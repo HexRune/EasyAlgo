@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.0 STL 是什么 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "11.0"; }
+
+  /* ── 子导航组件：横向并排卡片 ── */
+  .ch11-subnav { margin-bottom: 28px; }
+  .ch11-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch11-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+  }
+  .ch11-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch11-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch11-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch11-group-name { color: var(--text-secondary); }
+  .ch11-group.current .ch11-group-name { color: var(--grp-color); }
+  .ch11-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  /* 收起态：常驻的"展开"小徽章，明确传达"可点击" */
+  .ch11-group:not(.current) .ch11-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch11-group:not(.current):hover .ch11-group-head { background: var(--grp-color-light); }
+  .ch11-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch11-group:not(.current):hover .ch11-group-name { color: var(--grp-color); }
+  .ch11-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch11-group:not(.current):hover .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch11-group.current .ch11-expand-badge { display: none; }
+
+  .ch11-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch11-group:not(.current) .ch11-items { display: none; }
+  .ch11-group.expanded .ch11-items { display: flex; }
+  .ch11-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch11-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch11-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch11-group.c-intro  { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-seq    { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-adapt  { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch11-group.c-assoc  { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+  .ch11-group.c-util   { --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid);  --grp-color-light: var(--amber-light); }
+  .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
+
+  /* ── 本页专属样式 ── */
+  .intro-banner {
+    display: flex; gap: 16px; align-items: center;
+    background: linear-gradient(135deg, var(--accent-light), #FAFAF7);
+    border: 1px solid #D4D0F8; border-radius: var(--r-lg);
+    padding: 20px 24px; margin-bottom: 24px;
+  }
+  .intro-banner-icon { font-size: 34px; flex-shrink: 0; }
+  .intro-banner-text { font-size: 13.5px; color: var(--accent-dark); line-height: 1.7; }
+
+  .triad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+  @media (max-width: 640px) { .triad { grid-template-columns: 1fr; } }
+  .triad-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px 18px; }
+  .triad-card.containers { border-top: 3px solid var(--accent); }
+  .triad-card.algorithms { border-top: 3px solid var(--teal-mid); }
+  .triad-card.iterators  { border-top: 3px solid var(--amber-mid); }
+  .triad-icon { font-size: 20px; margin-bottom: 8px; }
+  .triad-title { font-size: 13.5px; font-weight: 700; margin-bottom: 4px; }
+  .triad-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 8px; }
+  .triad-list { font-size: 11.5px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; line-height: 1.7; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: #EEEDFE; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-dark); background: var(--accent-light); white-space: nowrap; }
+
+  /* 下一步导览卡片 */
+  .next-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 24px 0; }
+  @media (max-width: 900px) { .next-steps { grid-template-columns: repeat(2, 1fr); } }
+  .next-step-card {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    padding: 14px 14px; text-decoration: none;
+    background: var(--surface); transition: border-color .12s, transform .12s;
+  }
+  .next-step-card:hover { transform: translateY(-2px); }
+  .ns-seq   { border-top: 3px solid var(--accent); }
+  .ns-adapt { border-top: 3px solid var(--teal-mid); }
+  .ns-assoc { border-top: 3px solid var(--blue-mid); }
+  .ns-util  { border-top: 3px solid var(--amber-mid); }
+  .ns-algo  { border-top: 3px solid var(--coral-mid); }
+  .ns-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .ns-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="11.0">
+    <div class="chapter-eyebrow">
+      <a href="index.html">首页</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十一章 · STL 标准模板库</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.0 STL 是什么</span>
+    </div>
+    <h1 class="chapter-title">十一、STL 标准模板库</h1>
+    <p class="chapter-desc">先导课：STL 是什么、三大核心组件、所有容器共享的通用操作 —— 在认识每个具体容器之前，先建立整体的知识地图。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch11-subnav">
+    <div class="ch11-subnav-groups">
+
+      <div class="ch11-group c-intro current expanded">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">先导课</span>
+          <span class="ch11-group-count">1</span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item active" href="11_00_STL概述.html">STL 是什么</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-seq" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">序列容器</span>
+          <span class="ch11-group-count">4</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_01_string.html">string</a>
+          <a class="ch11-item" href="11_02_vector.html">vector</a>
+          <a class="ch11-item" href="11_03_list.html">list</a>
+          <a class="ch11-item" href="11_04_deque.html">deque</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-adapt" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">容器适配器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_05_stack.html">stack</a>
+          <a class="ch11-item" href="11_06_queue.html">queue</a>
+          <a class="ch11-item" href="11_07_priority_queue.html">priority_queue</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-assoc" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">关联容器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_08_map.html">map</a>
+          <a class="ch11-item" href="11_09_unordered_map.html">unordered_map</a>
+          <a class="ch11-item" href="11_10_set.html">set</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-util" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">实用类型</span>
+          <span class="ch11-group-count">2</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_11_pair.html">pair</a>
+          <a class="ch11-item" href="11_12_bitset.html">bitset</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-algo" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">STL 算法</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_13_STL算法.html">算法大全</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 11.0 STL 是什么 ═══ -->
+  <section class="section" id="s0">
+    <p class="section-label">11.0</p>
+    <h2 class="section-title">STL 是什么</h2>
+    <div class="section-body">
+      <p>想象一下，你有一大堆乐高积木，每次想搭一个城堡都要自己从零开始做每一块砖——这太累了！如果有人提前给你准备好了各种形状的积木块：长方形的基础块、可以转动的轮子、连接用的铰链……你只需要把它们拼起来就行了。</p>
+      <p><strong>STL 就是 C++ 给程序员准备的"积木工具箱"。</strong>它里面装好了编程时最常用的一些数据结构：可以自动变长的数组、可以两头操作的队列、可以快速查找的字典……我们不再需要从零开始写这些复杂的东西，直接用就好。</p>
+    </div>
+
+    <div class="intro-banner">
+      <div class="intro-banner-icon">🧰</div>
+      <div class="intro-banner-text">
+        <strong>STL</strong> 的全称是 <strong>Standard Template Library</strong>（标准模板库）。它最厉害的地方在于：<strong>数据存储和数据操作是分开的</strong>。比如排序算法写好了之后，既可以用来排序数组，也可以用来排序链表——因为算法不关心数据存在哪里，只关心怎么访问数据。
+      </div>
+    </div>
+
+    <div class="sub-title">三大核心组件</div>
+    <div class="triad">
+      <div class="triad-card containers">
+        <div class="triad-icon">📦</div>
+        <div class="triad-title">容器 Containers</div>
+        <div class="triad-desc">装数据的"箱子"</div>
+        <div class="triad-list">vector · list · deque<br>stack · queue<br>set · map …</div>
+      </div>
+      <div class="triad-card algorithms">
+        <div class="triad-icon">⚙️</div>
+        <div class="triad-title">算法 Algorithms</div>
+        <div class="triad-desc">对数据做操作的"工具"</div>
+        <div class="triad-list">sort · find<br>reverse · count …</div>
+      </div>
+      <div class="triad-card iterators">
+        <div class="triad-icon">🔗</div>
+        <div class="triad-title">迭代器 Iterators</div>
+        <div class="triad-desc">连接容器和算法的"桥梁"</div>
+        <div class="triad-list">begin() · end()<br>就像一个智能指针</div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>
+        迭代器可以理解为一个<strong>"智能指针"</strong>，它知道如何在你选用的容器中移动。<code>begin()</code> 指向第一个元素，<code>end()</code> 指向最后一个元素之后的位置（标记"结束了"）。
+      </div>
+    </div>
+
+    <div class="sub-title">所有容器的"通用技能"</div>
+    <div class="section-body">
+      <p>好消息是，几乎所有 STL 容器都共享一套相同的操作。就像一个工具箱里的所有工具都有"拿起来"和"放下去"这两个动作一样，无论你用 <code>vector</code> 还是 <code>list</code>，下面这些操作你都能用：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>函数 / 类型</th><th>功能</th><th>返回值</th></tr></thead>
+      <tbody>
+        <tr><td>.size()</td><td>返回容器中元素的个数</td><td>size_t（无符号整数）</td></tr>
+        <tr><td>.empty()</td><td>判断容器是否为空</td><td>bool（空为 true）</td></tr>
+        <tr><td>.clear()</td><td>清空所有元素</td><td>无</td></tr>
+        <tr><td>.begin()</td><td>返回指向第一个元素的迭代器</td><td>迭代器</td></tr>
+        <tr><td>.end()</td><td>返回指向尾后（最后一个元素之后）</td><td>迭代器</td></tr>
+        <tr><td>.front()</td><td>返回第一个元素的引用</td><td>元素的引用</td></tr>
+        <tr><td>.back()</td><td>返回最后一个元素的引用</td><td>元素的引用</td></tr>
+        <tr><td>.swap(b)</td><td>交换两个同类容器的全部内容</td><td>无（void）</td></tr>
+        <tr><td>::iterator</td><td>容器的迭代器类型</td><td>类型名</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div>注意：<code>front()</code> / <code>back()</code> 在 <code>stack</code>、<code>queue</code> 等容器适配器中会有所限制（比如 <code>stack</code> 没有 <code>front()</code>），具体细节会在对应章节里说明。这张表概括的是<strong>大多数序列容器和关联容器</strong>共有的接口。</div>
+    </div>
+
+    <div class="sub-title">接下来要学什么</div>
+    <div class="section-body">
+      <p>下面五大类一共 13 个专题，建议按顺序学习——序列容器是最基础的，后面的容器适配器、关联容器都会用到序列容器的概念。</p>
+    </div>
+
+    <div class="next-steps">
+      <a class="next-step-card ns-seq" href="11_01_string.html">
+        <div class="ns-label">① 序列容器起点</div>
+        <div class="ns-title">string 字符串</div>
+      </a>
+      <a class="next-step-card ns-adapt" href="11_05_stack.html">
+        <div class="ns-label">② 容器适配器起点</div>
+        <div class="ns-title">stack 栈</div>
+      </a>
+      <a class="next-step-card ns-assoc" href="11_08_map.html">
+        <div class="ns-label">③ 关联容器起点</div>
+        <div class="ns-title">map 有序映射</div>
+      </a>
+      <a class="next-step-card ns-util" href="11_11_pair.html">
+        <div class="ns-label">④ 实用类型起点</div>
+        <div class="ns-title">pair 打包两值</div>
+      </a>
+      <a class="next-step-card ns-algo" href="11_13_STL算法.html">
+        <div class="ns-label">⑤ 算法库</div>
+        <div class="ns-title">STL 算法大全</div>
+      </a>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十一章 · STL 标准模板库 · 11.0 STL 是什么</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="10_结构体.html">← 第十章：结构体</a>
+      <a class="nav-btn" href="11_01_string.html">11.1 string 字符串 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

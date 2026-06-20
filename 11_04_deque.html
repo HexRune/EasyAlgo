@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.4 deque 双端队列 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "11.4"; }
+
+  /* ── 子导航组件：横向并排卡片 ── */
+  .ch11-subnav { margin-bottom: 28px; }
+  .ch11-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch11-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+  }
+  .ch11-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch11-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch11-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch11-group-name { color: var(--text-secondary); }
+  .ch11-group.current .ch11-group-name { color: var(--grp-color); }
+  .ch11-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .ch11-group:not(.current) .ch11-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch11-group:not(.current):hover .ch11-group-head { background: var(--grp-color-light); }
+  .ch11-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch11-group:not(.current):hover .ch11-group-name { color: var(--grp-color); }
+  .ch11-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch11-group:not(.current):hover .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch11-group.current .ch11-expand-badge { display: none; }
+
+  .ch11-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch11-group:not(.current) .ch11-items { display: none; }
+  .ch11-group.expanded .ch11-items { display: flex; }
+  .ch11-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch11-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch11-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch11-group.c-intro  { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-seq    { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-adapt  { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch11-group.c-assoc  { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+  .ch11-group.c-util   { --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid);  --grp-color-light: var(--amber-light); }
+  .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
+
+  /* ── 本页专属样式 ── */
+  .deque-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px; margin: 20px 0; font-family: 'JetBrains Mono', monospace; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .dq-title { font-size: 11px; color: #6C7086; margin-bottom: 16px; letter-spacing: .06em; }
+  .dq-row { display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .dq-cell { width: 44px; height: 44px; border-radius: 6px; background: rgba(137,180,250,.15); border: 2px solid rgba(137,180,250,.5); color: var(--code-fn); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; }
+  .dq-ends { display: flex; justify-content: space-between; margin-top: 14px; }
+  .dq-ends .dq-tag { font-size: 11.5px; font-weight: 700; padding: 4px 11px; border-radius: 999px; }
+  .dq-ends .front-tag { background: rgba(166,227,161,.15); color: var(--code-str); }
+  .dq-ends .back-tag { background: rgba(250,179,135,.15); color: var(--code-num); }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: #EEEDFE; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-dark); background: var(--accent-light); white-space: nowrap; }
+
+  .lite-compare-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .lite-compare-table thead tr { background: #F3F2FF; }
+  .lite-compare-table th { padding: 9px 12px; text-align: left; font-size: 11.5px; font-weight: 700; color: var(--accent-dark); border-bottom: 1px solid var(--border); }
+  .lite-compare-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+  .lite-compare-table tr:last-child td { border-bottom: none; }
+  .lite-compare-table td:first-child { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="11.4">
+    <div class="chapter-eyebrow">
+      <a href="index.html">首页</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十一章 · STL 标准模板库</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.4 deque</span>
+    </div>
+    <h1 class="chapter-title">11.4　deque 双端队列</h1>
+    <p class="chapter-desc">vector 和 list 的"混血儿"——既能下标随机访问，又能在两端 O(1) 增删，序列容器系列的最后一站。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch11-subnav">
+    <div class="ch11-subnav-groups">
+
+      <div class="ch11-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">先导课</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_00_STL概述.html">STL 是什么</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-seq current expanded">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">序列容器</span>
+          <span class="ch11-group-count">4</span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_01_string.html">string</a>
+          <a class="ch11-item" href="11_02_vector.html">vector</a>
+          <a class="ch11-item" href="11_03_list.html">list</a>
+          <a class="ch11-item active" href="11_04_deque.html">deque</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-adapt" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">容器适配器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_05_stack.html">stack</a>
+          <a class="ch11-item" href="11_06_queue.html">queue</a>
+          <a class="ch11-item" href="11_07_priority_queue.html">priority_queue</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-assoc" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">关联容器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_08_map.html">map</a>
+          <a class="ch11-item" href="11_09_unordered_map.html">unordered_map</a>
+          <a class="ch11-item" href="11_10_set.html">set</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-util" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">实用类型</span>
+          <span class="ch11-group-count">2</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_11_pair.html">pair</a>
+          <a class="ch11-item" href="11_12_bitset.html">bitset</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-algo" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">STL 算法</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_13_STL算法.html">算法大全</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">11.4.1</span><a href="#s1">定义与初始化</a></li>
+      <li><span class="toc-num">11.4.2</span><a href="#s2">常用操作</a></li>
+      <li><span class="toc-num">11.4.3</span><a href="#s3">完整使用示例</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+    <div class="section-body">
+      <p><code>deque</code> 是 C++ 标准库中的<strong>双端队列</strong>，全称 Double-Ended Queue。是 <code>vector</code> 和 <code>list</code> 的"混血儿"：它既支持下标随机访问，又支持在头部和尾部快速增删。底层由多段连续空间拼接而成，所以头部操作也是 O(1)。使用前需引入 <code>&lt;deque&gt;</code> 头文件。</p>
+    </div>
+
+    <div class="deque-visual">
+      <div class="dq-title">deque：两端都能 O(1) 操作</div>
+      <div class="dq-row">
+        <div class="dq-cell">1</div>
+        <div class="dq-cell">2</div>
+        <div class="dq-cell">3</div>
+        <div class="dq-cell">4</div>
+      </div>
+      <div class="dq-ends">
+        <span class="dq-tag front-tag">⬅ push_front / pop_front</span>
+        <span class="dq-tag back-tag">push_back / pop_back ➡</span>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>注意：</b><br>
+        · <code>deque</code> 支持 O(1) 的头部和尾部插入/删除，弥补了 <code>vector</code> 头部操作慢的缺点。<br>
+        · <code>deque</code> 支持 <code>operator[]</code> 和 <code>at()</code> 随机访问，弥补了 <code>list</code> 不能随机访问的缺点。<br>
+        · <code>deque</code> 的底层是分段连续空间，不是一整块连续内存，因此某些需要连续内存指针的场景（如传给 C 风格接口）不适合用 <code>deque</code>。
+      </div>
+    </div>
+
+    <div class="sub-title" id="s1">11.4.1　定义与初始化</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · deque 的几种初始化方式</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;deque&gt;</span><span class="pnc"></span> <span class="cmt">// 必须包含这个头文件</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">deque</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">dq1</span><span class="pnc">;</span>                    <span class="cmt">// 空双端队列</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">deque</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">dq2</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">);</span>                 <span class="cmt">// 5 个元素，全部初始化为 0</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="fn">deque</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">dq3</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">,</span> <span class="num">7</span><span class="pnc">);</span>              <span class="cmt">// 5 个元素，全部初始化为 7</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">deque</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">dq4</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">};</span> <span class="cmt">// 初始化列表</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">deque</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">dq5</span><span class="pnc">(</span><span class="fn">dq4</span><span class="pnc">);</span>               <span class="cmt">// 拷贝构造</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="s2">11.4.2　常用操作</div>
+    <div class="section-body">
+      <p><code>deque</code> 拥有 <code>vector</code> 的全部功能（<code>[]</code>、<code>at()</code>、<code>size()</code>、<code>empty()</code> 等），同时额外支持头部操作：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · deque 的双端操作 + 随机访问</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">deque</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">dq</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="cmt">// 头部操作（vector 没有的！）</span></td></tr>
+          <tr class="hl-g"><td class="ln">3</td><td class="cd"><span class="fn">dq</span><span class="pnc">.</span><span class="fn">push_front</span><span class="pnc">(</span><span class="num">1</span><span class="pnc">);</span>   <span class="cmt">// {1, 2, 3, 4}</span></td></tr>
+          <tr class="hl-g"><td class="ln">4</td><td class="cd"><span class="fn">dq</span><span class="pnc">.</span><span class="fn">pop_front</span><span class="pnc">();</span>    <span class="cmt">// {2, 3, 4}</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// 尾部操作（和 vector 一样）</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">dq</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">);</span>    <span class="cmt">// {2, 3, 4, 5}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">dq</span><span class="pnc">.</span><span class="fn">pop_back</span><span class="pnc">();</span>     <span class="cmt">// {2, 3, 4}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// 随机访问（list 没有的！）</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">dq</span><span class="pnc">[</span><span class="num">1</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>     <span class="cmt">// 输出：3——支持下标访问</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">dq</span><span class="pnc">.</span><span class="fn">at</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>  <span class="cmt">// 输出：2——支持 at 访问</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>注意：</b><code>deque</code> 底层是分段连续空间，不是一整块连续内存，所以<strong>没有 <code>data()</code> 函数</strong>。如果需要把数据传给要求连续内存的 C 函数，不能用 <code>deque</code>，请用 <code>vector</code>。
+      </div>
+    </div>
+
+    <div class="sub-title" id="s3">11.4.3　完整使用示例</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · deque 综合示例</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;deque&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">deque</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">dq</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="cmt">// 头部和尾部都能插入</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">dq</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">);</span>  <span class="cmt">// {2}</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">dq</span><span class="pnc">.</span><span class="fn">push_front</span><span class="pnc">(</span><span class="num">1</span><span class="pnc">);</span> <span class="cmt">// {1, 2}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">dq</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">);</span>  <span class="cmt">// {1, 2, 3}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="fn">dq</span><span class="pnc">.</span><span class="fn">push_front</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">);</span> <span class="cmt">// {0, 1, 2, 3}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="cmt">// 随机访问</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"第2个元素: "</span> <span class="op">&lt;&lt;</span> <span class="fn">dq</span><span class="pnc">[</span><span class="num">1</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：1</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"首元素: "</span> <span class="op">&lt;&lt;</span> <span class="fn">dq</span><span class="pnc">.</span><span class="fn">front</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：0</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"尾元素: "</span> <span class="op">&lt;&lt;</span> <span class="fn">dq</span><span class="pnc">.</span><span class="fn">back</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>  <span class="cmt">// 输出：3</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="cmt">// 遍历</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"遍历: "</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span> <span class="pnc">:</span> <span class="fn">dq</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span>  <span class="cmt">// 输出：0 1 2 3</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd"></td></tr>
+          <tr><td class="ln">27</td><td class="cd">    <span class="cmt">// 头部和尾部删除</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd">    <span class="fn">dq</span><span class="pnc">.</span><span class="fn">pop_front</span><span class="pnc">();</span>  <span class="cmt">// {1, 2, 3}</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd">    <span class="fn">dq</span><span class="pnc">.</span><span class="fn">pop_back</span><span class="pnc">();</span>   <span class="cmt">// {1, 2}</span></td></tr>
+          <tr><td class="ln">30</td><td class="cd"></td></tr>
+          <tr><td class="ln">31</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"大小: "</span> <span class="op">&lt;&lt;</span> <span class="fn">dq</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：2</span></td></tr>
+          <tr><td class="ln">32</td><td class="cd"></td></tr>
+          <tr><td class="ln">33</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">34</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title">四种序列容器对比</div>
+    <table class="lite-compare-table">
+      <thead><tr><th>容器</th><th>随机访问</th><th>头部增删</th><th>尾部增删</th><th>中间增删</th><th>典型场景</th></tr></thead>
+      <tbody>
+        <tr><td>vector</td><td>O(1)</td><td>O(n)</td><td>O(1)</td><td>O(n)</td><td>大多数场景的默认选择</td></tr>
+        <tr><td>list</td><td>不支持</td><td>O(1)</td><td>O(1)</td><td>O(1)</td><td>频繁在中间插入/删除</td></tr>
+        <tr><td>deque</td><td>O(1)</td><td>O(1)</td><td>O(1)</td><td>O(n)</td><td>两端都要快速操作（如滑动窗口）</td></tr>
+        <tr><td>string</td><td>O(1)</td><td>O(n)</td><td>O(1)</td><td>O(n)</td><td>文本处理（本质是特化的 vector&lt;char&gt;）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title">📋 deque 常用操作速查表</div>
+    <div class="section-body">
+      <p>把本节出现过的方法按用途归类汇总，写代码时可以直接当参考卡用。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>方法</th><th>分类</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td>dq.size() / dq.empty()</td><td>容量</td><td>元素个数 / 判断是否为空</td></tr>
+        <tr><td>dq.clear()</td><td>容量</td><td>清空所有元素</td></tr>
+        <tr><td>dq[i]</td><td>访问</td><td>下标访问，不检查越界</td></tr>
+        <tr><td>dq.at(i)</td><td>访问</td><td>下标访问，越界抛异常</td></tr>
+        <tr><td>dq.front() / dq.back()</td><td>访问</td><td>第一个 / 最后一个元素</td></tr>
+        <tr><td>dq.push_front(x) / dq.pop_front()</td><td>修改</td><td>头部插入 / 删除，O(1)（vector 没有）</td></tr>
+        <tr><td>dq.push_back(x) / dq.pop_back()</td><td>修改</td><td>尾部插入 / 删除，O(1)</td></tr>
+        <tr><td>dq.insert(it, x) / dq.erase(it)</td><td>修改</td><td>中间插入 / 删除，O(n)</td></tr>
+        <tr><td>dq1.swap(dq2)</td><td>修改</td><td>交换两个 deque 的全部内容</td></tr>
+        <tr><td>dq.begin() / dq.end()</td><td>遍历</td><td>正向迭代器范围</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">🎯</span>
+      <div><b>什么时候用 deque？</b>典型场景是<strong>滑动窗口</strong>类问题——需要同时从队首和队尾快速增删，又偶尔需要按下标看某个位置的值。如果只需要严格的"先进先出"或"后进先出"，<code>queue</code> / <code>stack</code>（下一节）更直接。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十一章 · STL 标准模板库 · 11.4 deque</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="11_03_list.html">← 11.3 list 双向链表</a>
+      <a class="nav-btn" href="11_05_stack.html">11.5 stack 栈 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

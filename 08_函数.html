@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第八章 · 函数 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+    /* ── Chapter 8 专属样式 ── */
+
+  /* 代码行高亮扩展（返回行 / 引用行） */
+  /* .hl-ret td { background: rgba(166,227,161,.07) !important; }
+  .hl-ref td { background: rgba(250,179,135,.07) !important; }  覆盖公共的绿色为橙色 */
+
+  /* 函数解剖可视化 */
+  .fn-anatomy {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 22px 26px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    overflow-x: auto;
+  }
+  .fn-line { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 0; line-height: 1.8; font-size: 14px }
+  .fn-part { display: inline-flex; flex-direction: column; align-items: center; position: relative }
+  .fn-text { padding: 3px 6px; border-radius: 5px; font-size: 14px; font-weight: 600; white-space: nowrap }
+  .fn-ret-type { background: rgba(243,139,168,.15); color: var(--code-type) }
+  .fn-name     { background: rgba(137,180,250,.15); color: var(--code-fn) }
+  .fn-param    { background: rgba(250,179,135,.12); color: var(--code-num) }
+  .fn-body     { background: rgba(166,227,161,.1);  color: var(--code-str) }
+  .fn-pnc { color: var(--code-punc); font-size: 14px; padding: 3px 2px }
+  .fn-labels {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 16px; padding-top: 14px;
+    border-top: 1px solid #2A2840; font-size: 12px;
+  }
+  .fn-lbl { display: flex; align-items: center; gap: 6px }
+  .fn-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0 }
+
+  /* 函数组成表（覆盖公共 .comp-table 的深色表头） */
+  .comp-table thead tr { background: var(--accent-light) }
+  .comp-table th { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA }
+  .comp-table td { line-height: 1.6 }
+  .comp-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: var(--accent-dark); background: var(--accent-light) }
+  .comp-table tr:nth-child(even) td:first-child { background: #EEEDFE }
+  .must-badge { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 4px; font-weight: 600 }
+  .must { background: #EAF8F2; color: var(--teal) }
+  .opt  { background: #F1EFE8; color: var(--text-muted) }
+  .cond { background: var(--amber-light); color: var(--amber) }
+
+  /* 函数调用图 */
+  .call-diagram {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 20px 24px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; overflow-x: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+  .cd-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px }
+  .cd-badge { padding: 5px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 600; white-space: nowrap; flex-shrink: 0 }
+  .cd-main { background: #2A2840; color: var(--code-text) }
+  .cd-fn   { background: rgba(137,180,250,.15); color: var(--code-fn); border: 1px solid rgba(137,180,250,.3) }
+  .cd-arrow { color: #45475A; font-size: 16px }
+  .cd-val  { color: var(--code-num); font-size: 13px }
+  .cd-ret  { color: var(--code-str); font-size: 12px }
+  .cd-note { color: #6C7086; font-size: 11.5px; font-style: italic }
+
+  /* 形参 vs 实参对比 */
+  .param-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0 }
+  .param-card { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border) }
+  .param-head { padding: 10px 14px; display: flex; align-items: center; gap: 8px }
+  .param-head.formal { background: rgba(137,180,250,.1) }
+  .param-head.actual { background: rgba(166,227,161,.1) }
+  .param-head-tag { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px }
+  .formal .param-head-tag { background: rgba(137,180,250,.3); color: var(--blue) }
+  .actual .param-head-tag { background: rgba(166,227,161,.3); color: var(--teal) }
+  .param-head-title { font-size: 13px; font-weight: 700 }
+  .formal .param-head-title { color: var(--blue) }
+  .actual .param-head-title { color: var(--teal) }
+  .param-body { padding: 10px 14px; font-size: 13px; color: var(--text-secondary); line-height: 1.65; border-top: 1px solid var(--border) }
+
+  /* 值传递 vs 引用传递对比（网格布局；.pass-card 等已在公共样式 §7） */
+  .pass-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0 }
+  .pass-result { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-top: 6px }
+  .val-result { background: var(--blue-light); color: var(--blue) }
+  .ref-result { background: var(--amber-light); color: var(--amber) }
+
+  /* 声明 vs 定义表 */
+  .decl-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .decl-table thead tr { background: #1E1C2E }
+  .decl-table th { padding: 9px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840 }
+  .decl-table th:first-child { color: var(--code-text) }
+  .decl-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle }
+  .decl-table tr:last-child td { border-bottom: none }
+  .decl-table tr:nth-child(even) td { background: #FAFAF7 }
+  .decl-table td:first-child { font-family: 'Noto Sans SC', system-ui, sans-serif; font-size: 13px; font-weight: 600; color: var(--text-primary); background: #F7F6F2 }
+  .decl-table tr:nth-child(even) td:first-child { background: #F0EFE9 }
+
+  /* 递归调用栈可视化 */
+  .rec-stack {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 20px 24px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; overflow-x: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+  .rec-phases { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: start }
+  .rec-phase-title { font-size: 11px; color: #6C7086; text-align: center; margin-bottom: 10px; letter-spacing: .06em; text-transform: uppercase }
+  .rec-frames { display: flex; flex-direction: column; gap: 6px }
+  .rec-frame { border-radius: 6px; padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; border: 1px solid }
+  .rf-0    { background: rgba(137,180,250,.18); border-color: rgba(137,180,250,.4); color: var(--code-fn) }
+  .rf-1    { background: rgba(203,166,247,.14); border-color: rgba(203,166,247,.35); color: var(--code-kw) }
+  .rf-2    { background: rgba(250,179,135,.14); border-color: rgba(250,179,135,.35); color: var(--code-num) }
+  .rf-3    { background: rgba(166,227,161,.14); border-color: rgba(166,227,161,.35); color: var(--code-str) }
+  .rf-base { background: rgba(245,194,231,.14); border-color: rgba(245,194,231,.35); color: var(--code-op); font-style: italic }
+  .rf-call { font-weight: 600 }
+  .rf-ret  { color: #6C7086; font-size: 11.5px }
+  .rec-divider { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #45475A; font-size: 20px; padding-top: 24px }
+  .rec-div-label { font-size: 10px; color: #45475A; letter-spacing: .06em }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="Ch.8">
+    <p class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      C++ 编程语法
+    </p>
+    <h1 class="chapter-title">八、函数</h1>
+    <p class="chapter-desc">函数是将特定功能的代码打包封装、起名复用的机制。好的函数让程序结构清晰，有效避免重复代码。本章还将介绍递归这一强大技术。</p>
+  </header>
+
+  <nav class="toc">
+    <p class="toc-title">本章目录</p>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">8.1</span>函数的定义</a></li>
+      <li><a href="#s2"><span class="toc-num">8.2</span>函数的调用</a></li>
+      <li><a href="#s3"><span class="toc-num">8.3</span>函数的声明</a></li>
+      <li><a href="#s4"><span class="toc-num">8.4</span>参数详解（值传递 / 引用传递 / 指针传递）</a></li>
+      <li><a href="#s5"><span class="toc-num">8.5</span>递归函数</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 8.1 定义 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">8.1</p>
+    <h2 class="section-title">函数的定义</h2>
+    <div class="section-body">
+      <p>函数是对实现某一功能的代码进行模块化封装。定义格式如下：</p>
+    </div>
+
+    <!-- Function anatomy visual -->
+    <div class="fn-anatomy">
+      <div class="fn-line">
+        <span class="fn-part"><span class="fn-text fn-ret-type">int</span></span>
+        <span class="fn-pnc">&nbsp;</span>
+        <span class="fn-part"><span class="fn-text fn-name">Add</span></span>
+        <span class="fn-pnc">(</span>
+        <span class="fn-part"><span class="fn-text fn-param">int a, int b</span></span>
+        <span class="fn-pnc">)&nbsp;</span>
+        <span class="fn-part"><span class="fn-text fn-body">{ return a + b; }</span></span>
+      </div>
+      <div class="fn-labels">
+        <div class="fn-lbl"><span class="fn-dot" style="background:var(--code-type)"></span><span style="color:#6C7086">返回值类型 — 函数返回什么类型的数据</span></div>
+        <div class="fn-lbl"><span class="fn-dot" style="background:var(--code-fn)"></span><span style="color:#6C7086">函数名 — 调用时使用的名字</span></div>
+        <div class="fn-lbl"><span class="fn-dot" style="background:var(--code-num)"></span><span style="color:#6C7086">参数列表 — 传入的数据（类型 + 名称）</span></div>
+        <div class="fn-lbl"><span class="fn-dot" style="background:var(--code-str)"></span><span style="color:#6C7086">函数体 — 具体执行的代码</span></div>
+      </div>
+    </div>
+
+    <table class="comp-table">
+      <thead><tr><th>组成部分</th><th>说明</th><th>是否必须</th></tr></thead>
+      <tbody>
+        <tr><td>返回值类型</td><td>函数执行完毕后返回的数据类型，如 <code>int</code>、<code>double</code>、<code>string</code> 等</td><td><span class="must-badge must">✅ 必需</span>（无返回值写 <code>void</code>）</td></tr>
+        <tr><td>函数名</td><td>调用函数时使用的名字，命名规则同变量名</td><td><span class="must-badge must">✅ 必需</span></td></tr>
+        <tr><td>参数列表</td><td>调用时传入的数据，需指定类型和名称，多个参数用逗号分隔</td><td><span class="must-badge opt">可选</span>（无参数时留空）</td></tr>
+        <tr><td>函数体</td><td>花括号 <code>{}</code> 内要执行的具体代码</td><td><span class="must-badge must">✅ 必需</span></td></tr>
+        <tr><td>return 语句</td><td>返回计算结果并结束函数；返回值类型为 <code>void</code> 时可省略</td><td><span class="must-badge cond">视返回类型而定</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 函数定义示例</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 示例1：计算两数之和（有返回值）</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">Add</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span>  <span class="cmt">// 返回类型 int，两个 int 参数</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">result</span> <span class="op">=</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-ret"><td class="ln">5</td><td class="cd">    <span class="kw">return</span> <span class="fn">result</span><span class="pnc">;</span>  <span class="cmt">// 返回计算结果</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// 示例2：打印问候语（无返回值）</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd"><span class="kw">void</span> <span class="fn">Greet</span><span class="pnc">(</span><span class="typ">string</span> <span class="fn">name</span><span class="pnc">)</span>  <span class="cmt">// 返回类型 void，表示不返回值</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Hello, "</span> <span class="op">&lt;&lt;</span> <span class="fn">name</span> <span class="op">&lt;&lt;</span> <span class="str">"!"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="cmt">// 无需 return</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>命名建议：</b>函数名应见名知义，用动词或动词短语描述其功能（如 <code>Add</code>、<code>GetMax</code>、<code>PrintResult</code>）。多个参数即使类型相同也不能省略类型声明，必须写 <code>int a, int b</code>，不能写 <code>int a, b</code>。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.2 调用 ═══ -->
+  <section class="section" id="s2">
+    <p class="section-label">8.2</p>
+    <h2 class="section-title">函数的调用</h2>
+    <div class="section-body">
+      <p>调用函数就是使用函数的功能来执行代码或获取返回值。在函数名后跟圆括号，括号内传入实参，多个参数用逗号分隔。</p>
+    </div>
+
+    <!-- Call diagram -->
+    <div class="call-diagram">
+      <div class="cd-row">
+        <span class="cd-badge cd-main">main()</span>
+        <span class="cd-arrow">→ 调用 →</span>
+        <span class="cd-badge cd-fn">Add(3, 5)</span>
+        <span class="cd-arrow">→ 返回 →</span>
+        <span class="cd-val">8</span>
+        <span class="cd-note" style="margin-left:8px">// 用变量接收：int sum = Add(3, 5);</span>
+      </div>
+      <div class="cd-row">
+        <span class="cd-badge cd-main">main()</span>
+        <span class="cd-arrow">→ 调用 →</span>
+        <span class="cd-badge cd-fn">Add(3, 5) * 2</span>
+        <span class="cd-arrow">→ 直接用于表达式 →</span>
+        <span class="cd-val">16</span>
+      </div>
+      <div class="cd-row">
+        <span class="cd-badge cd-main">main()</span>
+        <span class="cd-arrow">→ 调用 →</span>
+        <span class="cd-badge cd-fn">Greet("小明")</span>
+        <span class="cd-note" style="margin-left:8px">// void 函数：作为独立语句调用</span>
+      </div>
+    </div>
+
+    <h3 class="sub-title">形参与实参</h3>
+    <div class="param-compare">
+      <div class="param-card">
+        <div class="param-head formal"><span class="param-head-tag">形参</span><span class="param-head-title">形式参数</span></div>
+        <div class="param-body">函数<strong>定义时</strong>括号内的参数，规定调用者需要传入什么类型的数据。只是一个"占位符"，没有实际的值。</div>
+      </div>
+      <div class="param-card">
+        <div class="param-head actual"><span class="param-head-tag">实参</span><span class="param-head-title">实际参数</span></div>
+        <div class="param-body">函数<strong>调用时</strong>实际传入的具体值或变量。实参的数量、顺序、类型必须与形参一一对应。</div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 形参 vs 实参</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl"><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Add</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span>  <span class="cmt">// a、b 是形参（定义处）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span> <span class="kw">return</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span><span class="pnc">; }</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">int</span> <span class="fn">x</span> <span class="op">=</span> <span class="num">3</span><span class="pnc">,</span> <span class="fn">y</span> <span class="op">=</span> <span class="num">5</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-ret"><td class="ln">7</td><td class="cd">    <span class="typ">int</span> <span class="fn">sum</span> <span class="op">=</span> <span class="fn">Add</span><span class="pnc">(</span><span class="fn">x</span><span class="pnc">,</span> <span class="fn">y</span><span class="pnc">);</span>       <span class="cmt">// x、y 是实参（变量）</span></td></tr>
+          <tr class="hl-ret"><td class="ln">8</td><td class="cd">    <span class="fn">Add</span><span class="pnc">(</span><span class="num">10</span><span class="pnc">,</span> <span class="num">20</span><span class="pnc">);</span>              <span class="cmt">// 10、20 也是实参（字面量）</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.3 声明 ═══ -->
+  <section class="section" id="s3">
+    <p class="section-label">8.3</p>
+    <h2 class="section-title">函数的声明</h2>
+    <div class="section-body">
+      <p>C++ 要求函数必须先定义（或声明）后调用。如果函数定义在 <code>main()</code> 之后，需要在前面写<strong>函数声明</strong>（也叫函数原型），提前告诉编译器这个函数的存在。</p>
+    </div>
+
+    <table class="decl-table">
+      <thead><tr><th>概念</th><th>格式</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td>函数声明（原型）</td><td><code>返回类型 函数名(参数列表);</code></td><td>告诉编译器函数"长什么样"，没有具体实现代码</td></tr>
+        <tr><td>函数定义（实现）</td><td><code>返回类型 函数名(参数列表) { 函数体 }</code></td><td>给出函数的完整实现代码</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 函数声明示例</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">Add</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">);</span>  <span class="cmt">// ← 函数声明（只写函数头，不写函数体）</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">                      <span class="cmt">// 参数名可省略：int Add(int, int);</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">Add</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>  <span class="cmt">// 正常调用</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr class="hl-ret"><td class="ln">13</td><td class="cd"><span class="typ">int</span> <span class="fn">Add</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span>  <span class="cmt">// ← 函数定义（在 main 之后也没问题）</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="kw">return</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.4 参数 ═══ -->
+  <section class="section" id="s4">
+    <p class="section-label">8.4</p>
+    <h2 class="section-title">函数参数详解</h2>
+    <div class="section-body">
+      <p>C++ 中函数参数共有三种传递方式：<strong>值传递</strong>、<strong>引用传递</strong>和<strong>指针传递</strong>。三者的核心区别在于：函数内对参数的操作，是否能影响到调用方的原始变量。</p>
+    </div>
+
+    <!-- 三种方式总览卡片 -->
+    <div class="pass-compare" style="grid-template-columns: 1fr 1fr 1fr;">
+      <div class="pass-card">
+        <div class="pass-head val-h"><span class="pass-icon">📋</span><span class="pass-title">① 值传递</span></div>
+        <div class="pass-body">
+          传入原变量的<strong>拷贝副本</strong>，函数内的修改与原变量完全隔离。<br><br>
+          写法：<code>int x</code><br>
+          调用：<code>f(a)</code><br>
+          <span class="pass-result val-result">❌ 不影响原变量</span>
+        </div>
+      </div>
+      <div class="pass-card">
+        <div class="pass-head ref-h"><span class="pass-icon">🔗</span><span class="pass-title">② 引用传递</span></div>
+        <div class="pass-body">
+          传入原变量的<strong>别名</strong>，函数内操作参数就是操作原变量本身。<br><br>
+          写法：<code>int &amp;x</code><br>
+          调用：<code>f(a)</code>（同值传递，自动绑定）<br>
+          <span class="pass-result ref-result">✅ 直接修改原变量</span>
+        </div>
+      </div>
+      <div class="pass-card">
+        <div class="pass-head" style="background:rgba(203,166,247,.1)"><span class="pass-icon">📍</span><span class="pass-title" style="color:var(--accent)">③ 指针传递</span></div>
+        <div class="pass-body">
+          传入原变量的<strong>内存地址</strong>，函数内通过解引用 <code>*</code> 修改原变量。<br><br>
+          写法：<code>int *x</code><br>
+          调用：<code>f(&amp;a)</code>（需取地址）<br>
+          <span class="pass-result" style="background:var(--accent-light);color:var(--accent-dark)">✅ 可修改原变量</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 值传递 ── -->
+    <h3 class="sub-title">① 值传递（Pass by Value）</h3>
+    <div class="section-body">
+      <p>最常用的默认方式。调用时将实参的值<strong>复制一份</strong>传给形参，两者互不干扰。适合传递小型数据（int、double、char 等）且不需要修改原值的场景。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 值传递</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">void</span> <span class="fn">TryDouble</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span><span class="pnc">)</span>        <span class="cmt">// x 是副本</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="fn">x</span> <span class="op">=</span> <span class="fn">x</span> <span class="op">*</span> <span class="num">2</span><span class="pnc">;</span>               <span class="cmt">// 只改了副本</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数内 x = "</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span><span class="pnc">;</span> <span class="cmt">// 10</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">5</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">    <span class="fn">TryDouble</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">);</span>            <span class="cmt">// 传入 a 的副本</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数外 a = "</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">;</span> <span class="cmt">// 仍是 5，原变量未变</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>内存模型：</b>值传递会在栈上额外分配一块空间存放副本。对于 <code>int</code> 这样的小型类型开销极小；但若传递大型结构体或 <code>string</code>，拷贝成本较高，此时应改用引用传递。</div>
+    </div>
+
+    <!-- ── 引用传递 ── -->
+    <h3 class="sub-title">② 引用传递（Pass by Reference）</h3>
+    <div class="section-body">
+      <p>在参数类型后加 <code>&amp;</code>，函数接收的是原变量的<strong>别名</strong>——形参和实参指向同一块内存，对形参的任何操作都直接作用于原变量。调用时写法和值传递完全相同，<code>&amp;</code> 只写在函数定义处。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 引用传递</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl-ref"><td class="ln">1</td><td class="cd"><span class="kw">void</span> <span class="fn">RealDouble</span><span class="pnc">(</span><span class="typ">int</span> <span class="op">&amp;</span><span class="fn">x</span><span class="pnc">)</span>     <span class="cmt">// &amp; 表示引用，x 就是原变量的别名</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-ref"><td class="ln">3</td><td class="cd">    <span class="fn">x</span> <span class="op">=</span> <span class="fn">x</span> <span class="op">*</span> <span class="num">2</span><span class="pnc">;</span>               <span class="cmt">// 直接修改原变量</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数内 x = "</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span><span class="pnc">;</span> <span class="cmt">// 10</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 经典用途：交换两个变量</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="kw">void</span> <span class="fn">Swap</span><span class="pnc">(</span><span class="typ">int</span> <span class="op">&amp;</span><span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="op">&amp;</span><span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="typ">int</span> <span class="fn">tmp</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">a</span> <span class="op">=</span> <span class="fn">b</span><span class="pnc">;</span> <span class="fn">b</span> <span class="op">=</span> <span class="fn">tmp</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">5</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd">    <span class="fn">RealDouble</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">);</span>           <span class="cmt">// 调用写法与值传递相同</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数外 a = "</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">;</span> <span class="cmt">// 10，原变量已修改</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="typ">int</span> <span class="fn">x</span> <span class="op">=</span> <span class="num">3</span><span class="pnc">,</span> <span class="fn">y</span> <span class="op">=</span> <span class="num">7</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">21</td><td class="cd">    <span class="fn">Swap</span><span class="pnc">(</span><span class="fn">x</span><span class="pnc">,</span> <span class="fn">y</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">y</span><span class="pnc">;</span>   <span class="cmt">// 7 3</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>const 引用：只读不改</b><br>如果只想避免大对象拷贝、但不需要修改原值，可以用 <code>const int &amp;x</code>。编译器会阻止你在函数内修改 <code>x</code>，既安全又高效。</div>
+    </div>
+
+    <!-- ── 指针传递 ── -->
+    <h3 class="sub-title">③ 指针传递（Pass by Pointer）</h3>
+    <div class="section-body">
+      <p>将原变量的<strong>内存地址</strong>传入函数，形参是一个指针变量（<code>int *x</code>）。函数内需要用解引用运算符 <code>*x</code> 才能访问或修改原变量的值。调用时须用取地址运算符 <code>&amp;a</code> 传入地址。</p>
+      <p>指针传递与引用传递效果相同（都能修改原变量），但写法更繁琐。在 C++ 中<strong>优先使用引用传递</strong>；指针传递主要出现在与 C 语言兼容、或需要传递数组的场景。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 指针传递</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl"><td class="ln">1</td><td class="cd"><span class="kw">void</span> <span class="fn">PtrDouble</span><span class="pnc">(</span><span class="typ">int</span> <span class="op">*</span><span class="fn">x</span><span class="pnc">)</span>      <span class="cmt">// x 是指向 int 的指针</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="op">*</span><span class="fn">x</span> <span class="op">=</span> <span class="op">*</span><span class="fn">x</span> <span class="op">*</span> <span class="num">2</span><span class="pnc">;</span>            <span class="cmt">// 解引用：通过地址修改原变量</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数内 *x = "</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">x</span><span class="pnc">;</span> <span class="cmt">// 10</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 经典用途：指针版 Swap</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="kw">void</span> <span class="fn">PtrSwap</span><span class="pnc">(</span><span class="typ">int</span> <span class="op">*</span><span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="op">*</span><span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="typ">int</span> <span class="fn">tmp</span> <span class="op">=</span> <span class="op">*</span><span class="fn">a</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="op">*</span><span class="fn">a</span> <span class="op">=</span> <span class="op">*</span><span class="fn">b</span><span class="pnc">;</span> <span class="op">*</span><span class="fn">b</span> <span class="op">=</span> <span class="fn">tmp</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">5</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd">    <span class="fn">PtrDouble</span><span class="pnc">(</span><span class="op">&amp;</span><span class="fn">a</span><span class="pnc">);</span>           <span class="cmt">// 传地址：&amp;a</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数外 a = "</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">;</span> <span class="cmt">// 10，原变量已修改</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="typ">int</span> <span class="fn">x</span> <span class="op">=</span> <span class="num">3</span><span class="pnc">,</span> <span class="fn">y</span> <span class="op">=</span> <span class="num">7</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">21</td><td class="cd">    <span class="fn">PtrSwap</span><span class="pnc">(</span><span class="op">&amp;</span><span class="fn">x</span><span class="pnc">,</span> <span class="op">&amp;</span><span class="fn">y</span><span class="pnc">);</span>         <span class="cmt">// 注意：传 &amp;x 不是 x</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">y</span><span class="pnc">;</span>   <span class="cmt">// 7 3</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>指针 vs 引用的区别：</b>引用一旦绑定就不能改变指向，而指针可以指向不同变量，也可以为 <code>nullptr</code>（空指针）。因此指针比引用更灵活，但也更危险——解引用空指针会导致程序崩溃。</div>
+    </div>
+
+    <!-- ── 三种方式对比表 ── -->
+    <h3 class="sub-title">三种方式横向对比</h3>
+    <table class="advice-table">
+      <thead>
+        <tr><th>对比项</th><th>值传递</th><th>引用传递</th><th>指针传递</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>形参写法</td>
+          <td><code>int x</code></td>
+          <td><code>int &amp;x</code></td>
+          <td><code>int *x</code></td>
+        </tr>
+        <tr>
+          <td>调用写法</td>
+          <td><code>f(a)</code></td>
+          <td><code>f(a)</code></td>
+          <td><code>f(&amp;a)</code></td>
+        </tr>
+        <tr>
+          <td>函数内访问</td>
+          <td><code>x</code>（操作副本）</td>
+          <td><code>x</code>（操作原变量）</td>
+          <td><code>*x</code>（解引用操作原变量）</td>
+        </tr>
+        <tr>
+          <td>能否修改原变量</td>
+          <td>❌ 不能</td>
+          <td>✅ 能</td>
+          <td>✅ 能</td>
+        </tr>
+        <tr>
+          <td>是否产生拷贝</td>
+          <td>✅ 产生（开销大）</td>
+          <td>❌ 不产生</td>
+          <td>❌ 不产生（仅传地址）</td>
+        </tr>
+        <tr>
+          <td>可以为空</td>
+          <td>—</td>
+          <td>❌ 引用必须绑定有效变量</td>
+          <td>✅ 可以是 <code>nullptr</code></td>
+        </tr>
+        <tr>
+          <td>推荐使用场景</td>
+          <td>读取小型数据、不需修改原值</td>
+          <td>需修改原值，或传递大对象（加 const）</td>
+          <td>与 C 语言兼容、传递数组、动态内存</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>参数选择建议：</b><br>
+        · 只读小数据 → <b>值传递</b><br>
+        · 需要修改原值 / 传大对象 → <b>引用传递</b>（最常用）<br>
+        · 传大对象但不修改 → <b><code>const</code> 引用</b>（最优雅）<br>
+        · 传数组 / 与 C 风格库交互 → <b>指针传递</b>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>本章只介绍参数传递中指针的基本用法。</b>指针的完整机制（指针运算、动态内存、多级指针等）将在 <a href="09_指针与引用.html" style="color:var(--accent);font-weight:600;">第九章「指针与引用」</a> 中系统讲解。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.5 递归 ═══ -->
+  <section class="section" id="s5">
+    <p class="section-label">8.5</p>
+    <h2 class="section-title">递归函数</h2>
+    <div class="section-body">
+      <p>我们知道函数可以调用其他函数——那函数能不能调用<strong>自己</strong>？答案是可以，这就是<b>递归</b>。</p>
+      <p>以计算 <code>4!</code>（4的阶乘）为例：<code>4! = 4 × 3!</code>，而 <code>3! = 3 × 2!</code>，<code>2! = 2 × 1!</code>，<code>1! = 1</code>。问题的规模在每一步都缩小了一级，直到答案已知为止。这种"把大问题分解成同结构的小问题"的思路，正是递归的本质。</p>
+      <p>一个正确的递归函数必须具备两个要素，缺一不可：</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;">
+      <div style="background:var(--coral-light);border:1px solid var(--coral-mid);border-radius:var(--r-md);padding:14px 16px;">
+        <div style="font-weight:700;color:var(--coral);margin-bottom:6px;font-size:14px;">① 递归边界（终止条件）</div>
+        <div style="font-size:13px;color:var(--coral);line-height:1.65;">让递归能够停下来，防止无限递归。没有终止条件 = 程序崩溃。</div>
+      </div>
+      <div style="background:var(--teal-light);border:1px solid var(--teal-mid);border-radius:var(--r-md);padding:14px 16px;">
+        <div style="font-weight:700;color:var(--teal);margin-bottom:6px;font-size:14px;">② 递归推进</div>
+        <div style="font-size:13px;color:var(--teal);line-height:1.65;">每次调用时让问题规模向边界靠近（如 n 减小），最终达到终止条件。</div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 递归示例（阶乘 &amp; 求和）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 计算 n!（n 的阶乘）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">Factorial</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">==</span> <span class="num">1</span><span class="pnc">)</span> <span class="kw">return</span> <span class="num">1</span><span class="pnc">;</span>           <span class="cmt">// ① 边界：1! = 1</span></td></tr>
+          <tr class="hl-ret"><td class="ln">5</td><td class="cd">    <span class="kw">return</span> <span class="fn">n</span> <span class="op">*</span> <span class="fn">Factorial</span><span class="pnc">(</span><span class="fn">n</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">);</span>  <span class="cmt">// ② 推进：n! = n × (n-1)!</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// 计算 1+2+...+n</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="typ">int</span> <span class="fn">Sum</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">==</span> <span class="num">1</span><span class="pnc">)</span> <span class="kw">return</span> <span class="num">1</span><span class="pnc">;</span>       <span class="cmt">// ① 边界</span></td></tr>
+          <tr class="hl-ret"><td class="ln">12</td><td class="cd">    <span class="kw">return</span> <span class="fn">n</span> <span class="op">+</span> <span class="fn">Sum</span><span class="pnc">(</span><span class="fn">n</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">);</span>    <span class="cmt">// ② 推进：Sum(n) = n + Sum(n-1)</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">Factorial</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">);</span>  <span class="cmt">// 120</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">Sum</span><span class="pnc">(</span><span class="num">10</span><span class="pnc">);</span>        <span class="cmt">// 55</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title">Factorial(4) 的调用栈展开</h3>
+
+    <!-- Recursion call stack visual -->
+    <div class="rec-stack">
+      <div class="rec-phases">
+        <!-- Descent -->
+        <div>
+          <div class="rec-phase-title">⬇ 递推阶段（逐层调用）</div>
+          <div class="rec-frames">
+            <div class="rec-frame rf-0">
+              <span class="rf-call">Factorial(4)</span>
+              <span class="rf-ret">= 4 × Factorial(3)</span>
+            </div>
+            <div class="rec-frame rf-1" style="margin-left:16px">
+              <span class="rf-call">Factorial(3)</span>
+              <span class="rf-ret">= 3 × Factorial(2)</span>
+            </div>
+            <div class="rec-frame rf-2" style="margin-left:32px">
+              <span class="rf-call">Factorial(2)</span>
+              <span class="rf-ret">= 2 × Factorial(1)</span>
+            </div>
+            <div class="rec-frame rf-base" style="margin-left:48px">
+              <span class="rf-call">Factorial(1)</span>
+              <span class="rf-ret">= 1 ← 触底！边界条件</span>
+            </div>
+          </div>
+        </div>
+        <!-- Middle -->
+        <div class="rec-divider">
+          <div>↕</div>
+          <div class="rec-div-label">触底<br>回溯</div>
+        </div>
+        <!-- Ascent -->
+        <div>
+          <div class="rec-phase-title">⬆ 回归阶段（逐层返回）</div>
+          <div class="rec-frames">
+            <div class="rec-frame rf-base" style="margin-left:48px">
+              <span class="rf-call">返回 1</span>
+              <span class="rf-ret" style="color:var(--code-op)">1! = 1</span>
+            </div>
+            <div class="rec-frame rf-2" style="margin-left:32px">
+              <span class="rf-call">返回 2×1 = 2</span>
+              <span class="rf-ret" style="color:var(--code-num)">2! = 2</span>
+            </div>
+            <div class="rec-frame rf-1" style="margin-left:16px">
+              <span class="rf-call">返回 3×2 = 6</span>
+              <span class="rf-ret" style="color:var(--code-kw)">3! = 6</span>
+            </div>
+            <div class="rec-frame rf-0">
+              <span class="rf-call">返回 4×6 = 24</span>
+              <span class="rf-ret" style="color:var(--code-fn);font-weight:700">4! = 24 ✓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">⚠️</span>
+      <div><b>三条递归注意事项：</b><br>
+        ① 必须有明确的终止条件，否则无限递归会导致栈溢出（程序崩溃）。<br>
+        ② 递归层数不能太深。竞赛中若递归深度超过约 10⁵～10⁶ 层，需改用循环或手动模拟栈。<br>
+        ③ 递归代码简洁，但每次函数调用都有额外开销。大规模问题优先考虑循环迭代替代递归。
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第八章 函数</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="07_位运算.html">← 第七章：位运算</a>
+      <a class="nav-btn" href="09_指针与引用.html">第九章：指针与引用 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

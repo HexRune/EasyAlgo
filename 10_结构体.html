@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第十章 · 结构体 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+    /* ── Chapter 10 专属样式 ── */
+
+  /* 代码行高亮扩展（绿色/橙色） */
+  .hl-g td { background: rgba(30,110,86,.07) !important; }
+  .hl-a td { background: rgba(250,179,135,.07) !important; }
+
+  /* 结构体定义解剖图 */
+  .struct-anatomy {
+    display: flex; gap: 20px; align-items: flex-start; margin: 20px 0; flex-wrap: wrap;
+  }
+  .struct-blueprint {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 18px 20px; flex: 1; min-width: 260px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    line-height: 1.8;
+  }
+  .sb-kw { color: var(--code-kw); }
+  .sb-name { color: var(--code-fn); font-weight: 700; }
+  .sb-pnc { color: var(--code-punc); }
+  .sb-type-name { color: var(--code-type); }
+  .sb-type-str { color: var(--code-str); }
+  .sb-type-int { color: var(--code-fn); }
+  .sb-type-flt { color: var(--code-num); }
+  .sb-field { color: var(--code-text); }
+  .sb-cmt { color: var(--code-cmt); font-style: italic; font-size: 12px; }
+  .sb-semi { color: var(--coral-mid); font-weight: 700; font-size: 16px; }
+
+  /* 结构体实例卡 */
+  .struct-card {
+    background: var(--surface); border: 2px solid var(--accent-mid); border-radius: var(--r-lg);
+    min-width: 200px; overflow: hidden;
+    box-shadow: var(--shadow); flex-shrink: 0;
+  }
+  .sc-header {
+    background: var(--accent); padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sc-type { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #fff; opacity: .7; }
+  .sc-name { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #fff; }
+  .sc-fields { padding: 12px 0; }
+  .sc-field {
+    display: flex; align-items: center;
+    padding: 7px 16px; border-bottom: 1px solid var(--border);
+  }
+  .sc-field:last-child { border-bottom: none; }
+  .sc-field-type {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    padding: 2px 6px; border-radius: 3px; margin-right: 10px; min-width: 52px; text-align: center; flex-shrink: 0;
+  }
+  .ft-str { background: #EAF8F2; color: var(--teal); }
+  .ft-int { background: var(--blue-light); color: var(--blue); }
+  .ft-flt { background: var(--amber-light); color: var(--amber); }
+  .sc-field-name { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--text-secondary); flex: 1; }
+  .sc-field-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+  .fv-str { color: var(--teal); }
+  .fv-int { color: var(--blue); }
+  .fv-flt { color: var(--amber); }
+
+  /* 点运算符可视化 */
+  .dot-visual {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 16px 20px; margin: 18px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    overflow-x: auto;
+  }
+  .dv-row { display: flex; align-items: center; gap: 0; margin-bottom: 8px; flex-wrap: nowrap; }
+  .dv-var { padding: 5px 12px; border-radius: 5px; font-weight: 700; flex-shrink: 0; }
+  .dv-var.struct-inst { background: rgba(137,180,250,.15); color: var(--code-fn); border: 1px solid rgba(137,180,250,.4); }
+  .dv-dot { color: var(--code-op); font-size: 20px; font-weight: 700; padding: 0 3px; flex-shrink: 0; }
+  .dv-member { padding: 5px 12px; border-radius: 5px; font-weight: 700; flex-shrink: 0; }
+  .dv-member.m-str { background: rgba(166,227,161,.15); color: var(--code-str); border: 1px solid rgba(166,227,161,.4); }
+  .dv-member.m-int { background: rgba(137,180,250,.12); color: var(--code-fn); border: 1px solid rgba(137,180,250,.3); }
+  .dv-member.m-flt { background: rgba(250,179,135,.12); color: var(--code-num); border: 1px solid rgba(250,179,135,.3); }
+  .dv-eq { color: #6C7086; padding: 0 8px; flex-shrink: 0; }
+  .dv-val { color: var(--code-text); font-size: 13.5px; }
+  .dv-sep { height: 1px; background: #2A2840; margin: 6px 0; }
+
+  /* 结构体数组可视化 */
+  .struct-arr {
+    display: flex; gap: 10px; margin: 20px 0; overflow-x: auto; padding-bottom: 4px;
+  }
+  .sa-card {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-md);
+    min-width: 148px; overflow: hidden; flex-shrink: 0;
+  }
+  .sa-idx {
+    background: var(--accent-light); padding: 5px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+    color: var(--accent-dark); border-bottom: 1px solid #D3CFFA; text-align: center;
+  }
+  .sa-field {
+    padding: 5px 10px; border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    display: flex; justify-content: space-between; gap: 8px;
+  }
+  .sa-field:last-child { border-bottom: none; }
+  .sa-fn { color: #6C7086; flex-shrink: 0; }
+  .sa-fv { font-weight: 600; }
+  .sa-fv.s { color: var(--teal); } .sa-fv.n { color: var(--blue); } .sa-fv.f { color: var(--amber); }
+
+  /* 值传递 vs 引用传递对比（覆盖公共样式 .pass-head.ref-h 的颜色） */
+  .pass-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
+  .pass-head.ref-h { background: var(--teal-light); }
+  .ref-h .pass-title { color: var(--teal); }
+  .pass-syntax { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; margin-top: 6px; display: block; }
+  .val-h ~ .pass-body .pass-syntax { color: var(--blue); }
+  .ref-h ~ .pass-body .pass-syntax { color: var(--teal); }
+
+  /* 排序流水线图 */
+  .sort-pipeline {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 18px 22px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+    overflow-x: auto;
+  }
+  .sp-title { font-size: 11px; color: #6C7086; margin-bottom: 14px; letter-spacing: .06em; text-transform: uppercase; }
+  .sp-states { display: flex; align-items: flex-start; gap: 0; flex-wrap: nowrap; overflow-x: auto; }
+  .sp-state { flex-shrink: 0; }
+  .sp-state-title { font-size: 11px; color: #6C7086; text-align: center; margin-bottom: 8px; }
+  .sp-rows { display: flex; flex-direction: column; gap: 4px; }
+  .sp-row {
+    display: flex; align-items: center; gap: 6px;
+    background: #2A2840; border-radius: 5px; padding: 6px 10px;
+    white-space: nowrap; min-width: 160px;
+  }
+  .sp-row.top { background: rgba(166,227,161,.15); border: 1px solid rgba(166,227,161,.3); }
+  .sp-rank { color: #45475A; font-size: 11px; min-width: 18px; }
+  .sp-rname { color: var(--code-text); }
+  .sp-rscore { color: var(--code-num); margin-left: auto; }
+  .sp-row.top .sp-rscore { color: var(--code-str); font-weight: 700; }
+  .sp-arrow {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 0 14px; gap: 4px; color: #45475A; font-size: 18px; align-self: center;
+    flex-shrink: 0;
+  }
+  .sp-arrow-label { font-size: 10px; color: #45475A; white-space: nowrap; letter-spacing: .04em; }
+
+  /* 比较函数高亮框 */
+  .cmp-box {
+    background: #16141F; border: 1px solid #2A2840; border-radius: var(--r-sm);
+    padding: 12px 14px; margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7;
+    color: var(--code-text);
+  }
+  .cmp-kw { color: var(--code-kw); } .cmp-type { color: var(--code-type); } .cmp-fn { color: var(--code-fn); }
+  .cmp-param { color: var(--code-num); } .cmp-str { color: var(--code-str); } .cmp-ret { color: var(--code-kw); }
+  .cmp-op { color: var(--code-op); } .cmp-field { color: var(--code-text); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header">
+    <p class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      C++ 编程语法
+    </p>
+    <h1 class="chapter-title">十、结构体</h1>
+    <p class="chapter-desc">结构体允许把不同类型的相关数据组合成一个整体，比如把学生的姓名、年龄、分数打包在一起，是竞赛中组织复杂数据的核心工具。</p>
+  </header>
+
+  <nav class="toc">
+    <p class="toc-title">本章目录</p>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">10.1</span>定义结构体</a></li>
+      <li><a href="#s2"><span class="toc-num">10.2</span>使用结构体</a></li>
+      <li><a href="#s3"><span class="toc-num">10.3</span>结构体数组</a></li>
+      <li><a href="#s4"><span class="toc-num">10.4</span>结构体与函数</a></li>
+      <li><a href="#s5"><span class="toc-num">10.5</span>结构体与排序</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 10.1 定义 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">10.1</p>
+    <h2 class="section-title">定义结构体</h2>
+    <div class="section-body">
+      <p>结构体用 <code>struct</code> 关键字定义，把多个不同类型的数据字段打包成一种新的数据类型。定义好后可以像 <code>int</code>、<code>double</code> 一样使用它来创建变量。</p>
+    </div>
+
+    <!-- Anatomy: blueprint → instance card -->
+    <div class="struct-anatomy">
+      <!-- blueprint (code) -->
+      <div class="struct-blueprint">
+        <div><span class="sb-kw">struct</span> <span class="sb-name">Student</span></div>
+        <div><span class="sb-pnc">{</span></div>
+        <div>&nbsp;&nbsp;<span class="sb-type-str">string</span> <span class="sb-field">name</span><span class="sb-pnc">;</span>   <span class="sb-cmt">// 姓名</span></div>
+        <div>&nbsp;&nbsp;<span class="sb-type-int">int</span>    <span class="sb-field">age</span><span class="sb-pnc">;</span>    <span class="sb-cmt">// 年龄</span></div>
+        <div>&nbsp;&nbsp;<span class="sb-type-flt">float</span>  <span class="sb-field">score</span><span class="sb-pnc">;</span>  <span class="sb-cmt">// 分数</span></div>
+        <div><span class="sb-pnc">}</span><span class="sb-semi">;</span> <span class="sb-cmt" style="margin-left:4px">// ⚠️ 分号不能少！</span></div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #2A2840;font-size:11.5px;color:#6C7086">
+          ↑ 这只是类型定义，不占内存<br>创建变量时才分配空间
+        </div>
+      </div>
+
+      <!-- arrow -->
+      <div style="display:flex;align-items:center;align-self:center;color:var(--accent-mid);font-size:28px;flex-shrink:0;padding-top:0">→</div>
+
+      <!-- instance card -->
+      <div class="struct-card">
+        <div class="sc-header">
+          <span class="sc-type">Student</span>
+          <span class="sc-name">s1</span>
+        </div>
+        <div class="sc-fields">
+          <div class="sc-field">
+            <span class="sc-field-type ft-str">string</span>
+            <span class="sc-field-name">name</span>
+            <span class="sc-field-val fv-str">"小明"</span>
+          </div>
+          <div class="sc-field">
+            <span class="sc-field-type ft-int">int</span>
+            <span class="sc-field-name">age</span>
+            <span class="sc-field-val fv-int">15</span>
+          </div>
+          <div class="sc-field">
+            <span class="sc-field-type ft-flt">float</span>
+            <span class="sc-field-name">score</span>
+            <span class="sc-field-val fv-flt">92.5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">⚠️</span>
+      <div><b>结构体定义末尾的分号 <code>;</code> 必须写！</b>这是初学者最容易遗漏的地方，缺少分号会导致编译错误，且错误提示通常很难看懂。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>三点说明：</b><br>① 结构体通常定义在 <code>main()</code> 之前，以便全局使用。<br>② 结构体只定义了一种新的数据类型，本身不占内存，只有用它创建变量时才分配空间。<br>③ 竞赛中常见的结构体：坐标点 <code>Point</code>、图的边 <code>Edge</code>、学生信息 <code>Student</code> 等。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 10.2 使用结构体 ═══ -->
+  <section class="section" id="s2">
+    <p class="section-label">10.2</p>
+    <h2 class="section-title">使用结构体</h2>
+    <div class="section-body">
+      <p>定义好结构体后，可以像普通类型一样创建结构体变量，通过 <code>.</code>（点运算符）访问其成员。</p>
+    </div>
+
+    <!-- Dot operator visual -->
+    <div class="dot-visual">
+      <div style="font-size:11px;color:#6C7086;margin-bottom:12px;letter-spacing:.05em">点运算符：结构体变量 · 成员名</div>
+      <div class="dv-row">
+        <div class="dv-var struct-inst">s1</div>
+        <div class="dv-dot">.</div>
+        <div class="dv-member m-str">name</div>
+        <div class="dv-eq">→</div>
+        <div class="dv-val" style="color:var(--code-str)">"小明"</div>
+      </div>
+      <div class="dv-row">
+        <div class="dv-var struct-inst">s1</div>
+        <div class="dv-dot">.</div>
+        <div class="dv-member m-int">age</div>
+        <div class="dv-eq">→</div>
+        <div class="dv-val" style="color:var(--code-fn)">15</div>
+      </div>
+      <div class="dv-row">
+        <div class="dv-var struct-inst">s1</div>
+        <div class="dv-dot">.</div>
+        <div class="dv-member m-flt">score</div>
+        <div class="dv-eq">→</div>
+        <div class="dv-val" style="color:var(--code-num)">92.5</div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 结构体变量创建与访问</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 方式1：先定义，再逐成员赋值</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">Student</span> <span class="fn">s1</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="fn">s1</span><span class="pnc">.</span><span class="fn">name</span>  <span class="op">=</span> <span class="str">"小明"</span><span class="pnc">;</span>  <span class="cmt">// 用 . 访问成员</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="fn">s1</span><span class="pnc">.</span><span class="fn">age</span>   <span class="op">=</span> <span class="num">15</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="fn">s1</span><span class="pnc">.</span><span class="fn">score</span> <span class="op">=</span> <span class="num">92.5</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"姓名："</span> <span class="op">&lt;&lt;</span> <span class="fn">s1</span><span class="pnc">.</span><span class="fn">name</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"成绩："</span> <span class="op">&lt;&lt;</span> <span class="fn">s1</span><span class="pnc">.</span><span class="fn">score</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="cmt">// 方式2：初始化时直接赋值（按成员定义顺序）</span></td></tr>
+          <tr class="hl-g"><td class="ln">11</td><td class="cd"><span class="fn">Student</span> <span class="fn">s2</span> <span class="op">=</span> <span class="pnc">{</span><span class="str">"小红"</span><span class="pnc">,</span> <span class="num">14</span><span class="pnc">,</span> <span class="num">95.0</span><span class="pnc">};</span>  <span class="cmt">// 顺序要与定义一致</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 10.3 结构体数组 ═══ -->
+  <section class="section" id="s3">
+    <p class="section-label">10.3</p>
+    <h2 class="section-title">结构体数组</h2>
+    <div class="section-body">
+      <p>可以用结构体数组存储多个同类型数据，每个元素都是一个完整的结构体变量，用 <code>[i].成员名</code> 访问。</p>
+    </div>
+
+    <!-- Struct array visual -->
+    <div class="struct-arr">
+      <div class="sa-card">
+        <div class="sa-idx">students[0]</div>
+        <div class="sa-field"><span class="sa-fn">name</span><span class="sa-fv s">"小明"</span></div>
+        <div class="sa-field"><span class="sa-fn">age</span><span class="sa-fv n">15</span></div>
+        <div class="sa-field"><span class="sa-fn">score</span><span class="sa-fv f">92.5</span></div>
+      </div>
+      <div class="sa-card">
+        <div class="sa-idx">students[1]</div>
+        <div class="sa-field"><span class="sa-fn">name</span><span class="sa-fv s">"小红"</span></div>
+        <div class="sa-field"><span class="sa-fn">age</span><span class="sa-fv n">14</span></div>
+        <div class="sa-field"><span class="sa-fn">score</span><span class="sa-fv f">95.0</span></div>
+      </div>
+      <div class="sa-card">
+        <div class="sa-idx">students[2]</div>
+        <div class="sa-field"><span class="sa-fn">name</span><span class="sa-fv s">"小华"</span></div>
+        <div class="sa-field"><span class="sa-fn">age</span><span class="sa-fv n">16</span></div>
+        <div class="sa-field"><span class="sa-fn">score</span><span class="sa-fv f">88.0</span></div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 结构体数组 &amp; vector</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 静态数组</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="fn">Student</span> <span class="fn">students</span><span class="pnc">[</span><span class="num">3</span><span class="pnc">] =</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span><span class="str">"小明"</span><span class="pnc">,</span> <span class="num">15</span><span class="pnc">,</span> <span class="num">92.5</span><span class="pnc">},</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span><span class="str">"小红"</span><span class="pnc">,</span> <span class="num">14</span><span class="pnc">,</span> <span class="num">95.0</span><span class="pnc">},</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span><span class="str">"小华"</span><span class="pnc">,</span> <span class="num">16</span><span class="pnc">,</span> <span class="num">88.0</span><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 遍历结构体数组</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">3</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">students</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">].</span><span class="fn">name</span> <span class="op">&lt;&lt;</span> <span class="str">"："</span> <span class="op">&lt;&lt;</span> <span class="fn">students</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">].</span><span class="fn">score</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="cmt">// 结合 vector（动态大小，竞赛中更常用）</span></td></tr>
+          <tr class="hl-g"><td class="ln">14</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="fn">Student</span><span class="pnc">&gt;</span> <span class="fn">stuList</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="fn">stuList</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">({</span><span class="str">"小明"</span><span class="pnc">,</span> <span class="num">15</span><span class="pnc">,</span> <span class="num">92.5</span><span class="pnc">});</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="fn">stuList</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">({</span><span class="str">"小红"</span><span class="pnc">,</span> <span class="num">14</span><span class="pnc">,</span> <span class="num">95.0</span><span class="pnc">});</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"></td></tr>
+          <tr class="hl-g"><td class="ln">18</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="kw">auto</span> <span class="op">&amp;</span><span class="fn">s</span> <span class="pnc">:</span> <span class="fn">stuList</span><span class="pnc">)</span>  <span class="cmt">// 范围 for 循环 + 引用</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">name</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">score</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 10.4 结构体与函数 ═══ -->
+  <section class="section" id="s4">
+    <p class="section-label">10.4</p>
+    <h2 class="section-title">结构体与函数</h2>
+    <div class="section-body">
+      <p>结构体可以作为函数参数传递，同样分为值传递和引用传递两种方式。由于结构体往往包含多个字段，<strong>引用传递更为推荐</strong>，可避免昂贵的拷贝开销。</p>
+    </div>
+
+    <div class="pass-compare">
+      <div class="pass-card">
+        <div class="pass-head val-h"><span class="pass-icon">📋</span><span class="pass-title">值传递（拷贝）</span></div>
+        <div class="pass-body">
+          函数收到结构体的完整副本，修改不影响原对象。对于多字段结构体，拷贝开销较大。<br>
+          <span class="pass-syntax" style="color:var(--blue)">void Print(Student s)</span>
+        </div>
+      </div>
+      <div class="pass-card">
+        <div class="pass-head ref-h"><span class="pass-icon">🔗</span><span class="pass-title">引用传递（推荐）</span></div>
+        <div class="pass-body">
+          函数直接操作原结构体，无拷贝开销。需要只读时加 <code>const</code>。<br>
+          <span class="pass-syntax" style="color:var(--teal)">void Update(Student &amp;s)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 结构体作为函数参数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 值传递：函数内修改不影响原结构体</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">void</span> <span class="fn">PrintStudent</span><span class="pnc">(</span><span class="fn">Student</span> <span class="fn">s</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">name</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">score</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl-g"><td class="ln">7</td><td class="cd"><span class="cmt">// 引用传递：直接修改原结构体（推荐）</span></td></tr>
+          <tr class="hl-g"><td class="ln">8</td><td class="cd"><span class="kw">void</span> <span class="fn">UpdateScore</span><span class="pnc">(</span><span class="fn">Student</span> <span class="op">&amp;</span><span class="fn">s</span><span class="pnc">,</span> <span class="typ">float</span> <span class="fn">newScore</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">s</span><span class="pnc">.</span><span class="fn">score</span> <span class="op">=</span> <span class="fn">newScore</span><span class="pnc">;</span>  <span class="cmt">// 直接修改原结构体</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="fn">Student</span> <span class="fn">s</span> <span class="op">=</span> <span class="pnc">{</span><span class="str">"小明"</span><span class="pnc">,</span> <span class="num">15</span><span class="pnc">,</span> <span class="num">90.0</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="fn">PrintStudent</span><span class="pnc">(</span><span class="fn">s</span><span class="pnc">);</span>          <span class="cmt">// 输出：小明 90</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="fn">UpdateScore</span><span class="pnc">(</span><span class="fn">s</span><span class="pnc">,</span> <span class="num">95.0</span><span class="pnc">);</span>    <span class="cmt">// 修改成绩</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">PrintStudent</span><span class="pnc">(</span><span class="fn">s</span><span class="pnc">);</span>          <span class="cmt">// 输出：小明 95</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <table class="advice-table">
+      <thead><tr><th>使用场景</th><th>推荐方式</th></tr></thead>
+      <tbody>
+        <tr><td>只需读取结构体内容</td><td><span class="advice-rec">const 引用</span>（<code>const Student &amp;s</code>），避免拷贝开销</td></tr>
+        <tr><td>需要修改结构体内容</td><td><span class="advice-rec">普通引用</span>（<code>Student &amp;s</code>）</td></tr>
+        <tr><td>结构体很小（只有两三个基本类型字段）</td><td>值传递也可以，开销可忽略</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══ 10.5 排序 ═══ -->
+  <section class="section" id="s5">
+    <p class="section-label">10.5</p>
+    <h2 class="section-title">结构体与排序</h2>
+    <div class="section-body">
+      <p>竞赛中，结构体最常用的场景之一就是配合 <code>sort()</code> 进行<strong>自定义排序</strong>。需要提供一个比较函数 <code>Cmp</code>，告诉 sort 按什么规则排序。</p>
+    </div>
+
+    <!-- Sort pipeline visual -->
+    <div class="sort-pipeline">
+      <div class="sp-title">按成绩从高到低排序的过程</div>
+      <div class="sp-states">
+        <!-- Before -->
+        <div class="sp-state">
+          <div class="sp-state-title">排序前</div>
+          <div class="sp-rows">
+            <div class="sp-row"><span class="sp-rank">[0]</span><span class="sp-rname">小明</span><span class="sp-rscore">92.5</span></div>
+            <div class="sp-row"><span class="sp-rank">[1]</span><span class="sp-rname">小红</span><span class="sp-rscore">95.0</span></div>
+            <div class="sp-row"><span class="sp-rank">[2]</span><span class="sp-rname">小华</span><span class="sp-rscore">88.0</span></div>
+          </div>
+        </div>
+        <!-- Arrow -->
+        <div class="sp-arrow">
+          <div>→</div>
+          <div class="sp-arrow-label">sort() + Cmp</div>
+        </div>
+        <!-- After -->
+        <div class="sp-state">
+          <div class="sp-state-title">排序后（成绩↓）</div>
+          <div class="sp-rows">
+            <div class="sp-row top"><span class="sp-rank">[0]</span><span class="sp-rname">小红</span><span class="sp-rscore">95.0 🥇</span></div>
+            <div class="sp-row top"><span class="sp-rank">[1]</span><span class="sp-rname">小明</span><span class="sp-rscore">92.5 🥈</span></div>
+            <div class="sp-row top"><span class="sp-rank">[2]</span><span class="sp-rname">小华</span><span class="sp-rscore">88.0 🥉</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cmp function highlight box -->
+    <div class="cmp-box">
+      <span class="cmt" style="font-style:italic;color:var(--code-cmt)">// 比较函数：返回 true 表示 a 排在 b 前面</span><br>
+      <span class="cmp-kw">bool</span> <span class="cmp-fn">Cmp</span>(<span class="cmp-kw">const</span> <span class="cmp-fn">Student</span> <span class="cmp-op">&amp;</span><span class="cmp-param">a</span>, <span class="cmp-kw">const</span> <span class="cmp-fn">Student</span> <span class="cmp-op">&amp;</span><span class="cmp-param">b</span>)<br>
+      {<br>
+      &nbsp;&nbsp;<span class="cmp-kw">return</span> <span class="cmp-param">a</span>.<span class="cmp-field">score</span> <span class="cmp-op">&gt;</span> <span class="cmp-param">b</span>.<span class="cmp-field">score</span><span class="pnc">;</span>  <span style="color:var(--code-cmt);font-style:italic;font-size:12px">// 大于 → 成绩高的排前面（降序）</span><br>
+      }
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 结构体排序完整示例</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;algorithm&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;vector&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="kw">struct</span> <span class="fn">Student</span> <span class="pnc">{</span> <span class="typ">string</span> <span class="fn">name</span><span class="pnc">;</span> <span class="typ">int</span> <span class="fn">age</span><span class="pnc">;</span> <span class="typ">float</span> <span class="fn">score</span><span class="pnc">; };</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="cmt">// 自定义比较函数：成绩高的排前面</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd"><span class="typ">bool</span> <span class="fn">Cmp</span><span class="pnc">(</span><span class="kw">const</span> <span class="fn">Student</span> <span class="op">&amp;</span><span class="fn">a</span><span class="pnc">,</span> <span class="kw">const</span> <span class="fn">Student</span> <span class="op">&amp;</span><span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd"><span class="pnc">{</span> <span class="kw">return</span> <span class="fn">a</span><span class="pnc">.</span><span class="fn">score</span> <span class="op">&gt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">score</span><span class="pnc">; }</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="fn">Student</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="pnc">{</span> <span class="pnc">{</span><span class="str">"小明"</span><span class="pnc">,</span><span class="num">15</span><span class="pnc">,</span><span class="num">92.5</span><span class="pnc">},</span> <span class="pnc">{</span><span class="str">"小红"</span><span class="pnc">,</span><span class="num">14</span><span class="pnc">,</span><span class="num">95.0</span><span class="pnc">},</span> <span class="pnc">{</span><span class="str">"小华"</span><span class="pnc">,</span><span class="num">16</span><span class="pnc">,</span><span class="num">88.0</span><span class="pnc">} };</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr class="hl-g"><td class="ln">15</td><td class="cd">    <span class="fn">sort</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="fn">Cmp</span><span class="pnc">);</span>  <span class="cmt">// 传入比较函数</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="kw">auto</span> <span class="op">&amp;</span><span class="fn">s</span> <span class="pnc">:</span> <span class="fn">v</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">name</span> <span class="op">&lt;&lt;</span> <span class="str">"："</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">score</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="cmt">// 输出：小红：95  小明：92.5  小华：88</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div>
+        <b>竞赛中 Cmp 函数的规则记忆：</b><br>
+        <code>return a.score &gt; b.score</code> → 成绩大的在前 → <strong>降序</strong><br>
+        <code>return a.score &lt; b.score</code> → 成绩小的在前 → <strong>升序</strong><br>
+        多关键字排序：<code>return a.score != b.score ? a.score &gt; b.score : a.name &lt; b.name</code>（成绩不同按成绩降序，相同按姓名升序）
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十章 结构体</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="09_指针与引用.html">← 第九章：指针与引用</a>
+      <a class="nav-btn" href="11_00_STL概述.html">第十一章：STL 标准模板库 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

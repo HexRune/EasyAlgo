@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第一章 · 基础框架 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* ── Chapter 1 专属样式 ── */
+
+  /* 代码说明表 */
+  .explain-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    font-size: 13.5px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .explain-table thead tr {
+    background: var(--accent-light);
+  }
+  .explain-table th {
+    padding: 10px 16px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--accent-dark);
+    border-bottom: 1px solid #D3CFFA;
+  }
+  .explain-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+  .explain-table tr:last-child td { border-bottom: none; }
+  .explain-table tr:nth-child(even) td { background: #FAFAF7; }
+  .explain-table td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-dark);
+    white-space: nowrap;
+    background: #F4F2FF;
+  }
+  .explain-table tr:nth-child(even) td:first-child { background: #EEEDFE; }
+
+  /* 执行步骤列表 */
+  .step-list { list-style: none; margin: 18px 0; }
+  .step-item {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .step-item::before {
+    content: '';
+    position: absolute;
+    left: 19px; top: 40px;
+    width: 2px;
+    height: calc(100% + 8px);
+    background: var(--border);
+  }
+  .step-item:last-child::before { display: none; }
+  .step-num {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(74,63,191,.35);
+  }
+  .step-content { padding-top: 6px; }
+  .step-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+  }
+  .step-desc {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .step-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .badge-gray { background: #E4E2D8; color: #5C5A52; }
+  .badge-purple { background: var(--accent-light); color: var(--accent-dark); }
+
+  /* 编译流程图 */
+  .flow-diagram {
+    margin: 22px 0;
+    overflow-x: auto;
+  }
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    justify-content: center;
+    flex-wrap: nowrap;
+    min-width: max-content;
+    padding: 4px 0;
+  }
+  .flow-node {
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .flow-node.source  { background: var(--accent-light); color: var(--accent-dark); border: 1.5px solid #AFA9EC; }
+  .flow-node.process { background: var(--teal-light); color: var(--teal); border: 1.5px solid #9FE1CB; }
+  .flow-node.file    { background: var(--amber-light); color: var(--amber); border: 1.5px solid #FAC775; }
+  .flow-node.output  { background: #EAF3DE; color: #3B6D11; border: 1.5px solid #C0DD97; }
+  .flow-arrow {
+    font-size: 18px;
+    color: var(--border-md);
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+  .flow-label {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .flow-col { display: flex; flex-direction: column; align-items: center; }
+
+  /* 代码行高亮（本章使用 .highlight-row，区别于公共的 .hl） */
+  .highlight-row { background: rgba(74,63,191,.06) !important; }
+
+  /* 首章导航栏只有"下一章"按钮，右对齐 */
+  .chapter-nav { justify-content: flex-end; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="Ch.1">
+    <p class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      C++ 编程语法
+    </p>
+    <h1 class="chapter-title">一、基础框架</h1>
+    <p class="chapter-desc">从第一行代码出发，认识 C++ 程序的骨架结构，理解每一行代码的含义，以及代码从源文件到可执行程序的完整旅程。</p>
+  </header>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本章目录</p>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">1.1</span>第一个程序</a></li>
+      <li><a href="#s2"><span class="toc-num">1.2</span>程序结构详解</a></li>
+      <li><a href="#s3"><span class="toc-num">1.3</span>注释</a></li>
+      <li><a href="#s4"><span class="toc-num">1.4</span>C++ 程序的执行流程</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 1.1 第一个程序 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">1.1</p>
+    <h2 class="section-title">第一个程序</h2>
+    <div class="section-body">
+      <p>在正式开始写代码之前，先来认识 C++ 程序的基本结构。就像写文章需要有开头、正文、结尾，C++ 程序也有它固定的骨架。</p>
+      <p>下面是我们的第一个 C++ 程序——它会在屏幕上输出 <code>Hello, World!</code>。</p>
+    </div>
+
+    <!-- Code Block -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div>
+          <div class="code-dot amber"></div>
+          <div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">C++</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="str">&lt;iostream&gt;</span>              <span class="cmt">// ① 引入头文件（工具箱）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="punc">;</span>            <span class="cmt">// ② 使用标准命名空间</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span>                      <span class="cmt">// ③ 主函数：程序从这里开始</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Hello, World!"</span><span class="punc">;</span>    <span class="cmt">// ④ 输出文字</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span>                   <span class="cmt">// ⑤ 程序正常结束</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>小技巧：</b>竞赛编程中可以用万能头文件 <code>#include &lt;bits/stdc++.h&gt;</code> 代替所有标准头文件。它只在 GCC 编译器下有效（大多数 OJ 平台支持），但不是 C++ 标准的一部分，工程项目中不建议使用。另外，它会增加编译时间，在部分严格限制编译时间的竞赛中需要留意。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 1.2 程序结构详解 ═══ -->
+  <section class="section" id="s2">
+    <p class="section-label">1.2</p>
+    <h2 class="section-title">程序结构详解</h2>
+    <div class="section-body">
+      <p>上面的程序每一行都有特定的含义，我们来逐行理解：</p>
+    </div>
+
+    <table class="explain-table">
+      <thead>
+        <tr>
+          <th>代码</th>
+          <th>含义说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>#include&lt;iostream&gt;</td>
+          <td>加载输入输出流头文件，让程序能使用 <code>cout</code> / <code>cin</code> 等功能</td>
+        </tr>
+        <tr>
+          <td>using namespace std;</td>
+          <td>声明使用标准命名空间，这样就不用每次都写 <code>std::</code> 前缀了</td>
+        </tr>
+        <tr>
+          <td>int main()</td>
+          <td>主函数，是程序的入口。程序运行时，会从 <code>main()</code> 开始执行</td>
+        </tr>
+        <tr>
+          <td>{ }</td>
+          <td>花括号包裹函数体（要执行的代码块）</td>
+        </tr>
+        <tr>
+          <td>cout &lt;&lt; "..."</td>
+          <td>向屏幕输出内容，<code>&lt;&lt;</code> 是插入运算符</td>
+        </tr>
+        <tr>
+          <td>return 0;</td>
+          <td>结束主函数，<code>0</code> 代表程序正常退出</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout danger">
+      <span class="callout-icon">⚠️</span>
+      <div><b>注意：</b>每条 C++ 语句必须以分号 <code>;</code> 结尾，<b>忘记分号是初学者最常见的错误！</b></div>
+    </div>
+  </section>
+
+  <!-- ═══ 1.3 注释 ═══ -->
+  <section class="section" id="s3">
+    <p class="section-label">1.3</p>
+    <h2 class="section-title">注释</h2>
+    <div class="section-body">
+      <p>注释是写给<b>人</b>看的说明文字，程序运行时会被自动忽略。C++ 支持两种注释方式：</p>
+    </div>
+
+    <h3 class="sub-title">单行注释 <code>//</code></h3>
+    <div class="section-body">
+      <p>从 <code>//</code> 开始，直到该行末尾，整行都是注释。</p>
+    </div>
+
+    <h3 class="sub-title">多行注释 <code>/* ... */</code></h3>
+    <div class="section-body">
+      <p>用 <code>/*</code> 和 <code>*/</code> 包裹，可以跨越多行，适合写较长的说明。</p>
+    </div>
+
+    <!-- Code Block: Comments -->
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div>
+          <div class="code-dot amber"></div>
+          <div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">C++ · 注释示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 这是单行注释，从 // 开始，到行尾结束</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="cmt">/*</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">   这是多行注释</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">   可以跨越多行</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="cmt">   适合写较长的说明</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">*/</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr class="highlight-row"><td class="ln">11</td><td class="cd">    <span class="cmt">// 单行注释：输出问候语</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Hello!"</span><span class="punc">;</span>  <span class="cmt">// 也可以写在语句后面</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>养成写注释的好习惯！</b>代码写完一段时间再回来看，注释能帮你快速回忆当时的思路。竞赛中写清楚关键步骤的注释，也方便调试和检查。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 1.4 执行流程 ═══ -->
+  <section class="section" id="s4">
+    <p class="section-label">1.4</p>
+    <h2 class="section-title">C++ 程序的执行流程</h2>
+    <div class="section-body">
+      <p>编写完成一个 C++ 程序后，想要运行起来，必须经过四个步骤：<b>预处理→编译→汇编→链接</b>。每个步骤都会生成对应的文件。</p>
+    </div>
+
+    <!-- Flow Diagram -->
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-col">
+          <div class="flow-node source">源代码文件<br><small style="font-family:monospace;font-size:11px">main.cpp</small></div>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-col">
+          <div class="flow-node process">预处理器<br><small style="font-size:11px">展开 #include / #define</small></div>
+          <div class="flow-label">-E</div>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-col">
+          <div class="flow-node file">纯净 C++ 文本<br><small style="font-family:monospace;font-size:11px">main.i</small></div>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-col">
+          <div class="flow-node process">编译器<br><small style="font-size:11px">语法/语义分析</small></div>
+          <div class="flow-label">-S</div>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-col">
+          <div class="flow-node file">汇编文件<br><small style="font-family:monospace;font-size:11px">main.s</small></div>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-col">
+          <div class="flow-node process">汇编器<br><small style="font-size:11px">翻译成机器码</small></div>
+          <div class="flow-label">-c</div>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-col">
+          <div class="flow-node file">目标文件<br><small style="font-family:monospace;font-size:11px">main.o</small></div>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-col">
+          <div class="flow-node process">链接器<br><small style="font-size:11px">合并 .o 填充地址</small></div>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-col">
+          <div class="flow-node output">可执行程序<br><small style="font-family:monospace;font-size:11px">main / main.exe</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Example Code -->
+    <h3 class="sub-title">以这段程序为例，走完四个步骤</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div>
+          <div class="code-dot amber"></div>
+          <div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">C++ · main.cpp</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#define</span> <span class="fn">PI</span> <span class="num">3.14</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr class="highlight-row"><td class="ln">6</td><td class="cd">    <span class="cmt">// 打印圆周率</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">std::cout</span> <span class="op">&lt;&lt;</span> <span class="fn">PI</span> <span class="op">&lt;&lt;</span> <span class="fn">std::endl</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Steps -->
+    <ul class="step-list">
+      <li class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">预处理（Preprocessing）<span class="step-badge badge-gray">生成 .i 文件</span></div>
+          <div class="step-desc">
+            预处理器是一个"文本替换工人"，它做三件事：把 <code>#include &lt;iostream&gt;</code> 替换成 iostream 头文件的全部内容；把代码中所有 <code>PI</code> 替换成 <code>3.14</code>；删掉所有注释。最终输出一个没有任何宏、没有任何注释的纯净 C++ 文本文件。
+          </div>
+        </div>
+      </li>
+      <li class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">编译（Compilation）<span class="step-badge badge-gray">生成 .s 文件</span></div>
+          <div class="step-desc">
+            这是四步中最"聪明"的一步。编译器先做<b>词法分析</b>（认识每个单词）、<b>语法分析</b>（检查语法对不对）、<b>语义分析</b>（检查逻辑对不对）。这一步发现的错误就是你最熟悉的"编译错误"。随后将 C++ 代码翻译成汇编语言（<code>.s</code> 文件）——就像把中文翻译成更接近机器的"暗语"。
+          </div>
+        </div>
+      </li>
+      <li class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">汇编（Assembly）<span class="step-badge badge-gray">生成 .o 文件</span></div>
+          <div class="step-desc">
+            汇编器是一个"机械翻译官"——把汇编指令一条一条翻译成二进制的 0 和 1（机器码），存入目标文件（<code>.o</code> 或 <code>.obj</code>）。此时文件已经是二进制了，人类看不懂，但 CPU 也还不能直接运行，因为还有很多函数地址没有确定。
+          </div>
+        </div>
+      </li>
+      <li class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">链接（Linking）<span class="step-badge badge-purple">生成可执行文件</span></div>
+          <div class="step-desc">
+            你的程序用了 <code>std::cout</code>，但 <code>cout</code> 的实现代码在标准库的目标文件里，不在你的文件里。链接器把你的 <code>.o</code>、标准库的 <code>.o</code>、其他用到的库全部拼合在一起，把所有函数调用的"空白地址"都填上正确地址，最终生成可以直接运行的可执行文件（Windows 下通常是 <code>.exe</code>，Linux 下通常无后缀名）。
+          </div>
+        </div>
+      </li>
+    </ul>
+
+    <div class="callout info">
+      <span class="callout-icon">🔧</span>
+      <div><b>日常使用不必担心：</b>在 IDE（如 Dev-C++、VS Code、CLion）或命令行编译时，这四个步骤是自动连续完成的，你只需点一下"运行"按钮或输入一条命令即可。但理解这四个步骤，能帮助你区分"编译错误"（语法问题，来自第二步）和"链接错误"（找不到函数实现，来自第四步）。</div>
+    </div>
+  </section>
+
+  <!-- ═══ Footer ═══ -->
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第一章 基础框架</p>
+    <div class="chapter-nav">
+      <a class="nav-btn" href="02_变量与数据类型.html">下一章：变量与数据类型 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

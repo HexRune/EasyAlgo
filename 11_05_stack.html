@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.5 stack 栈 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "11.5"; }
+
+  /* ── 子导航组件：横向并排卡片 ── */
+  .ch11-subnav { margin-bottom: 28px; }
+  .ch11-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch11-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+  }
+  .ch11-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch11-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch11-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch11-group-name { color: var(--text-secondary); }
+  .ch11-group.current .ch11-group-name { color: var(--grp-color); }
+  .ch11-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .ch11-group:not(.current) .ch11-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch11-group:not(.current):hover .ch11-group-head { background: var(--grp-color-light); }
+  .ch11-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch11-group:not(.current):hover .ch11-group-name { color: var(--grp-color); }
+  .ch11-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch11-group:not(.current):hover .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch11-group.current .ch11-expand-badge { display: none; }
+
+  .ch11-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch11-group:not(.current) .ch11-items { display: none; }
+  .ch11-group.expanded .ch11-items { display: flex; }
+  .ch11-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch11-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch11-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch11-group.c-intro  { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-seq    { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-adapt  { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch11-group.c-assoc  { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+  .ch11-group.c-util   { --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid);  --grp-color-light: var(--amber-light); }
+  .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
+
+  /* ── 本页专属样式 ── */
+  .stack-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 24px; margin: 20px 0; font-family: 'JetBrains Mono', monospace; box-shadow: 0 2px 8px rgba(0,0,0,.18); display: flex; gap: 32px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .stack-plates { display: flex; flex-direction: column-reverse; gap: 4px; align-items: center; }
+  .stack-plate { width: 90px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--code-text); }
+  .stack-plate.p1 { background: rgba(166,227,161,.2); border: 2px solid rgba(166,227,161,.5); }
+  .stack-plate.p2 { background: rgba(137,180,250,.2); border: 2px solid rgba(137,180,250,.5); }
+  .stack-plate.p3 { background: rgba(203,166,247,.2); border: 2px solid rgba(203,166,247,.5); }
+  .stack-plate.top { box-shadow: 0 0 0 3px rgba(249,226,175,.3); }
+  .stack-label { font-size: 11px; color: #6C7086; margin-top: 10px; text-align: center; }
+  .stack-arrow-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .stack-arrow-item { font-size: 11.5px; color: #A6ADC8; display: flex; align-items: center; gap: 6px; }
+  .stack-arrow-item .arrow-ico { color: var(--code-num); font-weight: 700; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: #EEEDFE; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-dark); background: var(--accent-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="11.5">
+    <div class="chapter-eyebrow">
+      <a href="index.html">首页</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十一章 · STL 标准模板库</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.5 stack</span>
+    </div>
+    <h1 class="chapter-title">11.5　stack 栈</h1>
+    <p class="chapter-desc">后进先出（LIFO）的容器适配器——只能在栈顶操作，像一摞盘子，只能从最上面放、从最上面取。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch11-subnav">
+    <div class="ch11-subnav-groups">
+
+      <div class="ch11-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">先导课</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_00_STL概述.html">STL 是什么</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-seq" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">序列容器</span>
+          <span class="ch11-group-count">4</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_01_string.html">string</a>
+          <a class="ch11-item" href="11_02_vector.html">vector</a>
+          <a class="ch11-item" href="11_03_list.html">list</a>
+          <a class="ch11-item" href="11_04_deque.html">deque</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-adapt current expanded">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">容器适配器</span>
+          <span class="ch11-group-count">3</span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item active" href="11_05_stack.html">stack</a>
+          <a class="ch11-item" href="11_06_queue.html">queue</a>
+          <a class="ch11-item" href="11_07_priority_queue.html">priority_queue</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-assoc" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">关联容器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_08_map.html">map</a>
+          <a class="ch11-item" href="11_09_unordered_map.html">unordered_map</a>
+          <a class="ch11-item" href="11_10_set.html">set</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-util" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">实用类型</span>
+          <span class="ch11-group-count">2</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_11_pair.html">pair</a>
+          <a class="ch11-item" href="11_12_bitset.html">bitset</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-algo" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">STL 算法</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_13_STL算法.html">算法大全</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">11.5.1</span><a href="#s1">定义与初始化</a></li>
+      <li><span class="toc-num">11.5.2</span><a href="#s2">常用操作</a></li>
+      <li><span class="toc-num">11.5.3</span><a href="#s3">经典陷阱</a></li>
+      <li><span class="toc-num">11.5.4</span><a href="#s4">完整使用示例</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+    <div class="section-body">
+      <p><code>stack</code> 是一种<strong>后进先出（LIFO，Last In First Out）</strong>的容器适配器。它底层默认使用 <code>deque</code> 实现，只开放有限的接口，只允许在栈顶进行插入和删除操作。形象地理解，它就像一摞盘子——你只能放新的在最上面，也只能从最上面取走。使用前需引入 <code>&lt;stack&gt;</code> 头文件。</p>
+    </div>
+
+    <div class="stack-visual">
+      <div>
+        <div class="stack-plates">
+          <div class="stack-plate p1">1</div>
+          <div class="stack-plate p2">2</div>
+          <div class="stack-plate p3 top">3</div>
+        </div>
+        <div class="stack-label">栈顶在最上面 ↑<br>s.top() = 3</div>
+      </div>
+      <div class="stack-arrow-col">
+        <div class="stack-arrow-item"><span class="arrow-ico">↓</span> push(x) 放在最上面</div>
+        <div class="stack-arrow-item"><span class="arrow-ico">↑</span> pop() 从最上面拿走</div>
+        <div class="stack-arrow-item"><span class="arrow-ico">·</span> 只能操作栈顶，碰不到下面</div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>注意：</b><br>
+        · <code>stack</code> 是<strong>容器适配器</strong>，不是独立容器，它底层默认用 <code>deque</code> 实现，只开放有限的接口。<strong>不能用迭代器遍历它</strong>。<br>
+        · 对空栈调用 <code>top()</code> 或 <code>pop()</code> 是未定义行为，使用前务必用 <code>empty()</code> 检查。
+      </div>
+    </div>
+
+    <div class="sub-title" id="s1">11.5.1　定义与初始化</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · stack 的定义方式</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;stack&gt;</span><span class="pnc"></span> <span class="cmt">// 必须包含这个头文件</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">stack</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">s1</span><span class="pnc">;</span>        <span class="cmt">// 空栈</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">stack</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">s2</span><span class="pnc">(</span><span class="fn">s1</span><span class="pnc">);</span>     <span class="cmt">// 拷贝另一个栈</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="s2">11.5.2　常用操作</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · push / top / pop</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">stack</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">s</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="cmt">// 压入元素</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">push</span><span class="pnc">(</span><span class="num">1</span><span class="pnc">);</span>  <span class="cmt">// 栈：[1]</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">push</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">);</span>  <span class="cmt">// 栈：[1, 2]</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">push</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">);</span>  <span class="cmt">// 栈：[1, 2, 3]</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 查看栈顶</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">top</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：3（栈顶元素）</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="cmt">// 弹出栈顶</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">pop</span><span class="pnc">();</span>  <span class="cmt">// 弹出 3，栈变成 [1, 2]</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="cmt">// 容量</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>  <span class="cmt">// 输出：2</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">empty</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：0（false，不空）</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="cmt">// 交换</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="fn">s1</span><span class="pnc">.</span><span class="fn">swap</span><span class="pnc">(</span><span class="fn">s2</span><span class="pnc">);</span>  <span class="cmt">// 交换两个栈的全部内容</span></td></tr>
+          <tr class="hl-g"><td class="ln">19</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">emplace</span><span class="pnc">(</span><span class="num">10</span><span class="pnc">);</span> <span class="cmt">// 在栈顶原地构造元素（比 push 更高效）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="s3">11.5.3　🔥 经典陷阱</div>
+
+    <p style="font-size:14.5px;color:var(--text-secondary);margin-bottom:10px;"><strong>陷阱一：pop() 不返回被删除的值！</strong></p>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · pop() 的常见误用</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">stack</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">s</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">push</span><span class="pnc">(</span><span class="num">10</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr class="hl-warn"><td class="ln">4</td><td class="cd"><span class="cmt">// ❌ 错误写法——pop() 返回 void，不能赋值</span></td></tr>
+          <tr class="hl-warn"><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">x</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">pop</span><span class="pnc">();</span>  <span class="cmt">// 编译错误！</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl-g"><td class="ln">7</td><td class="cd"><span class="cmt">// ✅ 正确写法——先取栈顶，再弹出</span></td></tr>
+          <tr class="hl-g"><td class="ln">8</td><td class="cd"><span class="typ">int</span> <span class="fn">x</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">top</span><span class="pnc">();</span>  <span class="cmt">// 先拿到 10</span></td></tr>
+          <tr class="hl-g"><td class="ln">9</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">pop</span><span class="pnc">();</span>            <span class="cmt">// 再把 10 弹出</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🔥</span>
+      <div><b>为什么会这样？</b><code>pop()</code> 的设计哲学是"删除"和"读取"分开：<code>pop()</code> 只负责删除，返回类型是 <code>void</code>；要读取栈顶的值，必须先调用 <code>top()</code>。这和很多人直觉里"弹出并返回"的想法不一样，是 STL 容器适配器里最容易踩的坑之一。</div>
+    </div>
+
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>陷阱二：空栈调用 top() 或 pop() 是危险操作</strong></p>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 操作前先检查 empty()</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">stack</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">s</span><span class="pnc">;</span>  <span class="cmt">// 空栈</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr class="hl-warn"><td class="ln">3</td><td class="cd"><span class="cmt">// ❌ 危险！程序可能直接崩溃</span></td></tr>
+          <tr class="hl-warn"><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">top</span><span class="pnc">();</span></td></tr>
+          <tr class="hl-warn"><td class="ln">5</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">pop</span><span class="pnc">();</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl-g"><td class="ln">7</td><td class="cd"><span class="cmt">// ✅ 安全做法——操作前先检查</span></td></tr>
+          <tr class="hl-g"><td class="ln">8</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="op">!</span><span class="fn">s</span><span class="pnc">.</span><span class="fn">empty</span><span class="pnc">())</span></td></tr>
+          <tr class="hl-g"><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-g"><td class="ln">10</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">top</span><span class="pnc">();</span></td></tr>
+          <tr class="hl-g"><td class="ln">11</td><td class="cd">    <span class="fn">s</span><span class="pnc">.</span><span class="fn">pop</span><span class="pnc">();</span></td></tr>
+          <tr class="hl-g"><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="s4">11.5.4　完整使用示例</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · stack 综合示例</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;stack&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">stack</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">s</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="cmt">// 压入三个元素</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">s</span><span class="pnc">.</span><span class="fn">push</span><span class="pnc">(</span><span class="num">1</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">s</span><span class="pnc">.</span><span class="fn">push</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">s</span><span class="pnc">.</span><span class="fn">push</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"栈顶: "</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">top</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：3</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"大小: "</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：3</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="cmt">// 逐个弹出（后进先出）</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"依次弹出: "</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="op">!</span><span class="fn">s</span><span class="pnc">.</span><span class="fn">empty</span><span class="pnc">())</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">top</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span> <span class="cmt">// 输出：3 2 1</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">        <span class="fn">s</span><span class="pnc">.</span><span class="fn">pop</span><span class="pnc">();</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd"></td></tr>
+          <tr><td class="ln">26</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"是否为空: "</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">empty</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：1（true）</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd"></td></tr>
+          <tr><td class="ln">28</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title">📋 stack 常用操作速查表</div>
+    <div class="section-body">
+      <p>把本节出现过的方法按用途归类汇总，写代码时可以直接当参考卡用。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>方法</th><th>分类</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td>s.push(x)</td><td>修改</td><td>压入元素到栈顶</td></tr>
+        <tr><td>s.pop()</td><td>修改</td><td>弹出栈顶元素，<strong>不返回值</strong></td></tr>
+        <tr><td>s.emplace(args...)</td><td>修改</td><td>在栈顶原地构造元素，省去拷贝</td></tr>
+        <tr><td>s.top()</td><td>访问</td><td>读取（不删除）栈顶元素</td></tr>
+        <tr><td>s.size() / s.empty()</td><td>容量</td><td>元素个数 / 判断是否为空</td></tr>
+        <tr><td>s1.swap(s2)</td><td>修改</td><td>交换两个栈的全部内容</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">🎯</span>
+      <div><b>什么时候用 stack？</b>括号匹配、表达式求值、DFS（深度优先搜索）的非递归实现、撤销操作（undo）……任何"最近发生的事先处理"的场景都是 <code>stack</code> 的舞台。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十一章 · STL 标准模板库 · 11.5 stack</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="11_04_deque.html">← 11.4 deque 双端队列</a>
+      <a class="nav-btn" href="11_06_queue.html">11.6 queue 队列 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

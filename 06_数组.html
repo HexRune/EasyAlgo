@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第六章 · 数组 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+    /* ── Chapter 6 专属样式 ── */
+
+  /* 代码行高亮扩展（错误行） */
+  .hl-err td { background: rgba(153,60,29,.07) !important; }
+
+  /* 数组内存可视化 */
+  .arr-visual {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 20px 24px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    overflow-x: auto;
+  }
+  .arr-row { display: flex; align-items: center; gap: 0; margin-bottom: 4px; flex-wrap: nowrap }
+  .arr-label { font-size: 11.5px; color: #6C7086; min-width: 72px; text-align: right; padding-right: 12px; flex-shrink: 0 }
+  .arr-cells { display: flex; gap: 3px }
+  .arr-cell {
+    width: 44px; height: 44px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; flex-shrink: 0;
+  }
+  .arr-cell.val { background: #2A2840; color: var(--code-num) }
+  .arr-cell.val.hi { background: rgba(166,227,161,.2); color: var(--code-str); border: 2px solid var(--code-str) }
+  .arr-cell.idx { background: transparent; color: #6C7086; font-size: 12px; font-weight: 400 }
+  .arr-cell.addr { background: transparent; color: #45475A; font-size: 11px; font-weight: 400 }
+  .arr-cell.empty { background: #16141F; color: #2A2840; border: 1px dashed #2A2840 }
+  .arr-row-label { font-size: 11px; color: var(--code-fn); margin-left: 6px; align-self: center }
+
+  /* 内存地址公式 */
+  .addr-formula {
+    display: flex; align-items: center; gap: 8px;
+    background: #16141F; border-radius: var(--r-sm);
+    padding: 12px 16px; margin: 12px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .af-result { color: var(--code-num); font-weight: 700 }
+  .af-eq { color: #6C7086 }
+  .af-base { color: var(--code-fn) }
+  .af-plus { color: var(--code-op) }
+  .af-size { color: var(--code-str) }
+  .af-idx { color: var(--code-kw) }
+  .af-note { font-size: 11px; color: #6C7086; font-style: italic; margin-left: auto }
+
+  /* 命名规则表 */
+  .rule-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .rule-table thead tr { background: var(--accent-light) }
+  .rule-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA }
+  .rule-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); font-size: 13px; vertical-align: middle }
+  .rule-table tr:last-child td { border-bottom: none }
+  .rule-table tr:nth-child(even) td { background: #FAFAF7 }
+  .ok { color: var(--teal); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600 }
+  .no { color: var(--coral); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; text-decoration: line-through; text-decoration-color: var(--coral-mid) }
+
+  /* 插入/删除步骤可视化 */
+  .op-steps { display: flex; flex-direction: column; gap: 10px; margin: 20px 0 }
+  .op-step-row { display: flex; align-items: center; gap: 10px }
+  .op-step-arr { display: flex; gap: 3px }
+  .op-cell {
+    width: 36px; height: 36px; border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .op-cell.n { background: #2A2840; color: var(--code-num) }
+  .op-cell.mv { background: rgba(137,180,250,.2); color: var(--code-fn); border: 2px solid var(--code-fn) }
+  .op-cell.ins { background: rgba(166,227,161,.3); color: var(--code-str); border: 2px solid var(--code-str) }
+  .op-cell.del-t { background: rgba(203,166,247,.15); color: var(--code-kw); border: 2px dashed var(--code-kw) }
+  .op-cell.gray { background: #16141F; color: #45475A; border: 1px dashed #2A2840 }
+  .op-step-label { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6C7086; white-space: nowrap }
+  .op-arrow-vert { text-align: center; color: #45475A; font-size: 14px; padding-left: 4px }
+
+  /* 通用引用表（深色/浅色两种风格） */
+  .ref-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .ref-table.dark thead tr { background: #1E1C2E }
+  .ref-table.dark th { padding: 9px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840 }
+  .ref-table.dark th:first-child { color: var(--code-text) }
+  .ref-table.dark td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; line-height: 1.6 }
+  .ref-table.dark tr:last-child td { border-bottom: none }
+  .ref-table.dark tr:nth-child(even) td { background: #FAFAF7 }
+  .ref-table.dark td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: var(--code-fn); white-space: nowrap; background: #16141F }
+  .ref-table.dark tr:nth-child(even) td:first-child { background: #16141F }
+
+  .ref-table.light thead tr { background: var(--amber-light) }
+  .ref-table.light th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--amber); border-bottom: 1px solid #FAC775 }
+  .ref-table.light td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle }
+  .ref-table.light tr:last-child td { border-bottom: none }
+  .ref-table.light tr:nth-child(even) td { background: #FAFAF7 }
+  .ref-table.light td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: var(--amber); white-space: nowrap; background: #FFF5E0 }
+  .ref-table.light tr:nth-child(even) td:first-child { background: var(--amber-light) }
+
+  /* 转义字符表 */
+  .esc-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .esc-table thead tr { background: #1E1C2E }
+  .esc-table th { padding: 9px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840 }
+  .esc-table th:first-child { color: var(--code-text) }
+  .esc-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle }
+  .esc-table tr:last-child td { border-bottom: none }
+  .esc-table tr:nth-child(even) td { background: #FAFAF7 }
+  .esc-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--code-kw); background: #16141F; text-align: center }
+  .esc-table tr:nth-child(even) td:first-child { background: #16141F }
+  .esc-ex { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-muted) }
+
+  /* cctype 函数卡片 */
+  .cctype-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 16px 0 }
+  .cctype-card { border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 13px; display: flex; gap: 10px; align-items: flex-start }
+  .cctype-fn { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--code-fn); white-space: nowrap; min-width: 96px }
+  .cctype-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5 }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="Ch.6">
+    <p class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      C++ 编程语法
+    </p>
+    <h1 class="chapter-title">六、数组</h1>
+    <p class="chapter-desc">数组是存储相同类型数据的容器，像一排连续的格子。本章涵盖一维数组、二维数组、字符数组（C 风格字符串）及常用操作。</p>
+  </header>
+
+  <nav class="toc">
+    <p class="toc-title">本章目录</p>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">6.1</span>一维数组</a></li>
+      <li><a href="#s1-3"><span class="toc-num">6.1.3</span>访问与遍历</a></li>
+      <li><a href="#s1-4"><span class="toc-num">6.1.4</span>插入元素</a></li>
+      <li><a href="#s1-5"><span class="toc-num">6.1.5</span>删除元素</a></li>
+      <li><a href="#s1-6"><span class="toc-num">6.1.6</span>常用操作</a></li>
+      <li><a href="#s2"><span class="toc-num">6.2</span>二维数组</a></li>
+      <li><a href="#s3"><span class="toc-num">6.3</span>字符数组</a></li>
+      <li><a href="#s3-5"><span class="toc-num">6.3.5</span>字符函数库 cctype</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 6.1 一维数组 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">6.1</p>
+    <h2 class="section-title">一维数组</h2>
+    <div class="section-body">
+      <p>数组（array）是一种线性数据结构，将<strong>相同类型</strong>的元素存储在<strong>连续的内存空间</strong>中。元素在数组中的位置称为索引（index），索引从 <code>0</code> 开始。</p>
+    </div>
+
+    <!-- Array memory visual -->
+    <div class="arr-visual">
+      <div class="arr-row">
+        <span class="arr-label">数组</span>
+        <div class="arr-cells">
+          <div class="arr-cell val">1</div>
+          <div class="arr-cell val">3</div>
+          <div class="arr-cell val">2</div>
+          <div class="arr-cell val hi">5</div>
+          <div class="arr-cell val">4</div>
+        </div>
+        <span class="arr-row-label">← 连续内存</span>
+      </div>
+      <div class="arr-row">
+        <span class="arr-label">索引</span>
+        <div class="arr-cells">
+          <div class="arr-cell idx">0</div>
+          <div class="arr-cell idx">1</div>
+          <div class="arr-cell idx">2</div>
+          <div class="arr-cell idx" style="color:var(--code-str);font-weight:700">3</div>
+          <div class="arr-cell idx">4</div>
+        </div>
+      </div>
+      <div class="arr-row">
+        <span class="arr-label">内存地址</span>
+        <div class="arr-cells">
+          <div class="arr-cell addr">0x00</div>
+          <div class="arr-cell addr">0x04</div>
+          <div class="arr-cell addr">0x08</div>
+          <div class="arr-cell addr" style="color:var(--code-str)">0x0C</div>
+          <div class="arr-cell addr">0x10</div>
+        </div>
+      </div>
+      <div class="addr-formula">
+        <span class="af-result">元素地址</span>
+        <span class="af-eq">=</span>
+        <span class="af-base">数组首地址</span>
+        <span class="af-plus">+</span>
+        <span class="af-size">元素字节数</span>
+        <span class="af-plus">×</span>
+        <span class="af-idx">索引</span>
+        <span class="af-note">例：索引3的地址 = 0x00 + 4 × 3 = 0x0C</span>
+      </div>
+    </div>
+
+    <h3 class="sub-title">6.1.1 数组命名规则</h3>
+    <table class="rule-table">
+      <thead><tr><th>规则</th><th>合法示例</th><th>不合法示例</th><th>原因</th></tr></thead>
+      <tbody>
+        <tr><td>只能含字母、数字、下划线</td><td class="ok">scores, my_arr</td><td class="no">my-arr</td><td>含连字符</td></tr>
+        <tr><td>不能以数字开头</td><td class="ok">arr2</td><td class="no">2arr</td><td>数字开头</td></tr>
+        <tr><td>不能与已定义变量重名</td><td class="ok">myArr</td><td class="no">int n=5; int n[10];</td><td>名字冲突</td></tr>
+        <tr><td>不能使用关键字</td><td class="ok">forArr</td><td class="no">int for[5];</td><td>for 是关键字</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="sub-title">6.1.2 定义与初始化</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 数组定义与初始化</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 语法：类型 数组名[大小];</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">[</span><span class="num">5</span><span class="pnc">];</span>                          <span class="cmt">// 定义可存 5 个整数的数组（未初始化）</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">b</span><span class="pnc">[</span><span class="num">5</span><span class="pnc">] = {</span><span class="num">90</span><span class="pnc">,</span> <span class="num">85</span><span class="pnc">,</span> <span class="num">78</span><span class="pnc">,</span> <span class="num">92</span><span class="pnc">,</span> <span class="num">88</span><span class="pnc">};</span>   <span class="cmt">// 完整初始化</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">c</span><span class="pnc">[] = {</span><span class="num">90</span><span class="pnc">,</span> <span class="num">85</span><span class="pnc">,</span> <span class="num">78</span><span class="pnc">,</span> <span class="num">92</span><span class="pnc">,</span> <span class="num">88</span><span class="pnc">};</span>    <span class="cmt">// 省略大小，自动推断为 5</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="typ">int</span> <span class="fn">d</span><span class="pnc">[</span><span class="num">5</span><span class="pnc">] = {</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">};</span>                 <span class="cmt">// 部分初始化 → {1, 2, 0, 0, 0}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr class="hl-err"><td class="ln">8</td><td class="cd"><span class="fn">a</span> <span class="op">=</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// ❌ 错误！数组变量之间不能直接赋值</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🏗️</span>
+      <div><b>大数组放全局！</b><code>main()</code> 内的局部数组存放在栈（Stack）中，栈空间默认仅 1~2 MB。数组过大会立即导致<strong>栈溢出</strong>（程序崩溃），且无任何警告，是极隐蔽的错误。<br>解决方法：将大数组定义在 <code>main()</code> 外部（全局变量），它会被分配到静态存储区，空间充裕。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 6.1.3 访问 ═══ -->
+  <section class="section" id="s1-3">
+    <p class="section-label">6.1.3</p>
+    <h2 class="section-title">访问数组中的元素</h2>
+    <div class="section-body">
+      <p>数组下标从 <code>0</code> 开始，最后一个元素的下标是 <strong>大小 - 1</strong>。通过 <code>数组名[下标]</code> 访问或修改指定位置的元素。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 数组访问与遍历</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">[</span><span class="num">5</span><span class="pnc">] = {</span><span class="num">90</span><span class="pnc">,</span> <span class="num">85</span><span class="pnc">,</span> <span class="num">78</span><span class="pnc">,</span> <span class="num">92</span><span class="pnc">,</span> <span class="num">88</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="cmt">//下标：  0    1    2    3    4</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">];</span>       <span class="cmt">// 输出：90（第1个元素）</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">[</span><span class="num">4</span><span class="pnc">];</span>       <span class="cmt">// 输出：88（最后一个，下标 = 大小-1）</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">a</span><span class="pnc">[</span><span class="num">2</span><span class="pnc">]</span> <span class="op">=</span> <span class="num">99</span><span class="pnc">;</span>        <span class="cmt">// 修改第3个元素</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr class="hl-err"><td class="ln">8</td><td class="cd"><span class="fn">a</span><span class="pnc">[</span><span class="num">3</span><span class="pnc">] = {</span><span class="num">0</span><span class="pnc">,</span><span class="num">1</span><span class="pnc">,</span><span class="num">2</span><span class="pnc">};</span>  <span class="cmt">// ❌ 错误！非定义时不能整体赋值</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="cmt">// 用循环遍历数组</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">5</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">💥</span>
+      <div><b>下标越界！</b>C++ 不会检查下标是否合法。访问 <code>a[5]</code>（越界）不会报错，但会读写到相邻内存，造成程序崩溃或数据错误，是极危险的隐藏 bug。始终确保下标在 <code>[0, 大小-1]</code> 范围内。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 6.1.4 插入 ═══ -->
+  <section class="section" id="s1-4">
+    <p class="section-label">6.1.4</p>
+    <h2 class="section-title">插入元素</h2>
+    <div class="section-body">
+      <p>数组元素在内存中紧挨着，中间没有空间。在索引 <code>1</code> 处插入元素 <code>3</code> 时，需要先将该位置及之后的所有元素<strong>依次向后移动一位</strong>，再写入新值。由于数组长度固定，插入会导致尾部元素丢失。</p>
+    </div>
+
+    <!-- Insert step visual -->
+    <div style="background:var(--code-bg);border-radius:var(--r-md);padding:20px 24px;margin:20px 0;overflow-x:auto;">
+      <div style="font-size:11px;color:#6C7086;font-family:'JetBrains Mono',monospace;margin-bottom:14px;">示例：在索引 1 处插入元素 3，数组 = {1,2,5,4,0}</div>
+      <div class="op-steps">
+        <div class="op-step-row">
+          <div class="op-step-arr">
+            <div class="op-cell n">1</div><div class="op-cell n">2</div><div class="op-cell n">5</div><div class="op-cell n">4</div><div class="op-cell gray">0</div>
+          </div>
+          <span class="op-step-label">← 初始状态（有效元素 4 个，末位 0 无意义）</span>
+        </div>
+        <div class="op-arrow-vert" style="padding-left:66px;color:#45475A">↓ nums[4] = nums[3]</div>
+        <div class="op-step-row">
+          <div class="op-step-arr">
+            <div class="op-cell n">1</div><div class="op-cell n">2</div><div class="op-cell n">5</div><div class="op-cell mv">4</div><div class="op-cell mv">4</div>
+          </div>
+          <span class="op-step-label">← 索引3的值复制到索引4</span>
+        </div>
+        <div class="op-arrow-vert" style="padding-left:66px;color:#45475A">↓ nums[3] = nums[2]</div>
+        <div class="op-step-row">
+          <div class="op-step-arr">
+            <div class="op-cell n">1</div><div class="op-cell n">2</div><div class="op-cell n">5</div><div class="op-cell mv">5</div><div class="op-cell n">4</div>
+          </div>
+          <span class="op-step-label">← 索引2的值复制到索引3</span>
+        </div>
+        <div class="op-arrow-vert" style="padding-left:66px;color:#45475A">↓ nums[2] = nums[1]</div>
+        <div class="op-step-row">
+          <div class="op-step-arr">
+            <div class="op-cell n">1</div><div class="op-cell n">2</div><div class="op-cell mv">2</div><div class="op-cell n">5</div><div class="op-cell n">4</div>
+          </div>
+          <span class="op-step-label">← 索引1的值复制到索引2</span>
+        </div>
+        <div class="op-arrow-vert" style="padding-left:20px;color:#45475A">↓ nums[1] = 3</div>
+        <div class="op-step-row">
+          <div class="op-step-arr">
+            <div class="op-cell n">1</div><div class="op-cell ins">3</div><div class="op-cell n">2</div><div class="op-cell n">5</div><div class="op-cell n">4</div>
+          </div>
+          <span class="op-step-label">← 插入完成！初始末尾元素 0 已丢失</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 数组插入元素</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">index</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">,</span> <span class="fn">num</span> <span class="op">=</span> <span class="num">3</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">nums</span><span class="pnc">[</span><span class="num">5</span><span class="pnc">] = {</span><span class="num">1</span><span class="pnc">,</span><span class="num">2</span><span class="pnc">,</span><span class="num">5</span><span class="pnc">,</span><span class="num">4</span><span class="pnc">,</span><span class="num">0</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// 从后往前移动，腾出 index 位置</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">5</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;</span> <span class="fn">index</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="fn">nums</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">nums</span><span class="pnc">[</span><span class="fn">i</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd"><span class="fn">nums</span><span class="pnc">[</span><span class="fn">index</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">num</span><span class="pnc">;</span>  <span class="cmt">// 写入新值</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 6.1.5 删除 ═══ -->
+  <section class="section" id="s1-5">
+    <p class="section-label">6.1.5</p>
+    <h2 class="section-title">删除元素</h2>
+    <div class="section-body">
+      <p>删除索引 <code>1</code> 处的元素时，需要把该位置之后的所有元素<strong>依次向前移动一位</strong>。删除后末尾元素无意义，有效长度减 1。</p>
+    </div>
+
+    <div style="background:var(--code-bg);border-radius:var(--r-md);padding:20px 24px;margin:20px 0;overflow-x:auto;">
+      <div style="font-size:11px;color:#6C7086;font-family:'JetBrains Mono',monospace;margin-bottom:14px;">示例：删除索引 1 处的元素 3，数组 = {1,3,2,5,4}</div>
+      <div class="op-steps">
+        <div class="op-step-row">
+          <div class="op-step-arr">
+            <div class="op-cell n">1</div><div class="op-cell del-t">3</div><div class="op-cell n">2</div><div class="op-cell n">5</div><div class="op-cell n">4</div>
+          </div>
+          <span class="op-step-label">← 待删除元素（索引1）</span>
+        </div>
+        <div class="op-arrow-vert" style="padding-left:66px;color:#45475A">↓ nums[1] = nums[2]</div>
+        <div class="op-step-row">
+          <div class="op-step-arr">
+            <div class="op-cell n">1</div><div class="op-cell mv">2</div><div class="op-cell mv">2</div><div class="op-cell n">5</div><div class="op-cell n">4</div>
+          </div>
+          <span class="op-step-label">← 索引2的值覆盖索引1</span>
+        </div>
+        <div class="op-arrow-vert" style="padding-left:66px;color:#45475A">↓ nums[2] = nums[3]</div>
+        <div class="op-step-row">
+          <div class="op-step-arr">
+            <div class="op-cell n">1</div><div class="op-cell n">2</div><div class="op-cell mv">5</div><div class="op-cell mv">5</div><div class="op-cell n">4</div>
+          </div>
+          <span class="op-step-label">← 索引3的值覆盖索引2</span>
+        </div>
+        <div class="op-arrow-vert" style="padding-left:66px;color:#45475A">↓ nums[3] = nums[4]</div>
+        <div class="op-step-row">
+          <div class="op-step-arr">
+            <div class="op-cell n">1</div><div class="op-cell n">2</div><div class="op-cell n">5</div><div class="op-cell mv">4</div><div class="op-cell gray">4</div>
+          </div>
+          <span class="op-step-label">← 删除完成！末尾 4 已无意义，有效长度变为 4</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 数组删除元素</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">index</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">nums</span><span class="pnc">[</span><span class="num">5</span><span class="pnc">] = {</span><span class="num">1</span><span class="pnc">,</span><span class="num">3</span><span class="pnc">,</span><span class="num">2</span><span class="pnc">,</span><span class="num">5</span><span class="pnc">,</span><span class="num">4</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// 从前往后移动，覆盖 index 位置</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="fn">index</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">5</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="fn">nums</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">nums</span><span class="pnc">[</span><span class="fn">i</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">];</span>  <span class="cmt">// 后一个覆盖前一个</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 末尾元素已无意义，有效长度 -1</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 6.1.6 常用操作 ═══ -->
+  <section class="section" id="s1-6">
+    <p class="section-label">6.1.6 &amp; 6.1.7</p>
+    <h2 class="section-title">常用操作与排序</h2>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 求最值、求和、逆序输出</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">[] = {</span><span class="num">3</span><span class="pnc">,</span><span class="num">1</span><span class="pnc">,</span><span class="num">4</span><span class="pnc">,</span><span class="num">1</span><span class="pnc">,</span><span class="num">5</span><span class="pnc">,</span><span class="num">9</span><span class="pnc">,</span><span class="num">2</span><span class="pnc">,</span><span class="num">6</span><span class="pnc">},</span> <span class="fn">n</span> <span class="op">=</span> <span class="num">8</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="cmt">// ── 求最大值 ──</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">maxVal</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">];</span>  <span class="cmt">// 以第一个元素为初始最大值</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&gt;</span> <span class="fn">maxVal</span><span class="pnc">)</span> <span class="fn">maxVal</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// ── 求总和与平均值 ──</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd"><span class="typ">int</span> <span class="fn">sum</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span> <span class="fn">sum</span> <span class="op">+=</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">double</span> <span class="fn">avg</span> <span class="op">=</span> <span class="pnc">(</span><span class="typ">double</span><span class="pnc">)</span><span class="fn">sum</span> <span class="op">/</span> <span class="fn">n</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="cmt">// ── 逆序输出 ──</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="fn">n</span><span class="op">-</span><span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title">用 <code>sort()</code> 排序（需 <code>#include &lt;algorithm&gt;</code>）</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · sort() 排序</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;algorithm&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">[] = {</span><span class="num">3</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">9</span><span class="pnc">},</span> <span class="fn">n</span> <span class="op">=</span> <span class="num">6</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="fn">sort</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">n</span><span class="pnc">);</span>                      <span class="cmt">// 升序：1 1 3 4 5 9</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="fn">sort</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">n</span><span class="pnc">,</span> <span class="fn">greater</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;());</span>  <span class="cmt">// 降序：9 5 4 3 1 1</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 6.2 二维数组 ═══ -->
+  <section class="section" id="s2">
+    <p class="section-label">6.2</p>
+    <h2 class="section-title">二维数组</h2>
+    <div class="section-body">
+      <p>二维数组像一张表格，有行和列两个维度，适合存储矩阵、棋盘等数据。语法是 <code>类型 数组名[行数][列数];</code>。</p>
+    </div>
+
+    <!-- 2D array visual -->
+    <div class="arr-visual" style="padding:18px 24px 14px;">
+      <div style="font-size:11px;color:#6C7086;font-family:'JetBrains Mono',monospace;margin-bottom:12px;">int matrix[2][3] = { {1,2,3}, {4,5,6} }</div>
+      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+        <div>
+          <div class="arr-row" style="margin-bottom:3px;">
+            <span class="arr-label" style="min-width:44px;">行0</span>
+            <div class="arr-cells">
+              <div class="arr-cell val" style="width:50px">1</div>
+              <div class="arr-cell val" style="width:50px;background:rgba(166,227,161,.2);color:var(--code-str)">2</div>
+              <div class="arr-cell val" style="width:50px">3</div>
+            </div>
+          </div>
+          <div class="arr-row">
+            <span class="arr-label" style="min-width:44px;">行1</span>
+            <div class="arr-cells">
+              <div class="arr-cell val" style="width:50px">4</div>
+              <div class="arr-cell val" style="width:50px">5</div>
+              <div class="arr-cell val" style="width:50px;background:rgba(250,179,135,.2);color:var(--code-num)">6</div>
+            </div>
+          </div>
+          <div class="arr-row" style="margin-top:4px;">
+            <span class="arr-label" style="min-width:44px;"></span>
+            <div class="arr-cells">
+              <div class="arr-cell idx" style="width:50px">列0</div>
+              <div class="arr-cell idx" style="width:50px;color:var(--code-str)">列1</div>
+              <div class="arr-cell idx" style="width:50px">列2</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#6C7086;padding-top:4px;line-height:2;">
+          <div style="color:var(--code-str)">matrix[0][1] = 2 ← 第0行第1列</div>
+          <div style="color:var(--code-num)">matrix[1][2] = 6 ← 第1行第2列</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 二维数组定义、访问与遍历</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">matrix</span><span class="pnc">[</span><span class="num">2</span><span class="pnc">][</span><span class="num">3</span><span class="pnc">] =</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">},</span>  <span class="cmt">// 第0行</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span><span class="num">4</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">6</span><span class="pnc">}</span>   <span class="cmt">// 第1行</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">matrix</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">][</span><span class="num">1</span><span class="pnc">];</span>  <span class="cmt">// 输出：2</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">matrix</span><span class="pnc">[</span><span class="num">1</span><span class="pnc">][</span><span class="num">2</span><span class="pnc">];</span>  <span class="cmt">// 输出：6</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="cmt">// 嵌套循环遍历</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">2</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>            <span class="cmt">// 遍历行</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="num">3</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span>       <span class="cmt">// 遍历列</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">matrix</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 6.3 字符数组 ═══ -->
+  <section class="section" id="s3">
+    <p class="section-label">6.3</p>
+    <h2 class="section-title">字符数组（C 风格字符串）</h2>
+    <div class="section-body">
+      <p>字符数组是 C 语言处理字符串的方式，本质是 <code>char</code> 类型的一维数组，但有一个特殊规定：末尾必须有 <code>'\0'</code>（空字符，ASCII = 0）作为终止符，告诉程序"字符串到这里结束了"。</p>
+    </div>
+
+    <!-- null terminator visual -->
+    <div class="arr-visual">
+      <div style="font-size:11px;color:#6C7086;font-family:'JetBrains Mono',monospace;margin-bottom:10px;">char name[8] = "abcdefg";  // 7个字符 + 1个 \0</div>
+      <div class="arr-row">
+        <span class="arr-label">字符</span>
+        <div class="arr-cells">
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">a</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">b</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">c</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">d</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">e</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">f</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">g</div>
+          <div class="arr-cell val" style="background:rgba(203,166,247,.2);color:var(--code-kw);font-size:12px">\0</div>
+        </div>
+      </div>
+      <div class="arr-row">
+        <span class="arr-label">索引</span>
+        <div class="arr-cells">
+          <div class="arr-cell idx">0</div><div class="arr-cell idx">1</div><div class="arr-cell idx">2</div>
+          <div class="arr-cell idx">3</div><div class="arr-cell idx">4</div><div class="arr-cell idx">5</div>
+          <div class="arr-cell idx">6</div>
+          <div class="arr-cell idx" style="color:var(--code-kw)">7</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 字符数组 &amp; 输入</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">char</span> <span class="fn">name</span><span class="pnc">[</span><span class="num">8</span><span class="pnc">] = </span><span class="str">"abcdefg"</span><span class="pnc">;</span>   <span class="cmt">// 7 字符 + \0，长度必须 ≥ 8</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">char</span> <span class="fn">str</span><span class="pnc">[] = </span><span class="str">"Hello"</span><span class="pnc">;</span>       <span class="cmt">// 自动推断长度为 6（5 + \0）</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// 读取单词（遇空格停止）</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="typ">char</span> <span class="fn">word</span><span class="pnc">[</span><span class="num">20</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">word</span><span class="pnc">;</span>                 <span class="cmt">// 遇空格停止</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// 读取含空格的整行</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd"><span class="typ">char</span> <span class="fn">sentence</span><span class="pnc">[</span><span class="num">100</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd"><span class="fn">cin</span><span class="pnc">.</span><span class="fn">getline</span><span class="pnc">(</span><span class="fn">sentence</span><span class="pnc">,</span> <span class="num">100</span><span class="pnc">);</span>  <span class="cmt">// 读取整行，包括空格</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="cmt">// 混用 cin 和 getline 时需先清空缓冲区</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">;</span> <span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">a</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd"><span class="fn">cin</span><span class="pnc">.</span><span class="fn">sync</span><span class="pnc">();</span>                 <span class="cmt">// 清空缓冲区残留的换行符</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="fn">cin</span><span class="pnc">.</span><span class="fn">getline</span><span class="pnc">(</span><span class="fn">sentence</span><span class="pnc">,</span> <span class="num">100</span><span class="pnc">);</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">📌</span>
+      <div><b>getline 注意事项：</b>长度参数不能超过数组长度；只能读取字符类型；默认以换行符作为结束符。使用 <code>cin</code> 读取整数后调用 <code>cin.sync()</code> 清空缓冲区，否则 <code>getline</code> 会直接读到残留的换行符。</div>
+    </div>
+
+    <h3 class="sub-title">6.3.2 常用转义字符</h3>
+    <table class="esc-table">
+      <thead><tr><th>转义字符</th><th>含义</th><th>ASCII</th><th>使用示例</th></tr></thead>
+      <tbody>
+        <tr><td>\n</td><td>换行</td><td>10</td><td class="esc-ex">cout &lt;&lt; "Hello\nWorld";</td></tr>
+        <tr><td>\t</td><td>水平制表符（Tab）</td><td>9</td><td class="esc-ex">cout &lt;&lt; "A\tB\tC";</td></tr>
+        <tr><td>\\</td><td>一个反斜杠 \</td><td>92</td><td class="esc-ex">cout &lt;&lt; "C:\\Users";</td></tr>
+        <tr><td>\"</td><td>一个双引号 "</td><td>34</td><td class="esc-ex">cout &lt;&lt; "\"Hello\"";</td></tr>
+        <tr><td>\'</td><td>一个单引号 '</td><td>39</td><td class="esc-ex">char c = '\'';</td></tr>
+        <tr><td>\0</td><td>字符串终止符（空字符）</td><td>0</td><td class="esc-ex">char s[] = {'H','i','\0'};</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="sub-title">6.3.3 常用字符串函数（<code>#include &lt;cstring&gt;</code>）</h3>
+    <table class="ref-table dark">
+      <thead><tr><th>函数</th><th>功能</th><th>示例</th></tr></thead>
+      <tbody>
+        <tr><td>strlen(s)</td><td>返回字符串有效长度（不含 \0）</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--code-str)">strlen("Hello") → 5</td></tr>
+        <tr><td>strcpy(dest, src)</td><td>将 src 复制到 dest</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--code-str)">strcpy(b, a)</td></tr>
+        <tr><td>strcat(s1, s2)</td><td>将 s2 拼接到 s1 末尾</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--code-str)">strcat(s, " World")</td></tr>
+        <tr><td>strcmp(s1, s2)</td><td>比较字符串大小（按 ASCII），相等返回 0</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--code-str)">strcmp("abc","abc") → 0</td></tr>
+        <tr><td>strlwr(s)</td><td>将字符串转为全小写</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--code-str)">strlwr("HELLO") → "hello"</td></tr>
+        <tr><td>strupr(s)</td><td>将字符串转为全大写</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--code-str)">strupr("hello") → "HELLO"</td></tr>
+        <tr><td>atoi(s)</td><td>字符串转整数（非数字返回 0）</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--code-str)">atoi("123") → 123</td></tr>
+        <tr><td>atof(s)</td><td>字符串转 double（非数字返回 0.0）</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--code-str)">atof("3.14") → 3.14</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══ 6.3.5 cctype ═══ -->
+  <section class="section" id="s3-5">
+    <p class="section-label">6.3.5</p>
+    <h2 class="section-title">字符函数库 <code>&lt;cctype&gt;</code></h2>
+    <div class="section-body">
+      <p><code>&lt;cctype&gt;</code> 提供了一系列字符分类和转换函数，参数为 <code>int</code>（传入 <code>char</code> 会自动转换），判断函数返回 0（假）或非 0（真）。</p>
+    </div>
+
+    <div class="cctype-grid">
+      <div class="cctype-card"><span class="cctype-fn">isalpha(c)</span><span class="cctype-desc">判断是否为字母（a-z 或 A-Z）</span></div>
+      <div class="cctype-card"><span class="cctype-fn">isdigit(c)</span><span class="cctype-desc">判断是否为数字字符（0-9）</span></div>
+      <div class="cctype-card"><span class="cctype-fn">isalnum(c)</span><span class="cctype-desc">判断是否为字母或数字</span></div>
+      <div class="cctype-card"><span class="cctype-fn">islower(c)</span><span class="cctype-desc">判断是否为小写字母（a-z）</span></div>
+      <div class="cctype-card"><span class="cctype-fn">isupper(c)</span><span class="cctype-desc">判断是否为大写字母（A-Z）</span></div>
+      <div class="cctype-card"><span class="cctype-fn">isspace(c)</span><span class="cctype-desc">判断是否为空白字符（空格、\t、\n 等）</span></div>
+      <div class="cctype-card"><span class="cctype-fn">isblank(c)</span><span class="cctype-desc">判断是否为空格或制表符</span></div>
+      <div class="cctype-card"><span class="cctype-fn">ispunct(c)</span><span class="cctype-desc">判断是否为标点字符</span></div>
+      <div class="cctype-card"><span class="cctype-fn">isprint(c)</span><span class="cctype-desc">判断是否为可打印字符（非控制字符）</span></div>
+      <div class="cctype-card"><span class="cctype-fn">iscntrl(c)</span><span class="cctype-desc">判断是否为控制字符（非打印字符）</span></div>
+      <div class="cctype-card"><span class="cctype-fn">toupper(c)</span><span class="cctype-desc">转换为大写字母，无对应形式则返回原字符</span></div>
+      <div class="cctype-card"><span class="cctype-fn">tolower(c)</span><span class="cctype-desc">转换为小写字母，无对应形式则返回原字符</span></div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>竞赛常用：</b><code>isdigit</code>、<code>isalpha</code>、<code>toupper</code>/<code>tolower</code> 是字符处理题中使用频率最高的函数，搭配 <code>for</code> 循环遍历字符数组，可以快速完成字符分类、大小写转换等任务。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第六章 数组</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="05_循环结构.html">← 第五章：循环结构</a>
+      <a class="nav-btn" href="07_位运算.html">第七章：位运算 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

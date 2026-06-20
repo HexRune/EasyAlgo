@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第九章 · 指针与引用 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+    /* ── Chapter 9 专属样式 ── */
+
+  /* 代码行高亮扩展（指针行 / 引用行覆盖为橙色） */
+  .hl-ptr td { background: rgba(250,179,135,.07) !important; }
+  .hl-ref td { background: rgba(250,179,135,.07) !important; }
+
+  /* 内存分区表 */
+  .mem-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .mem-table thead tr { background: #1E1C2E }
+  .mem-table th { padding: 9px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840 }
+  .mem-table th:first-child { color: var(--code-text) }
+  .mem-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle }
+  .mem-table tr:last-child td { border-bottom: none }
+  .mem-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; white-space: nowrap; background: #16141F }
+  .mem-table tr.stack td:first-child { color: var(--code-fn) }
+  .mem-table tr.heap  td:first-child { color: var(--code-str) }
+  .mem-table tr.bss   td:first-child { color: var(--code-num) }
+  .mem-table tr.data  td:first-child { color: var(--code-kw) }
+  .mem-table tr.text  td:first-child { color: var(--code-op) }
+  .mem-badge { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 4px; font-weight: 600; margin-left: 6px }
+  .badge-focus  { background: rgba(137,180,250,.2); color: var(--blue) }
+  .badge-manual { background: rgba(166,227,161,.2); color: var(--teal) }
+
+  /* 内存地址可视化 */
+  .mem-visual {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 20px 24px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    overflow-x: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+  .mv-title { font-size: 11px; color: #6C7086; margin-bottom: 14px; letter-spacing: .06em }
+  .mv-grid { display: flex; gap: 4px; align-items: stretch; flex-wrap: nowrap }
+  .mv-cell { display: flex; flex-direction: column; align-items: center; min-width: 68px; flex-shrink: 0 }
+  .mv-box { width: 100%; height: 52px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; border: 2px solid; flex-shrink: 0 }
+  .mv-box.var-a { background: rgba(250,179,135,.15); border-color: rgba(250,179,135,.5); color: var(--code-num) }
+  .mv-box.ptr-p { background: rgba(137,180,250,.15); border-color: rgba(137,180,250,.5); color: var(--code-fn) }
+  .mv-box.empty { background: #16141F; border-color: #2A2840; color: #2A2840 }
+  .mv-box.null  { background: #16141F; border-color: #2A2840; color: #45475A; font-size: 11px }
+  .mv-addr { font-size: 10.5px; color: #6C7086; margin-top: 5px; text-align: center }
+  .mv-name { font-size: 12px; color: var(--code-text); margin-bottom: 5px; text-align: center }
+  .mv-arrow { display: flex; align-items: center; gap: 0; align-self: center; padding: 0 4px; margin-top: 18px }
+  .mv-arrow-line { height: 2px; width: 28px; background: var(--code-op) }
+  .mv-arrow-head { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid var(--code-op) }
+  .mv-legend { display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap }
+  .mv-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #6C7086 }
+  .mv-legend-box { width: 14px; height: 14px; border-radius: 3px; border: 2px solid; flex-shrink: 0 }
+
+  /* 符号表（&, *, *） */
+  .sym-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .sym-table thead tr { background: var(--accent-light) }
+  .sym-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA }
+  .sym-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6 }
+  .sym-table tr:last-child td { border-bottom: none }
+  .sym-table tr:nth-child(even) td { background: #FAFAF7 }
+  .sym-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--code-op); text-align: center; width: 50px; background: var(--accent-light) }
+  .sym-table tr:nth-child(even) td:first-child { background: #EEEDFE }
+  .sym-ctx { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); display: block; margin-top: 3px }
+
+  /* 数组指针可视化 */
+  .arr-ptr-visual {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 18px 22px; margin: 18px 0;
+    font-family: 'JetBrains Mono', monospace;
+    overflow-x: auto;
+  }
+  .apv-row { display: flex; align-items: center; gap: 0; margin-bottom: 8px }
+  .apv-label { font-size: 11.5px; color: #6C7086; min-width: 64px; text-align: right; padding-right: 12px; flex-shrink: 0 }
+  .apv-cells { display: flex; gap: 3px }
+  .apv-cell { min-width: 48px; height: 42px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0 }
+  .apv-cell.norm { background: #2A2840; color: var(--code-text) }
+  .apv-cell.hi0  { background: rgba(250,179,135,.25); color: var(--code-num); border: 2px solid rgba(250,179,135,.6) }
+  .apv-cell.hi2  { background: rgba(203,166,247,.2);  color: var(--code-kw);  border: 2px solid rgba(203,166,247,.5) }
+  .apv-cell.hi3  { background: rgba(166,227,161,.2);  color: var(--code-str); border: 2px solid rgba(166,227,161,.5) }
+  .apv-cell.idx  { background: transparent; color: #45475A; font-size: 12px; font-weight: 400 }
+  .apv-cell.addr-c { background: transparent; color: #2A2840; font-size: 10px; font-weight: 400 }
+  .apv-ptr { display: flex; align-items: center; gap: 6px; background: rgba(137,180,250,.1); border: 1px solid rgba(137,180,250,.3); border-radius: 5px; padding: 5px 10px; margin-right: 10px; color: var(--code-fn); font-size: 13px; font-weight: 600; flex-shrink: 0 }
+  .apv-ptr-arrow { color: rgba(137,180,250,.7); font-size: 14px }
+
+  /* 数组名 vs 指针对比表（注意此类名不同于公共 .comp-table） */
+  .cmp-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .cmp-table thead tr { background: #1E1C2E }
+  .cmp-table th { padding: 9px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840 }
+  .cmp-table th:first-child { color: var(--code-text) }
+  .cmp-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle }
+  .cmp-table tr:last-child td { border-bottom: none }
+  .cmp-table tr:nth-child(even) td { background: #FAFAF7 }
+  .cmp-table td:first-child { font-weight: 700; color: var(--text-primary) }
+
+  /* 引用可视化 */
+  .ref-visual {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 18px 22px; margin: 18px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    overflow-x: auto;
+  }
+  .rv-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px }
+  .rv-var { padding: 8px 16px; border-radius: 6px; font-size: 15px; font-weight: 700; border: 2px solid; white-space: nowrap }
+  .rv-a   { background: rgba(250,179,135,.15); border-color: rgba(250,179,135,.5); color: var(--code-num) }
+  .rv-ref { background: rgba(166,227,161,.15); border-color: rgba(166,227,161,.5); color: var(--code-str) }
+  .rv-eq    { font-size: 20px; color: var(--code-op); font-weight: 700 }
+  .rv-arrow { font-size: 22px; color: #45475A }
+  .rv-label { font-size: 12px; color: #6C7086; font-style: italic }
+
+  /* 指针 vs 引用对比卡 */
+  .pr-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0 }
+  .pr-card { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border) }
+  .pr-head { padding: 10px 14px; display: flex; align-items: center; gap: 8px }
+  .pr-head.ptr-h { background: rgba(250,179,135,.1) }
+  .pr-head.ref-h { background: rgba(166,227,161,.1) }
+  .pr-icon { font-size: 20px }
+  .pr-title { font-size: 13.5px; font-weight: 700 }
+  .ptr-h .pr-title { color: var(--amber) }
+  .ref-h .pr-title { color: var(--teal) }
+  .pr-body { padding: 10px 14px; font-size: 13px; color: var(--text-secondary); line-height: 1.7; border-top: 1px solid var(--border) }
+
+  /* 指针 vs 引用完整对比表 */
+  .full-cmp { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .full-cmp thead tr { background: #1E1C2E }
+  .full-cmp th { padding: 9px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840 }
+  .full-cmp th:first-child { color: var(--code-text) }
+  .full-cmp td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6 }
+  .full-cmp tr:last-child td { border-bottom: none }
+  .full-cmp tr:nth-child(even) td { background: #FAFAF7 }
+  .full-cmp td:first-child { font-weight: 700; color: var(--text-primary) }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="Ch.9">
+    <p class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      C++ 编程语法
+    </p>
+    <h1 class="chapter-title">九、指针与引用</h1>
+    <p class="chapter-desc">指针是 C++ 的核心特性之一，理解指针需要先了解计算机内存的工作方式。引用则是更安全、语法更简洁的变量别名机制。</p>
+  </header>
+
+  <nav class="toc">
+    <p class="toc-title">本章目录</p>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">9.1</span>内存与地址</a></li>
+      <li><a href="#s2"><span class="toc-num">9.2</span>指针变量</a></li>
+      <li><a href="#s3"><span class="toc-num">9.3</span>指针与数组</a></li>
+      <li><a href="#s4"><span class="toc-num">9.4</span>引用</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 9.1 内存与地址 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">9.1</p>
+    <h2 class="section-title">内存与地址</h2>
+    <div class="section-body">
+      <p>计算机的内存就像一排有编号的格子，每个格子都有一个唯一的编号，称为<strong>地址</strong>。每个变量都占据内存中的一段连续格子。使用 <code>&amp;</code> 取址运算符可以获取变量的首地址：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 取址运算符</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">;</span>   <span class="cmt">// 输出变量的值：10</span></td></tr>
+          <tr class="hl-ptr"><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="op">&amp;</span><span class="fn">a</span><span class="pnc">;</span>  <span class="cmt">// 输出变量的地址（十六进制，如 0x61fe1c）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title">程序内存分区</h3>
+    <table class="mem-table">
+      <thead><tr><th>内存区域</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr class="stack"><td>Stack（栈区）<span class="mem-badge badge-focus">重点</span></td><td>存放局部变量、函数参数、返回地址等，由编译器<strong>自动管理</strong>，出作用域自动释放</td></tr>
+        <tr class="heap"><td>Heap（堆区）<span class="mem-badge badge-manual">手动管理</span></td><td>动态内存分配区域，由程序员手动申请（<code>new</code>）和释放（<code>delete</code>），不释放会内存泄漏</td></tr>
+        <tr class="bss"><td>BSS 段</td><td>存放未显式初始化或初始化为 0 的全局变量和静态变量</td></tr>
+        <tr class="data"><td>Data 段</td><td>存放已显式初始化的全局变量和静态变量</td></tr>
+        <tr class="text"><td>Text 段（代码区）</td><td>存储程序的机器指令，只读</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>初学者重点：</b>先关注<strong>栈区</strong>和<strong>堆区</strong>即可。栈区存放局部变量（自动管理），堆区用于动态分配（手动管理），其余区域了解即可。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 9.2 指针变量 ═══ -->
+  <section class="section" id="s2">
+    <p class="section-label">9.2</p>
+    <h2 class="section-title">指针变量</h2>
+    <div class="section-body">
+      <p>指针变量存储的是另一个变量的<strong>内存地址</strong>。通过指针，可以间接访问和修改它所指向的变量。</p>
+    </div>
+
+    <!-- Pointer visual: p → a -->
+    <div class="mem-visual">
+      <div class="mv-title">int a = 10;  int *p = &amp;a;  // p 中存储 a 的地址</div>
+      <div class="mv-grid">
+        <!-- other memory -->
+        <div class="mv-cell">
+          <div class="mv-name" style="color:#2A2840">···</div>
+          <div class="mv-box empty">···</div>
+          <div class="mv-addr">0x61fe14</div>
+        </div>
+        <!-- pointer p -->
+        <div class="mv-cell">
+          <div class="mv-name" style="color:var(--code-fn)">p</div>
+          <div class="mv-box ptr-p" style="font-size:12px">0x61fe1c</div>
+          <div class="mv-addr">0x61fe18</div>
+        </div>
+        <!-- arrow -->
+        <div class="mv-arrow">
+          <div class="mv-arrow-line"></div>
+          <div class="mv-arrow-head"></div>
+        </div>
+        <!-- variable a -->
+        <div class="mv-cell">
+          <div class="mv-name" style="color:var(--code-num)">a</div>
+          <div class="mv-box var-a">10</div>
+          <div class="mv-addr">0x61fe1c</div>
+        </div>
+        <!-- other memory -->
+        <div class="mv-cell" style="margin-left:8px">
+          <div class="mv-name" style="color:#2A2840">···</div>
+          <div class="mv-box empty">···</div>
+          <div class="mv-addr">0x61fe20</div>
+        </div>
+      </div>
+      <div class="mv-legend">
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(250,179,135,.15);border-color:rgba(250,179,135,.5)"></div>变量 a — 存放值 10</div>
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.5)"></div>指针 p — 存放 a 的地址（0x61fe1c）</div>
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:#16141F;border-color:#2A2840"></div>其他内存区域</div>
+      </div>
+    </div>
+
+    <!-- Symbol table -->
+    <h3 class="sub-title">三个关键符号</h3>
+    <table class="sym-table">
+      <thead><tr><th>符号</th><th>出现场景</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>&amp;</td>
+          <td>变量前（如 <code>&amp;a</code>）</td>
+          <td><strong>取址运算符</strong>：获取变量的内存地址</td>
+        </tr>
+        <tr>
+          <td>*</td>
+          <td>声明语句中（如 <code>int *p</code>）</td>
+          <td><strong>指针类型声明</strong>：声明一个指针变量</td>
+        </tr>
+        <tr>
+          <td>*</td>
+          <td>使用指针时（如 <code>*p</code>）</td>
+          <td><strong>解引用运算符</strong>：访问指针所指向的值</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 指针基本用法</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="op">*</span><span class="fn">p</span><span class="pnc">;</span>         <span class="cmt">// 声明：p 是一个指向 int 类型的指针</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-ptr"><td class="ln">3</td><td class="cd"><span class="fn">p</span> <span class="op">=</span> <span class="op">&amp;</span><span class="fn">a</span><span class="pnc">;</span>      <span class="cmt">// 让 p 指向变量 a（存储 a 的地址）</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">p</span><span class="pnc">;</span>    <span class="cmt">// 输出 a 的地址（如 0x61fe1c）</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">p</span><span class="pnc">;</span>   <span class="cmt">// 解引用：输出 p 所指向的值，即 10</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd"><span class="op">*</span><span class="fn">p</span> <span class="op">=</span> <span class="num">20</span><span class="pnc">;</span>    <span class="cmt">// 通过指针修改 a 的值</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">;</span>    <span class="cmt">// 输出 20（a 被间接修改了）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">☠️</span>
+      <div><b>野指针！</b>指针使用前必须初始化（指向一个有效地址）。未初始化的指针是<strong>野指针</strong>，使用它会导致未定义行为（程序崩溃或数据错乱）。<br>不确定指针应指向哪里时，先初始化为 <code>nullptr</code>：<code>int *p = nullptr;</code>。这样意外解引用时会立刻崩溃，便于调试，比野指针安全得多。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 9.3 指针与数组 ═══ -->
+  <section class="section" id="s3">
+    <p class="section-label">9.3</p>
+    <h2 class="section-title">指针与数组</h2>
+    <div class="section-body">
+      <p>数组名本身就是一个指向首元素地址的<strong>指针常量</strong>，可以像指针一样使用。</p>
+    </div>
+
+    <!-- Array pointer visual -->
+    <div class="arr-ptr-visual">
+      <div style="font-size:11px;color:#6C7086;margin-bottom:12px;">int arr[] = {1, 2, 3, 4, 5};  int *p = arr;  // p 指向 arr[0]</div>
+      <div class="apv-row">
+        <span class="apv-label">值</span>
+        <div class="apv-ptr"><span>p</span><span class="apv-ptr-arrow">→</span></div>
+        <div class="apv-cells">
+          <div class="apv-cell hi0">1</div>
+          <div class="apv-cell norm">2</div>
+          <div class="apv-cell hi2">3</div>
+          <div class="apv-cell hi3">4</div>
+          <div class="apv-cell norm">5</div>
+        </div>
+      </div>
+      <div class="apv-row">
+        <span class="apv-label">索引</span>
+        <div style="width:80px;flex-shrink:0"></div>
+        <div class="apv-cells">
+          <div class="apv-cell idx" style="color:var(--code-num)">[0]</div>
+          <div class="apv-cell idx">[1]</div>
+          <div class="apv-cell idx" style="color:var(--code-kw)">[2]</div>
+          <div class="apv-cell idx" style="color:var(--code-str)">[3]</div>
+          <div class="apv-cell idx">[4]</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;font-family:'JetBrains Mono',monospace;display:flex;gap:20px;flex-wrap:wrap;">
+        <span style="color:var(--code-num)">*p      → 1  (arr[0])</span>
+        <span style="color:var(--code-kw)">*(p+2)  → 3  (arr[2])</span>
+        <span style="color:var(--code-str)">p[3]    → 4  (arr[3])</span>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 指针访问数组</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">arr</span><span class="pnc">[] = {</span><span class="num">1</span><span class="pnc">,</span><span class="num">2</span><span class="pnc">,</span><span class="num">3</span><span class="pnc">,</span><span class="num">4</span><span class="pnc">,</span><span class="num">5</span><span class="pnc">};</span></td></tr>
+          <tr class="hl-ptr"><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="op">*</span><span class="fn">p</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">;</span>       <span class="cmt">// 等同于 p = &amp;arr[0]</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">p</span><span class="pnc">;</span>        <span class="cmt">// 输出 1（arr[0]）</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="pnc">(</span><span class="fn">p</span><span class="op">+</span><span class="num">2</span><span class="pnc">);</span>    <span class="cmt">// 输出 3（arr[2]）</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">p</span><span class="pnc">[</span><span class="num">3</span><span class="pnc">];</span>      <span class="cmt">// 输出 4（arr[3]，指针可用下标）</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// 用指针遍历数组</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">5</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="pnc">(</span><span class="fn">p</span> <span class="op">+</span> <span class="fn">i</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title">数组名 vs 指针</h3>
+    <table class="cmp-table">
+      <thead><tr><th>特性</th><th>数组名 arr</th><th>指针 p</th></tr></thead>
+      <tbody>
+        <tr><td>是否可改变指向</td><td><span class="no">❌ 常量，不能修改</span></td><td><span class="ok">✅ 变量，可重新赋值</span></td></tr>
+        <tr><td>+ 偏移运算</td><td><span class="ok">✅ arr + 1</span></td><td><span class="ok">✅ p + 1</span></td></tr>
+        <tr><td>[ ] 下标访问</td><td><span class="ok">✅ arr[2]</span></td><td><span class="ok">✅ p[2]</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>指针偏移注意：</b><code>p + 1</code> 并不是将地址加 1，而是偏移一个<strong>元素的大小</strong>（如 <code>int</code> 指针偏移 4 字节）。解引用前务必确保指针指向有效的数组范围，越界访问是未定义行为。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 9.4 引用 ═══ -->
+  <section class="section" id="s4">
+    <p class="section-label">9.4</p>
+    <h2 class="section-title">引用</h2>
+    <div class="section-body">
+      <p>引用是变量的<strong>别名</strong>，对引用的所有操作等同于直接操作原变量。引用比指针更安全、语法更简洁，声明时必须立即初始化，且绑定后不能再改变。</p>
+    </div>
+
+    <!-- Reference visual -->
+    <div class="ref-visual">
+      <div style="font-size:11px;color:#6C7086;margin-bottom:12px;">int a = 10;  int &amp;ref = a;  // ref 是 a 的别名</div>
+      <div class="rv-row">
+        <div class="rv-var rv-a">a = 10</div>
+        <span class="rv-eq">⟺</span>
+        <div class="rv-var rv-ref">ref = 10</div>
+        <span class="rv-label">同一块内存，两个名字</span>
+      </div>
+      <div style="margin-top:10px;font-size:12.5px;font-family:'JetBrains Mono',monospace;color:#6C7086;display:flex;flex-direction:column;gap:5px;">
+        <span><span style="color:var(--code-str)">ref = 20;</span>  <span style="color:#45475A">// 等同于 a = 20</span></span>
+        <span><span style="color:var(--code-str)">cout &lt;&lt; a;</span>  <span style="color:#45475A">// 输出 20（a 也变了）</span></span>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 引用用法</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-ref"><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="op">&amp;</span><span class="fn">ref</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">;</span>  <span class="cmt">// ref 是 a 的引用（别名），必须在声明时初始化</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">ref</span><span class="pnc">;</span>   <span class="cmt">// 输出 10（和 a 完全一样）</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">ref</span> <span class="op">=</span> <span class="num">20</span><span class="pnc">;</span>     <span class="cmt">// 修改 ref 等同于修改 a</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">;</span>     <span class="cmt">// 输出 20</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 引用最常用于函数参数（实现引用传递）</span></td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd"><span class="kw">void</span> <span class="fn">swap</span><span class="pnc">(</span><span class="typ">int</span> <span class="op">&amp;</span><span class="fn">x</span><span class="pnc">,</span> <span class="typ">int</span> <span class="op">&amp;</span><span class="fn">y</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="typ">int</span> <span class="fn">temp</span> <span class="op">=</span> <span class="fn">x</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">x</span> <span class="op">=</span> <span class="fn">y</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">y</span> <span class="op">=</span> <span class="fn">temp</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title">指针 vs 引用</h3>
+
+    <div class="pr-compare">
+      <div class="pr-card">
+        <div class="pr-head ptr-h"><span class="pr-icon">🎯</span><span class="pr-title">指针（Pointer）</span></div>
+        <div class="pr-body">
+          存储另一个变量的<strong>地址</strong>，通过 <code>*</code> 解引用访问值。<br>
+          灵活但危险：可以不初始化（野指针），可以改变指向，可以为 <code>nullptr</code>。<br>
+          语法相对复杂，需要 <code>*</code> 和 <code>&amp;</code> 操作。
+        </div>
+      </div>
+      <div class="pr-card">
+        <div class="pr-head ref-h"><span class="pr-icon">🔗</span><span class="pr-title">引用（Reference）</span></div>
+        <div class="pr-body">
+          变量的<strong>别名</strong>，操作引用就是操作原变量。<br>
+          安全且简洁：必须在声明时初始化，绑定后不能改变，不能为空。<br>
+          语法像普通变量，无需 <code>*</code> 解引用。
+        </div>
+      </div>
+    </div>
+
+    <table class="full-cmp">
+      <thead><tr><th>特性</th><th>指针</th><th>引用</th></tr></thead>
+      <tbody>
+        <tr><td>是否必须初始化</td><td><span class="no">❌ 可不初始化（危险）</span></td><td><span class="ok">✅ 必须在声明时初始化</span></td></tr>
+        <tr><td>能否改变指向</td><td><span class="ok">✅ 可以随时指向别处</span></td><td><span class="no">❌ 一旦绑定，终生不变</span></td></tr>
+        <tr><td>是否可以为空</td><td><span class="ok">✅ 可以为 nullptr</span></td><td><span class="no">❌ 不能为空</span></td></tr>
+        <tr><td>语法复杂度</td><td>需要 <code>*</code> 和 <code>&amp;</code> 操作</td><td>简洁，像普通变量</td></tr>
+        <tr><td>适用场景</td><td>需要灵活改变指向或可为空</td><td>函数传参、修改原变量</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>选择建议：</b><br>
+        ① 函数参数需要修改原变量时，优先使用<strong>引用</strong>（<code>&amp;</code>），更安全、代码更简洁。<br>
+        ② 需要表示"可能不存在"的对象，或需要动态改变指向时，使用<strong>指针</strong>。<br>
+        ③ 传递大对象（如 <code>string</code>、结构体）时，用 <code>const 引用</code> 避免拷贝开销。
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第九章 指针与引用</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="08_函数.html">← 第八章：函数</a>
+      <a class="nav-btn" href="10_结构体.html">第十章：结构体 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.2 vector 动态数组 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "11.2"; }
+
+  /* ── 子导航组件：横向并排卡片 ── */
+  .ch11-subnav { margin-bottom: 28px; }
+  .ch11-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch11-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+  }
+  .ch11-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch11-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch11-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch11-group-name { color: var(--text-secondary); }
+  .ch11-group.current .ch11-group-name { color: var(--grp-color); }
+  .ch11-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .ch11-group:not(.current) .ch11-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch11-group:not(.current):hover .ch11-group-head { background: var(--grp-color-light); }
+  .ch11-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch11-group:not(.current):hover .ch11-group-name { color: var(--grp-color); }
+  .ch11-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch11-group:not(.current):hover .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch11-group.current .ch11-expand-badge { display: none; }
+
+  .ch11-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch11-group:not(.current) .ch11-items { display: none; }
+  .ch11-group.expanded .ch11-items { display: flex; }
+  .ch11-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch11-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch11-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch11-group.c-intro  { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-seq    { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-adapt  { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch11-group.c-assoc  { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+  .ch11-group.c-util   { --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid);  --grp-color-light: var(--amber-light); }
+  .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
+
+  /* ── 本页专属样式 ── */
+  .cap-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 20px 24px; margin: 20px 0; font-family: 'JetBrains Mono', monospace; }
+  .cap-title { font-size: 11px; color: #6C7086; margin-bottom: 12px; letter-spacing: .06em; }
+  .cap-bar { display: flex; height: 40px; border-radius: 6px; overflow: hidden; border: 2px solid #2A2840; }
+  .cap-seg { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--code-text); }
+  .cap-seg.used  { background: rgba(137,180,250,.25); flex: 3; }
+  .cap-seg.free  { background: #16141F; color: #45475A; flex: 2; }
+  .cap-legend { display: flex; gap: 20px; margin-top: 12px; font-size: 11.5px; color: #6C7086; }
+  .cap-legend span.dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: #EEEDFE; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-dark); background: var(--accent-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="11.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">首页</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十一章 · STL 标准模板库</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.2 vector</span>
+    </div>
+    <h1 class="chapter-title">11.2　vector 动态数组</h1>
+    <p class="chapter-desc">STL 中最常用的容器——一个能自动伸缩的数组，支持下标快速访问，也能随时增删元素。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch11-subnav">
+    <div class="ch11-subnav-groups">
+
+      <div class="ch11-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">先导课</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_00_STL概述.html">STL 是什么</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-seq current expanded">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">序列容器</span>
+          <span class="ch11-group-count">4</span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_01_string.html">string</a>
+          <a class="ch11-item active" href="11_02_vector.html">vector</a>
+          <a class="ch11-item" href="11_03_list.html">list</a>
+          <a class="ch11-item" href="11_04_deque.html">deque</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-adapt" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">容器适配器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_05_stack.html">stack</a>
+          <a class="ch11-item" href="11_06_queue.html">queue</a>
+          <a class="ch11-item" href="11_07_priority_queue.html">priority_queue</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-assoc" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">关联容器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_08_map.html">map</a>
+          <a class="ch11-item" href="11_09_unordered_map.html">unordered_map</a>
+          <a class="ch11-item" href="11_10_set.html">set</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-util" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">实用类型</span>
+          <span class="ch11-group-count">2</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_11_pair.html">pair</a>
+          <a class="ch11-item" href="11_12_bitset.html">bitset</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-algo" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">STL 算法</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_13_STL算法.html">算法大全</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">11.2.1</span><a href="#s1">定义与初始化</a></li>
+      <li><span class="toc-num">11.2.2</span><a href="#s2">常用操作</a></li>
+      <li><span class="toc-num">11.2.3</span><a href="#s3">完整使用示例</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+    <div class="section-body">
+      <p><code>vector</code> 是 STL 中最常用的容器，可以把它理解成一个<strong>能自动伸缩的数组</strong>。当你需要一个可以随时增减元素、且能用下标快速访问任意位置的序列时，<code>vector</code> 是第一选择。使用前需引入 <code>&lt;vector&gt;</code> 头文件。</p>
+    </div>
+
+    <div class="sub-title" id="s1">11.2.1　定义与初始化</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · vector 的几种初始化方式</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;vector&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v1</span><span class="pnc">;</span>                       <span class="cmt">// 空数组，里面什么都没有</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v2</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">);</span>                    <span class="cmt">// 5 个元素，全部自动初始化为 0</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v3</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">,</span> <span class="num">7</span><span class="pnc">);</span>                 <span class="cmt">// 5 个元素，全部初始化为 7</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v4</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">};</span>    <span class="cmt">// 直接用花括号列出元素（最直观的写法）</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v5</span><span class="pnc">(</span><span class="fn">v4</span><span class="pnc">);</span>                  <span class="cmt">// 拷贝构造——复制一个一模一样的数组</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">    <span class="cmt">// 二维数组：3 行 4 列，全部初始化为 0</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;&gt;</span> <span class="fn">matrix</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">,</span> <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;(</span><span class="num">4</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">));</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>注意事项：</b><br>
+        · <code>vector&lt;int&gt; v(n)</code> 创建的 n 个元素会被自动初始化为 0，<strong>不会</strong>像局部数组那样留下"脏数据"。<br>
+        · <code>vector&lt;int&gt; v(n, val)</code> 创建的 n 个元素会被初始化为指定的 <code>val</code>。<br>
+        · 初始化列表 <code>{...}</code> 是 C++11 引入的语法，简洁直观，优先使用。
+      </div>
+    </div>
+
+    <div class="sub-title" id="s2">11.2.2　常用操作</div>
+
+    <p style="font-size:14.5px;color:var(--text-secondary);margin-bottom:10px;"><strong>📏 容量管理</strong></p>
+
+    <div class="cap-visual">
+      <div class="cap-title">size() 与 capacity() 的区别</div>
+      <div class="cap-bar">
+        <div class="cap-seg used">已用（size = 3）</div>
+        <div class="cap-seg free">预留空间（未用）</div>
+      </div>
+      <div class="cap-legend">
+        <span><span class="dot" style="background:rgba(137,180,250,.6)"></span>实际存储的元素 — size()</span>
+        <span><span class="dot" style="background:#2A2840"></span>已分配但还没用 — capacity() 多出的部分</span>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 容量相关操作</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span>            <span class="cmt">// 3——当前有多少个元素</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">capacity</span><span class="pnc">();</span>        <span class="cmt">// 已分配的内存最多能装多少个（通常 ≥ size）</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">empty</span><span class="pnc">();</span>           <span class="cmt">// false——判断是否为空</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">clear</span><span class="pnc">();</span>           <span class="cmt">// 清空所有元素，size 变成 0</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">resize</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">);</span>          <span class="cmt">// 把大小调整为 5，多出来的位置填 0</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">resize</span><span class="pnc">(</span><span class="num">10</span><span class="pnc">,</span> <span class="op">-</span><span class="num">1</span><span class="pnc">);</span>    <span class="cmt">// 把大小调整为 10，多出来的位置填 -1</span></td></tr>
+          <tr class="hl-g"><td class="ln">8</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">reserve</span><span class="pnc">(</span><span class="num">1000</span><span class="pnc">);</span>     <span class="cmt">// 提前预留 1000 个位置的空间</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">shrink_to_fit</span><span class="pnc">();</span>  <span class="cmt">// 把多余的内存释放掉</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>reserve() 有什么用？</b><br>
+        <code>vector</code> 扩容时，需要重新找一块更大的内存，然后把旧数据全部搬过去——这很花时间。如果你预先知道大概要存 1000 个元素，提前调用 <code>reserve(1000)</code> 就可以避免反复搬家，显著提升性能。这是竞赛中常见的优化手段。
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>clear() 的陷阱：</b><code>clear()</code> 只把元素清掉，让 <code>size()</code> 变成 0，但<strong>已经占用的内存不会释放</strong>。如果想真正释放内存，可以用 <code>vector&lt;int&gt;().swap(v)</code> 这个小技巧。
+      </div>
+    </div>
+
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>🔍 元素访问</strong></p>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 元素访问</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">10</span><span class="pnc">,</span> <span class="num">20</span><span class="pnc">,</span> <span class="num">30</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">x</span> <span class="op">=</span> <span class="fn">v</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">];</span>        <span class="cmt">// 10——用下标访问，不检查越界</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">y</span> <span class="op">=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">at</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">);</span>     <span class="cmt">// 10——用 at 访问，越界时会报错</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">first</span> <span class="op">=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">front</span><span class="pnc">();</span>  <span class="cmt">// 10——第一个元素</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">last</span> <span class="op">=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">back</span><span class="pnc">();</span>    <span class="cmt">// 30——最后一个元素</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="typ">int</span><span class="op">*</span> <span class="fn">p</span> <span class="op">=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">data</span><span class="pnc">();</span>   <span class="cmt">// 获取底层数组的原始指针（需要调用 C 函数时有用）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🔌</span>
+      <div><b>data() 的妙用：</b>有些老旧的 C 语言函数需要传入数组指针（比如 <code>memcpy</code>、<code>scanf</code>），这时可以用 <code>v.data()</code> 把 vector 当成普通数组来用。</div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>效率须知：</b><code>vector</code> 在<strong>尾部</strong>增删元素是 O(1)，非常快。但在<strong>头部或中间</strong>插入/删除是 O(n)，因为需要把后面的元素全部挪位置。如果需要频繁在中间操作，应该考虑用 <code>list</code>。</div>
+    </div>
+
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>✏️ 增删修改</strong></p>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · push_back / insert / erase</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="num">4</span><span class="pnc">);</span>              <span class="cmt">// 在末尾追加：{1, 2, 3, 4}</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">pop_back</span><span class="pnc">();</span>               <span class="cmt">// 删除最后一个：{1, 2, 3}</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">()</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">99</span><span class="pnc">);</span> <span class="cmt">// 在下标 1 处插入 99：{1, 99, 2, 3}</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">()</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">);</span>   <span class="cmt">// 删除下标 1 的元素：{1, 2, 3}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">v1</span><span class="pnc">.</span><span class="fn">swap</span><span class="pnc">(</span><span class="fn">v2</span><span class="pnc">);</span>              <span class="cmt">// 交换两个 vector 的全部内容（O(1)，极快）</span></td></tr>
+          <tr class="hl-g"><td class="ln">7</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">emplace_back</span><span class="pnc">(</span><span class="num">10</span><span class="pnc">,</span> <span class="str">'a'</span><span class="pnc">);</span>   <span class="cmt">// 在末尾原地构造元素（比 push_back 更高效）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>emplace_back vs push_back：</b><code>push_back</code> 是先造好一个临时对象再拷贝进去，<code>emplace_back</code> 是直接在末尾原地构造，省去了拷贝这一步。对于简单的 <code>int</code> 差别不大，但对于复杂的类型（比如 pair、结构体），<code>emplace_back</code> 更高效。</div>
+    </div>
+
+    <div class="sub-title">🔥 经典陷阱：删除时迭代器失效</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · erase 与迭代器失效</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl-warn"><td class="ln">1</td><td class="cd"><span class="cmt">// ❌ 错误写法——erase 之后迭代器已经"过期"了</span></td></tr>
+          <tr class="hl-warn"><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">();</span> <span class="fn">it</span> <span class="op">!=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">();</span> <span class="op">++</span><span class="fn">it</span><span class="pnc">)</span></td></tr>
+          <tr class="hl-warn"><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-warn"><td class="ln">4</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="op">*</span><span class="fn">it</span> <span class="op">==</span> <span class="fn">target</span><span class="pnc">)</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="fn">it</span><span class="pnc">);</span> <span class="cmt">// 危险！it 已失效，++it 会出错</span></td></tr>
+          <tr class="hl-warn"><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl-g"><td class="ln">7</td><td class="cd"><span class="cmt">// ✅ 正确写法——利用 erase 返回的新迭代器</span></td></tr>
+          <tr class="hl-g"><td class="ln">8</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">();</span> <span class="fn">it</span> <span class="op">!=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">();</span> <span class="pnc">)</span></td></tr>
+          <tr class="hl-g"><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-g"><td class="ln">10</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="op">*</span><span class="fn">it</span> <span class="op">==</span> <span class="fn">target</span><span class="pnc">)</span></td></tr>
+          <tr class="hl-g"><td class="ln">11</td><td class="cd">        <span class="fn">it</span> <span class="op">=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="fn">it</span><span class="pnc">);</span>  <span class="cmt">// erase 返回被删除元素的下一个位置</span></td></tr>
+          <tr class="hl-g"><td class="ln">12</td><td class="cd">    <span class="kw">else</span></td></tr>
+          <tr class="hl-g"><td class="ln">13</td><td class="cd">        <span class="op">++</span><span class="fn">it</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-g"><td class="ln">14</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🔥</span>
+      <div>这是竞赛和工程中<strong>最经典的 STL 陷阱之一</strong>：删除元素后，原来的迭代器立刻失效，再对它做 <code>++</code> 是未定义行为，轻则结果错误，重则程序崩溃。记住口诀：<strong>erase 返回新位置，用它接着往下走，不要再手动 ++it</strong>。</div>
+    </div>
+
+    <div class="sub-title" id="s3">11.2.3　完整使用示例</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · vector 综合示例</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;vector&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="cmt">// 遍历方式一：下标</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="fn">size_t</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">v</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="cmt">// 遍历方式二：范围 for（最简洁）</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span> <span class="pnc">:</span> <span class="fn">v</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"></td></tr>
+          <tr class="hl-g"><td class="ln">21</td><td class="cd">    <span class="cmt">// 删除偶数</span></td></tr>
+          <tr class="hl-g"><td class="ln">22</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">();</span> <span class="fn">it</span> <span class="op">!=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">();</span> <span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr class="hl-g"><td class="ln">23</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="op">*</span><span class="fn">it</span> <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr class="hl-g"><td class="ln">24</td><td class="cd">            <span class="fn">it</span> <span class="op">=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="fn">it</span><span class="pnc">);</span></td></tr>
+          <tr class="hl-g"><td class="ln">25</td><td class="cd">        <span class="kw">else</span></td></tr>
+          <tr class="hl-g"><td class="ln">26</td><td class="cd">            <span class="op">++</span><span class="fn">it</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-g"><td class="ln">27</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd">    <span class="cmt">// v 变成 {1, 3, 5}</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd"></td></tr>
+          <tr><td class="ln">30</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"size: "</span> <span class="op">&lt;&lt;</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：3</span></td></tr>
+          <tr><td class="ln">31</td><td class="cd"></td></tr>
+          <tr><td class="ln">32</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">33</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title">📋 vector 常用操作速查表</div>
+    <div class="section-body">
+      <p>把本节出现过的方法按用途归类汇总，写代码时可以直接当参考卡用。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>方法</th><th>分类</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td>v.size() / v.empty()</td><td>容量</td><td>元素个数 / 判断是否为空</td></tr>
+        <tr><td>v.capacity()</td><td>容量</td><td>已分配的内存最多能装多少个</td></tr>
+        <tr><td>v.clear()</td><td>容量</td><td>清空元素（size 变 0，内存不释放）</td></tr>
+        <tr><td>v.resize(n) / v.resize(n, val)</td><td>容量</td><td>调整大小，多出的位置填 0 或 val</td></tr>
+        <tr><td>v.reserve(n)</td><td>容量</td><td>提前预留 n 个位置，避免反复扩容</td></tr>
+        <tr><td>v.shrink_to_fit()</td><td>容量</td><td>释放多余内存</td></tr>
+        <tr><td>v[i]</td><td>访问</td><td>下标访问，不检查越界，速度快</td></tr>
+        <tr><td>v.at(i)</td><td>访问</td><td>下标访问，越界抛异常，更安全</td></tr>
+        <tr><td>v.front() / v.back()</td><td>访问</td><td>第一个 / 最后一个元素</td></tr>
+        <tr><td>v.data()</td><td>访问</td><td>获取底层数组的原始指针</td></tr>
+        <tr><td>v.push_back(x) / v.pop_back()</td><td>修改</td><td>末尾追加 / 删除元素，O(1)</td></tr>
+        <tr><td>v.insert(it, x)</td><td>修改</td><td>在 it 位置插入元素，O(n)</td></tr>
+        <tr><td>v.erase(it)</td><td>修改</td><td>删除 it 位置的元素，返回下一个有效迭代器</td></tr>
+        <tr><td>v.emplace_back(args...)</td><td>修改</td><td>末尾原地构造元素，省去拷贝</td></tr>
+        <tr><td>v1.swap(v2)</td><td>修改</td><td>交换两个 vector 的全部内容，O(1)</td></tr>
+        <tr><td>v.begin() / v.end()</td><td>遍历</td><td>正向迭代器范围</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十一章 · STL 标准模板库 · 11.2 vector</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="11_01_string.html">← 11.1 string 字符串</a>
+      <a class="nav-btn" href="11_03_list.html">11.3 list 双向链表 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

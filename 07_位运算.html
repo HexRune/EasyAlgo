@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第七章 · 位运算 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+    /* ── Chapter 7 专属样式 ── */
+
+  /* 代码行高亮扩展（警告行） */
+  .hl-warn td { background: rgba(153,60,29,.07) !important; }
+
+  /* 位运算符总览表 */
+  .op-overview { width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .op-overview thead tr { background: #1E1C2E }
+  .op-overview th { padding: 10px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840 }
+  .op-overview th:first-child { color: var(--code-text) }
+  .op-overview td { padding: 10px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6 }
+  .op-overview tr:last-child td { border-bottom: none }
+  .op-overview td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; color: var(--code-op); background: #16141F; text-align: center; width: 52px }
+  .op-name { font-weight: 700; color: var(--text-primary); font-size: 13.5px }
+  .op-rule { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #6C7086; margin-top: 3px }
+  .op-mnemonic { display: inline-block; background: var(--accent-light); color: var(--accent-dark); font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-top: 4px }
+
+  /* 二进制运算可视化卡片 */
+  .bin-op-card {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 18px 22px; margin: 18px 0;
+    font-family: 'JetBrains Mono', monospace;
+    overflow-x: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+  .bin-op-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #2A2840 }
+  .bin-op-sym { font-size: 22px; font-weight: 700; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0 }
+  .sym-and { background: rgba(137,180,250,.15); color: var(--code-fn) }
+  .sym-or  { background: rgba(166,227,161,.15); color: var(--code-str) }
+  .sym-xor { background: rgba(203,166,247,.15); color: var(--code-kw) }
+  .sym-not { background: rgba(245,194,231,.15); color: var(--code-op) }
+  .sym-shl { background: rgba(250,179,135,.15); color: var(--code-num) }
+  .sym-shr { background: rgba(249,226,175,.15); color: #FAD89B }
+  .bin-op-title { font-size: 14px; font-weight: 700 }
+  .sym-and-t { color: var(--code-fn) }
+  .sym-or-t  { color: var(--code-str) }
+  .sym-xor-t { color: var(--code-kw) }
+  .sym-not-t { color: var(--code-op) }
+  .sym-shl-t { color: var(--code-num) }
+  .sym-shr-t { color: #FAD89B }
+  .bin-op-rule { font-size: 12px; color: #6C7086; margin-left: auto }
+
+  .bin-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px }
+  .bin-label { font-size: 12px; color: #6C7086; min-width: 24px; text-align: right; flex-shrink: 0 }
+  .bin-digits { display: flex; gap: 3px }
+  .bd { width: 22px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0 }
+  .bd.z    { background: #16141F; color: #45475A }
+  .bd.o    { background: #2A2840; color: var(--code-text) }
+  .bd.hi-a { background: rgba(137,180,250,.3); color: var(--code-fn); border: 1px solid rgba(137,180,250,.5) }
+  .bd.hi-o { background: rgba(166,227,161,.3); color: var(--code-str); border: 1px solid rgba(166,227,161,.5) }
+  .bd.hi-x { background: rgba(203,166,247,.3); color: var(--code-kw); border: 1px solid rgba(203,166,247,.5) }
+  .bd.hi-n { background: rgba(245,194,231,.3); color: var(--code-op); border: 1px solid rgba(245,194,231,.5) }
+  .bd.hi-s { background: rgba(250,179,135,.3); color: var(--code-num); border: 1px solid rgba(250,179,135,.5) }
+  .bin-sep { height: 1px; background: #2A2840; margin: 8px 0 8px 32px }
+  .bin-decimal { font-size: 12.5px; color: #6C7086; margin-left: 4px; align-self: center }
+
+  /* 异或性质卡片 */
+  .xor-props { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0 }
+  .xor-prop { background: rgba(203,166,247,.1); border: 1px solid rgba(203,166,247,.3); border-radius: var(--r-sm); padding: 10px 12px; text-align: center }
+  .xor-prop-eq { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--code-kw) }
+  .xor-prop-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px }
+
+  /* 位运算技巧卡片网格 */
+  .tricks-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 18px 0 }
+  .trick-card { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .trick-head { padding: 8px 13px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px }
+  .trick-head.and-h { background: rgba(137,180,250,.1); color: var(--blue) }
+  .trick-head.or-h  { background: rgba(166,227,161,.1); color: var(--teal) }
+  .trick-head.xor-h { background: rgba(203,166,247,.1); color: var(--accent) }
+  .trick-head.shr-h { background: rgba(250,179,135,.1); color: var(--amber) }
+  .trick-body { padding: 10px 13px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--code-text); background: var(--code-bg); line-height: 1.7 }
+  .trick-body .c { color: var(--code-cmt); font-style: italic }
+
+  /* 移位可视化 */
+  .shift-visual {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 16px 20px; margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    overflow-x: auto;
+  }
+  .sv-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: nowrap }
+  .sv-label { min-width: 80px; color: #6C7086; font-size: 12px; text-align: right; flex-shrink: 0 }
+  .sv-bits { display: flex; gap: 2px; flex-wrap: nowrap }
+  .sv-bit { width: 24px; height: 24px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0 }
+  .sv-bit.z     { background: #16141F; color: #45475A }
+  .sv-bit.o     { background: #2A2840; color: var(--code-text) }
+  .sv-bit.moved { background: rgba(250,179,135,.25); color: var(--code-num); border: 1px solid rgba(250,179,135,.4) }
+  .sv-bit.lost  { background: #0D0C14; color: #2A2840; text-decoration: line-through; font-size: 10px }
+  .sv-bit.new0  { background: rgba(137,180,250,.15); color: var(--code-fn); border: 1px solid rgba(137,180,250,.3) }
+  .sv-decimal { font-size: 12.5px; color: #6C7086; margin-left: 8px; white-space: nowrap }
+  .sv-sep { height: 1px; background: #2A2840; margin: 6px 0 6px 86px }
+
+  /* GCC 内置函数表 */
+  .gcc-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .gcc-table thead tr { background: #1E1C2E }
+  .gcc-table th { padding: 9px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840 }
+  .gcc-table th:first-child { color: var(--code-text) }
+  .gcc-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle }
+  .gcc-table tr:last-child td { border-bottom: none }
+  .gcc-table tr:nth-child(even) td { background: #FAFAF7 }
+  .gcc-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--code-fn); white-space: nowrap; background: #16141F }
+  .gcc-table tr:nth-child(even) td:first-child { background: #16141F }
+  .gcc-ex  { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-muted) }
+  .gcc-res { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--code-num) }
+
+  /* 44 二进制位演示 */
+  .bit44 { display: flex; gap: 2px; align-items: center; margin-top: 8px; flex-wrap: wrap }
+  .b44 { width: 20px; height: 20px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; flex-shrink: 0 }
+  .b44.z  { background: #16141F; color: #45475A }
+  .b44.o  { background: #2A2840; color: var(--code-text) }
+  .b44.hi { background: rgba(166,227,161,.3); color: var(--code-str); border: 1px solid rgba(166,227,161,.4) }
+  .b44.lo { background: rgba(250,179,135,.2); color: var(--code-num); border: 1px solid rgba(250,179,135,.3) }
+  .b44-sep { width: 6px; height: 20px; display: flex; align-items: center; justify-content: center; color: #2A2840; font-size: 14px }
+
+  /* .trick-body code { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; padding: 1px 5px; border-radius: 3px; font-size: 12px; } */
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="Ch.7">
+    <p class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      C++ 编程语法
+    </p>
+    <h1 class="chapter-title">七、位运算</h1>
+    <p class="chapter-desc">位运算直接操作二进制位，速度极快（比乘除法快得多），是竞赛编程的核心技巧。所有位运算都针对补码进行。</p>
+  </header>
+
+  <nav class="toc">
+    <p class="toc-title">本章目录</p>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">7.1</span>六大位运算符总览</a></li>
+      <li><a href="#s-and"><span class="toc-num">7.1.1</span>& 按位与</a></li>
+      <li><a href="#s-or"><span class="toc-num">7.1.2</span>| 按位或</a></li>
+      <li><a href="#s-not"><span class="toc-num">7.1.3</span>~ 按位非</a></li>
+      <li><a href="#s-xor"><span class="toc-num">7.1.4</span>^ 按位异或</a></li>
+      <li><a href="#s-shl"><span class="toc-num">7.1.5</span>&lt;&lt; 左移</a></li>
+      <li><a href="#s-shr"><span class="toc-num">7.1.6</span>&gt;&gt; 右移</a></li>
+      <li><a href="#s2"><span class="toc-num">7.2</span>GCC 内置函数速查</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 7.1 总览 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">7.1</p>
+    <h2 class="section-title">六大位运算符总览</h2>
+    <div class="section-body">
+      <p>位运算直接操作整数的二进制位。C++ 提供六个位运算符，各有特定的运算规则与优先级：</p>
+    </div>
+
+    <table class="op-overview">
+      <thead><tr><th>符号</th><th>名称与规则</th><th>记忆口诀</th><th>优先级</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>&amp;</td>
+          <td><div class="op-name">按位与（AND）</div><div class="op-rule">两位都为 1 才为 1，否则为 0</div></td>
+          <td><span class="op-mnemonic">全1才1，有0出0</span></td>
+          <td><span class="op-pri">8</span></td>
+        </tr>
+        <tr>
+          <td>|</td>
+          <td><div class="op-name">按位或（OR）</div><div class="op-rule">有一个 1 就为 1，全 0 才为 0</div></td>
+          <td><span class="op-mnemonic">有1就1，全0出0</span></td>
+          <td><span class="op-pri">10</span></td>
+        </tr>
+        <tr>
+          <td>^</td>
+          <td><div class="op-name">按位异或（XOR）</div><div class="op-rule">两位不同为 1，相同为 0</div></td>
+          <td><span class="op-mnemonic">相同为0，不同为1</span></td>
+          <td><span class="op-pri">9</span></td>
+        </tr>
+        <tr>
+          <td>~</td>
+          <td><div class="op-name">按位非（NOT）</div><div class="op-rule">每一位全部翻转（0→1，1→0）</div></td>
+          <td><span class="op-mnemonic">全部翻转</span></td>
+          <td><span class="op-pri">2</span></td>
+        </tr>
+        <tr>
+          <td>&lt;&lt;</td>
+          <td><div class="op-name">左移</div><div class="op-rule">所有位左移 n 位，低位补 0，相当于 ×2ⁿ</div></td>
+          <td><span class="op-mnemonic">左移 = ×2ⁿ</span></td>
+          <td><span class="op-pri">5</span></td>
+        </tr>
+        <tr>
+          <td>&gt;&gt;</td>
+          <td><div class="op-name">右移</div><div class="op-rule">所有位右移 n 位，正数高位补 0，相当于 ÷2ⁿ</div></td>
+          <td><span class="op-mnemonic">右移 = ÷2ⁿ</span></td>
+          <td><span class="op-pri">5</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══ 7.1.1 & ═══ -->
+  <section class="section" id="s-and">
+    <p class="section-label">7.1.1</p>
+    <h2 class="section-title">&amp; 按位与（AND）</h2>
+    <div class="section-body"><p>对应位都为 1 时结果才为 1，否则为 0。常用于：判断奇偶、检测某位、清零某些位。</p></div>
+
+    <div class="bin-op-card">
+      <div class="bin-op-header">
+        <div class="bin-op-sym sym-and">&amp;</div>
+        <div>
+          <div class="bin-op-title sym-and-t">6 &amp; 3 = 2</div>
+          <div style="font-size:12px;color:#6C7086;margin-top:2px">规则：1&amp;1=1 &nbsp;·&nbsp; 1&amp;0=0 &nbsp;·&nbsp; 0&amp;0=0</div>
+        </div>
+      </div>
+      <div class="bin-row">
+        <span class="bin-label">&nbsp;</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div>
+          <div class="bd z">0</div><div class="bd hi-a">1</div><div class="bd hi-a">1</div><div class="bd z">0</div>
+        </div>
+        <span class="bin-decimal">(6)</span>
+      </div>
+      <div class="bin-row">
+        <span class="bin-label">&amp;</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div>
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd hi-a">1</div><div class="bd hi-a">1</div>
+        </div>
+        <span class="bin-decimal">(3)</span>
+      </div>
+      <div class="bin-sep"></div>
+      <div class="bin-row">
+        <span class="bin-label">=</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div>
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd hi-a">1</div><div class="bd z">0</div>
+        </div>
+        <span class="bin-decimal" style="color:var(--code-fn);font-weight:700">(2) ✓</span>
+      </div>
+    </div>
+
+    <div class="tricks-grid">
+      <div class="trick-card">
+        <div class="trick-head and-h">🔍 判断奇偶</div>
+        <div class="trick-body"><span style="color:var(--code-kw)">if</span> (n <span style="color:var(--code-fn)">&amp;</span> <span style="color:var(--code-num)">1</span>)  <span class="c">// 最低位=1 → 奇数</span>
+  <br>&nbsp;&nbsp;&nbsp;&nbsp;cout &lt;&lt; <span style="color:var(--code-str)">"奇数"</span>;
+<br><span style="color:var(--code-kw)">else</span>
+  <br>&nbsp;&nbsp;&nbsp;&nbsp;cout &lt;&lt; <span style="color:var(--code-str)">"偶数"</span>;</div>
+      </div>
+      <div class="trick-card">
+        <div class="trick-head and-h">🎯 判断第 k 位是否为 1</div>
+        <div class="trick-body"><span style="color:var(--code-kw)">if</span> ((n >> k) <span style="color:var(--code-fn)">&amp;</span> <span style="color:var(--code-num)">1</span>)
+  <br>&nbsp;&nbsp;&nbsp;&nbsp;cout &lt;&lt; <span style="color:var(--code-str)">"第k位是1"</span>;
+<span class="c"><br>// k 从 0 开始，0 是最低位</span><br>&nbsp;</div>
+      </div>
+      <div class="trick-card">
+        <div class="trick-head and-h">🧹 保留低 k 位</div>
+        <div class="trick-body"><span style="color:var(--code-type)">int</span> lowK = n <span style="color:var(--code-fn)">&amp;</span> ((<span style="color:var(--code-num)">1</span> &lt;&lt; k) - <span style="color:var(--code-num)">1</span>);
+<span class="c">// (1<<k)-1 低k位全为1的掩码</span></div>
+      </div>
+      <div class="trick-card">
+        <div class="trick-head and-h">🚿 将第 k 位清零</div>
+        <div class="trick-body">n <span style="color:var(--code-fn)">&amp;=</span> ~(<span style="color:var(--code-num)">1</span> &lt;&lt; k);
+<span class="c">// ~(1<<k): 除第k位是0外全是1
+// 与运算后第k位变0，其余不变</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 7.1.2 | ═══ -->
+  <section class="section" id="s-or">
+    <p class="section-label">7.1.2</p>
+    <h2 class="section-title">| 按位或（OR）</h2>
+    <div class="section-body"><p>只要有一个位为 1 结果就为 1，全 0 才得 0。常用于：将某些位强制设为 1、合并标志位。</p></div>
+
+    <div class="bin-op-card">
+      <div class="bin-op-header">
+        <div class="bin-op-sym sym-or">|</div>
+        <div>
+          <div class="bin-op-title sym-or-t">6 | 3 = 7</div>
+          <div style="font-size:12px;color:#6C7086;margin-top:2px">规则：1|1=1 &nbsp;·&nbsp; 1|0=1 &nbsp;·&nbsp; 0|0=0</div>
+        </div>
+      </div>
+      <div class="bin-row">
+        <span class="bin-label">&nbsp;</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div>
+          <div class="bd z">0</div><div class="bd hi-o">1</div><div class="bd hi-o">1</div><div class="bd z">0</div>
+        </div>
+        <span class="bin-decimal">(6)</span>
+      </div>
+      <div class="bin-row">
+        <span class="bin-label">|</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div>
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd hi-o">1</div><div class="bd hi-o">1</div>
+        </div>
+        <span class="bin-decimal">(3)</span>
+      </div>
+      <div class="bin-sep"></div>
+      <div class="bin-row">
+        <span class="bin-label">=</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div>
+          <div class="bd z">0</div><div class="bd hi-o">1</div><div class="bd hi-o">1</div><div class="bd hi-o">1</div>
+        </div>
+        <span class="bin-decimal" style="color:var(--code-str);font-weight:700">(7) ✓</span>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 按位或用途</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl"><td class="ln">1</td><td class="cd"><span class="cmt">// 将第 k 位设为 1</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="fn">n</span> <span class="op">|=</span> <span class="pnc">(</span><span class="num">1</span> <span class="op">&lt;&lt;</span> <span class="fn">k</span><span class="pnc">);</span>  <span class="cmt">// 1<<k 只有第k位为1，|后第k位必然为1</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 7.1.3 ~ ═══ -->
+  <section class="section" id="s-not">
+    <p class="section-label">7.1.3</p>
+    <h2 class="section-title">~ 按位非（NOT）</h2>
+    <div class="section-body"><p>将每一个二进制位全部取反（0→1，1→0）。重要规律：<code>~n = -(n+1)</code>，例如 <code>~6 = -7</code>，<code>~0 = -1</code>，<code>~(-1) = 0</code>。</p></div>
+
+    <div class="bin-op-card">
+      <div class="bin-op-header">
+        <div class="bin-op-sym sym-not">~</div>
+        <div>
+          <div class="bin-op-title sym-not-t">~6 = -7</div>
+          <div style="font-size:12px;color:#6C7086;margin-top:2px">规则：~1=0 &nbsp;·&nbsp; ~0=1 &nbsp;（全部翻转）</div>
+        </div>
+      </div>
+      <div class="bin-row">
+        <span class="bin-label">~</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div>
+          <div class="bd z">0</div><div class="bd hi-n">1</div><div class="bd hi-n">1</div><div class="bd hi-n">0</div>
+        </div>
+        <span class="bin-decimal">(6)</span>
+      </div>
+      <div class="bin-sep"></div>
+      <div class="bin-row">
+        <span class="bin-label">=</span>
+        <div class="bin-digits">
+          <div class="bd hi-n">1</div><div class="bd hi-n">1</div><div class="bd hi-n">1</div><div class="bd hi-n">1</div>
+          <div class="bd hi-n">1</div><div class="bd z">0</div><div class="bd z">0</div><div class="bd hi-n">1</div>
+        </div>
+        <span class="bin-decimal" style="color:var(--code-op);font-weight:700">(-7，补码) ✓</span>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>配合 &amp; 清零某位：</b><code>n &amp;= ~(1 &lt;&lt; k)</code> — <code>~(1&lt;&lt;k)</code> 除第 k 位是 0 外其余全是 1，按位与后第 k 位清零，其余位保持不变。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 7.1.4 ^ ═══ -->
+  <section class="section" id="s-xor">
+    <p class="section-label">7.1.4</p>
+    <h2 class="section-title">^ 按位异或（XOR）</h2>
+    <div class="section-body"><p>两位相同结果为 0，两位不同结果为 1。异或有非常神奇的性质，是竞赛中最常用的位运算之一。</p></div>
+
+    <div class="bin-op-card">
+      <div class="bin-op-header">
+        <div class="bin-op-sym sym-xor">^</div>
+        <div>
+          <div class="bin-op-title sym-xor-t">6 ^ 3 = 5</div>
+          <div style="font-size:12px;color:#6C7086;margin-top:2px">规则：1^1=0 &nbsp;·&nbsp; 1^0=1 &nbsp;·&nbsp; 0^0=0</div>
+        </div>
+      </div>
+      <div class="bin-row">
+        <span class="bin-label">&nbsp;</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div>
+          <div class="bd z">0</div><div class="bd hi-x">1</div><div class="bd hi-x">1</div><div class="bd z">0</div>
+        </div>
+        <span class="bin-decimal">(6)</span>
+      </div>
+      <div class="bin-row">
+        <span class="bin-label">^</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div>
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd hi-x">1</div><div class="bd hi-x">1</div>
+        </div>
+        <span class="bin-decimal">(3)</span>
+      </div>
+      <div class="bin-sep"></div>
+      <div class="bin-row">
+        <span class="bin-label">=</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div><div class="bd z">0</div>
+          <div class="bd z">0</div><div class="bd hi-x">1</div><div class="bd z">0</div><div class="bd hi-x">1</div>
+        </div>
+        <span class="bin-decimal" style="color:var(--code-kw);font-weight:700">(5) ✓</span>
+      </div>
+    </div>
+
+    <h3 class="sub-title">异或的三个神奇性质</h3>
+    <div class="xor-props">
+      <div class="xor-prop">
+        <div class="xor-prop-eq">a ^ a == 0</div>
+        <div class="xor-prop-desc">任何数与自己异或得 0</div>
+      </div>
+      <div class="xor-prop">
+        <div class="xor-prop-eq">a ^ 0 == a</div>
+        <div class="xor-prop-desc">任何数与 0 异或得本身</div>
+      </div>
+      <div class="xor-prop">
+        <div class="xor-prop-eq">a^b^a == b</div>
+        <div class="xor-prop-desc">满足交换律和结合律</div>
+      </div>
+    </div>
+
+    <div class="tricks-grid">
+      <div class="trick-card">
+        <div class="trick-head xor-h">🔄 不用临时变量交换两数</div>
+        <div class="trick-body">a <span style="color:var(--code-kw)">^=</span> b;
+b <span style="color:var(--code-kw)">^=</span> a;
+<br>a <span style="color:var(--code-kw)">^=</span> b;
+<span class="c">// 三步后 a、b 互换</span>
+<br>&nbsp;<br>&nbsp;
+</div>
+
+      </div>
+      <div class="trick-card">
+        <div class="trick-head xor-h">🔍 找出唯一出现奇数次的数</div>
+        <div class="trick-body"><span style="color:var(--code-type)">int</span> res = <span style="color:var(--code-num)">0</span>;
+<br><span style="color:var(--code-kw)">for</span> (<span style="color:var(--code-type)">int</span> x : arr)
+  <br>    res <span style="color:var(--code-kw)">^=</span> x; <span class="c">// 偶数次→0，奇数次留下</span>
+<br>cout &lt;&lt; res;</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 7.1.5 << ═══ -->
+  <section class="section" id="s-shl">
+    <p class="section-label">7.1.5</p>
+    <h2 class="section-title">&lt;&lt; 左移</h2>
+    <div class="section-body"><p>所有二进制位整体向左移动 n 位，高位丢弃，低位补 0。每左移 1 位相当于乘以 2，左移 n 位相当于乘以 2ⁿ。</p></div>
+
+    <div class="shift-visual">
+      <div style="font-size:11px;color:#6C7086;margin-bottom:10px;">6 &lt;&lt; 2 = 24（6 × 2² = 6 × 4）</div>
+      <div class="sv-row">
+        <span class="sv-label">原始 (6)</span>
+        <div class="sv-bits">
+          <div class="sv-bit z">0</div><div class="sv-bit z">0</div><div class="sv-bit z">0</div><div class="sv-bit z">0</div>
+          <div class="sv-bit z">0</div><div class="sv-bit z">0</div><div class="sv-bit moved">1</div><div class="sv-bit moved">1</div><div class="sv-bit moved">0</div>
+        </div>
+      </div>
+      <div style="padding-left:86px;font-size:13px;color:#45475A;margin:4px 0;">↙↙ 左移 2 位，右侧补 00</div>
+      <div class="sv-row">
+        <span class="sv-label">结果 (24)</span>
+        <div class="sv-bits">
+          <div class="sv-bit z">0</div><div class="sv-bit z">0</div><div class="sv-bit z">0</div><div class="sv-bit moved">1</div>
+          <div class="sv-bit moved">1</div><div class="sv-bit moved">0</div><div class="sv-bit new0">0</div><div class="sv-bit new0">0</div>
+        </div>
+        <span class="sv-decimal" style="color:var(--code-num)">= 16+8 = 24 ✓</span>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 左移常见用途</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="num">6</span> <span class="op">&lt;&lt;</span> <span class="num">1</span>  <span class="op">=</span> <span class="num">12</span>    <span class="cmt">// 6 × 2¹</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="num">6</span> <span class="op">&lt;&lt;</span> <span class="num">2</span>  <span class="op">=</span> <span class="num">24</span>    <span class="cmt">// 6 × 2²</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="num">1</span> <span class="op">&lt;&lt;</span> <span class="num">10</span> <span class="op">=</span> <span class="num">1024</span>  <span class="cmt">// 2¹⁰，竞赛中极常用</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">pow2</span> <span class="op">=</span> <span class="num">1</span> <span class="op">&lt;&lt;</span> <span class="fn">k</span><span class="pnc">;</span>  <span class="cmt">// 快速计算 2^k</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="fn">n</span> <span class="op">|=</span> <span class="pnc">(</span><span class="num">1</span> <span class="op">&lt;&lt;</span> <span class="fn">k</span><span class="pnc">);</span>      <span class="cmt">// 将第 k 位设为 1</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr class="hl-warn"><td class="ln">8</td><td class="cd"><span class="num">1</span> <span class="op">&lt;&lt;</span> <span class="num">31</span>  <span class="cmt">// ⚠️ 溢出！int 最大 31 位，结果是负数</span></td></tr>
+          <tr class="hl-warn"><td class="ln">9</td><td class="cd"><span class="num">1LL</span> <span class="op">&lt;&lt;</span> <span class="num">31</span> <span class="cmt">// ✓ 正确：用 long long 避免溢出</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 7.1.6 >> ═══ -->
+  <section class="section" id="s-shr">
+    <p class="section-label">7.1.6</p>
+    <h2 class="section-title">&gt;&gt; 右移</h2>
+    <div class="section-body"><p>所有二进制位整体向右移动 n 位，低位丢弃，正数高位补 0，负数高位补 1（算术右移）。每右移 1 位相当于除以 2 并向下取整。</p></div>
+
+    <div class="shift-visual">
+      <div style="font-size:11px;color:#6C7086;margin-bottom:10px;">24 &gt;&gt; 2 = 6（24 ÷ 2² = 24 ÷ 4）</div>
+      <div class="sv-row">
+        <span class="sv-label">原始 (24)</span>
+        <div class="sv-bits">
+          <div class="sv-bit z">0</div><div class="sv-bit z">0</div><div class="sv-bit z">0</div><div class="sv-bit moved">1</div>
+          <div class="sv-bit moved">1</div><div class="sv-bit moved">0</div><div class="sv-bit lost">0</div><div class="sv-bit lost">0</div>
+        </div>
+      </div>
+      <div style="padding-left:86px;font-size:13px;color:#45475A;margin:4px 0;">↘↘ 右移 2 位，低位丢弃，左侧补 00</div>
+      <div class="sv-row">
+        <span class="sv-label">结果 (6)</span>
+        <div class="sv-bits">
+          <div class="sv-bit new0">0</div><div class="sv-bit new0">0</div>
+          <div class="sv-bit z">0</div><div class="sv-bit z">0</div><div class="sv-bit z">0</div>
+          <div class="sv-bit moved">1</div><div class="sv-bit moved">1</div><div class="sv-bit moved">0</div>
+        </div>
+        <span class="sv-decimal" style="color:var(--code-num)">= 4+2 = 6 ✓</span>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 右移常见用途</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="num">24</span> <span class="op">&gt;&gt;</span> <span class="num">1</span> <span class="op">=</span> <span class="num">12</span>   <span class="cmt">// 24 ÷ 2</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="num">24</span> <span class="op">&gt;&gt;</span> <span class="num">2</span> <span class="op">=</span> <span class="num">6</span>    <span class="cmt">// 24 ÷ 4</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="num">7</span>  <span class="op">&gt;&gt;</span> <span class="num">1</span> <span class="op">=</span> <span class="num">3</span>    <span class="cmt">// 7 ÷ 2 = 3.5，向下取整为 3</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="fn">n</span> <span class="op">&gt;&gt;=</span> <span class="num">1</span><span class="pnc">;</span>              <span class="cmt">// 快速除以 2（比 n/2 快）</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="typ">int</span> <span class="fn">bit</span> <span class="op">=</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&gt;&gt;</span> <span class="fn">k</span><span class="pnc">)</span> <span class="op">&amp;</span> <span class="num">1</span><span class="pnc">;</span> <span class="cmt">// 取出第 k 位的值（0 或 1）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Priority trap -->
+    <div class="callout danger">
+      <span class="callout-icon">🚨</span>
+      <div>
+        <b>优先级陷阱！</b>位运算的优先级比 <code>==</code> 和 <code>!=</code> 低，必须加括号：<br>
+        <code style="margin-top:6px;display:inline-block">if ((n &amp; 1) == 0)</code> ← ✓ 正确<br>
+        <code style="margin-top:4px;display:inline-block">if (n &amp; 1 == 0)</code> ← ✗ 错误！等价于 <code>n &amp; (1==0)</code> = <code>n &amp; 0</code> = 0，永远为假！
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>移位越界！</b>移位的位数不能 ≥ 数据类型的总位数。<code>int</code> 是 32 位，移位不能 ≥ 32。<code>1 &lt;&lt; 31</code> 会溢出（结果变负数），应改写为 <code>1LL &lt;&lt; 31</code> 使用 <code>long long</code>。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 7.2 GCC 内置函数 ═══ -->
+  <section class="section" id="s2">
+    <p class="section-label">7.2</p>
+    <h2 class="section-title">GCC 二进制内置函数速查</h2>
+    <div class="section-body">
+      <p>GCC 编译器提供了一套操作二进制位的内置函数，在竞赛中非常实用。以 <code>44</code>（二进制 <code>101100</code>）为例演示：</p>
+    </div>
+
+    <!-- 44 binary visual -->
+    <div style="background:var(--code-bg);border-radius:var(--r-md);padding:14px 18px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:12px;">
+      <div style="color:#6C7086;margin-bottom:8px;">44 = 0000 0000 0000 0000 0000 0000 0010 1100（32位）</div>
+      <div class="bit44">
+        <div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div>
+        <div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div>
+        <div class="b44-sep">·</div>
+        <div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div>
+        <div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div>
+        <div class="b44-sep">·</div>
+        <div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div>
+        <div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div>
+        <div class="b44-sep">·</div>
+        <div class="b44 hi">1</div><div class="b44 z">0</div>
+        <div class="b44 hi">1</div><div class="b44 hi">1</div>
+        <div class="b44 lo">0</div><div class="b44 lo">0</div>
+        <div style="margin-left:10px;color:#6C7086;font-size:11px;align-self:center">
+          <span style="color:var(--code-str)">■ = 值为1的位（共3个）</span>
+          &nbsp;&nbsp;
+          <span style="color:var(--code-num)">■ = 末尾0（共2个）</span>
+        </div>
+      </div>
+    </div>
+
+    <table class="gcc-table">
+      <thead><tr><th>函数</th><th>功能</th><th>示例（x=44）</th><th>结果</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>__builtin_popcount(x)</td>
+          <td>统计二进制中 1 的个数</td>
+          <td class="gcc-ex">__builtin_popcount(44)</td>
+          <td class="gcc-res">3</td>
+        </tr>
+        <tr>
+          <td>__builtin_clz(x)</td>
+          <td>统计前导 0 的个数（32位）</td>
+          <td class="gcc-ex">__builtin_clz(44)</td>
+          <td class="gcc-res">26</td>
+        </tr>
+        <tr>
+          <td>__builtin_ctz(x)</td>
+          <td>统计末尾 0 的个数</td>
+          <td class="gcc-ex">__builtin_ctz(44)</td>
+          <td class="gcc-res">2</td>
+        </tr>
+        <tr>
+          <td>__builtin_ffs(x)</td>
+          <td>最低位 1 的位置（从 1 开始计数）</td>
+          <td class="gcc-ex">__builtin_ffs(44)</td>
+          <td class="gcc-res">3</td>
+        </tr>
+        <tr>
+          <td>__builtin_parity(x)</td>
+          <td>1 的个数奇偶性（奇→1，偶→0）</td>
+          <td class="gcc-ex">__builtin_parity(44)</td>
+          <td class="gcc-res">1</td>
+        </tr>
+        <tr>
+          <td>__builtin_bswap32(x)</td>
+          <td>翻转字节序（32位大小端转换）</td>
+          <td class="gcc-ex">__builtin_bswap32(0x12345678)</td>
+          <td class="gcc-res">0x78563412</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>竞赛高频：</b><code>__builtin_popcount</code> 在位集（bitmask）DP 中极常用，用来统计状态中已选了多少个元素；<code>__builtin_ctz</code> 可以快速找到最低位的 1（即 lowbit 操作），常见于树状数组（BIT）。对于 <code>long long</code> 类型，使用 <code>__builtin_popcountll</code>、<code>__builtin_clzll</code> 等带 <code>ll</code> 后缀的版本。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第七章 位运算</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="06_数组.html">← 第六章：数组</a>
+      <a class="nav-btn" href="08_函数.html">第八章：函数 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
