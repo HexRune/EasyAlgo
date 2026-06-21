@@ -60,14 +60,34 @@
   .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
 
   /* ── 本页专属样式 ── */
-  .chain-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 20px; margin: 20px 0; font-family: 'JetBrains Mono', monospace; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
-  .chain-row { display: flex; align-items: center; gap: 0; }
-  .chain-node { display: flex; align-items: center; flex-shrink: 0; }
-  .chain-box { width: 52px; height: 44px; border-radius: 6px; background: rgba(203,166,247,.15); border: 2px solid rgba(203,166,247,.5); color: var(--code-kw); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; }
-  .chain-arrow { width: 26px; height: 2px; background: var(--code-op); position: relative; flex-shrink: 0; margin: 0 2px; }
-  .chain-arrow::after { content: ''; position: absolute; right: 0; top: -4px; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid var(--code-op); }
-  .chain-null { font-size: 10.5px; color: #45475A; margin-left: 8px; flex-shrink: 0; }
-  .chain-caption { font-size: 11px; color: #6C7086; margin-top: 12px; line-height: 1.6; }
+  /* ── list 散落内存 + 双向指针示意图 ── */
+  .list-mem-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .lmv-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; letter-spacing: .02em; }
+  .lmv-svg { width: 100%; height: auto; display: block; }
+  .lmv-free { fill: #232132; stroke: #34324A; stroke-width: 1.5; }
+  .lmv-occupied { fill: #2B2A3D; stroke: #45445E; stroke-width: 1.5; stroke-dasharray: 3 3; }
+  .lmv-occ-text { font-family: 'Noto Sans SC', sans-serif; font-size: 11px; font-weight: 500; fill: #5C5A75; text-anchor: middle; }
+  .lmv-node-val { fill: rgba(166,227,161,.16); stroke: rgba(166,227,161,.55); stroke-width: 1.5; }
+  .lmv-node-ptr { fill: rgba(245,194,231,.13); stroke: rgba(245,194,231,.45); stroke-width: 1.5; }
+  .lmv-node-text { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; fill: var(--code-str); text-anchor: middle; }
+  .lmv-ptr-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; fill: #F5C2E7; text-anchor: middle; }
+  .lmv-tag-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; fill: #6C7086; text-anchor: middle; }
+  .lmv-arrow-next { fill: none; stroke: #94E2D5; stroke-width: 2; opacity: .85; }
+  .lmv-arrow-prev { fill: none; stroke: #F5C2E7; stroke-width: 1.5; stroke-dasharray: 4 3; opacity: .75; }
+
+  .lmv-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #2A2840; }
+  .lmv-leg-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #A6ADC8; font-family: 'Noto Sans SC', sans-serif; }
+  .lmv-swatch { width: 16px; height: 16px; border-radius: 4px; display: inline-block; flex-shrink: 0; }
+  .lmv-swatch.free { background: #232132; border: 1.5px solid #34324A; }
+  .lmv-swatch.occ { background: #2B2A3D; border: 1.5px dashed #45445E; }
+  .lmv-swatch.val { background: rgba(166,227,161,.2); border: 1.5px solid rgba(166,227,161,.6); }
+  .lmv-swatch.ptr { background: rgba(245,194,231,.2); border: 1.5px solid rgba(245,194,231,.55); }
+  .lmv-line-sample { width: 22px; height: 0; border-top: 2px solid #94E2D5; display: inline-block; }
+  .lmv-line-sample.prev { border-top: 2px dashed #F5C2E7; }
+
+  .lmv-caption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .lmv-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; }
+  .lmv-caption strong { color: #F2CDCD; font-weight: 700; }
 
   .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
   .api-table thead tr { background: var(--accent-light); }
@@ -85,7 +105,7 @@
   <!-- ═══ 章节头 ═══ -->
   <header class="chapter-header" data-ch="11.3">
     <div class="chapter-eyebrow">
-      <a href="index.html">首页</a>
+      <a href="index.html">← 目录</a>
       <span class="eyebrow-sep">/</span>
       <span>第十一章 · STL 标准模板库</span>
       <span class="eyebrow-sep">/</span>
@@ -197,20 +217,84 @@
       <p><code>list</code> 是一个<strong>双向链表</strong>。链表不像数组那样所有元素挤在一块连续的内存里，而是每个元素各住各的，彼此用"指针"串起来。这带来的好处是：在任意位置插入或删除元素都是 O(1)，快到飞起。代价是：不能用下标直接跳到第 n 个元素，只能顺着链条一个一个找。使用前需引入 <code>&lt;list&gt;</code> 头文件。</p>
     </div>
 
-    <div class="chain-visual">
-      <div class="sv-title" style="font-size:11px;color:#6C7086;margin-bottom:14px;letter-spacing:.06em;">list 的内存结构：每个节点都有自己的位置，靠箭头串联</div>
-      <div class="chain-row">
-        <span class="chain-null">head →</span>
-        <div class="chain-node"><div class="chain-box">1</div></div>
-        <div class="chain-arrow"></div>
-        <div class="chain-node"><div class="chain-box">2</div></div>
-        <div class="chain-arrow"></div>
-        <div class="chain-node"><div class="chain-box">3</div></div>
-        <div class="chain-arrow"></div>
-        <div class="chain-node"><div class="chain-box">4</div></div>
-        <span class="chain-null">→ nullptr</span>
+    <div class="list-mem-visual">
+      <div class="lmv-title">存储 list 的内存空间是分散的，每个节点的"值格"和"指针格"紧挨在一起作为一个节点单元，但不同节点之间互不相邻</div>
+      <svg viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg" class="lmv-svg">
+        <defs>
+          <marker id="arrNext" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#94E2D5"/>
+          </marker>
+          <marker id="arrPrev" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#F5C2E7"/>
+          </marker>
+        </defs>
+
+        <!-- 5列 x 3行网格，每格 116x62，间隔 8；col x = 8,132,256,380,504  row y = 8,78,148 -->
+        <!-- 第1行：[节点1][其它变量][节点3][free][其它变量] -->
+        <rect x="8"   y="8" width="58"  height="56" rx="6" class="lmv-node-val"/>
+        <text x="37" y="44" class="lmv-node-text">1</text>
+        <rect x="66"  y="8" width="58"  height="56" rx="6" class="lmv-node-ptr"/>
+        <text x="95" y="31" class="lmv-ptr-text">prev</text>
+        <text x="95" y="46" class="lmv-ptr-text">next</text>
+        <rect x="132" y="8" width="116" height="56" rx="6" class="lmv-occupied"/>
+        <text x="190" y="40" class="lmv-occ-text">其它变量</text>
+        <rect x="256" y="8" width="58"  height="56" rx="6" class="lmv-node-val"/>
+        <text x="285" y="44" class="lmv-node-text">3</text>
+        <rect x="314" y="8" width="58"  height="56" rx="6" class="lmv-node-ptr"/>
+        <text x="343" y="31" class="lmv-ptr-text">prev</text>
+        <text x="343" y="46" class="lmv-ptr-text">next</text>
+        <rect x="380" y="8" width="116" height="56" rx="6" class="lmv-free"/>
+        <rect x="504" y="8" width="116" height="56" rx="6" class="lmv-occupied"/>
+        <text x="562" y="40" class="lmv-occ-text">其它变量</text>
+
+        <!-- 第2行：[free][节点2][其它变量][free][free] -->
+        <rect x="8"   y="78" width="116" height="56" rx="6" class="lmv-free"/>
+        <rect x="132" y="78" width="58"  height="56" rx="6" class="lmv-node-val"/>
+        <text x="161" y="114" class="lmv-node-text">2</text>
+        <rect x="190" y="78" width="58"  height="56" rx="6" class="lmv-node-ptr"/>
+        <text x="219" y="101" class="lmv-ptr-text">prev</text>
+        <text x="219" y="116" class="lmv-ptr-text">next</text>
+        <rect x="256" y="78" width="116" height="56" rx="6" class="lmv-occupied"/>
+        <text x="314" y="110" class="lmv-occ-text">其它变量</text>
+        <rect x="380" y="78" width="116" height="56" rx="6" class="lmv-free"/>
+        <rect x="504" y="78" width="116" height="56" rx="6" class="lmv-free"/>
+
+        <!-- 第3行：[free][free][其它变量][free][节点4] -->
+        <rect x="8"   y="148" width="116" height="56" rx="6" class="lmv-free"/>
+        <rect x="132" y="148" width="116" height="56" rx="6" class="lmv-free"/>
+        <rect x="256" y="148" width="116" height="56" rx="6" class="lmv-occupied"/>
+        <text x="314" y="180" class="lmv-occ-text">其它变量</text>
+        <rect x="380" y="148" width="116" height="56" rx="6" class="lmv-free"/>
+        <rect x="504" y="148" width="58"  height="56" rx="6" class="lmv-node-val"/>
+        <text x="533" y="184" class="lmv-node-text">4</text>
+        <rect x="562" y="148" width="58"  height="56" rx="6" class="lmv-node-ptr"/>
+        <text x="591" y="171" class="lmv-ptr-text">prev</text>
+        <text x="591" y="186" class="lmv-ptr-text">next</text>
+
+        <!-- head / tail 标记：紧贴在节点正下方/正上方 -->
+        <text x="37" y="220" class="lmv-tag-text">↑ head</text>
+        <text x="533" y="220" class="lmv-tag-text">↑ tail</text>
+
+        <!-- next 箭头（实线青色）：1→2，2→3，3→4，全部是相邻格子间的短弧线，不交叉 -->
+        <path d="M 50,64 C 60,85 90,95 132,100" class="lmv-arrow-next" marker-end="url(#arrNext)"/>
+        <path d="M 195,86 C 220,60 240,45 270,30" class="lmv-arrow-next" marker-end="url(#arrNext)"/>
+        <path d="M 290,64 C 340,110 420,150 504,168" class="lmv-arrow-next" marker-end="url(#arrNext)"/>
+
+        <!-- prev 箭头（虚线粉色，走在 next 旁边的平行短弧，方向相反）：2→1，3→2，4→3 -->
+        <path d="M 145,86 C 110,75 75,68 55,60" class="lmv-arrow-prev" marker-end="url(#arrPrev)"/>
+        <path d="M 268,42 C 245,55 215,72 188,92" class="lmv-arrow-prev" marker-end="url(#arrPrev)"/>
+        <path d="M 510,164 C 430,130 350,90 300,55" class="lmv-arrow-prev" marker-end="url(#arrPrev)"/>
+      </svg>
+
+      <div class="lmv-legend">
+        <span class="lmv-leg-item"><span class="lmv-swatch free"></span>可用内存空间</span>
+        <span class="lmv-leg-item"><span class="lmv-swatch occ"></span>已被其它变量占用</span>
+        <span class="lmv-leg-item"><span class="lmv-swatch val"></span>存储节点值</span>
+        <span class="lmv-leg-item"><span class="lmv-swatch ptr"></span>存储 prev / next 指针</span>
+        <span class="lmv-leg-item"><span class="lmv-line-sample next"></span>next 指针方向</span>
+        <span class="lmv-leg-item"><span class="lmv-line-sample prev"></span>prev 指针方向</span>
       </div>
-      <div class="chain-caption">每个节点散落在内存的不同位置（不连续），通过指针互相连接。在中间插入新节点只需改两个指针，不用搬动其它元素。</div>
+      <div class="lmv-caption">节点 1、2、3、4 在内存里的物理位置是<strong>随机散落、不连续</strong>的——"值格"和"指针格"是同一个节点的两部分，紧挨在一起，但节点与节点之间隔着的格子，有些是真正空闲的，<strong>有些早就被程序里别的变量占用了</strong>。new 一个新节点时，系统只能在当下空闲的格子里随便找一块塞进去，所以节点最终散落在哪儿是不可预测的。每个节点靠自己存的 <code>prev</code> 和 <code>next</code> 两个指针，分别指向前一个和后一个节点的内存地址，这也是为什么 <code>list</code> 不能像数组一样直接用下标跳转：物理地址和逻辑顺序之间没有固定的换算关系，只能顺着指针一格一格走。</div>
     </div>
 
     <div class="callout warn">
