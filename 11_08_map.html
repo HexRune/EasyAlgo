@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.8 map 有序映射 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "11.8"; }
+
+  /* ── 子导航组件：横向并排卡片 ── */
+  .ch11-subnav { margin-bottom: 28px; }
+  .ch11-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch11-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+  }
+  .ch11-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch11-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch11-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch11-group-name { color: var(--text-secondary); }
+  .ch11-group.current .ch11-group-name { color: var(--grp-color); }
+  .ch11-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .ch11-group:not(.current) .ch11-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch11-group:not(.current):hover .ch11-group-head { background: var(--grp-color-light); }
+  .ch11-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch11-group:not(.current):hover .ch11-group-name { color: var(--grp-color); }
+  .ch11-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch11-group:not(.current):hover .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch11-group.current .ch11-expand-badge { display: none; }
+
+  .ch11-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch11-group:not(.current) .ch11-items { display: none; }
+  .ch11-group.expanded .ch11-items { display: flex; }
+  .ch11-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch11-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch11-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch11-group.c-intro  { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-seq    { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-adapt  { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch11-group.c-assoc  { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+  .ch11-group.c-util   { --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid);  --grp-color-light: var(--amber-light); }
+  .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
+
+  /* ── 本页专属样式：键值对映射可视化 ── */
+  .map-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .map-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .map-rows { display: flex; flex-direction: column; gap: 8px; }
+  .map-row { display: flex; align-items: center; gap: 0; font-family: 'JetBrains Mono', monospace; }
+  .map-key { width: 110px; padding: 9px 14px; border-radius: 6px 0 0 6px; background: rgba(137,180,250,.18); border: 1.5px solid rgba(137,180,250,.5); color: var(--code-fn); font-weight: 700; font-size: 13.5px; text-align: center; }
+  .map-arrow { width: 36px; text-align: center; color: #6C7086; font-size: 14px; flex-shrink: 0; }
+  .map-val { width: 90px; padding: 9px 14px; border-radius: 0 6px 6px 0; background: rgba(166,227,161,.15); border: 1.5px solid rgba(166,227,161,.5); color: var(--code-str); font-weight: 700; font-size: 13.5px; text-align: center; }
+  .map-order-note { font-size: 10.5px; color: #6C7086; margin-top: 12px; padding-top: 12px; border-top: 1px solid #2A2840; }
+
+  .map-caption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .map-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .map-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: #EEEDFE; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-dark); background: var(--accent-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="11.8">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十一章 · STL 标准模板库</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.8 map</span>
+    </div>
+    <h1 class="chapter-title">11.8　map 有序映射</h1>
+    <p class="chapter-desc">一个"智能字典"：给它一个键，立刻返回对应的值。内部用红黑树实现，元素按键自动排序，查找/插入/删除都是 O(log n)。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch11-subnav">
+    <div class="ch11-subnav-groups">
+
+      <div class="ch11-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">先导课</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_00_STL概述.html">STL 是什么</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-seq" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">序列容器</span>
+          <span class="ch11-group-count">4</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_01_string.html">string</a>
+          <a class="ch11-item" href="11_02_vector.html">vector</a>
+          <a class="ch11-item" href="11_03_list.html">list</a>
+          <a class="ch11-item" href="11_04_deque.html">deque</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-adapt" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">容器适配器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_05_stack.html">stack</a>
+          <a class="ch11-item" href="11_06_queue.html">queue</a>
+          <a class="ch11-item" href="11_07_priority_queue.html">priority_queue</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-assoc current expanded">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">关联容器</span>
+          <span class="ch11-group-count">3</span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item active" href="11_08_map.html">map</a>
+          <a class="ch11-item" href="11_09_unordered_map.html">unordered_map</a>
+          <a class="ch11-item" href="11_10_set.html">set</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-util" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">实用类型</span>
+          <span class="ch11-group-count">2</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_11_pair.html">pair</a>
+          <a class="ch11-item" href="11_12_bitset.html">bitset</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-algo" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">STL 算法</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_13_STL算法.html">算法大全</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">11.8.1</span><a href="#s1">定义与初始化</a></li>
+      <li><span class="toc-num">11.8.2</span><a href="#s2">常用操作</a></li>
+      <li><span class="toc-num">11.8.3</span><a href="#s3">经典陷阱</a></li>
+      <li><span class="toc-num">11.8.4</span><a href="#s4">完整使用示例</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+    <div class="section-body">
+      <p><code>map</code> 像一个"智能字典"：你给它一个键（key），它立刻返回对应的值（value）。比如用名字查分数、用单词查出现次数。<code>map</code> 内部用<strong>红黑树</strong>实现，元素会按键的大小自动排序，查找、插入、删除都是 O(log n)。使用前需引入 <code>&lt;map&gt;</code> 头文件。</p>
+    </div>
+
+    <div class="map-visual">
+      <div class="map-title">map&lt;string, int&gt;：键 → 值，并且自动按键的字典序排好</div>
+      <div class="map-rows">
+        <div class="map-row"><div class="map-key">"Alice"</div><div class="map-arrow">→</div><div class="map-val">85</div></div>
+        <div class="map-row"><div class="map-key">"Bob"</div><div class="map-arrow">→</div><div class="map-val">92</div></div>
+        <div class="map-row"><div class="map-key">"Carol"</div><div class="map-arrow">→</div><div class="map-val">78</div></div>
+      </div>
+      <div class="map-order-note">即使插入顺序是 Bob → Alice → Carol，遍历时也总是按键的字典序输出：Alice → Bob → Carol。</div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>注意：</b><br>
+        · <code>map</code> 的键是<strong>唯一的</strong>，若插入已存在的键，会覆盖原有值。<br>
+        · <code>map</code> 中的元素会按键的升序自动排序，遍历时总是按字典序或数值序输出。<br>
+        · <code>map</code> 底层为红黑树，查找、插入、删除的时间复杂度均为 O(log n)。
+      </div>
+    </div>
+
+    <div class="sub-title" id="s1">11.8.1　定义与初始化</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · map 的定义方式</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;map&gt;</span><span class="pnc"></span> <span class="cmt">// 必须包含这个头文件</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">map</span><span class="pnc">&lt;</span><span class="fn">string</span><span class="pnc">,</span> <span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">m1</span><span class="pnc">;</span>   <span class="cmt">// 空映射：名字 → 分数</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">map</span><span class="pnc">&lt;</span><span class="fn">string</span><span class="pnc">,</span> <span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">m2</span> <span class="op">=</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">        <span class="pnc">{</span><span class="str">"Alice"</span><span class="pnc">,</span> <span class="num">85</span><span class="pnc">},</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="pnc">{</span><span class="str">"Bob"</span><span class="pnc">,</span> <span class="num">92</span><span class="pnc">},</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">        <span class="pnc">{</span><span class="str">"Carol"</span><span class="pnc">,</span> <span class="num">78</span><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="pnc">};</span>  <span class="cmt">// 用花括号初始化</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="fn">map</span><span class="pnc">&lt;</span><span class="fn">string</span><span class="pnc">,</span> <span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">m3</span><span class="pnc">(</span><span class="fn">m2</span><span class="pnc">);</span>  <span class="cmt">// 拷贝构造</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="fn">map</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">,</span> <span class="fn">string</span><span class="pnc">&gt;</span> <span class="fn">m4</span><span class="pnc">;</span>   <span class="cmt">// 键是 int，值是 string</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="s2">11.8.2　常用操作</div>
+
+    <p style="font-size:14.5px;color:var(--text-secondary);margin-bottom:10px;"><strong>✏️ 插入与删除</strong></p>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 插入、删除、清空</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">map</span><span class="pnc">&lt;</span><span class="fn">string</span><span class="pnc">,</span> <span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">m</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">m</span><span class="pnc">[</span><span class="str">"Alice"</span><span class="pnc">]</span> <span class="op">=</span> <span class="num">85</span><span class="pnc">;</span>           <span class="cmt">// 方式一：用 [] 赋值（键存在则覆盖）</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">m</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">({</span><span class="str">"Bob"</span><span class="pnc">,</span> <span class="num">92</span><span class="pnc">});</span>   <span class="cmt">// 方式二：用 insert（键已存在则不覆盖！）</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">m</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="str">"Alice"</span><span class="pnc">);</span>          <span class="cmt">// 删除键为 "Alice" 的元素</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">m</span><span class="pnc">.</span><span class="fn">clear</span><span class="pnc">();</span>                   <span class="cmt">// 清空所有元素</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">m1</span><span class="pnc">.</span><span class="fn">swap</span><span class="pnc">(</span><span class="fn">m2</span><span class="pnc">);</span>                <span class="cmt">// 交换两个 map 的内容</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>🔍 查找与访问</strong></p>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · []、at()、find()、count() 四种查找方式</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">map</span><span class="pnc">&lt;</span><span class="fn">string</span><span class="pnc">,</span> <span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">m</span> <span class="op">=</span> <span class="pnc">{{</span><span class="str">"Alice"</span><span class="pnc">,</span> <span class="num">85</span><span class="pnc">},</span> <span class="pnc">{</span><span class="str">"Bob"</span><span class="pnc">,</span> <span class="num">92</span><span class="pnc">}};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr class="hl-warn"><td class="ln">3</td><td class="cd"><span class="cmt">// 方式一：用 []（键不存在时会自动插入！）</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">s1</span> <span class="op">=</span> <span class="fn">m</span><span class="pnc">[</span><span class="str">"Alice"</span><span class="pnc">];</span>  <span class="cmt">// 85——找到了</span></td></tr>
+          <tr class="hl-warn"><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">s2</span> <span class="op">=</span> <span class="fn">m</span><span class="pnc">[</span><span class="str">"Eve"</span><span class="pnc">];</span>    <span class="cmt">// 0——Eve 不存在，[] 会自动插入 {"Eve", 0}！</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 方式二：用 at()（键不存在时抛出异常，更安全）</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="typ">int</span> <span class="fn">s3</span> <span class="op">=</span> <span class="fn">m</span><span class="pnc">.</span><span class="fn">at</span><span class="pnc">(</span><span class="str">"Alice"</span><span class="pnc">);</span>  <span class="cmt">// 85——找到了</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// int s4 = m.at("Eve"); // 抛出异常——Eve 不存在</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="cmt">// 方式三：用 find()（返回迭代器，没找到返回 end()）</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">m</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">"Bob"</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">it</span> <span class="op">!=</span> <span class="fn">m</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">())</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">it</span><span class="op">-></span><span class="fn">first</span> <span class="op">&lt;&lt;</span> <span class="str">": "</span> <span class="op">&lt;&lt;</span> <span class="fn">it</span><span class="op">-></span><span class="fn">second</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// Bob: 92</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="cmt">// 方式四：用 count()（判断键是否存在，返回 0 或 1）</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">m</span><span class="pnc">.</span><span class="fn">count</span><span class="pnc">(</span><span class="str">"Alice"</span><span class="pnc">))</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Alice 存在"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>🔄 遍历</strong></p>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 用迭代器和范围 for 遍历</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">map</span><span class="pnc">&lt;</span><span class="fn">string</span><span class="pnc">,</span> <span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">m</span> <span class="op">=</span> <span class="pnc">{{</span><span class="str">"Bob"</span><span class="pnc">,</span> <span class="num">92</span><span class="pnc">},</span> <span class="pnc">{</span><span class="str">"Alice"</span><span class="pnc">,</span> <span class="num">85</span><span class="pnc">},</span> <span class="pnc">{</span><span class="str">"Carol"</span><span class="pnc">,</span> <span class="num">78</span><span class="pnc">}};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="cmt">// 用迭代器遍历（按键的字典序自动排序）</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">m</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">();</span> <span class="fn">it</span> <span class="op">!=</span> <span class="fn">m</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">();</span> <span class="op">++</span><span class="fn">it</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">it</span><span class="op">-></span><span class="fn">first</span> <span class="op">&lt;&lt;</span> <span class="str">": "</span> <span class="op">&lt;&lt;</span> <span class="fn">it</span><span class="op">-></span><span class="fn">second</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 输出顺序：Alice: 85 Bob: 92 Carol: 78（按键排序）</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 范围 for 更简洁</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="kw">auto</span><span class="op">&</span> <span class="fn">p</span> <span class="pnc">:</span> <span class="fn">m</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">p</span><span class="pnc">.</span><span class="fn">first</span> <span class="op">&lt;&lt;</span> <span class="str">": "</span> <span class="op">&lt;&lt;</span> <span class="fn">p</span><span class="pnc">.</span><span class="fn">second</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="s3">11.8.3　🔥 经典陷阱</div>
+
+    <p style="font-size:14.5px;color:var(--text-secondary);margin-bottom:10px;"><strong>陷阱一：[] 会自动插入不存在的键！</strong></p>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · [] 的隐藏副作用</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">map</span><span class="pnc">&lt;</span><span class="fn">string</span><span class="pnc">,</span> <span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">m</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="cmt">// 你只是想检查一下 "Alice" 的分数……</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">m</span><span class="pnc">[</span><span class="str">"Alice"</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：0</span></td></tr>
+          <tr class="hl-warn"><td class="ln">4</td><td class="cd"><span class="cmt">// ❌ 但这一行悄悄地插入了 {"Alice", 0}！</span></td></tr>
+          <tr class="hl-warn"><td class="ln">5</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">m</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：1——map 里已经多了一个元素</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl-g"><td class="ln">7</td><td class="cd"><span class="cmt">// ✅ 安全做法：用 count() 或 find() 先检查</span></td></tr>
+          <tr class="hl-g"><td class="ln">8</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">m</span><span class="pnc">.</span><span class="fn">count</span><span class="pnc">(</span><span class="str">"Alice"</span><span class="pnc">))</span></td></tr>
+          <tr class="hl-g"><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-g"><td class="ln">10</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">m</span><span class="pnc">[</span><span class="str">"Alice"</span><span class="pnc">];</span></td></tr>
+          <tr class="hl-g"><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🔥</span>
+      <div>记住：<code>[]</code> 会强制覆盖（或自动插入默认值 0），<code>insert</code> 不会覆盖已存在的键。如果只是想检查 key 是否存在，用 <code>count()</code> 或 <code>find()</code>：<code>if (m.count("Alice")) cout &lt;&lt; m["Alice"];</code></div>
+    </div>
+
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>陷阱二：insert 和 [] 的行为不同</strong></p>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · insert 不会覆盖已存在的键</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">map</span><span class="pnc">&lt;</span><span class="fn">string</span><span class="pnc">,</span> <span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">m</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">m</span><span class="pnc">[</span><span class="str">"Eve"</span><span class="pnc">]</span> <span class="op">=</span> <span class="num">95</span><span class="pnc">;</span>            <span class="cmt">// 插入 {"Eve", 95}</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">m</span><span class="pnc">[</span><span class="str">"Eve"</span><span class="pnc">]</span> <span class="op">=</span> <span class="num">100</span><span class="pnc">;</span>           <span class="cmt">// 覆盖！{"Eve", 100}</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="fn">m</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">({</span><span class="str">"Eve"</span><span class="pnc">,</span> <span class="num">80</span><span class="pnc">});</span>  <span class="cmt">// 啥也没发生——"Eve" 已存在，insert 不会覆盖</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// m["Eve"] 仍然是 100</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="s4">11.8.4　完整使用示例</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · map 综合示例</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;map&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">map</span><span class="pnc">&lt;</span><span class="fn">string</span><span class="pnc">,</span> <span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">scores</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="cmt">// 插入</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">scores</span><span class="pnc">[</span><span class="str">"Alice"</span><span class="pnc">]</span> <span class="op">=</span> <span class="num">85</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">scores</span><span class="pnc">[</span><span class="str">"Bob"</span><span class="pnc">]</span> <span class="op">=</span> <span class="num">92</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">scores</span><span class="pnc">[</span><span class="str">"Carol"</span><span class="pnc">]</span> <span class="op">=</span> <span class="num">78</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="fn">scores</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">({</span><span class="str">"David"</span><span class="pnc">,</span> <span class="num">88</span><span class="pnc">});</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="cmt">// 覆盖（Alice 的成绩被更新）</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="fn">scores</span><span class="pnc">[</span><span class="str">"Alice"</span><span class="pnc">]</span> <span class="op">=</span> <span class="num">90</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="cmt">// 查找</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">scores</span><span class="pnc">.</span><span class="fn">count</span><span class="pnc">(</span><span class="str">"Bob"</span><span class="pnc">))</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Bob: "</span> <span class="op">&lt;&lt;</span> <span class="fn">scores</span><span class="pnc">[</span><span class="str">"Bob"</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：Bob: 92</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd"></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="cmt">// 遍历（按键的字典序自动排序）</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"全部成绩:"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="kw">auto</span><span class="op">&</span> <span class="fn">p</span> <span class="pnc">:</span> <span class="fn">scores</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">p</span><span class="pnc">.</span><span class="fn">first</span> <span class="op">&lt;&lt;</span> <span class="str">": "</span> <span class="op">&lt;&lt;</span> <span class="fn">p</span><span class="pnc">.</span><span class="fn">second</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd">    <span class="cmt">// 输出：Alice: 90 Bob: 92 Carol: 78 David: 88</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd"></td></tr>
+          <tr><td class="ln">30</td><td class="cd">    <span class="cmt">// 删除</span></td></tr>
+          <tr><td class="ln">31</td><td class="cd">    <span class="fn">scores</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="str">"Carol"</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">32</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"删除后大小: "</span> <span class="op">&lt;&lt;</span> <span class="fn">scores</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：3</span></td></tr>
+          <tr><td class="ln">33</td><td class="cd"></td></tr>
+          <tr><td class="ln">34</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">35</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title">📋 map 常用操作速查表</div>
+    <div class="section-body">
+      <p>把本节出现过的方法按用途归类汇总，写代码时可以直接当参考卡用。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>方法</th><th>分类</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td>m[key] = val</td><td>插入/修改</td><td>赋值，键存在则覆盖，不存在则插入</td></tr>
+        <tr><td>m.insert({key, val})</td><td>插入</td><td>插入，键已存在则<strong>不覆盖</strong></td></tr>
+        <tr><td>m.erase(key)</td><td>删除</td><td>删除指定键的元素</td></tr>
+        <tr><td>m[key]</td><td>查找</td><td>键不存在时<strong>自动插入</strong>默认值，要小心</td></tr>
+        <tr><td>m.at(key)</td><td>查找</td><td>键不存在时抛出异常，更安全</td></tr>
+        <tr><td>m.find(key)</td><td>查找</td><td>返回迭代器，没找到返回 end()</td></tr>
+        <tr><td>m.count(key)</td><td>查找</td><td>判断键是否存在，返回 0 或 1</td></tr>
+        <tr><td>m.size() / m.empty()</td><td>容量</td><td>元素个数 / 判断是否为空</td></tr>
+        <tr><td>m.clear()</td><td>容量</td><td>清空所有元素</td></tr>
+        <tr><td>m.begin() / m.end()</td><td>遍历</td><td>正向迭代器范围，按键升序</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">🎯</span>
+      <div><b>什么时候用 map？</b>需要按键查值、且希望遍历时键是有序的场景：统计单词出现次数并按字典序输出、按学号查学生信息、需要范围查询（比如找所有分数在某区间的人）等。如果不需要顺序、只追求最快查找速度，下一节的 <code>unordered_map</code> 更合适。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十一章 · STL 标准模板库 · 11.8 map</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="11_07_priority_queue.html">← 11.7 priority_queue 优先队列</a>
+      <a class="nav-btn" href="11_09_unordered_map.html">11.9 unordered_map 无序映射 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

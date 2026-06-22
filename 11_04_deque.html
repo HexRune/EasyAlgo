@@ -60,14 +60,37 @@
   .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
 
   /* ── 本页专属样式 ── */
-  .deque-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px; margin: 20px 0; font-family: 'JetBrains Mono', monospace; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
-  .dq-title { font-size: 11px; color: #6C7086; margin-bottom: 16px; letter-spacing: .06em; }
-  .dq-row { display: flex; align-items: center; justify-content: center; gap: 4px; }
-  .dq-cell { width: 44px; height: 44px; border-radius: 6px; background: rgba(137,180,250,.15); border: 2px solid rgba(137,180,250,.5); color: var(--code-fn); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; }
-  .dq-ends { display: flex; justify-content: space-between; margin-top: 14px; }
-  .dq-ends .dq-tag { font-size: 11.5px; font-weight: 700; padding: 4px 11px; border-radius: 999px; }
-  .dq-ends .front-tag { background: rgba(166,227,161,.15); color: var(--code-str); }
-  .dq-ends .back-tag { background: rgba(250,179,135,.15); color: var(--code-num); }
+  /* ── deque 分段结构示意图 ── */
+  .dqv-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .dqv-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; letter-spacing: .02em; }
+  .dqv-svg { width: 100%; height: auto; display: block; }
+
+  .dqv-map-label { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #6C7086; }
+  .dqv-map-cell { fill: rgba(203,166,247,.15); stroke: rgba(203,166,247,.5); stroke-width: 1.5; }
+  .dqv-map-text { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 600; fill: var(--code-kw); text-anchor: middle; }
+  .dqv-map-link { fill: none; stroke: rgba(203,166,247,.4); stroke-width: 1.3; stroke-dasharray: 3 3; }
+
+  .dqv-seg-label { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; fill: #6C7086; text-anchor: middle; }
+  .dqv-seg-bracket { fill: rgba(137,180,250,.04); stroke: rgba(137,180,250,.22); stroke-width: 1.5; stroke-dasharray: 2 4; }
+  .dqv-empty { fill: #232132; stroke: #34324A; stroke-width: 1.5; }
+  .dqv-filled { fill: rgba(137,180,250,.18); stroke: rgba(137,180,250,.55); stroke-width: 1.5; }
+  .dqv-val-text { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; fill: var(--code-fn); text-anchor: middle; }
+
+  .dqv-tag-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+  .dqv-tag-text.front { fill: var(--code-str); }
+  .dqv-tag-text.back { fill: var(--code-num); }
+  .dqv-caption-inline { font-family: 'Noto Sans SC', sans-serif; font-size: 10.5px; fill: #6C7086; text-anchor: middle; }
+
+  .dqv-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 6px; padding-top: 12px; border-top: 1px solid #2A2840; }
+  .dqv-leg-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #A6ADC8; font-family: 'Noto Sans SC', sans-serif; }
+  .dqv-swatch { width: 16px; height: 16px; border-radius: 4px; display: inline-block; flex-shrink: 0; }
+  .dqv-swatch.filled { background: rgba(137,180,250,.2); border: 1.5px solid rgba(137,180,250,.6); }
+  .dqv-swatch.empty { background: #232132; border: 1.5px solid #34324A; }
+  .dqv-swatch.map { background: rgba(203,166,247,.2); border: 1.5px solid rgba(203,166,247,.55); }
+
+  .dqv-caption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .dqv-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .dqv-caption strong { color: #F2CDCD; font-weight: 700; }
 
   .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
   .api-table thead tr { background: var(--accent-light); }
@@ -204,17 +227,75 @@
       <p><code>deque</code> 是 C++ 标准库中的<strong>双端队列</strong>，全称 Double-Ended Queue。是 <code>vector</code> 和 <code>list</code> 的"混血儿"：它既支持下标随机访问，又支持在头部和尾部快速增删。底层由多段连续空间拼接而成，所以头部操作也是 O(1)。使用前需引入 <code>&lt;deque&gt;</code> 头文件。</p>
     </div>
 
-    <div class="deque-visual">
-      <div class="dq-title">deque：两端都能 O(1) 操作</div>
-      <div class="dq-row">
-        <div class="dq-cell">1</div>
-        <div class="dq-cell">2</div>
-        <div class="dq-cell">3</div>
-        <div class="dq-cell">4</div>
+    <div class="dqv-visual">
+      <div class="dqv-title">deque 的真实结构：若干个固定大小的"连续小块"，靠一个索引表（map）串起来</div>
+      <svg viewBox="0 0 690 220" xmlns="http://www.w3.org/2000/svg" class="dqv-svg">
+        <defs>
+          <marker id="dqArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#89B4FA"/>
+          </marker>
+        </defs>
+
+        <!-- 顶部：map 索引表，三个格子分别指向三个分段 -->
+        <text x="8" y="16" class="dqv-map-label">map（索引表）</text>
+        <rect x="8"   y="22" width="60" height="30" rx="5" class="dqv-map-cell"/>
+        <text x="38" y="42" class="dqv-map-text">seg0</text>
+        <rect x="76" y="22" width="60" height="30" rx="5" class="dqv-map-cell"/>
+        <text x="106" y="42" class="dqv-map-text">seg1</text>
+        <rect x="144" y="22" width="60" height="30" rx="5" class="dqv-map-cell"/>
+        <text x="174" y="42" class="dqv-map-text">seg2</text>
+
+        <!-- map 指向各分段的连线 -->
+        <path d="M 38,52 C 38,70 60,80 80,92" class="dqv-map-link" marker-end="url(#dqArrow)"/>
+        <path d="M 106,52 L 220,92" class="dqv-map-link" marker-end="url(#dqArrow)"/>
+        <path d="M 174,52 C 280,75 400,80 460,92" class="dqv-map-link" marker-end="url(#dqArrow)"/>
+
+        <!-- 分段外层"括号"背景：让三个 segment 在视觉上明确分组、互不相连 -->
+        <rect x="20"  y="86" width="200" height="64" rx="10" class="dqv-seg-bracket"/>
+        <rect x="244" y="86" width="200" height="64" rx="10" class="dqv-seg-bracket"/>
+        <rect x="468" y="86" width="200" height="64" rx="10" class="dqv-seg-bracket"/>
+
+        <!-- 分段 0：4 格，前两格空闲（留给 push_front），后两格存 1、2 -->
+        <text x="120" y="80" class="dqv-seg-label">segment 0</text>
+        <rect x="28"  y="94" width="44" height="48" rx="6" class="dqv-empty"/>
+        <rect x="76"  y="94" width="44" height="48" rx="6" class="dqv-empty"/>
+        <rect x="124" y="94" width="44" height="48" rx="6" class="dqv-filled"/>
+        <text x="146" y="124" class="dqv-val-text">1</text>
+        <rect x="172" y="94" width="44" height="48" rx="6" class="dqv-filled"/>
+        <text x="194" y="124" class="dqv-val-text">2</text>
+
+        <!-- 分段 1：4 格，全部存满 3、4、5、6 -->
+        <text x="344" y="80" class="dqv-seg-label">segment 1</text>
+        <rect x="252" y="94" width="44" height="48" rx="6" class="dqv-filled"/>
+        <text x="274" y="124" class="dqv-val-text">3</text>
+        <rect x="300" y="94" width="44" height="48" rx="6" class="dqv-filled"/>
+        <text x="322" y="124" class="dqv-val-text">4</text>
+        <rect x="348" y="94" width="44" height="48" rx="6" class="dqv-filled"/>
+        <text x="370" y="124" class="dqv-val-text">5</text>
+        <rect x="396" y="94" width="44" height="48" rx="6" class="dqv-filled"/>
+        <text x="418" y="124" class="dqv-val-text">6</text>
+
+        <!-- 分段 2：4 格，前两格存 7，后两格空闲（留给 push_back） -->
+        <text x="568" y="80" class="dqv-seg-label">segment 2</text>
+        <rect x="476" y="94" width="44" height="48" rx="6" class="dqv-filled"/>
+        <text x="498" y="124" class="dqv-val-text">7</text>
+        <rect x="524" y="94" width="44" height="48" rx="6" class="dqv-empty"/>
+        <rect x="572" y="94" width="44" height="48" rx="6" class="dqv-empty"/>
+        <rect x="620" y="94" width="44" height="48" rx="6" class="dqv-empty"/>
+
+        <!-- 两端操作标注 -->
+        <text x="50" y="174" class="dqv-tag-text front">⬅ push_front 往这里塞</text>
+        <text x="638" y="174" class="dqv-tag-text back" text-anchor="end">push_back 往这里塞 ➡</text>
+        <text x="320" y="195" class="dqv-caption-inline">下标访问时，先查 map 算出该下标落在哪个 segment，再算出段内偏移——两步都是 O(1)</text>
+      </svg>
+
+      <div class="dqv-legend">
+        <span class="dqv-leg-item"><span class="dqv-swatch filled"></span>已存储元素</span>
+        <span class="dqv-leg-item"><span class="dqv-swatch empty"></span>本段内的空闲位置（两端预留，供增删使用）</span>
+        <span class="dqv-leg-item"><span class="dqv-swatch map"></span>map 索引格（记录每段的起始地址）</span>
       </div>
-      <div class="dq-ends">
-        <span class="dq-tag front-tag">⬅ push_front / pop_front</span>
-        <span class="dq-tag back-tag">push_back / pop_back ➡</span>
+      <div class="dqv-caption">
+        <code>deque</code> 不是一整块连续内存（那是 <code>vector</code>），也不是一个个散落的节点（那是 <code>list</code>），而是<strong>若干个固定大小的连续小块（<code>segment</code>）</strong>，每块两端都留了一些空位。头部/尾部增删时，只需要在对应分段的预留空位里放一个新元素，<strong>不需要搬动其它元素</strong>，所以是 O(1)。当某一段的预留空位用完了，再向系统申请一整块新的 <code>segment</code>，挂到 <code>map</code> 上即可。
       </div>
     </div>
 
