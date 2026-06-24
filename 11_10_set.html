@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.10 set 有序集合 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "11.10"; font-size: 50px; }
+
+  /* ── 子导航组件：横向并排卡片 ── */
+  .ch11-subnav { margin-bottom: 28px; }
+  .ch11-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch11-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+  }
+  .ch11-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch11-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch11-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch11-group-name { color: var(--text-secondary); }
+  .ch11-group.current .ch11-group-name { color: var(--grp-color); }
+  .ch11-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .ch11-group:not(.current) .ch11-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch11-group:not(.current):hover .ch11-group-head { background: var(--grp-color-light); }
+  .ch11-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch11-group:not(.current):hover .ch11-group-name { color: var(--grp-color); }
+  .ch11-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch11-group:not(.current):hover .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch11-group.current .ch11-expand-badge { display: none; }
+
+  .ch11-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch11-group:not(.current) .ch11-items { display: none; }
+  .ch11-group.expanded .ch11-items { display: flex; }
+  .ch11-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch11-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch11-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch11-group.c-intro  { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-seq    { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-adapt  { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch11-group.c-assoc  { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+  .ch11-group.c-util   { --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid);  --grp-color-light: var(--amber-light); }
+  .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
+
+  /* ── 本页专属样式：去重排序集合可视化 ── */
+  .set-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .set-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .set-flow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .set-in, .set-out { display: flex; gap: 6px; flex-wrap: wrap; }
+  .set-chip { width: 34px; height: 34px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+  .set-chip.in { background: rgba(108,112,134,.18); border: 1.5px solid rgba(108,112,134,.4); color: #9398AC; }
+  .set-chip.in.dup { background: rgba(216,90,48,.18); border: 1.5px solid rgba(216,90,48,.5); color: var(--code-num); text-decoration: line-through; }
+  .set-chip.out { background: rgba(166,227,161,.18); border: 1.5px solid rgba(166,227,161,.55); color: var(--code-str); }
+  .set-arrow-big { font-size: 20px; color: #6C7086; }
+  .set-row-label { font-size: 10.5px; color: #6C7086; margin-bottom: 6px; }
+
+  .set-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .set-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .set-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: #EEEDFE; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-dark); background: var(--accent-light); white-space: nowrap; }
+
+  .lite-compare-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .lite-compare-table thead tr { background: #F3F2FF; }
+  .lite-compare-table th { padding: 9px 12px; text-align: left; font-size: 11.5px; font-weight: 700; color: var(--accent-dark); border-bottom: 1px solid var(--border); }
+  .lite-compare-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+  .lite-compare-table tr:last-child td { border-bottom: none; }
+  .lite-compare-table td:first-child { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="11.10">
+    <div class="chapter-eyebrow">
+      <a href="index.html">首页</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十一章 · STL 标准模板库</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.10 set</span>
+    </div>
+    <h1 class="chapter-title">11.10　set 有序集合</h1>
+    <p class="chapter-desc">一个会自动去重、自动排序的"收纳盒"——放进去的东西不会重复，拿出来的时候总是从小到大的顺序。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch11-subnav">
+    <div class="ch11-subnav-groups">
+
+      <div class="ch11-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">先导课</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_00_STL概述.html">STL 是什么</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-seq" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">序列容器</span>
+          <span class="ch11-group-count">4</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_01_string.html">string</a>
+          <a class="ch11-item" href="11_02_vector.html">vector</a>
+          <a class="ch11-item" href="11_03_list.html">list</a>
+          <a class="ch11-item" href="11_04_deque.html">deque</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-adapt" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">容器适配器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_05_stack.html">stack</a>
+          <a class="ch11-item" href="11_06_queue.html">queue</a>
+          <a class="ch11-item" href="11_07_priority_queue.html">priority_queue</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-assoc current expanded">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">关联容器</span>
+          <span class="ch11-group-count">3</span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_08_map.html">map</a>
+          <a class="ch11-item" href="11_09_unordered_map.html">unordered_map</a>
+          <a class="ch11-item active" href="11_10_set.html">set</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-util" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">实用类型</span>
+          <span class="ch11-group-count">2</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_11_pair.html">pair</a>
+          <a class="ch11-item" href="11_12_bitset.html">bitset</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-algo" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">STL 算法</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_13_STL算法.html">算法大全</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">11.10.1</span><a href="#s1">定义与初始化</a></li>
+      <li><span class="toc-num">11.10.2</span><a href="#s2">常用操作</a></li>
+      <li><span class="toc-num">11.10.3</span><a href="#s3">完整使用示例</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+    <div class="section-body">
+      <p><code>set</code> 是一个不重复元素的集合，内部自动排序。你可以把它想象成一个会自动去重、自动排序的"收纳盒"——放进去的东西不会重复，拿出来的时候总是从小到大的顺序。底层和 <code>map</code> 一样是红黑树，只是 <code>set</code> 只存键，不存值。使用前需引入 <code>&lt;set&gt;</code> 头文件。</p>
+    </div>
+
+    <div class="set-visual">
+      <div class="set-title">放进 set：自动去重 + 自动排序</div>
+      <div class="set-flow">
+        <div>
+          <div class="set-row-label">插入顺序：</div>
+          <div class="set-in">
+            <div class="set-chip in">3</div>
+            <div class="set-chip in">1</div>
+            <div class="set-chip in">4</div>
+            <div class="set-chip in dup">1</div>
+            <div class="set-chip in">5</div>
+            <div class="set-chip in">9</div>
+          </div>
+        </div>
+        <div class="set-arrow-big">→</div>
+        <div>
+          <div class="set-row-label">set 内部实际存储：</div>
+          <div class="set-out">
+            <div class="set-chip out">1</div>
+            <div class="set-chip out">3</div>
+            <div class="set-chip out">4</div>
+            <div class="set-chip out">5</div>
+            <div class="set-chip out">9</div>
+          </div>
+        </div>
+      </div>
+      <div class="set-caption">第二个 <code>1</code> 被自动忽略（重复元素不会被插入两次），剩下的元素自动按从小到大排好——这两件事完全不需要手动处理。</div>
+    </div>
+
+    <div class="sub-title" id="s1">11.10.1　定义与初始化</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · set 的定义方式</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;set&gt;</span><span class="pnc"></span> <span class="cmt">// 必须包含这个头文件</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">set</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">s1</span><span class="pnc">;</span>                       <span class="cmt">// 空集合</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">set</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">s2</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">3</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">};</span>  <span class="cmt">// 自动去重排序：{1, 3, 4, 5}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="fn">set</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">s3</span><span class="pnc">(</span><span class="fn">s2</span><span class="pnc">);</span>                  <span class="cmt">// 拷贝构造</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>注意：</b><br>
+        · <code>set</code> 中的元素本身既是"键"，也相当于一个不能修改的"值"——没有 <code>map</code> 那样的 <code>[]</code> 访问方式。<br>
+        · 元素一旦插入，<strong>不能直接修改</strong>，只能先删除再插入新值。<br>
+        · 底层为红黑树，插入、删除、查找都是 O(log n)。
+      </div>
+    </div>
+
+    <div class="sub-title" id="s2">11.10.2　常用操作</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · insert / erase / find / count</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">set</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">s</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">3</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">9</span><span class="pnc">};</span> <span class="cmt">// 自动去重并排序：{1, 3, 4, 5, 9}</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">);</span>     <span class="cmt">// 插入 2：{1, 2, 3, 4, 5, 9}</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="num">4</span><span class="pnc">);</span>      <span class="cmt">// 删除 4：{1, 2, 3, 5, 9}</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// 查找</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">s</span><span class="pnc">.</span><span class="fn">count</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">))</span> <span class="pnc">{</span>  <span class="cmt">// count 返回 0 或 1</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"3 在集合中"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd"><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">);</span> <span class="cmt">// find 返回迭代器</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">it</span> <span class="op">!=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">())</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"找到了: "</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">it</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="cmt">// 遍历（自动从小到大）</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span> <span class="pnc">:</span> <span class="fn">s</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span>  <span class="cmt">// 输出：1 2 3 5 9</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>解引用迭代器拿到的是元素本身：</b><code>set</code> 没有 <code>first</code>/<code>second</code>（那是 <code>map</code> 的 <code>pair</code>），<code>*it</code> 直接就是存进去的值。同样，<code>set</code> 也不支持 <code>[]</code> 访问——毕竟"键"本身就是"值"，用下标访问没有意义。</div>
+    </div>
+
+    <table class="lite-compare-table">
+      <thead><tr><th>对比项</th><th>map</th><th>set</th></tr></thead>
+      <tbody>
+        <tr><td>存储内容</td><td>键值对（key → value）</td><td>只有键（不重复的值本身）</td></tr>
+        <tr><td>访问方式</td><td>m[key]、it-&gt;first/second</td><td>无 []，*it 直接是元素</td></tr>
+        <tr><td>典型用途</td><td>按键查值</td><td>去重 + 排序 + 快速判断"是否存在"</td></tr>
+        <tr><td>无序版本</td><td>unordered_map</td><td>unordered_set（用法同理，平均 O(1)）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="s3">11.10.3　完整使用示例</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · set 综合示例</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;set&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">set</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">s</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">3</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">9</span><span class="pnc">};</span> <span class="cmt">// 自动去重并排序：{1, 3, 4, 5, 9}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">s</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">);</span>     <span class="cmt">// 插入 2：{1, 2, 3, 4, 5, 9}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="fn">s</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="num">4</span><span class="pnc">);</span>      <span class="cmt">// 删除 4：{1, 2, 3, 5, 9}</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="cmt">// 查找</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">s</span><span class="pnc">.</span><span class="fn">count</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">))</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"3 在集合中"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">it</span> <span class="op">!=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">())</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"找到了: "</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">it</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd"></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="cmt">// 遍历（自动从小到大）</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"遍历: "</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span> <span class="pnc">:</span> <span class="fn">s</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span> <span class="cmt">// 输出：1 2 3 5 9</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">30</td><td class="cd"></td></tr>
+          <tr><td class="ln">31</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">32</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title">📋 set 常用操作速查表</div>
+    <div class="section-body">
+      <p>把本节出现过的方法按用途归类汇总，写代码时可以直接当参考卡用。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>方法</th><th>分类</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td>s.insert(x)</td><td>插入</td><td>插入元素，已存在则忽略，O(log n)</td></tr>
+        <tr><td>s.erase(x)</td><td>删除</td><td>删除指定元素</td></tr>
+        <tr><td>s.find(x)</td><td>查找</td><td>返回迭代器，没找到返回 end()</td></tr>
+        <tr><td>s.count(x)</td><td>查找</td><td>判断元素是否存在，返回 0 或 1</td></tr>
+        <tr><td>s.size() / s.empty()</td><td>容量</td><td>元素个数 / 判断是否为空</td></tr>
+        <tr><td>s.clear()</td><td>容量</td><td>清空所有元素</td></tr>
+        <tr><td>s.begin() / s.end()</td><td>遍历</td><td>正向迭代器范围，自动从小到大</td></tr>
+        <tr><td>*it</td><td>访问</td><td>解引用迭代器直接拿到元素本身</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">🎯</span>
+      <div><b>什么时候用 set？</b>需要去重、需要保持有序、需要频繁判断"某个元素是否出现过"的场景：去重统计不同元素个数、维护一个动态变化的有序数列、配合 <code>lower_bound</code> 做有序范围查询等。如果只要去重和快速查找、不关心顺序，<code>unordered_set</code> 更快。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十一章 · STL 标准模板库 · 11.10 set</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="11_09_unordered_map.html">← 11.9 unordered_map 无序映射</a>
+      <a class="nav-btn" href="11_11_pair.html">11.11 pair 打包两个值 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
