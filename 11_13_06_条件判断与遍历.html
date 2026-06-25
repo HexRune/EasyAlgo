@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.13.6 条件判断与遍历 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "11.13"; font-size: 48px; }
+
+  /* ── 子导航组件：横向并排卡片 ── */
+  .ch11-subnav { margin-bottom: 28px; }
+  .ch11-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch11-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+  }
+  .ch11-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch11-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch11-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch11-group-name { color: var(--text-secondary); }
+  .ch11-group.current .ch11-group-name { color: var(--grp-color); }
+  .ch11-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .ch11-group:not(.current) .ch11-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch11-group:not(.current):hover .ch11-group-head { background: var(--grp-color-light); }
+  .ch11-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch11-group:not(.current):hover .ch11-group-name { color: var(--grp-color); }
+  .ch11-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch11-group:not(.current):hover .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch11-group.current .ch11-expand-badge { display: none; }
+
+  .ch11-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch11-group:not(.current) .ch11-items { display: none; }
+  .ch11-group.expanded .ch11-items { display: flex; }
+  .ch11-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch11-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch11-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch11-group.c-intro  { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-seq    { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-adapt  { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch11-group.c-assoc  { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+  .ch11-group.c-util   { --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid);  --grp-color-light: var(--amber-light); }
+  .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
+
+  .header-banner {
+    display: flex; gap: 12px; align-items: center;
+    background: linear-gradient(135deg, var(--coral-light), #FAFAF7);
+    border: 1px solid #F0D5C8; border-radius: var(--r-lg);
+    padding: 14px 20px; margin-bottom: 20px;
+    font-size: 13px; color: var(--coral);
+  }
+  .header-banner code { background: rgba(216,90,48,.12); color: var(--coral); }
+
+  /* ── 条件判断可视化（带 ✓ / ✗ 标记的数组） ── */
+  .cond-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .cond-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; }
+  .cond-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .cond-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .cond-cell { min-width: 34px; height: 34px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; flex-shrink: 0; }
+  .cond-mark { font-size: 12px; font-weight: 700; }
+  .cond-mark.yes { color: var(--code-str); }
+  .cond-mark.no { color: var(--code-op); }
+  .cond-result-row { display: flex; gap: 10px; align-items: center; margin-top: 4px; }
+  .cond-result-tag { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: #A6ADC8; min-width: 150px; }
+  .cond-result-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 5px; }
+  .cond-result-val.t { background: rgba(166,227,161,.22); color: var(--code-str); }
+  .cond-result-val.f { background: rgba(245,194,231,.18); color: var(--code-op); }
+  .cond-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .cond-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .cond-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #F0D5C8; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--coral-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="11.13">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十一章 · STL 标准模板库</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.13.6 条件判断与遍历</span>
+    </div>
+    <h1 class="chapter-title">11.13.6　条件判断与遍历</h1>
+    <p class="chapter-desc">all_of、any_of、none_of、for_each —— 对整个区间做条件判断，或者对每个元素执行同一个操作。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch11-subnav">
+    <div class="ch11-subnav-groups">
+
+      <div class="ch11-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">先导课</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_00_STL概述.html">STL 是什么</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-seq" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">序列容器</span>
+          <span class="ch11-group-count">4</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_01_string.html">string</a>
+          <a class="ch11-item" href="11_02_vector.html">vector</a>
+          <a class="ch11-item" href="11_03_list.html">list</a>
+          <a class="ch11-item" href="11_04_deque.html">deque</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-adapt" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">容器适配器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_05_stack.html">stack</a>
+          <a class="ch11-item" href="11_06_queue.html">queue</a>
+          <a class="ch11-item" href="11_07_priority_queue.html">priority_queue</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-assoc" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">关联容器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_08_map.html">map</a>
+          <a class="ch11-item" href="11_09_unordered_map.html">unordered_map</a>
+          <a class="ch11-item" href="11_10_set.html">set</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-util" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">实用类型</span>
+          <span class="ch11-group-count">2</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_11_pair.html">pair</a>
+          <a class="ch11-item" href="11_12_bitset.html">bitset</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-algo current expanded">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">STL 算法</span>
+          <span class="ch11-group-count">6</span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_13_01_排序与排列.html">排序与排列</a>
+          <a class="ch11-item" href="11_13_02_查找与计数.html">查找与计数</a>
+          <a class="ch11-item" href="11_13_03_复制替换与移动.html">复制替换移动</a>
+          <a class="ch11-item" href="11_13_04_数值运算.html">数值运算</a>
+          <a class="ch11-item" href="11_13_05_集合运算.html">集合运算</a>
+          <a class="ch11-item active" href="11_13_06_条件判断与遍历.html">条件判断遍历</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <div class="header-banner">
+    📂 引入头文件：<code>#include &lt;algorithm&gt;</code> —— 本节算法全部在这里。
+  </div>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#allany">all_of / any_of / none_of</a></li>
+      <li><span class="toc-num">②</span><a href="#for_each">for_each 遍历</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+    <div class="sub-title" id="allany">① all_of / any_of / none_of</div>
+    <div class="section-body">
+      <p>这三个函数都用一个返回 <code>bool</code> 的判断函数（通常是 lambda）去检查区间里的每个元素，最终给出一个整体的 <code>true</code> / <code>false</code> 结论：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>函数</th><th>含义</th><th>什么时候为 true</th></tr></thead>
+      <tbody>
+        <tr><td>all_of</td><td>是否全部满足条件</td><td>每一个元素都满足才为 true</td></tr>
+        <tr><td>any_of</td><td>是否至少一个满足条件</td><td>只要有一个满足就为 true</td></tr>
+        <tr><td>none_of</td><td>是否全部都不满足条件</td><td>一个都不满足才为 true</td></tr>
+      </tbody>
+    </table>
+
+    <div class="cond-visual">
+      <div class="cond-visual-title">v = {2, 4, 6, 8}；判断条件：x % 2 == 0（是否为偶数）</div>
+      <div class="cond-row">
+        <div class="cond-cell-wrap"><div class="cond-cell">2</div><div class="cond-mark yes">✓</div></div>
+        <div class="cond-cell-wrap"><div class="cond-cell">4</div><div class="cond-mark yes">✓</div></div>
+        <div class="cond-cell-wrap"><div class="cond-cell">6</div><div class="cond-mark yes">✓</div></div>
+        <div class="cond-cell-wrap"><div class="cond-cell">8</div><div class="cond-mark yes">✓</div></div>
+      </div>
+      <div class="cond-result-row"><div class="cond-result-tag">all_of（全是偶数？）</div><div class="cond-result-val t">true</div></div>
+      <div class="cond-result-row"><div class="cond-result-tag">any_of（有负数？）</div><div class="cond-result-val f">false</div></div>
+      <div class="cond-result-row"><div class="cond-result-tag">none_of（没有 0？）</div><div class="cond-result-val t">true</div></div>
+      <div class="cond-visual-caption">四个元素全部满足"是偶数"这个条件，所以 <code>all_of</code> 为 <strong>true</strong>；没有任何元素是负数，所以"有负数？"的 <code>any_of</code> 为 <strong>false</strong>；没有任何元素等于 0，所以"没有0？"的 <code>none_of</code> 为 <strong>true</strong>。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · all_of / any_of / none_of</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">2</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">6</span><span class="pnc">,</span> <span class="num">8</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="typ">bool</span> <span class="fn">all_even</span> <span class="op">=</span> <span class="fn">all_of</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="pnc">[](</span><span class="typ">int</span> <span class="fn">x</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">return</span> <span class="fn">x</span> <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">});</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"全是偶数? "</span> <span class="op">&lt;&lt;</span> <span class="fn">all_even</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 1（true）</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd"><span class="typ">bool</span> <span class="fn">has_negative</span> <span class="op">=</span> <span class="fn">any_of</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="pnc">[](</span><span class="typ">int</span> <span class="fn">x</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">return</span> <span class="fn">x</span> <span class="op">&lt;</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="pnc">});</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"有负数? "</span> <span class="op">&lt;&lt;</span> <span class="fn">has_negative</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 0（false）</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd"><span class="typ">bool</span> <span class="fn">none_zero</span> <span class="op">=</span> <span class="fn">none_of</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="pnc">[](</span><span class="typ">int</span> <span class="fn">x</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="kw">return</span> <span class="fn">x</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">});</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"没有0? "</span> <span class="op">&lt;&lt;</span> <span class="fn">none_zero</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 1（true）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><code>cout</code> 输出 <code>bool</code> 类型时会显示 <code>1</code>（true）或 <code>0</code>（false），而不是文字"true"/"false"——这是 C++ 的默认行为，想显示文字可以用 <code>cout &lt;&lt; boolalpha</code>。</div>
+    </div>
+
+    <div class="sub-title" id="for_each">② for_each —— 对每个元素执行操作</div>
+    <div class="section-body">
+      <p>对区间内的<strong>每一个元素</strong>依次执行同一个操作（通常是一个 lambda）。如果想修改元素本身，lambda 的参数要用<strong>引用</strong>接收。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · for_each 遍历与修改</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="cmt">// 打印每个元素</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="fn">for_each</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="pnc">[](</span><span class="typ">int</span> <span class="fn">x</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">});</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：1 2 3 4 5</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 每个元素翻倍</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd"><span class="fn">for_each</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="pnc">[](</span><span class="typ">int</span><span class="op">&amp;</span> <span class="fn">x</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="cmt">// 注意用引用才能修改</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">x</span> <span class="op">*=</span> <span class="num">2</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">});</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="cmt">// v 变成 {2, 4, 6, 8, 10}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>按值 vs 按引用：</b>例子第一个 lambda 用 <code>[](int x)</code>（按值），只能读取不能修改原数组；第二个用 <code>[](int&amp; x)</code>（按引用），才能真正改变 <code>v</code> 里的元素。这和第 8 章学过的"传值 vs 传引用"是同一个道理。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>虽然 <code>for_each</code> 很灵活，但大多数情况下，<strong>范围 for 循环</strong>（<code>for (int x : v)</code>）更简洁易读，效果完全一样。<code>for_each</code> 的优势是可以利用并行策略（C++17 起支持并行算法，比如 <code>for_each(std::execution::par, ...)</code>），处理海量数据时能自动多线程加速——这是范围 for 循环做不到的。</div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>本节小结——也是整个 11.13 节的收尾：</b>STL 算法的核心思想是"<strong>容器负责存数据，算法负责处理数据</strong>"，两者通过迭代器解耦。学会这套思路之后，写竞赛代码时遇到排序、查找、去重、求和这些常见操作，第一反应应该是"STL 里有没有现成的算法"，而不是从零手写循环——这样既省时间，又不容易出 bug。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十一章 · STL 标准模板库 · 11.13.6 条件判断与遍历</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="11_13_05_集合运算.html">← 11.13.5 集合运算</a>
+      <a class="nav-btn" href="index.html">返回目录 · 第十二章即将推出 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

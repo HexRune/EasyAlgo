@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.13.5 集合运算 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "11.13"; font-size: 48px; }
+
+  /* ── 子导航组件：横向并排卡片 ── */
+  .ch11-subnav { margin-bottom: 28px; }
+  .ch11-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch11-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+  }
+  .ch11-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch11-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch11-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch11-group-name { color: var(--text-secondary); }
+  .ch11-group.current .ch11-group-name { color: var(--grp-color); }
+  .ch11-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .ch11-group:not(.current) .ch11-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch11-group:not(.current):hover .ch11-group-head { background: var(--grp-color-light); }
+  .ch11-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch11-group:not(.current):hover .ch11-group-name { color: var(--grp-color); }
+  .ch11-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch11-group:not(.current):hover .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch11-group.current .ch11-expand-badge { display: none; }
+
+  .ch11-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch11-group:not(.current) .ch11-items { display: none; }
+  .ch11-group.expanded .ch11-items { display: flex; }
+  .ch11-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch11-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch11-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch11-group.c-intro  { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-seq    { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-adapt  { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch11-group.c-assoc  { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+  .ch11-group.c-util   { --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid);  --grp-color-light: var(--amber-light); }
+  .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
+
+  .header-banner {
+    display: flex; gap: 12px; align-items: center;
+    background: linear-gradient(135deg, var(--coral-light), #FAFAF7);
+    border: 1px solid #F0D5C8; border-radius: var(--r-lg);
+    padding: 14px 20px; margin-bottom: 20px;
+    font-size: 13px; color: var(--coral);
+  }
+  .header-banner code { background: rgba(216,90,48,.12); color: var(--coral); }
+
+  /* ── 两数组重叠可视化（并集/交集/差集） ── */
+  .set-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .set-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; }
+  .set-row-label { font-size: 11px; color: #6C7086; width: 18px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+  .set-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .set-cell { min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .set-cell.a-only { background: rgba(137,180,250,.2); color: var(--code-fn); border: 1px solid rgba(137,180,250,.4); }
+  .set-cell.b-only { background: rgba(245,194,231,.18); color: var(--code-op); border: 1px solid rgba(245,194,231,.38); }
+  .set-cell.both   { background: rgba(166,227,161,.28); color: var(--code-str); border: 1px solid rgba(166,227,161,.5); }
+  .set-divider { height: 1px; background: #2A2840; margin: 10px 0 14px 24px; }
+  .set-result-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .set-result-tag { font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; width: 110px; flex-shrink: 0; }
+  .set-result-tag.union  { color: var(--code-str); }
+  .set-result-tag.inter  { color: var(--code-op); }
+  .set-result-tag.diff   { color: var(--code-num); }
+  .set-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .set-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .set-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #F0D5C8; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--coral-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="11.13">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十一章 · STL 标准模板库</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.13.5 集合运算</span>
+    </div>
+    <h1 class="chapter-title">11.13.5　集合运算</h1>
+    <p class="chapter-desc">set_union、set_intersection、set_difference —— 对两个已排序序列做并集、交集、差集运算。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch11-subnav">
+    <div class="ch11-subnav-groups">
+
+      <div class="ch11-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">先导课</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_00_STL概述.html">STL 是什么</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-seq" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">序列容器</span>
+          <span class="ch11-group-count">4</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_01_string.html">string</a>
+          <a class="ch11-item" href="11_02_vector.html">vector</a>
+          <a class="ch11-item" href="11_03_list.html">list</a>
+          <a class="ch11-item" href="11_04_deque.html">deque</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-adapt" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">容器适配器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_05_stack.html">stack</a>
+          <a class="ch11-item" href="11_06_queue.html">queue</a>
+          <a class="ch11-item" href="11_07_priority_queue.html">priority_queue</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-assoc" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">关联容器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_08_map.html">map</a>
+          <a class="ch11-item" href="11_09_unordered_map.html">unordered_map</a>
+          <a class="ch11-item" href="11_10_set.html">set</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-util" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">实用类型</span>
+          <span class="ch11-group-count">2</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_11_pair.html">pair</a>
+          <a class="ch11-item" href="11_12_bitset.html">bitset</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-algo current expanded">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">STL 算法</span>
+          <span class="ch11-group-count">6</span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_13_01_排序与排列.html">排序与排列</a>
+          <a class="ch11-item" href="11_13_02_查找与计数.html">查找与计数</a>
+          <a class="ch11-item" href="11_13_03_复制替换与移动.html">复制替换移动</a>
+          <a class="ch11-item" href="11_13_04_数值运算.html">数值运算</a>
+          <a class="ch11-item active" href="11_13_05_集合运算.html">集合运算</a>
+          <a class="ch11-item" href="11_13_06_条件判断与遍历.html">条件判断遍历</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <div class="header-banner">
+    📂 引入头文件：<code>#include &lt;algorithm&gt;</code> —— 本节算法全部在这里，但<strong>都要求两个输入序列已经排好序</strong>。
+  </div>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#set_union">set_union 并集</a></li>
+      <li><span class="toc-num">②</span><a href="#set_intersection">set_intersection 交集</a></li>
+      <li><span class="toc-num">③</span><a href="#set_difference">set_difference 差集</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+    <div class="section-body">
+      <p>这三个函数都对两个<strong>已排序</strong>的序列做集合运算，写法几乎一样：传入两个序列各自的 <code>[begin, end)</code>，再传入存放结果的起始位置。返回值是<strong>结果的尾后迭代器</strong>，配合 <code>erase</code> 才能让 <code>result</code> 容器的大小刚好等于真实结果长度。</p>
+    </div>
+
+    <div class="set-visual">
+      <div class="set-visual-title">a = {1, 2, 3, 4, 5}　b = {3, 4, 5, 6, 7}</div>
+      <div class="set-row">
+        <div class="set-row-label">a</div>
+        <div class="set-cell a-only">1</div><div class="set-cell a-only">2</div><div class="set-cell both">3</div><div class="set-cell both">4</div><div class="set-cell both">5</div>
+      </div>
+      <div class="set-row">
+        <div class="set-row-label">b</div>
+        <div class="set-cell both">3</div><div class="set-cell both">4</div><div class="set-cell both">5</div><div class="set-cell b-only">6</div><div class="set-cell b-only">7</div>
+      </div>
+      <div class="set-divider"></div>
+      <div class="set-result-row">
+        <div class="set-result-tag union">并集 a ∪ b</div>
+        <div class="set-cell both">1</div><div class="set-cell both">2</div><div class="set-cell both">3</div><div class="set-cell both">4</div><div class="set-cell both">5</div><div class="set-cell both">6</div><div class="set-cell both">7</div>
+      </div>
+      <div class="set-result-row">
+        <div class="set-result-tag inter">交集 a ∩ b</div>
+        <div class="set-cell both">3</div><div class="set-cell both">4</div><div class="set-cell both">5</div>
+      </div>
+      <div class="set-result-row">
+        <div class="set-result-tag diff">差集 a − b</div>
+        <div class="set-cell a-only">1</div><div class="set-cell a-only">2</div>
+      </div>
+      <div class="set-visual-caption">蓝色格子是<strong>只在 a 中</strong>的元素，粉色格子是<strong>只在 b 中</strong>的元素，绿色格子是<strong>两边都有</strong>的元素——三个集合运算分别取了不同部分的组合。</div>
+    </div>
+
+    <div class="sub-title" id="set_union">① set_union —— 并集</div>
+    <div class="section-body">
+      <p>合并两个序列中出现过的所有元素（重复元素只保留一份），结果同样保持有序。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · set_union 求并集</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">a</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">b</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">3</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">6</span><span class="pnc">,</span> <span class="num">7</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">result</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// 并集：a ∪ b</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">result</span><span class="pnc">.</span><span class="fn">resize</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">+</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">());</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd"><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">set_union</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">a</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="fn">result</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">());</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">result</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="fn">it</span><span class="pnc">,</span> <span class="fn">result</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">());</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// result = {1, 2, 3, 4, 5, 6, 7}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div><b>为什么要先 <code>resize</code>？</b>这三个集合运算函数都是把结果<strong>写入</strong>到 <code>result.begin()</code> 开始的位置，而不是自动 <code>push_back</code>——如果 <code>result</code> 本身空间不够，会越界。并集结果最多有 <code>a.size() + b.size()</code> 个元素，所以按这个上限先分配空间最安全，多余的部分用 <code>erase</code> 删掉。</div>
+    </div>
+
+    <div class="sub-title" id="set_intersection">② set_intersection —— 交集</div>
+    <div class="section-body">
+      <p>只保留<strong>两个序列都出现过</strong>的元素。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · set_intersection 求交集</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 交集：a ∩ b</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">result</span><span class="pnc">.</span><span class="fn">resize</span><span class="pnc">(</span><span class="fn">min</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()));</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="fn">it</span> <span class="op">=</span> <span class="fn">set_intersection</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">a</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="fn">result</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">());</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">result</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="fn">it</span><span class="pnc">,</span> <span class="fn">result</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">());</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// result = {3, 4, 5}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>交集的结果不会超过<strong>较短那个序列的长度</strong>（最多和短的那个一样长），所以用 <code>min(a.size(), b.size())</code> 来预分配空间最合适。</div>
+    </div>
+
+    <div class="sub-title" id="set_difference">③ set_difference —— 差集</div>
+    <div class="section-body">
+      <p>保留<strong>在 a 中但不在 b 中</strong>的元素——注意差集是有方向的，<code>set_difference(a, b)</code> 和 <code>set_difference(b, a)</code> 结果不一样。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · set_difference 求差集</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 差集：a - b（在 a 中但不在 b 中）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">result</span><span class="pnc">.</span><span class="fn">resize</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">());</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="fn">it</span> <span class="op">=</span> <span class="fn">set_difference</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">a</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="fn">result</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">());</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">result</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="fn">it</span><span class="pnc">,</span> <span class="fn">result</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">());</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// result = {1, 2}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>别忘了排序：</b>这三个函数<strong>都要求输入序列已经有序</strong>，否则结果是未定义的。如果数据本身没排序，要先各自 <code>sort</code> 一遍。如果你存的本身就是 <code>set</code> 或者 <code>map</code>（天然有序），可以直接拿 <code>begin()</code> / <code>end()</code> 用，不需要再排序。</div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>这三个函数的时间复杂度都是 <strong>O(n + m)</strong>（n、m 分别是两个序列的长度）——比"对每个元素用 <code>find</code> 暴力查找另一个序列"的 O(n × m) 快得多，原理类似归并排序里的双指针合并。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十一章 · STL 标准模板库 · 11.13.5 集合运算</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="11_13_04_数值运算.html">← 11.13.4 数值运算</a>
+      <a class="nav-btn" href="11_13_06_条件判断与遍历.html">11.13.6 条件判断与遍历 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

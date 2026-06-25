@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.12 bitset 位集 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "11.12"; font-size: 48px; }
+
+  /* ── 子导航组件：横向并排卡片 ── */
+  .ch11-subnav { margin-bottom: 28px; }
+  .ch11-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch11-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+  }
+  .ch11-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch11-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch11-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch11-group-name { color: var(--text-secondary); }
+  .ch11-group.current .ch11-group-name { color: var(--grp-color); }
+  .ch11-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .ch11-group:not(.current) .ch11-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch11-group:not(.current):hover .ch11-group-head { background: var(--grp-color-light); }
+  .ch11-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch11-group:not(.current):hover .ch11-group-name { color: var(--grp-color); }
+  .ch11-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch11-group:not(.current):hover .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch11-group.current .ch11-expand-badge { display: none; }
+
+  .ch11-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch11-group:not(.current) .ch11-items { display: none; }
+  .ch11-group.expanded .ch11-items { display: flex; }
+  .ch11-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch11-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch11-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch11-group.c-intro  { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-seq    { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-adapt  { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch11-group.c-assoc  { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+  .ch11-group.c-util   { --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid);  --grp-color-light: var(--amber-light); }
+  .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
+
+  /* ── 本页专属样式：bit 位可视化（沿用第7章 .b44 风格） ── */
+  .bit-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .bit-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; }
+  .bit-row { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
+  .bit-cell { width: 30px; height: 30px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; position: relative; }
+  .bit-cell.z  { background: #16141F; color: #45475A; border: 1px solid #2A2840; }
+  .bit-cell.o  { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .bit-cell.hi { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.45); }
+  .bit-idx { font-size: 9.5px; color: #6C7086; text-align: center; width: 30px; flex-shrink: 0; }
+  .bit-idx-row { display: flex; gap: 3px; margin-top: 6px; }
+  .bit-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .bit-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .bit-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 位运算三件套对比卡 */
+  .bitop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+  @media (max-width: 640px) { .bitop-grid { grid-template-columns: 1fr; } }
+  .bitop-card { background: var(--code-bg); border-radius: var(--r-md); padding: 16px 16px 14px; }
+  .bitop-name { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: #CBA6F7; margin-bottom: 10px; text-align: center; }
+  .bitop-row { display: flex; gap: 2px; justify-content: center; margin-bottom: 4px; }
+  .bitop-cell { width: 18px; height: 18px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; }
+  .bitop-cell.z { background: #16141F; color: #45475A; }
+  .bitop-cell.o { background: #2A2840; color: var(--code-text); }
+  .bitop-cell.r { background: rgba(166,227,161,.3); color: var(--code-str); }
+  .bitop-sep { text-align: center; color: #6C7086; font-size: 13px; font-family: 'JetBrains Mono', monospace; margin: 2px 0; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: #EEEDFE; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-dark); background: var(--accent-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="11.12">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十一章 · STL 标准模板库</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.12 bitset</span>
+    </div>
+    <h1 class="chapter-title">11.12　bitset 位集</h1>
+    <p class="chapter-desc">专门处理二进制位的容器——每个元素只占 1 个 bit，处理位运算时极其高效。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch11-subnav">
+    <div class="ch11-subnav-groups">
+
+      <div class="ch11-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">先导课</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_00_STL概述.html">STL 是什么</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-seq" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">序列容器</span>
+          <span class="ch11-group-count">4</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_01_string.html">string</a>
+          <a class="ch11-item" href="11_02_vector.html">vector</a>
+          <a class="ch11-item" href="11_03_list.html">list</a>
+          <a class="ch11-item" href="11_04_deque.html">deque</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-adapt" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">容器适配器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_05_stack.html">stack</a>
+          <a class="ch11-item" href="11_06_queue.html">queue</a>
+          <a class="ch11-item" href="11_07_priority_queue.html">priority_queue</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-assoc" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">关联容器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_08_map.html">map</a>
+          <a class="ch11-item" href="11_09_unordered_map.html">unordered_map</a>
+          <a class="ch11-item" href="11_10_set.html">set</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-util current expanded">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">实用类型</span>
+          <span class="ch11-group-count">2</span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_11_pair.html">pair</a>
+          <a class="ch11-item active" href="11_12_bitset.html">bitset</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-algo" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">STL 算法</span>
+          <span class="ch11-group-count">6</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_13_01_排序与排列.html">排序与排列</a>
+          <a class="ch11-item" href="11_13_02_查找与计数.html">查找与计数</a>
+          <a class="ch11-item" href="11_13_03_复制替换与移动.html">复制替换移动</a>
+          <a class="ch11-item" href="11_13_04_数值运算.html">数值运算</a>
+          <a class="ch11-item" href="11_13_05_集合运算.html">集合运算</a>
+          <a class="ch11-item" href="11_13_06_条件判断与遍历.html">条件判断遍历</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">11.12.1</span><a href="#s1">定义与初始化</a></li>
+      <li><span class="toc-num">11.12.2</span><a href="#s2">常用操作</a></li>
+      <li><span class="toc-num">11.12.3</span><a href="#s3">位运算</a></li>
+      <li><span class="toc-num">11.12.4</span><a href="#s4">完整使用示例</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+    <div class="section-body">
+      <p><code>bitset</code> 是一个专门处理二进制位的容器。它的每一个元素只占 <strong>1 个 bit</strong>（而不是 1 个字节），处理位运算时极其高效。使用前需引入 <code>&lt;bitset&gt;</code> 头文件。</p>
+    </div>
+
+    <div class="bit-visual">
+      <div class="bit-visual-title">bitset&lt;8&gt; b("10101010")；8 个 bit，从左到右依次是第 7 位到第 0 位</div>
+      <div class="bit-row">
+        <div class="bit-cell o">1</div>
+        <div class="bit-cell z">0</div>
+        <div class="bit-cell o">1</div>
+        <div class="bit-cell z">0</div>
+        <div class="bit-cell o">1</div>
+        <div class="bit-cell z">0</div>
+        <div class="bit-cell o">1</div>
+        <div class="bit-cell z">0</div>
+      </div>
+      <div class="bit-idx-row">
+        <div class="bit-idx">7</div>
+        <div class="bit-idx">6</div>
+        <div class="bit-idx">5</div>
+        <div class="bit-idx">4</div>
+        <div class="bit-idx">3</div>
+        <div class="bit-idx">2</div>
+        <div class="bit-idx">1</div>
+        <div class="bit-idx">0</div>
+      </div>
+      <div class="bit-visual-caption">每个格子只占 <strong>1 bit</strong>，而不是普通 <code>bool</code> 数组里 1 个字节（8 bit）。8 个元素的 <code>bitset</code> 实际只占用 1 个字节的内存，<code>vector&lt;bool&gt;</code> 也有类似的压缩存储，但 <code>bitset</code> 的位运算接口更直接好用。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>和数组的区别：</b><code>bitset&lt;N&gt;</code> 的大小 <code>N</code> 必须是<strong>编译期常量</strong>，定义好之后不能再改变长度——这点和 <code>array</code> 类似，跟可以动态变长的 <code>vector</code> 不同。</div>
+    </div>
+
+    <div class="sub-title" id="s1">11.12.1　定义与初始化</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · bitset 的几种创建方式</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;bitset&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="fn">bitset</span><span class="pnc">&lt;</span><span class="num">8</span><span class="pnc">&gt;</span> <span class="fn">b1</span><span class="pnc">;</span>                  <span class="cmt">// 全部初始化为 0：00000000</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">    <span class="fn">bitset</span><span class="pnc">&lt;</span><span class="num">8</span><span class="pnc">&gt;</span> <span class="fn">b2</span><span class="pnc">(</span><span class="str">"10101010"</span><span class="pnc">);</span>     <span class="cmt">// 用字符串初始化：10101010</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">bitset</span><span class="pnc">&lt;</span><span class="num">8</span><span class="pnc">&gt;</span> <span class="fn">b3</span><span class="pnc">(</span><span class="num">10</span><span class="pnc">);</span>             <span class="cmt">// 用整数初始化：10 的二进制是 00001010</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">b2</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 直接 cout 输出：10101010</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div><code>bitset</code> 可以直接用 <code>cout</code> 输出，会自动打印成二进制字符串的形式——不需要手动转换，这点比手写位运算方便很多。</div>
+    </div>
+
+    <div class="sub-title" id="s2">11.12.2　常用操作</div>
+    <div class="section-body">
+      <p><code>bitset</code> 提供了一套读、改单个 bit 的成员函数，比手写 <code>(n &gt;&gt; i) &amp; 1</code> 之类的位运算表达式更直观。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>函数</th><th>功能</th><th>返回值 / 效果</th></tr></thead>
+      <tbody>
+        <tr><td>.count()</td><td>统计有多少位是 1</td><td>size_t</td></tr>
+        <tr><td>.test(i)</td><td>查询第 i 位是 0 还是 1</td><td>bool</td></tr>
+        <tr><td>.set(i)</td><td>把第 i 位设为 1</td><td>无</td></tr>
+        <tr><td>.set(i, v)</td><td>把第 i 位设为 v（0 或 1）</td><td>无</td></tr>
+        <tr><td>.reset(i)</td><td>把第 i 位设为 0</td><td>无</td></tr>
+        <tr><td>.flip(i)</td><td>把第 i 位翻转（0↔1）</td><td>无</td></tr>
+        <tr><td>.flip()</td><td>把全部位翻转</td><td>无</td></tr>
+        <tr><td>.any()</td><td>是否至少有一位是 1</td><td>bool</td></tr>
+        <tr><td>.none()</td><td>是否全部位都是 0</td><td>bool</td></tr>
+        <tr><td>.size()</td><td>返回 bitset 的总位数（即 N）</td><td>size_t</td></tr>
+        <tr><td>.to_string()</td><td>转换成字符串</td><td>string</td></tr>
+        <tr><td>.to_ulong()</td><td>转换成 unsigned long</td><td>unsigned long</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 查询与修改单个 bit</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">bitset</span><span class="pnc">&lt;</span><span class="num">8</span><span class="pnc">&gt;</span> <span class="fn">b</span><span class="pnc">(</span><span class="str">"10101010"</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">count</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 4——有 4 个 1</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">test</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 0——第 0 位是 0</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">test</span><span class="pnc">(</span><span class="num">1</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 1——第 1 位是 1</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">    <span class="fn">b</span><span class="pnc">.</span><span class="fn">set</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">);</span>  <span class="cmt">// 把第 0 位设为 1</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">    <span class="fn">b</span><span class="pnc">.</span><span class="fn">reset</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">);</span>   <span class="cmt">// 把第 2 位设为 0</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">    <span class="fn">b</span><span class="pnc">.</span><span class="fn">flip</span><span class="pnc">();</span>     <span class="cmt">// 全部翻转（0 变 1，1 变 0）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><code>bitset</code> 的下标 <strong>从右往左数，从 0 开始</strong>——和 <code>vector</code>、数组的下标方向相反。<code>b[0]</code> 是最右边（最低位），不是最左边。打印出来的字符串顺序是"高位在左"，但 <code>.test()</code> / <code>.set()</code> 的下标是从右边的低位开始数的，刚学的时候容易搞反。</div>
+    </div>
+
+    <div class="sub-title" id="s3">11.12.3　位运算</div>
+    <div class="section-body">
+      <p><code>bitset</code> 支持和整数一样的位运算符 <code>&amp;</code>（与）、<code>|</code>（或）、<code>^</code>（异或）、<code>~</code>（取反），写法和数学符号一致，但作用在每一位上：</p>
+    </div>
+
+    <div class="bitop-grid">
+      <div class="bitop-card">
+        <div class="bitop-name">a &amp; c（按位与）</div>
+        <div class="bitop-row"><div class="bitop-cell o">1</div><div class="bitop-cell z">1</div><div class="bitop-cell z">0</div><div class="bitop-cell o">0</div></div>
+        <div class="bitop-sep">&amp;</div>
+        <div class="bitop-row"><div class="bitop-cell z">1</div><div class="bitop-cell o">0</div><div class="bitop-cell z">1</div><div class="bitop-cell o">0</div></div>
+        <div class="bitop-sep">=</div>
+        <div class="bitop-row"><div class="bitop-cell r">1</div><div class="bitop-cell z">0</div><div class="bitop-cell z">0</div><div class="bitop-cell z">0</div></div>
+      </div>
+      <div class="bitop-card">
+        <div class="bitop-name">a | c（按位或）</div>
+        <div class="bitop-row"><div class="bitop-cell o">1</div><div class="bitop-cell z">1</div><div class="bitop-cell z">0</div><div class="bitop-cell o">0</div></div>
+        <div class="bitop-sep">|</div>
+        <div class="bitop-row"><div class="bitop-cell z">1</div><div class="bitop-cell o">0</div><div class="bitop-cell z">1</div><div class="bitop-cell o">0</div></div>
+        <div class="bitop-sep">=</div>
+        <div class="bitop-row"><div class="bitop-cell r">1</div><div class="bitop-cell r">1</div><div class="bitop-cell r">1</div><div class="bitop-cell z">0</div></div>
+      </div>
+      <div class="bitop-card">
+        <div class="bitop-name">a ^ c（按位异或）</div>
+        <div class="bitop-row"><div class="bitop-cell o">1</div><div class="bitop-cell z">1</div><div class="bitop-cell z">0</div><div class="bitop-cell o">0</div></div>
+        <div class="bitop-sep">^</div>
+        <div class="bitop-row"><div class="bitop-cell z">1</div><div class="bitop-cell o">0</div><div class="bitop-cell z">1</div><div class="bitop-cell o">0</div></div>
+        <div class="bitop-sep">=</div>
+        <div class="bitop-row"><div class="bitop-cell z">0</div><div class="bitop-cell r">1</div><div class="bitop-cell r">1</div><div class="bitop-cell z">0</div></div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · bitset 的位运算</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">bitset</span><span class="pnc">&lt;</span><span class="num">8</span><span class="pnc">&gt;</span> <span class="fn">a</span><span class="pnc">(</span><span class="str">"1100"</span><span class="pnc">),</span> <span class="fn">c</span><span class="pnc">(</span><span class="str">"1010"</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">&amp;</span> <span class="fn">c</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 按位与：00001000</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">|</span> <span class="fn">c</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 按位或：00001110</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">^</span> <span class="fn">c</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 按位异或：00000110</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>为什么要用 bitset 做位运算？</b>普通 <code>int</code> 最多 32 / 64 位，<code>bitset</code> 可以开到几千甚至几万位，并且 <code>&amp;</code> / <code>|</code> / <code>^</code> 这些运算在底层是按"机器字长"批量处理的（比如 64 位一次），比逐位循环判断快得多。常用于状态压缩 DP、筛法优化（如埃氏筛配合 bitset 标记）等场景。</div>
+    </div>
+
+    <div class="sub-title" id="s4">11.12.4　完整使用示例</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · bitset 综合示例</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;bitset&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">bitset</span><span class="pnc">&lt;</span><span class="num">8</span><span class="pnc">&gt;</span> <span class="fn">b</span><span class="pnc">(</span><span class="str">"10101010"</span><span class="pnc">);</span> <span class="cmt">// 8位二进制：10101010</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">b</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：10101010</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">count</span><span class="pnc">()</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：4——有几个 1</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">test</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：0——第 0 位是 0</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">test</span><span class="pnc">(</span><span class="num">1</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：1——第 1 位是 1</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="fn">b</span><span class="pnc">.</span><span class="fn">set</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">);</span> <span class="cmt">// 把第 0 位设为 1</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="fn">b</span><span class="pnc">.</span><span class="fn">reset</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">);</span>  <span class="cmt">// 把第 2 位设为 0</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="fn">b</span><span class="pnc">.</span><span class="fn">flip</span><span class="pnc">();</span>    <span class="cmt">// 全部翻转（0 变 1，1 变 0）</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="cmt">// 位运算</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">bitset</span><span class="pnc">&lt;</span><span class="num">8</span><span class="pnc">&gt;</span> <span class="fn">a</span><span class="pnc">(</span><span class="str">"1100"</span><span class="pnc">),</span> <span class="fn">c</span><span class="pnc">(</span><span class="str">"1010"</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">&amp;</span> <span class="fn">c</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 按位与：1000</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">|</span> <span class="fn">c</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 按位或：1110</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">^</span> <span class="fn">c</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 按位异或：0110</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title">📋 bitset 常用操作速查表</div>
+    <div class="section-body">
+      <p>把本节出现过的方法按用途归类汇总，写代码时可以直接当参考卡用。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>方法 / 写法</th><th>分类</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td>bitset&lt;N&gt; b</td><td>定义</td><td>定义 N 位、全为 0 的 bitset</td></tr>
+        <tr><td>bitset&lt;N&gt; b("...")</td><td>定义</td><td>用 0/1 字符串初始化</td></tr>
+        <tr><td>bitset&lt;N&gt; b(x)</td><td>定义</td><td>用整数 x 的二进制初始化</td></tr>
+        <tr><td>b[i]</td><td>访问</td><td>访问第 i 位（从右往左，从 0 开始）</td></tr>
+        <tr><td>.test(i)</td><td>查询</td><td>第 i 位是否为 1</td></tr>
+        <tr><td>.count()</td><td>查询</td><td>有多少位是 1</td></tr>
+        <tr><td>.any() / .none()</td><td>查询</td><td>是否有 1 / 是否全为 0</td></tr>
+        <tr><td>.size()</td><td>查询</td><td>总位数 N</td></tr>
+        <tr><td>.set(i) / .set(i,v)</td><td>修改</td><td>第 i 位设为 1 / 设为 v</td></tr>
+        <tr><td>.reset(i) / .reset()</td><td>修改</td><td>第 i 位设为 0 / 全部清零</td></tr>
+        <tr><td>.flip(i) / .flip()</td><td>修改</td><td>第 i 位翻转 / 全部翻转</td></tr>
+        <tr><td>&amp; / | / ^ / ~</td><td>位运算</td><td>与 / 或 / 异或 / 取反</td></tr>
+        <tr><td>&lt;&lt; / &gt;&gt;</td><td>位运算</td><td>整体左移 / 右移</td></tr>
+        <tr><td>.to_string()</td><td>转换</td><td>转成 string</td></tr>
+        <tr><td>.to_ulong() / .to_ullong()</td><td>转换</td><td>转成 unsigned (long) long</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">🎯</span>
+      <div><b>什么时候用 bitset？</b>需要大量、高频做位运算的场景：状态压缩 DP（用每一位表示一个状态是否被选中）、筛素数时标记合数、用位运算加速集合的交并差运算等。如果只是存几个布尔开关，普通 <code>bool</code> 变量或数组反而更直观。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十一章 · STL 标准模板库 · 11.12 bitset</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="11_11_pair.html">← 11.11 pair 打包两个值</a>
+      <a class="nav-btn" href="11_13_01_排序与排列.html">11.13.1 排序与排列 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

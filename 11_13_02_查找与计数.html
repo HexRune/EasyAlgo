@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.13.2 查找与计数 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "11.13"; font-size: 48px; }
+
+  /* ── 子导航组件：横向并排卡片 ── */
+  .ch11-subnav { margin-bottom: 28px; }
+  .ch11-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch11-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+  }
+  .ch11-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch11-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch11-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch11-group-name { color: var(--text-secondary); }
+  .ch11-group.current .ch11-group-name { color: var(--grp-color); }
+  .ch11-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .ch11-group:not(.current) .ch11-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch11-group:not(.current):hover .ch11-group-head { background: var(--grp-color-light); }
+  .ch11-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch11-group:not(.current):hover .ch11-group-name { color: var(--grp-color); }
+  .ch11-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch11-group:not(.current):hover .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch11-group.expanded .ch11-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch11-group.current .ch11-expand-badge { display: none; }
+
+  .ch11-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch11-group:not(.current) .ch11-items { display: none; }
+  .ch11-group.expanded .ch11-items { display: flex; }
+  .ch11-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch11-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch11-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch11-group.c-intro  { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-seq    { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch11-group.c-adapt  { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch11-group.c-assoc  { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+  .ch11-group.c-util   { --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid);  --grp-color-light: var(--amber-light); }
+  .ch11-group.c-algo   { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
+
+  .header-banner {
+    display: flex; gap: 12px; align-items: center;
+    background: linear-gradient(135deg, var(--coral-light), #FAFAF7);
+    border: 1px solid #F0D5C8; border-radius: var(--r-lg);
+    padding: 14px 20px; margin-bottom: 20px;
+    font-size: 13px; color: var(--coral);
+  }
+  .header-banner code { background: rgba(216,90,48,.12); color: var(--coral); }
+
+  /* ── 数组可视化 ── */
+  .arr-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .arr-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; }
+  .arr-row { display: flex; gap: 6px; align-items: flex-end; flex-wrap: wrap; }
+  .arr-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .arr-cell { min-width: 34px; height: 34px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .arr-cell.base { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .arr-cell.hi   { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.45); }
+  .arr-cell.lo   { background: rgba(250,179,135,.22); color: var(--code-num); border: 1px solid rgba(250,179,135,.4); }
+  .arr-idx { font-size: 10px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+  .arr-tag { font-size: 10px; color: var(--code-str); font-family: 'JetBrains Mono', monospace; font-weight: 700; min-height: 13px; }
+  .arr-tag.up { color: var(--code-num); }
+  .arr-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .arr-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .arr-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #F0D5C8; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--coral-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="11.13">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十一章 · STL 标准模板库</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.13.2 查找与计数</span>
+    </div>
+    <h1 class="chapter-title">11.13.2　查找与计数</h1>
+    <p class="chapter-desc">find、count、max_element / min_element、binary_search、lower_bound / upper_bound —— 在数据里找东西、数东西的通用算法。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch11-subnav">
+    <div class="ch11-subnav-groups">
+
+      <div class="ch11-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">先导课</span>
+          <span class="ch11-group-count">1</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_00_STL概述.html">STL 是什么</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-seq" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">序列容器</span>
+          <span class="ch11-group-count">4</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_01_string.html">string</a>
+          <a class="ch11-item" href="11_02_vector.html">vector</a>
+          <a class="ch11-item" href="11_03_list.html">list</a>
+          <a class="ch11-item" href="11_04_deque.html">deque</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-adapt" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">容器适配器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_05_stack.html">stack</a>
+          <a class="ch11-item" href="11_06_queue.html">queue</a>
+          <a class="ch11-item" href="11_07_priority_queue.html">priority_queue</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-assoc" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">关联容器</span>
+          <span class="ch11-group-count">3</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_08_map.html">map</a>
+          <a class="ch11-item" href="11_09_unordered_map.html">unordered_map</a>
+          <a class="ch11-item" href="11_10_set.html">set</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-util" onclick="this.classList.toggle('expanded')">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">实用类型</span>
+          <span class="ch11-group-count">2</span>
+          <span class="ch11-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_11_pair.html">pair</a>
+          <a class="ch11-item" href="11_12_bitset.html">bitset</a>
+        </div>
+      </div>
+
+      <div class="ch11-group c-algo current expanded">
+        <div class="ch11-group-head">
+          <span class="ch11-group-dot"></span>
+          <span class="ch11-group-name">STL 算法</span>
+          <span class="ch11-group-count">6</span>
+        </div>
+        <div class="ch11-items">
+          <a class="ch11-item" href="11_13_01_排序与排列.html">排序与排列</a>
+          <a class="ch11-item active" href="11_13_02_查找与计数.html">查找与计数</a>
+          <a class="ch11-item" href="11_13_03_复制替换与移动.html">复制替换移动</a>
+          <a class="ch11-item" href="11_13_04_数值运算.html">数值运算</a>
+          <a class="ch11-item" href="11_13_05_集合运算.html">集合运算</a>
+          <a class="ch11-item" href="11_13_06_条件判断与遍历.html">条件判断遍历</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <div class="header-banner">
+    📂 引入头文件：<code>#include &lt;algorithm&gt;</code> —— 本节算法全部在这里。
+  </div>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#find">find 查找元素</a></li>
+      <li><span class="toc-num">②</span><a href="#count">count 统计次数</a></li>
+      <li><span class="toc-num">③</span><a href="#minmax">max_element / min_element</a></li>
+      <li><span class="toc-num">④</span><a href="#binary_search">binary_search 二分查找</a></li>
+      <li><span class="toc-num">⑤</span><a href="#lower_upper">lower_bound / upper_bound</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+    <div class="sub-title" id="find">① find —— 查找元素</div>
+    <div class="section-body">
+      <p>从前往后逐个比较，找到第一个等于目标值的元素，返回指向它的迭代器；如果找不到，返回 <code>end()</code>。时间复杂度 O(n)，适用于任意容器（包括无序的）。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · find 查找单个元素</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">3</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">};</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">find</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="num">4</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">it</span> <span class="op">!=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">())</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"找到了: "</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">it</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 找到了: 4</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"下标: "</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">it</span> <span class="op">-</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">())</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 下标: 2</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 找不到时返回 end()</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="kw">auto</span> <span class="fn">it2</span> <span class="op">=</span> <span class="fn">find</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="num">99</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">it2</span> <span class="op">==</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">())</span> <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"没找到 99"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div><b>判断"是否找到"的标准写法：</b>永远是和 <code>end()</code> 比较（<code>it != v.end()</code>），不要直接判断迭代器是否为"空"——迭代器没有像指针那样天然的"空值"概念。</div>
+    </div>
+
+    <div class="sub-title" id="count">② count —— 统计出现次数</div>
+    <div class="section-body">
+      <p>统计某个值在区间内出现了多少次。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · count 统计次数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">};</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">cnt</span> <span class="op">=</span> <span class="fn">count</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="num">2</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"2 出现了 "</span> <span class="op">&lt;&lt;</span> <span class="fn">cnt</span> <span class="op">&lt;&lt;</span> <span class="str">" 次"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 2 出现了 3 次</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="minmax">③ max_element / min_element —— 找最大/最小值的位置</div>
+    <div class="section-body">
+      <p>注意这两个函数<strong>返回的是迭代器</strong>（位置），不是值本身——需要解引用 <code>*it</code> 才能拿到具体的值。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 找最大值和最小值</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">3</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">9</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="kw">auto</span> <span class="fn">max_it</span> <span class="op">=</span> <span class="fn">max_element</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">());</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"最大值: "</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">max_it</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 最大值: 9</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"下标: "</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">max_it</span> <span class="op">-</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">())</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 下标: 5</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd"><span class="kw">auto</span> <span class="fn">min_it</span> <span class="op">=</span> <span class="fn">min_element</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">());</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"最小值: "</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">min_it</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 最小值: 1</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div>如果只想要值，不需要下标，可以直接写 <code>*max_element(v.begin(), v.end())</code>，一行解决——但每次调用都是 O(n) 重新扫描一遍，循环里频繁调用要注意效率。</div>
+    </div>
+
+    <div class="sub-title" id="binary_search">④ binary_search —— 二分查找</div>
+    <div class="section-body">
+      <p><strong>只能在已排序的序列上使用</strong>，时间复杂度 O(log n)。它只告诉你"有没有"，返回一个 <code>bool</code>，不会告诉你具体在哪个位置——如果需要位置，要用下面的 <code>lower_bound</code>。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · binary_search 判断元素是否存在</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">7</span><span class="pnc">,</span> <span class="num">9</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">binary_search</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="num">5</span><span class="pnc">))</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"5 在数组中"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="kw">if</span> <span class="pnc">(!</span><span class="fn">binary_search</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="num">4</span><span class="pnc">))</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"4 不在数组中"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="lower_upper">⑤ lower_bound / upper_bound —— 二分查找位置</div>
+    <div class="section-body">
+      <p>同样<strong>只能在已排序的序列上使用</strong>，时间复杂度 O(log n)。和 <code>binary_search</code> 不同，它们返回的是<strong>位置</strong>（迭代器）：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>函数</th><th>含义</th><th>找的是</th></tr></thead>
+      <tbody>
+        <tr><td>lower_bound</td><td>第一个 ≥ target 的位置</td><td>下界（包含等于）</td></tr>
+        <tr><td>upper_bound</td><td>第一个 &gt; target 的位置</td><td>上界（不包含等于）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="arr-visual">
+      <div class="arr-visual-title">v = {1, 2, 2, 2, 3, 4}；查找 target = 2</div>
+      <div class="arr-row">
+        <div class="arr-cell-wrap"><div class="arr-tag">&nbsp;</div><div class="arr-cell base">1</div><div class="arr-idx">0</div></div>
+        <div class="arr-cell-wrap"><div class="arr-tag">lower_bound</div><div class="arr-cell hi">2</div><div class="arr-idx">1</div></div>
+        <div class="arr-cell-wrap"><div class="arr-tag">&nbsp;</div><div class="arr-cell hi">2</div><div class="arr-idx">2</div></div>
+        <div class="arr-cell-wrap"><div class="arr-tag">&nbsp;</div><div class="arr-cell hi">2</div><div class="arr-idx">3</div></div>
+        <div class="arr-cell-wrap"><div class="arr-tag up">upper_bound</div><div class="arr-cell lo">3</div><div class="arr-idx">4</div></div>
+        <div class="arr-cell-wrap"><div class="arr-tag">&nbsp;</div><div class="arr-cell base">4</div><div class="arr-idx">5</div></div>
+      </div>
+      <div class="arr-visual-caption"><code>lower_bound</code> 停在下标 <strong>1</strong>（第一个 ≥ 2 的位置），<code>upper_bound</code> 停在下标 <strong>4</strong>（第一个 &gt; 2 的位置）。两者之间的区间 <code>[lower_bound, upper_bound)</code> 正好就是所有等于 2 的元素，区间长度 = 2 出现的次数。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · lower_bound 与 upper_bound</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="cmt">// lower_bound：第一个 ≥ target 的位置</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="kw">auto</span> <span class="fn">lb</span> <span class="op">=</span> <span class="fn">lower_bound</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="num">2</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"第一个 ≥ 2 的下标: "</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">lb</span> <span class="op">-</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">())</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出: 1</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// upper_bound：第一个 &gt; target 的位置</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd"><span class="kw">auto</span> <span class="fn">ub</span> <span class="op">=</span> <span class="fn">upper_bound</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="num">2</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"第一个 &gt; 2 的下标: "</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">ub</span> <span class="op">-</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">())</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出: 4</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="cmt">// 等于 2 的元素个数</span></td></tr>
+          <tr class="hl"><td class="ln">12</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"2 的个数: "</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">ub</span> <span class="op">-</span> <span class="fn">lb</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出: 3</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>竞赛中 <code>lower_bound</code> 比 <code>find</code> 常用得多——对于<strong>有序数组</strong>，O(log n) 比 O(n) 快太多。<code>map</code>、<code>set</code> 这些关联容器也有自己的成员函数版本 <code>.lower_bound()</code>，效果一样但效率更高（不需要重新排序）。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十一章 · STL 标准模板库 · 11.13.2 查找与计数</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="11_13_01_排序与排列.html">← 11.13.1 排序与排列</a>
+      <a class="nav-btn" href="11_13_03_复制替换与移动.html">11.13.3 复制、替换与移动 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
