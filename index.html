@@ -292,6 +292,110 @@
     vertical-align: middle;
     margin-left: 6px;
   }
+
+  /* ═══ 算法文档：18 个模块的可折叠分组 ═══ */
+
+  .algo-mega-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 22px 24px 16px;
+    margin-bottom: 48px;
+  }
+
+  .algo-mega-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 18px;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .algo-modules { display: flex; flex-direction: column; gap: 8px; }
+
+  .algo-mod {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: border-color .12s;
+  }
+  .algo-mod.open { border-color: var(--teal-mid); }
+
+  .algo-mod-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px;
+    cursor: pointer;
+    background: var(--bg);
+    transition: background .12s;
+    user-select: none;
+  }
+  .algo-mod-head:hover { background: var(--teal-light); }
+  .algo-mod.open .algo-mod-head { background: var(--teal-light); }
+
+  .algo-mod-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700;
+    color: var(--text-muted);
+    width: 20px; flex-shrink: 0;
+  }
+  .algo-mod-name { font-size: 13.5px; font-weight: 700; color: var(--text-primary); flex-shrink: 0; }
+  .algo-mod.open .algo-mod-name { color: var(--teal); }
+
+  .algo-mod-hint {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .algo-mod-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--text-muted);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .algo-mod-chevron {
+    flex-shrink: 0;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .algo-mod-head:hover .algo-mod-chevron { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .algo-mod.open .algo-mod-chevron { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .algo-mod.open .algo-mod-chevron .amc-icon { transform: rotate(45deg); }
+  .amc-icon { display: inline-block; transition: transform .15s; }
+
+  .algo-mod-items {
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 4px 14px 14px;
+  }
+  .algo-mod.open .algo-mod-items { display: grid; }
+  @media (max-width: 700px) { .algo-mod-items { grid-template-columns: repeat(2, 1fr); } }
+
+  .algo-item {
+    display: flex; align-items: center;
+    padding: 9px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    text-decoration: none;
+    font-size: 12.5px; font-weight: 600;
+    color: var(--text-secondary);
+    transition: border-color .12s, background .12s, color .12s, transform .12s;
+  }
+  .algo-item:hover { border-color: var(--teal-mid); background: var(--teal-light); color: var(--teal); transform: translateY(-1px); }
+  .algo-item.wide { grid-column: span 4; }
+  @media (max-width: 700px) { .algo-item.wide { grid-column: span 2; } }
 </style>
 </head>
 <body>
@@ -306,7 +410,8 @@
     </p>
     <div class="hero-badges">
       <span class="hero-badge purple">📘 语法文档 · 12 章</span>
-      <span class="hero-badge amber">🚧 附录与算法文档筹备中</span>
+      <span class="hero-badge teal">🧮 算法文档 · 18 模块</span>
+      <span class="hero-badge amber">🚧 附录筹备中</span>
     </div>
   </header>
 
@@ -441,9 +546,9 @@
   <div class="stl-mega-card">
 
     <div class="stl-mega-head">
-      <div class="card-num amber">11</div>
+      <div class="card-num">11</div>
       <div class="card-body">
-        <div class="card-chapter">第十一章 <span class="coming-chip">持续更新中</span></div>
+        <div class="card-chapter">第十一章</div>
         <div class="card-title">STL 标准模板库</div>
         <div class="card-desc">序列容器 · 容器适配器 · 关联容器 · 实用类型 · STL 算法 —— 点击下方任意专题卡片直达对应页面</div>
       </div>
@@ -568,49 +673,324 @@
     </div>
   </a>
 
-  <!-- ═══ 算法文档（预留区域）═══ -->
+  <!-- ═══ 算法文档 ═══ -->
   <div class="book-label">
     <span class="book-label-text">算法文档</span>
     <div class="book-label-line"></div>
-    <span class="book-label-badge coming">🚧 筹备中</span>
+    <span class="book-label-badge coming">🚧 进行中</span>
   </div>
 
-  <!--
-    ╔══════════════════════════════════════════════════════════════╗
-    ║  📌 算法文档扩展区域                                          ║
-    ║  在此处按照下方模板添加算法文档章节卡片即可                      ║
-    ║                                                              ║
-    ║  <div class="chapter-grid">                                  ║
-    ║    <a class="chapter-card" href="algo_01_排序.html">          ║
-    ║      <div class="card-num teal">A1</div>                     ║
-    ║      <div class="card-body">                                  ║
-    ║        <div class="card-chapter">算法第一章</div>              ║
-    ║        <div class="card-title">排序算法</div>                 ║
-    ║        <div class="card-desc">冒泡 · 快排 · 归并</div>        ║
-    ║      </div>                                                   ║
-    ║      <div class="card-arrow">→</div>                         ║
-    ║    </a>                                                       ║
-    ║    ... 更多章节 ...                                            ║
-    ║  </div>                                                       ║
-    ╚══════════════════════════════════════════════════════════════╝
-  -->
+  <!-- 算法大卡片：整块外壳，内部 18 个模块分组展示 -->
+  <div class="algo-mega-card">
 
-  <div style="
-    background: var(--surface);
-    border: 2px dashed var(--border-md);
-    border-radius: var(--radius-lg);
-    padding: 40px 32px;
-    text-align: center;
-    color: var(--text-muted);
-    margin-bottom: 48px;
-  ">
-    <div style="font-size: 32px; margin-bottom: 12px;">📐</div>
-    <div style="font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">算法文档 · 即将推出</div>
-    <div style="font-size: 12.5px; line-height: 1.7;">
-      包含排序、搜索、动态规划、图论等竞赛核心算法专题<br>
-      添加后请将此占位块替换为 chapter-grid 卡片组
+    <div class="algo-mega-head">
+      <div class="card-num teal">A</div>
+      <div class="card-body">
+        <div class="card-chapter">算法专题 <span class="coming-chip">持续更新中</span></div>
+        <div class="card-title">算法文档</div>
+        <div class="card-desc">18 个模块，从数学基础到动态规划、图论进阶 · 点击模块标题展开对应专题</div>
+      </div>
     </div>
+
+    <div class="algo-modules">
+
+      <!-- 模块一 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">01</span>
+          <span class="algo-mod-name">数学基础</span>
+          <span class="algo-mod-hint">数位、质数、约数与进制的基础工具</span>
+          <span class="algo-mod-count">8</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">数位拆分</a>
+          <a class="algo-item" href="#">回文判断</a>
+          <a class="algo-item" href="#">质数判断</a>
+          <a class="algo-item" href="#">最大公约数</a>
+          <a class="algo-item" href="#">最小公倍数</a>
+          <a class="algo-item" href="#">进制转换</a>
+          <a class="algo-item" href="#">快速幂</a>
+          <a class="algo-item" href="#">线性筛素数</a>
+        </div>
+      </div>
+
+      <!-- 模块二 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">02</span>
+          <span class="algo-mod-name">基础算法思想</span>
+          <span class="algo-mod-hint">枚举、标记、模拟的入门思路</span>
+          <span class="algo-mod-count">3</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">枚举法</a>
+          <a class="algo-item" href="#">数组标记法</a>
+          <a class="algo-item" href="#">模拟法</a>
+        </div>
+      </div>
+
+      <!-- 模块三 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">03</span>
+          <span class="algo-mod-name">简单排序</span>
+          <span class="algo-mod-hint">用循环实现的经典排序方法</span>
+          <span class="algo-mod-count">4</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">冒泡排序</a>
+          <a class="algo-item" href="#">选择排序</a>
+          <a class="algo-item" href="#">插入排序</a>
+          <a class="algo-item" href="#">桶排序</a>
+        </div>
+      </div>
+
+      <!-- 模块四 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">04</span>
+          <span class="algo-mod-name">贪心算法</span>
+          <span class="algo-mod-hint">每一步都选当前最优的策略</span>
+          <span class="algo-mod-count">1</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item wide" href="#">贪心算法（区间调度 · 部分背包）</a>
+        </div>
+      </div>
+
+      <!-- 模块五 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">05</span>
+          <span class="algo-mod-name">区间处理技巧</span>
+          <span class="algo-mod-hint">快速求区间和与区间修改</span>
+          <span class="algo-mod-count">3</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">前缀和</a>
+          <a class="algo-item" href="#">差分</a>
+          <a class="algo-item" href="#">二维前缀和</a>
+        </div>
+      </div>
+
+      <!-- 模块六 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">06</span>
+          <span class="algo-mod-name">单调栈与单调队列</span>
+          <span class="algo-mod-hint">维护单调性，省去重复比较</span>
+          <span class="algo-mod-count">2</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">单调栈</a>
+          <a class="algo-item" href="#">单调队列</a>
+        </div>
+      </div>
+
+      <!-- 模块七 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">07</span>
+          <span class="algo-mod-name">双指针与二分查找</span>
+          <span class="algo-mod-hint">在有序数据里快速定位</span>
+          <span class="algo-mod-count">2</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">双指针</a>
+          <a class="algo-item" href="#">二分查找</a>
+        </div>
+      </div>
+
+      <!-- 模块八 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">08</span>
+          <span class="algo-mod-name">递推与递归</span>
+          <span class="algo-mod-hint">从前一步推出下一步，或反过来拆解</span>
+          <span class="algo-mod-count">2</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">递推</a>
+          <a class="algo-item" href="#">递归</a>
+        </div>
+      </div>
+
+      <!-- 模块九 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">09</span>
+          <span class="algo-mod-name">分治排序</span>
+          <span class="algo-mod-hint">递归思想在排序中的实战</span>
+          <span class="algo-mod-count">2</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">快速排序</a>
+          <a class="algo-item" href="#">归并排序</a>
+        </div>
+      </div>
+
+      <!-- 模块十 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">10</span>
+          <span class="algo-mod-name">并查集</span>
+          <span class="algo-mod-hint">管理元素分组与连通关系</span>
+          <span class="algo-mod-count">1</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item wide" href="#">并查集（Union-Find · 路径压缩）</a>
+        </div>
+      </div>
+
+      <!-- 模块十一 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">11</span>
+          <span class="algo-mod-name">搜索基础</span>
+          <span class="algo-mod-hint">用递归遍历所有可能的选择</span>
+          <span class="algo-mod-count">4</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">DFS 深度优先搜索</a>
+          <a class="algo-item" href="#">回溯</a>
+          <a class="algo-item" href="#">剪枝优化</a>
+          <a class="algo-item" href="#">记忆化搜索</a>
+        </div>
+      </div>
+
+      <!-- 模块十二 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">12</span>
+          <span class="algo-mod-name">动态规划基础</span>
+          <span class="algo-mod-hint">拆解子问题，避免重复计算</span>
+          <span class="algo-mod-count">2</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">线性 DP（LIS / LCS）</a>
+          <a class="algo-item" href="#">背包问题（01 / 完全 / 多重）</a>
+        </div>
+      </div>
+
+      <!-- 模块十三 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">13</span>
+          <span class="algo-mod-name">搜索进阶</span>
+          <span class="algo-mod-hint">按层扩展与双向夹击的搜索优化</span>
+          <span class="algo-mod-count">5</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">BFS 广度优先搜索</a>
+          <a class="algo-item" href="#">双向 BFS</a>
+          <a class="algo-item" href="#">迭代加深搜索 IDDFS</a>
+          <a class="algo-item" href="#">A* 算法</a>
+          <a class="algo-item" href="#">IDA* 算法</a>
+        </div>
+      </div>
+
+      <!-- 模块十四 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">14</span>
+          <span class="algo-mod-name">图论基础</span>
+          <span class="algo-mod-hint">图的存储、最短路与生成树</span>
+          <span class="algo-mod-count">6</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">图的存储</a>
+          <a class="algo-item" href="#">Floyd 最短路</a>
+          <a class="algo-item" href="#">Dijkstra 最短路</a>
+          <a class="algo-item" href="#">Kruskal 最小生成树</a>
+          <a class="algo-item" href="#">Prim 最小生成树</a>
+          <a class="algo-item" href="#">拓扑排序</a>
+        </div>
+      </div>
+
+      <!-- 模块十五 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">15</span>
+          <span class="algo-mod-name">树状数组与线段树</span>
+          <span class="algo-mod-hint">高效维护区间信息的数据结构</span>
+          <span class="algo-mod-count">3</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">离散化</a>
+          <a class="algo-item" href="#">树状数组</a>
+          <a class="algo-item" href="#">线段树</a>
+        </div>
+      </div>
+
+      <!-- 模块十六 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">16</span>
+          <span class="algo-mod-name">字符串算法</span>
+          <span class="algo-mod-hint">字符串匹配与前缀处理技巧</span>
+          <span class="algo-mod-count">3</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">字符串哈希</a>
+          <a class="algo-item" href="#">KMP 字符串匹配</a>
+          <a class="algo-item" href="#">Trie 字典树</a>
+        </div>
+      </div>
+
+      <!-- 模块十七 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">17</span>
+          <span class="algo-mod-name">动态规划进阶</span>
+          <span class="algo-mod-hint">区间、状态压缩与树上的 DP</span>
+          <span class="algo-mod-count">4</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">区间 DP</a>
+          <a class="algo-item" href="#">状压 DP</a>
+          <a class="algo-item" href="#">树形 DP</a>
+          <a class="algo-item" href="#">数位 DP</a>
+        </div>
+      </div>
+
+      <!-- 模块十八 -->
+      <div class="algo-mod">
+        <div class="algo-mod-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="algo-mod-num">18</span>
+          <span class="algo-mod-name">拓展专题</span>
+          <span class="algo-mod-hint">树上算法与博弈论的延伸内容</span>
+          <span class="algo-mod-count">3</span>
+          <span class="algo-mod-chevron"><span class="amc-icon">+</span></span>
+        </div>
+        <div class="algo-mod-items">
+          <a class="algo-item" href="#">LCA 最近公共祖先 · 树上倍增</a>
+          <a class="algo-item" href="#">博弈论（Nim 游戏 · SG 函数）</a>
+          <a class="algo-item" href="#">数论进阶（扩展欧几里得 · 逆元）</a>
+        </div>
+      </div>
+
+    </div>
+    <!-- /.algo-modules -->
+
   </div>
+  <!-- /.algo-mega-card -->
 
   <!-- ═══ Footer ═══ -->
   <footer class="doc-footer">
