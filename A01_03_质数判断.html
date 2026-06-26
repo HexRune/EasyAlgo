@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.3 质数判断 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "1.3"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 因数对镜像可视化（③ 优化一：只需要检查到 √n） */
+  .sqrt-pairs { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .sqrt-pair { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .sqrt-cell-row { display: flex; align-items: center; gap: 6px; }
+  .sqrt-cell { width: 38px; height: 38px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; }
+  .sqrt-cell.small { background: rgba(137,180,250,.22); color: var(--code-fn); border: 1px solid rgba(137,180,250,.42); }
+  .sqrt-cell.large { background: #2A2840; color: #6C7086; border: 1px dashed #3A3850; }
+  .sqrt-cell.axis  { background: rgba(166,227,161,.28); color: var(--code-str); border: 1px solid rgba(166,227,161,.5); }
+  .sqrt-op { font-size: 11px; color: #6C7086; }
+  .sqrt-eq { font-size: 10.5px; color: #6C7086; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+  .sqrt-divider-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 0 2px; }
+  .sqrt-divider-line { width: 1px; height: 46px; background: repeating-linear-gradient(to bottom, var(--teal-mid) 0, var(--teal-mid) 4px, transparent 4px, transparent 8px); }
+  .sqrt-divider-label { font-size: 9.5px; color: var(--teal); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 110px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="1.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块一 数学基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>1.3 质数判断</span>
+    </div>
+    <h1 class="chapter-title">1.3　质数判断</h1>
+    <p class="chapter-desc">判断一个数是不是质数——从最朴素的逐一枚举，一步步优化到只需要检查几次。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是质数</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：枚举到 n-1</a></li>
+      <li><span class="toc-num">③</span><a href="#sqrt">优化一：只需要检查到 √n</a></li>
+      <li><span class="toc-num">④</span><a href="#even">优化二：跳过偶数因数</a></li>
+      <li><span class="toc-num">⑤</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是质数</div>
+    <div class="section-body">
+      <p><strong>质数</strong>（也叫<strong>素数</strong>）是指一个大于 1 的自然数，除了 1 和它本身以外，不能被任何其他正整数整除。比如 <code>2、3、5、7、11、13</code> 都是质数；而 <code>4 = 2×2</code>、<code>6 = 2×3</code>、<code>9 = 3×3</code> 这些能被别的数整除的，叫做<strong>合数</strong>。</p>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>最容易搞错的一点：1 既不是质数，也不是合数。</b>质数的定义要求"正好有两个不同的正因数"——1 和它本身。但 <code>1</code> 的因数只有它自己一个（<code>1</code>），凑不出"两个不同的因数"，所以被单独排除在外，既不算质数也不算合数。判断质数时，<code>n &lt; 2</code> 永远应该直接排除。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>2 是唯一的偶数质数。</b>除了 2 以外，其余所有偶数都至少能被 2 整除——既能被 1、被自己整除，也能被 2 整除，因数个数超过两个，所以都是合数。后面优化的时候会专门用到这个性质。</div>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：枚举到 n-1</div>
+    <div class="section-body">
+      <p>最直接的想法：从 <code>2</code> 开始，把 <code>2</code> 到 <code>n-1</code> 之间所有的数都拿来试一遍，看 <code>n</code> 能不能被整除。只要找到一个能整除的，<code>n</code> 就不是质数；如果一个都找不到，<code>n</code> 就是质数。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 枚举所有可能的因数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">bool</span> <span class="fn">IsPrime</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&lt;</span> <span class="num">2</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span>   <span class="cmt">// 0、1 都不是质数</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">2</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">%</span> <span class="fn">i</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span>  <span class="cmt">// 找到一个因数，n 不是质数</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">return</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>这种写法完全正确，但效率不高——如果 <code>n</code> 是质数（比如 <code>n = 37</code>），循环会从 <code>2</code> 一直跑到 <code>36</code>，整整检查 <strong>35 次</strong>才能确定"一个因数都找不到"。<code>n</code> 越大，要检查的次数也越多，时间复杂度是 <strong>O(n)</strong>。</p>
+    </div>
+
+    <div class="sub-title" id="sqrt">③ 优化一：只需要检查到 √n</div>
+    <div class="section-body">
+      <p>其实根本不需要检查到 <code>n-1</code>。关键的发现是：<strong>一个数的因数总是成对出现的</strong>。如果 <code>a</code> 是 <code>n</code> 的一个因数，那么 <code>n / a</code> 必然也是 <code>n</code> 的因数（因为 <code>a × (n/a) = n</code>）。而这一对因数里，<strong>较小的那个一定不超过 √n</strong>——如果两个因数都比 √n 大，它们的乘积就会比 <code>n</code> 还大，不可能等于 <code>n</code>。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">36 的因数对 —— 每一对都以 √36 = 6 为镜像中心</div>
+      <div class="sqrt-pairs">
+        <div class="sqrt-pair">
+          <div class="sqrt-cell-row">
+            <div class="sqrt-cell small">1</div>
+            <div class="sqrt-op">×</div>
+            <div class="sqrt-cell large">36</div>
+          </div>
+          <div class="sqrt-eq">= 36</div>
+        </div>
+        <div class="sqrt-pair">
+          <div class="sqrt-cell-row">
+            <div class="sqrt-cell small">2</div>
+            <div class="sqrt-op">×</div>
+            <div class="sqrt-cell large">18</div>
+          </div>
+          <div class="sqrt-eq">= 36</div>
+        </div>
+        <div class="sqrt-pair">
+          <div class="sqrt-cell-row">
+            <div class="sqrt-cell small">3</div>
+            <div class="sqrt-op">×</div>
+            <div class="sqrt-cell large">12</div>
+          </div>
+          <div class="sqrt-eq">= 36</div>
+        </div>
+        <div class="sqrt-pair">
+          <div class="sqrt-cell-row">
+            <div class="sqrt-cell small">4</div>
+            <div class="sqrt-op">×</div>
+            <div class="sqrt-cell large">9</div>
+          </div>
+          <div class="sqrt-eq">= 36</div>
+        </div>
+        <div class="sqrt-divider-wrap">
+          <div class="sqrt-divider-line"></div>
+          <div class="sqrt-divider-label">√36 = 6</div>
+        </div>
+        <div class="sqrt-pair">
+          <div class="sqrt-cell-row">
+            <div class="sqrt-cell axis">6</div>
+            <div class="sqrt-op">×</div>
+            <div class="sqrt-cell axis">6</div>
+          </div>
+          <div class="sqrt-eq">= 36</div>
+        </div>
+      </div>
+      <div class="num-visual-caption">蓝色格子（<code>1 2 3 4</code>）是"较小的那一半"因数，灰色格子（<code>36 18 12 9</code>）是它们各自配对的"较大的那一半"——只要把蓝色这些数检查一遍，灰色的因数<strong>自动就被发现了</strong>（因为它们是配对出现的），完全不需要单独检查。<code>6 × 6 = 36</code> 正好卡在中间，是这个数的<strong>平方根</strong>，也是检查范围的终点。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 只检查到 √n</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">bool</span> <span class="fn">IsPrime</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&lt;</span> <span class="num">2</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">2</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">*</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">%</span> <span class="fn">i</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">return</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>为什么写 <code>i * i &lt;= n</code>，不直接写 <code>i &lt;= sqrt(n)</code>？</b><code>sqrt()</code> 函数算出来的是<strong>浮点数</strong>，存在精度误差——比如某些情况下 <code>sqrt(25)</code> 可能因为浮点误差算成 <code>4.999999998</code> 而不是干净的 <code>5.0</code>，导致循环提前一步结束，漏检了 <code>i = 5</code> 这个本该检查的因数。<code>i * i &lt;= n</code> 全程都是<strong>整数运算</strong>，不会有任何精度问题，而且比调用 <code>sqrt()</code> 函数更快——这是竞赛代码里的标准写法。</div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>这一个改动，把时间复杂度从 <strong>O(n)</strong> 降到了 <strong>O(√n)</strong>——当 <code>n</code> 很大时（比如十万、一百万），这个差距是巨大的：<code>n = 1000000</code> 时，基础写法最多要检查 <strong>999999</strong> 次，优化后只需要检查约 <strong>1000</strong> 次，快了近 1000 倍。</div>
+    </div>
+
+    <div class="sub-title" id="even">④ 优化二：跳过偶数因数</div>
+    <div class="section-body">
+      <p>还能再快一点。上一节提到，<strong>除了 2 以外的偶数都不是质数</strong>——所以可以先把 <code>n = 2</code> 单独处理掉，再把其余的偶数 <code>n</code> 直接排除。剩下需要循环检查的 <code>n</code> 必然是奇数，而<strong>奇数永远不可能有偶数因数</strong>（如果一个偶数能整除 <code>n</code>，<code>n</code> 就会是偶数，矛盾）——所以循环里可以直接跳过所有偶数，只检查奇数因数，相当于又把检查次数砍掉了接近一半：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 排除偶数，只检查奇数因数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">bool</span> <span class="fn">IsPrime</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&lt;</span> <span class="num">2</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">==</span> <span class="num">2</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">true</span><span class="pnc">;</span>   <span class="cmt">// 2 是质数（唯一的偶数质数）</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span>  <span class="cmt">// 排除其余偶数</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">3</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">*</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">+=</span> <span class="num">2</span><span class="pnc">)</span>  <span class="cmt">// 只检查奇数</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">%</span> <span class="fn">i</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">return</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>循环的起点从 <code>2</code> 改成了 <code>3</code>，每次增加 <code>2</code>（<code>i += 2</code>）而不是 <code>1</code>，跳过了所有偶数：<code>3, 5, 7, 9, ...</code>。配合前面 <code>i * i &lt;= n</code> 这个边界，整体检查次数又减少了接近一半。</p>
+    </div>
+
+    <div class="sub-title" id="compare">⑤ 完整代码与对比</div>
+    <div class="section-body">
+      <p>用 <code>n = 37</code>（质数）实际数一数三种写法各需要检查多少次，差距非常直观：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">判断 37 是不是质数 —— 三种写法的检查次数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">基础写法</div>
+        <div class="count-bar-track"><div class="count-bar-fill long">35 次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">只检查到 √n</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 11%;">2 次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">+ 跳过偶数</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 6%;">1 次</div></div>
+      </div>
+      <div class="num-visual-caption">基础写法要从 <code>2</code> 检查到 <code>36</code>，整整 <strong>35 次</strong>；只检查到 <code>√37≈6.08</code> 之后，只需要检查 <code>i=2,3,4,5,6</code> 共 <strong>5 次</strong>（这里实际只数了 <code>i*i&lt;=37</code> 成立的次数，即 <code>i</code> 取到 6 为止）；再跳过偶数只检查奇数 <code>i=3,5</code>，只需要 <strong>2 次</strong>就能确定 37 是质数。优化的效果立竿见影。</div>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>写法</th><th>检查范围</th><th>时间复杂度</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>基础写法</td><td>2 ~ n-1，逐个检查</td><td>O(n)</td><td>最直观，但 n 较大时很慢</td></tr>
+        <tr><td>只检查到 √n</td><td>2 ~ √n</td><td>O(√n)</td><td>核心优化，必须掌握</td></tr>
+        <tr><td>+ 跳过偶数</td><td>3 ~ √n，只取奇数</td><td>O(√n)，常数减半</td><td>锦上添花，复杂度量级不变但实际更快</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>如果要判断很多个数是不是质数呢？</b>本节的 <code>IsPrime</code> 函数适合"只判断一个数"的场景，每调用一次都要重新计算一遍。但如果题目要求"找出 1 到 100 万之间所有的质数"，对每个数都跑一遍 <code>IsPrime</code> 会非常慢——这种场景下有专门的批量筛法，一次性把一个范围内所有的质数都标记出来，效率比逐个判断高得多。这个技巧叫<strong>线性筛</strong>，会在模块一的最后一节（1.8）详细介绍。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块一 · 数学基础 · 1.3 质数判断</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A01_02_回文判断.html">← 1.2 回文判断</a>
+      <a class="nav-btn" href="A01_04_最大公约数.html">1.4 最大公约数 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

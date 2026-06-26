@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.2 回文判断 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "1.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格，复用 1.1 的视觉语言 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 镜像对称可视化（① 什么是回文数） */
+  .palin-row { display: flex; gap: 6px; justify-content: center; align-items: center; position: relative; }
+  .palin-cell { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 700; }
+  .palin-cell.p1 { background: rgba(137,180,250,.22); color: var(--code-fn); border: 1px solid rgba(137,180,250,.42); }
+  .palin-cell.p2 { background: rgba(245,194,231,.2); color: var(--code-op); border: 1px solid rgba(245,194,231,.4); }
+  .palin-cell.axis { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.45); }
+  .palin-cell.bad { background: rgba(243,139,168,.25); color: #F38BA8; border: 1px solid rgba(243,139,168,.45); }
+  .palin-label-row { display: flex; gap: 6px; justify-content: center; margin-top: 8px; }
+  .palin-label { width: 40px; text-align: center; font-size: 9.5px; color: #6C7086; }
+  .palin-divider { height: 1px; background: #2A2840; margin: 18px 0; }
+  .palin-axis-line { position: absolute; top: -6px; bottom: -6px; left: 50%; width: 1px; background: repeating-linear-gradient(to bottom, #45475A 0, #45475A 4px, transparent 4px, transparent 8px); }
+
+  /* 对比结果（②） */
+  .cmp-row { display: flex; align-items: center; gap: 14px; justify-content: center; margin: 8px 0; flex-wrap: wrap; }
+  .cmp-box { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; padding: 8px 16px; border-radius: 7px; background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .cmp-eq { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 5px; }
+  .cmp-eq.t { background: rgba(166,227,161,.22); color: var(--code-str); }
+  .cmp-eq.f { background: rgba(243,139,168,.22); color: #F38BA8; }
+
+  /* 双轨步骤表（复用 1.1 风格） */
+  .dual-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .dual-table th { font-family: 'Noto Sans SC', sans-serif; font-size: 11px; font-weight: 700; color: #A6ADC8; text-align: center; padding: 6px 8px 12px; border-bottom: 1px solid #2A2840; }
+  .dual-table td { text-align: center; padding: 9px 8px; color: var(--code-text); }
+  .dual-table tr:not(:last-child) td { border-bottom: 1px dashed #2A2840; }
+  .dual-table .dt-n { color: var(--code-fn); }
+  .dual-table .dt-arrow { color: #6C7086; font-size: 12px; }
+  .dual-table .dt-digit { color: var(--code-num); font-weight: 700; }
+  .dual-table .dt-rev { color: var(--code-str); }
+  .dual-table .dt-cond { color: #A6ADC8; font-size: 11px; }
+  .dual-table tr.dt-final td { color: var(--code-str); font-weight: 700; padding-top: 12px; }
+  .dual-table tr.dt-final { border-top: 1px solid #2A2840; }
+  .dual-table tr.dt-trap td { color: #F38BA8 !important; font-weight: 700; padding-top: 12px; }
+  .dual-table tr.dt-trap { border-top: 1px solid #2A2840; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="1.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块一 数学基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>1.2 回文判断</span>
+    </div>
+    <h1 class="chapter-title">1.2　回文判断</h1>
+    <p class="chapter-desc">判断一个数正读、反读是否一样——直接复用上一节的 ReverseNumber，再处理几个容易踩坑的细节。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是回文数</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：反转后比较</a></li>
+      <li><span class="toc-num">③</span><a href="#trap">两个容易踩坑的细节</a></li>
+      <li><span class="toc-num">④</span><a href="#half">进阶写法：只反转一半</a></li>
+      <li><span class="toc-num">⑤</span><a href="#compare">两种写法对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是回文数</div>
+    <div class="section-body">
+      <p><strong>回文数</strong>是指一个数从左往右读和从右往左读完全一样，比如 <code>121</code>、<code>1331</code>、<code>12321</code>，乃至单独一个数字 <code>7</code>。"回文"这个词本身来自古代的一种文字游戏——回文诗、回文句，顺着读、倒着读都是同一句话；数学里的回文数，就是把这个概念搬到数字上。</p>
+      <p>判断"是否对称"，本质上是判断<strong>每一对"镜像位置"上的数字是否相等</strong>：第 1 位要等于最后一位，第 2 位要等于倒数第 2 位，以此类推，一直夹到中间为止。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">12321 —— 每一对镜像位置都相等，是回文数</div>
+      <div class="palin-row">
+        <div class="palin-axis-line"></div>
+        <div class="palin-cell p1">1</div>
+        <div class="palin-cell p2">2</div>
+        <div class="palin-cell axis">3</div>
+        <div class="palin-cell p2">2</div>
+        <div class="palin-cell p1">1</div>
+      </div>
+      <div class="palin-label-row">
+        <div class="palin-label">第1位</div>
+        <div class="palin-label">第2位</div>
+        <div class="palin-label">中心</div>
+        <div class="palin-label">第2位</div>
+        <div class="palin-label">第1位</div>
+      </div>
+
+      <div class="palin-divider"></div>
+
+      <div class="num-visual-title">12341 —— 看起来很像，但第 2 位和倒数第 2 位不相等，不是回文数</div>
+      <div class="palin-row">
+        <div class="palin-axis-line"></div>
+        <div class="palin-cell p1">1</div>
+        <div class="palin-cell bad">2</div>
+        <div class="palin-cell axis">3</div>
+        <div class="palin-cell bad">4</div>
+        <div class="palin-cell p1">1</div>
+      </div>
+      <div class="palin-label-row">
+        <div class="palin-label">第1位</div>
+        <div class="palin-label">2≠4</div>
+        <div class="palin-label">中心</div>
+        <div class="palin-label">4≠2</div>
+        <div class="palin-label">第1位</div>
+      </div>
+
+      <div class="num-visual-caption">蓝色一对、粉色一对，是两组"必须相等"的镜像位置；中间绿色是<strong>对称轴</strong>，落单一个，不需要和谁配对。只要有一对镜像位置不相等（像第二个例子里的 2 和 4），整个数字就不是回文数。</div>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：反转后比较</div>
+    <div class="section-body">
+      <p>"每一对镜像位置相等"说起来有点抽象，但换一个角度看：如果把整个数字<strong>反转</strong>一遍，结果和原数完全一样，那不就正好说明每一位都和它的镜像位置相等吗？这正是上一节 <code>ReverseNumber</code> 能直接派上用场的地方——回文判断的最朴素写法，只需要一行：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 反转后比较（最朴素的写法）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">bool</span> <span class="fn">IsPalindrome</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">return</span> <span class="fn">n</span> <span class="op">==</span> <span class="fn">ReverseNumber</span><span class="pnc">(</span><span class="fn">n</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>试一下：<code>IsPalindrome(121)</code> —— <code>ReverseNumber(121)</code> 算出来还是 <code>121</code>，相等，是回文数；<code>IsPalindrome(123)</code> —— <code>ReverseNumber(123)</code> 算出来是 <code>321</code>，不相等，不是回文数。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">两个例子：反转之后比一比</div>
+      <div class="cmp-row">
+        <div class="cmp-box">n = 121</div>
+        <div class="cmp-eq t">==</div>
+        <div class="cmp-box">ReverseNumber(121) = 121</div>
+        <div class="cmp-eq t">✓ 回文数</div>
+      </div>
+      <div class="cmp-row">
+        <div class="cmp-box">n = 123</div>
+        <div class="cmp-eq f">≠</div>
+        <div class="cmp-box">ReverseNumber(123) = 321</div>
+        <div class="cmp-eq f">✗ 不是回文数</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div>这种写法的好处是<strong>非常直观</strong>——不需要纠结"镜像位置"这种抽象描述，反转一下、比一比就完事了。代价是它会把整个数字<strong>完整反转一遍</strong>，等会在第 ④ 节我们会看到，这个"完整反转"在某些情况下会带来麻烦。</div>
+    </div>
+
+    <div class="sub-title" id="trap">③ 两个容易踩坑的细节</div>
+
+    <div class="section-body">
+      <p><b>细节一：负数算不算回文数？</b>上一节我们刚学过，<code>n != 0</code> 这个条件能让 <code>ReverseNumber</code> 正常处理负数，那如果直接把负数丢进 <code>IsPalindrome</code> 会发生什么？我们用 <code>-121</code> 试一下：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">ReverseNumber(-121) 的真实结果 —— 一个容易被忽略的陷阱</div>
+      <table class="dual-table">
+        <tr><th>n（待拆分）</th><th></th><th>取出的数字</th><th></th><th>rev（结果累积）</th></tr>
+        <tr><td class="dt-n">-121</td><td class="dt-arrow">→</td><td class="dt-digit">-1</td><td class="dt-arrow">→</td><td class="dt-rev">0×10+(-1) = -1</td></tr>
+        <tr><td class="dt-n">-12</td><td class="dt-arrow">→</td><td class="dt-digit">-2</td><td class="dt-arrow">→</td><td class="dt-rev">-1×10+(-2) = -12</td></tr>
+        <tr><td class="dt-n">-1</td><td class="dt-arrow">→</td><td class="dt-digit">-1</td><td class="dt-arrow">→</td><td class="dt-rev">-12×10+(-1) = -121</td></tr>
+        <tr class="dt-trap"><td colspan="5">ReverseNumber(-121) = -121 —— 和原数相等！</td></tr>
+      </table>
+      <div class="num-visual-caption">因为负号本身也跟着每一位一起被"带"进了计算（每一位都是负数），如果原数去掉负号之后正好是回文（<code>121</code> 就是），反转完的结果会<strong>恰好跟原数相等</strong>。这样一来，<code>n == ReverseNumber(n)</code> 会把 <code>-121</code> 误判成"是回文数"——但按照通常的约定，<strong>负数永远不算回文数</strong>（负号本身打破了"从左读到右、从右读到左完全一样"这件事，"-121"倒着读会变成"121-"，根本不是同一个东西）。</div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>修复方法很简单：</b>在反转之前，先专门判断一下符号，负数直接返回"不是回文数"，根本不需要进入后面的反转逻辑：</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 修正：负数直接排除</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">bool</span> <span class="fn">IsPalindrome</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&lt;</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span>  <span class="cmt">// 负数不算回文数</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">return</span> <span class="fn">n</span> <span class="op">==</span> <span class="fn">ReverseNumber</span><span class="pnc">(</span><span class="fn">n</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p><b>细节二：以 0 结尾的数（但不是 0 本身），需要特殊处理吗？</b>比如 <code>120</code>、<code>100</code> 这种数，结尾是 0——直觉上你可能会担心这种情况需要单独写代码处理。其实<strong>完全不需要</strong>，上一节我们专门讲过"反转之后前导 0 会自动消失"，这里正好能用上：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">120 不需要额外处理 —— 上一节的"前导0消失"原理直接帮你解决了</div>
+      <div class="cmp-row">
+        <div class="cmp-box">n = 120</div>
+        <div class="cmp-eq f">≠</div>
+        <div class="cmp-box">ReverseNumber(120) = 21</div>
+        <div class="cmp-eq f">✗ 不是回文数</div>
+      </div>
+      <div class="num-visual-caption"><code>120</code> 反转之后，末尾的 0 会变成反转结果的<strong>开头</strong>，但整数没有前导 0 这种东西，所以这个 0 就直接消失了，<code>ReverseNumber(120)</code> 算出来是 <code>21</code>，和原数 <code>120</code> 自然不相等——<code>n == ReverseNumber(n)</code> 已经自动把这种情况正确判断成"不是回文数"了，不需要你额外写一行特判代码。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>有些代码（包括很多教辅资料）会在反转之前先加一句 <code>if (n % 10 == 0 && n != 0) return false;</code>，这其实只是一个<strong>可选的提前退出优化</strong>（省得真的去算一遍反转），并不是必须的——就像上面演示的，不加这句也能得到正确答案。理解"为什么不加也对"，比死记"要加这一句"更重要。</div>
+    </div>
+
+    <div class="sub-title" id="half">④ 进阶写法：只反转一半</div>
+    <div class="section-body">
+      <p>基础写法有一个潜在的风险：它会把 <code>n</code> <strong>完整反转</strong>一遍。如果 <code>n</code> 本身已经很接近 <code>int</code> 能表示的最大值（约 21 亿），反转之后位数顺序整体颠倒，反转结果<strong>可能会超出 <code>int</code> 的范围</strong>，导致溢出、结果出错。</p>
+      <p>解决办法是：既然回文数前后镜像对称，那<strong>只需要反转一半</strong>，再跟剩下的另一半比较，结果是一样的——但反转的数字始终不会比原数大太多，几乎不会溢出。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 只反转一半</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">bool</span> <span class="fn">IsPalindrome</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&lt;</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">rev</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&gt;</span> <span class="fn">rev</span><span class="pnc">)</span>     <span class="cmt">// 只要 n 还比 rev 大，说明还没反转过半</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="fn">rev</span> <span class="op">=</span> <span class="fn">rev</span> <span class="op">*</span> <span class="num">10</span> <span class="op">+</span> <span class="fn">n</span> <span class="op">%</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="fn">n</span> <span class="op">/=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">    <span class="kw">return</span> <span class="fn">n</span> <span class="op">==</span> <span class="fn">rev</span> <span class="op">||</span> <span class="fn">n</span> <span class="op">==</span> <span class="fn">rev</span> <span class="op">/</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>循环条件变成了 <code>n &gt; rev</code>——只要剩下没反转的那部分（<code>n</code>）还比已经反转出来的那部分（<code>rev</code>）大，就继续反转下一位。当 <code>rev</code> "追上" <code>n</code> 时，说明已经反转了差不多一半，停下来比较。用 <code>12321</code> 走一遍看看每一步：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">IsPalindrome(12321) —— 只反转一半的执行过程</div>
+      <table class="dual-table">
+        <tr><th>循环前 n</th><th>循环前 rev</th><th>n &gt; rev ?</th><th></th><th>反转后 n / rev</th></tr>
+        <tr><td class="dt-n">12321</td><td class="dt-rev">0</td><td class="dt-cond">12321 &gt; 0 ✓ 继续</td><td class="dt-arrow">→</td><td>n=1232　rev=1</td></tr>
+        <tr><td class="dt-n">1232</td><td class="dt-rev">1</td><td class="dt-cond">1232 &gt; 1 ✓ 继续</td><td class="dt-arrow">→</td><td>n=123　rev=12</td></tr>
+        <tr><td class="dt-n">123</td><td class="dt-rev">12</td><td class="dt-cond">123 &gt; 12 ✓ 继续</td><td class="dt-arrow">→</td><td>n=12　rev=123</td></tr>
+        <tr><td class="dt-n">12</td><td class="dt-rev">123</td><td class="dt-cond">12 &gt; 123 ✗ 停止</td><td class="dt-arrow"></td><td></td></tr>
+        <tr class="dt-final"><td colspan="5">最终 n=12，rev=123 —— n == rev/10（123/10=12），是回文数 ✓</td></tr>
+      </table>
+      <div class="num-visual-caption">注意最后一步：<code>12321</code> 总共 5 位，是<strong>奇数位</strong>，中间的 <code>3</code> 在反转过程中被"多算"进了 <code>rev</code> 里（<code>rev=123</code> 比 <code>n=12</code> 多一位）。这时候不能直接比较 <code>n == rev</code>，而要去掉 <code>rev</code> 最后一位（也就是中间那个多出来的数字）再比较：<code>rev / 10 = 12</code>，正好等于 <code>n</code>。如果原数是<strong>偶数位</strong>（比如 <code>1221</code>），两部分会刚好对半分，直接 <code>n == rev</code> 就够了，不需要再除以 10。</div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>为什么这样能避免溢出？</b>整个过程中，<code>rev</code> 最多增长到和原数<strong>位数差不多一半</strong>的规模就停下来了，永远不会超过原数本身的数量级——而基础写法里完整反转一个数，最坏情况下反转结果可能比 <code>int</code> 能装的范围还大。只反转一半，从根本上避开了这个风险。</div>
+    </div>
+
+    <div class="sub-title" id="compare">⑤ 两种写法对比</div>
+
+    <table class="api-table">
+      <thead><tr><th>写法</th><th>反转范围</th><th>溢出风险</th><th>适用场景</th></tr></thead>
+      <tbody>
+        <tr><td>反转后比较</td><td>完整反转整个数字</td><td>数字接近 int 上限时可能溢出</td><td>数字不大，追求代码简单直观</td></tr>
+        <tr><td>只反转一半</td><td>只反转大约一半的位数</td><td>几乎不会溢出</td><td>数字范围较大、或者题目对效率/边界要求更严格</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>如果判断的是字符串，而不是数字呢？</b>本节讨论的都是"数字"形式的回文（<code>int</code> 类型）。如果题目给的是一个字符串（比如判断 <code>"level"</code> 是不是回文），通常会用<strong>双指针</strong>——一个指针从最左边出发，一个从最右边出发，往中间逐步靠近，边走边比较两个指针指向的字符是否相等。这个技巧会在模块七·双指针里详细介绍，思路和这一节"镜像位置成对比较"的核心思想是完全一致的，只是不需要先转换成数字。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块一 · 数学基础 · 1.2 回文判断</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A01_01_数位拆分.html">← 1.1 数位拆分</a>
+      <a class="nav-btn" href="A01_03_质数判断.html">1.3 质数判断 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

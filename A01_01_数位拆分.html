@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.1 数位拆分 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "1.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格，三种内部布局复用 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 位值分解（① 为什么要拆数字） */
+  .place-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .place-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .place-cell { width: 42px; height: 42px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .place-cell.hi { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.45); }
+  .place-weight { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--code-num); }
+  .place-name { font-size: 10.5px; color: #6C7086; }
+  .place-formula { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #CBA6F7; margin: 16px 0 4px; }
+  .place-divider { height: 1px; background: #2A2840; margin: 16px 0; }
+  .place-result-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+  .place-result-row:last-child { margin-bottom: 0; }
+  .place-result-tag { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--code-fn); background: rgba(137,180,250,.15); padding: 4px 10px; border-radius: 5px; flex-shrink: 0; }
+  .place-result-note { font-size: 12px; color: #A6ADC8; flex: 1; min-width: 180px; }
+  .place-result-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--code-str); flex-shrink: 0; }
+
+  /* 双轨步骤表（② 拆分 ③ 反转） */
+  .dual-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .dual-table th { font-family: 'Noto Sans SC', sans-serif; font-size: 11px; font-weight: 700; color: #A6ADC8; text-align: center; padding: 6px 8px 12px; border-bottom: 1px solid #2A2840; }
+  .dual-table td { text-align: center; padding: 9px 8px; color: var(--code-text); }
+  .dual-table tr:not(:last-child) td { border-bottom: 1px dashed #2A2840; }
+  .dual-table .dt-n { color: var(--code-fn); }
+  .dual-table .dt-arrow { color: #6C7086; font-size: 12px; }
+  .dual-table .dt-digit { color: var(--code-num); font-weight: 700; }
+  .dual-table .dt-rev { color: var(--code-str); }
+  .dual-table tr.dt-final td { color: var(--code-str); font-weight: 700; padding-top: 12px; }
+  .dual-table tr.dt-final { border-top: 1px solid #2A2840; }
+
+  /* 落位槎可视化（④ 保序替换） */
+  .slot-step { margin-bottom: 14px; }
+  .slot-step:last-child { margin-bottom: 0; }
+  .slot-step-label { font-size: 11.5px; color: #A6ADC8; margin-bottom: 8px; font-family: 'Noto Sans SC', sans-serif; }
+  .slot-row { display: flex; gap: 6px; justify-content: center; }
+  .slot-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .slot-cell { width: 38px; height: 38px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; }
+  .slot-cell.empty { background: #16141F; color: #45475A; border: 1px dashed #2A2840; }
+  .slot-cell.now   { background: rgba(250,179,135,.25); color: var(--code-num); border: 1px solid rgba(250,179,135,.45); }
+  .slot-cell.done  { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .slot-cell.final { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.45); }
+  .slot-place { font-size: 9.5px; color: #6C7086; font-family: 'Noto Sans SC', sans-serif; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="1.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块一 数学基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>1.1 数位拆分</span>
+    </div>
+    <h1 class="chapter-title">1.1　数位拆分</h1>
+    <p class="chapter-desc">用 <code>% 10</code> 和 <code>/ 10</code> 一位一位"拆开"一个整数——这是几乎所有数字类竞赛题的起点工具。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么要"拆数字"</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：从右往左取出每一位</a></li>
+      <li><span class="toc-num">③</span><a href="#reverse">变体一：反转一个整数</a></li>
+      <li><span class="toc-num">④</span><a href="#keep">变体二：保留原序，替换某一位</a></li>
+      <li><span class="toc-num">⑤</span><a href="#compare">三种写法对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么要"拆数字"</div>
+    <div class="section-body">
+      <p>在 C++ 里，一个 <code>int</code> 类型的变量 <code>12345</code> 在内存里只是一段二进制数据——它<strong>并不知道自己"有 5 位"</strong>，也不知道"个位是 5、十位是 4"。"数位"这个概念，是我们人类用十进制书写数字时才有的——计算机眼里只有"这个数的大小"，没有"第几位是几"这种结构。</p>
+      <p>所以，如果题目要求你"求各位数字之和""判断是不是回文数""统计某个数字出现了几次"，就必须先把这个整数<strong>还原成一位一位的数字</strong>。而做到这件事，只需要两个最基础的运算：<code>% 10</code>（取余）和 <code>/ 10</code>（整除）。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">12345 的位值分解 —— 每一位数字都乘以它的"位权"</div>
+      <div class="place-row">
+        <div class="place-cell-wrap">
+          <div class="place-cell">1</div>
+          <div class="place-weight">×10000</div>
+          <div class="place-name">万位</div>
+        </div>
+        <div class="place-cell-wrap">
+          <div class="place-cell">2</div>
+          <div class="place-weight">×1000</div>
+          <div class="place-name">千位</div>
+        </div>
+        <div class="place-cell-wrap">
+          <div class="place-cell">3</div>
+          <div class="place-weight">×100</div>
+          <div class="place-name">百位</div>
+        </div>
+        <div class="place-cell-wrap">
+          <div class="place-cell">4</div>
+          <div class="place-weight">×10</div>
+          <div class="place-name">十位</div>
+        </div>
+        <div class="place-cell-wrap">
+          <div class="place-cell hi">5</div>
+          <div class="place-weight">×1</div>
+          <div class="place-name">个位</div>
+        </div>
+      </div>
+      <div class="place-formula">12345 = 1×10000 + 2×1000 + 3×100 + 4×10 + 5×1</div>
+      <div class="place-divider"></div>
+      <div class="place-result-row">
+        <div class="place-result-tag">12345 % 10</div>
+        <div class="place-result-note">前面 4 项全是 10 的倍数，除以 10 都余 0，只剩下个位单独留下来</div>
+        <div class="place-result-val">= 5</div>
+      </div>
+      <div class="place-result-row">
+        <div class="place-result-tag">12345 / 10</div>
+        <div class="place-result-note">整除会把个位直接"切掉"，剩下每一位的位权整体降一级</div>
+        <div class="place-result-val">= 1234</div>
+      </div>
+      <div class="num-visual-caption">这就是 <code>% 10</code> 和 <code>/ 10</code> 好用的根本原因——十进制里<strong>所有比"个位"更高的位</strong>，对 10 取余都贡献 0；而整除 10，相当于把整个数字"右移一位"，自然就甩掉了最右边那一位。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>类比理解：</b>可以把整数想象成一节一节套起来的"俄罗斯套娃"——最外面（最右边）那一节是个位，剥开一节（<code>/10</code>）就能看到下一节（十位），每剥一节之前先看一眼这一节是什么（<code>%10</code>）。拆数字的过程，就是不断"剥洋葱"，从最外层（个位）剥到最内层（最高位）。</div>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：从右往左取出每一位</div>
+    <div class="section-body">
+      <p>最基础的写法——一个 <code>while</code> 循环，每次取出当前的个位，再用整除去掉这一位，直到 <code>n</code> 变成 0 为止：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 拆分每一位（倒序输出）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 拆分每一位(倒序输出)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">while</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">!=</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">digit</span> <span class="op">=</span> <span class="fn">n</span> <span class="op">%</span> <span class="num">10</span><span class="pnc">;</span>    <span class="cmt">// 取出个位</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">digit</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span>  <span class="cmt">// 输出当前位</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">    <span class="fn">n</span> <span class="op">/=</span> <span class="num">10</span><span class="pnc">;</span>               <span class="cmt">// 去掉个位</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>用 <code>n = 12345</code> 走一遍这个循环，每一步 <code>n</code> 都在变小，每一步都"吐出"一个数字：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">n = 12345 时，while 循环的每一步</div>
+      <table class="dual-table">
+        <tr><th>循环前的 n</th><th></th><th>digit = n % 10</th><th></th><th>n /= 10 之后</th></tr>
+        <tr><td class="dt-n">12345</td><td class="dt-arrow">取出 →</td><td class="dt-digit">5</td><td class="dt-arrow">→ 变成</td><td class="dt-n">1234</td></tr>
+        <tr><td class="dt-n">1234</td><td class="dt-arrow">取出 →</td><td class="dt-digit">4</td><td class="dt-arrow">→ 变成</td><td class="dt-n">123</td></tr>
+        <tr><td class="dt-n">123</td><td class="dt-arrow">取出 →</td><td class="dt-digit">3</td><td class="dt-arrow">→ 变成</td><td class="dt-n">12</td></tr>
+        <tr><td class="dt-n">12</td><td class="dt-arrow">取出 →</td><td class="dt-digit">2</td><td class="dt-arrow">→ 变成</td><td class="dt-n">1</td></tr>
+        <tr><td class="dt-n">1</td><td class="dt-arrow">取出 →</td><td class="dt-digit">1</td><td class="dt-arrow">→ 变成</td><td class="dt-n">0</td></tr>
+        <tr class="dt-final"><td colspan="5">n = 0，循环结束 —— 输出顺序：5 4 3 2 1</td></tr>
+      </table>
+      <div class="num-visual-caption">注意输出顺序是 <strong>5 4 3 2 1</strong>，正好是 12345 的<strong>倒序</strong>——这是因为每次取出来的都是"当前最右边"的那一位，而个位本来就是原数最右边的那一位，所以第一个被取出来的，正好是原数的最后一位。</div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>一个容易忽略的细节：</b>如果 <code>n = 0</code>，循环条件 <code>n != 0</code> 一开始就不满足，循环体一次都不会执行——如果题目要求"输入 0 时也要输出 0"，需要在循环外单独判断并处理这个特殊情况。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么用 <code>n != 0</code> 而不是 <code>n &gt; 0</code>？</b>因为 C++ 里负数也是可以正常拆分的——只要循环条件写成 <code>n != 0</code>，无论 <code>n</code> 是正数还是负数，<code>/ 10</code> 都会让它一步步逼近 0，最终精确停在 <code>0</code> 上。如果写成 <code>n &gt; 0</code>，负数永远不满足这个条件，循环会被直接跳过、什么都拆不出来——这往往不是我们想要的效果。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">n = -123 时，while (n != 0) 同样能正常拆完</div>
+      <table class="dual-table">
+        <tr><th>循环前的 n</th><th></th><th>digit = n % 10</th><th></th><th>n /= 10 之后</th></tr>
+        <tr><td class="dt-n">-123</td><td class="dt-arrow">取出 →</td><td class="dt-digit">-3</td><td class="dt-arrow">→ 变成</td><td class="dt-n">-12</td></tr>
+        <tr><td class="dt-n">-12</td><td class="dt-arrow">取出 →</td><td class="dt-digit">-2</td><td class="dt-arrow">→ 变成</td><td class="dt-n">-1</td></tr>
+        <tr><td class="dt-n">-1</td><td class="dt-arrow">取出 →</td><td class="dt-digit">-1</td><td class="dt-arrow">→ 变成</td><td class="dt-n">0</td></tr>
+        <tr class="dt-final"><td colspan="5">n = 0，循环结束 —— 取出的每一位：-3 -2 -1</td></tr>
+      </table>
+      <div class="num-visual-caption">C++ 里整数除法是<strong>向零取整</strong>的，所以负数反复除以 10 也会一步步靠近 0，并且精确落在 0 上——这就是为什么 <code>n != 0</code> 同样能让负数的循环正常结束。不过要注意：<strong>取出来的每一位本身带着负号</strong>（<code>-3</code> 而不是 <code>3</code>），这是因为 C++ 里负数对正数取余，结果的符号和被除数一致（<code>-123 % 10 == -3</code>）。如果题目只关心数字本身、不关心符号，可以在拆之前先记下符号、再用 <code>n = abs(n)</code> 转成正数处理，或者每次取出 <code>digit</code> 后用 <code>abs(digit)</code> 拿到不带符号的数字。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div><b>最常见的应用——求各位数字之和：</b>把"输出 digit"换成"累加 digit"，就能算出一个数所有数位之和：</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 求各位数字之和</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="num">12345</span><span class="pnc">,</span> <span class="fn">sum</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">while</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">!=</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="fn">sum</span> <span class="op">+=</span> <span class="fn">n</span> <span class="op">%</span> <span class="num">10</span><span class="pnc">;</span>  <span class="cmt">// 累加当前位，而不是输出</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">n</span> <span class="op">/=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// sum = 1+2+3+4+5 = 15</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>同样的模板还能用来<strong>数一个数有几位</strong>（每循环一次计数器加 1）、<strong>统计某个数字出现了几次</strong>（每次判断 <code>digit</code> 是否等于目标数字）。记住这一个 <code>while</code> 循环的骨架，后面绝大多数"按位处理"的题目都是在这个骨架里改一行代码。</p>
+    </div>
+
+    <div class="sub-title" id="reverse">③ 变体一：反转一个整数</div>
+    <div class="section-body">
+      <p>基础写法只是把每一位"读出来"，不会保存。如果想把读出来的数字重新拼成一个新的整数，就要用到这个变体——<strong>反转数字</strong>：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · ReverseNumber 反转整数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">ReverseNumber</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">rev</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">!=</span> <span class="num">0</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">        <span class="fn">rev</span> <span class="op">=</span> <span class="fn">rev</span> <span class="op">*</span> <span class="num">10</span> <span class="op">+</span> <span class="fn">n</span> <span class="op">%</span> <span class="num">10</span><span class="pnc">;</span>    <span class="cmt">// 把之前的反转结果左移一位，加上新个位</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="fn">n</span> <span class="op">/=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">return</span> <span class="fn">rev</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="cmt">// ReverseNumber(12345) → 54321</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>关键就在第 5 行这一句：<code>rev = rev * 10 + n % 10</code>。<code>rev * 10</code> 的作用是把 <code>rev</code> 现有的每一位<strong>整体向左挪一位</strong>（腾出最右边的位置），然后再把新取出来的 <code>n % 10</code> 填进腾出来的最右边——这正好和基础写法是<strong>反过来的操作</strong>：基础写法是"剥掉"最右边一位，这里是"新增"一位到最右边。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">ReverseNumber(12345) 逐步执行过程</div>
+      <table class="dual-table">
+        <tr><th>n（待拆分）</th><th></th><th>取出的数字</th><th></th><th>rev（结果累积）</th></tr>
+        <tr><td class="dt-n">12345</td><td class="dt-arrow">→</td><td class="dt-digit">5</td><td class="dt-arrow">→</td><td class="dt-rev">0×10+5 = 5</td></tr>
+        <tr><td class="dt-n">1234</td><td class="dt-arrow">→</td><td class="dt-digit">4</td><td class="dt-arrow">→</td><td class="dt-rev">5×10+4 = 54</td></tr>
+        <tr><td class="dt-n">123</td><td class="dt-arrow">→</td><td class="dt-digit">3</td><td class="dt-arrow">→</td><td class="dt-rev">54×10+3 = 543</td></tr>
+        <tr><td class="dt-n">12</td><td class="dt-arrow">→</td><td class="dt-digit">2</td><td class="dt-arrow">→</td><td class="dt-rev">543×10+2 = 5432</td></tr>
+        <tr><td class="dt-n">1</td><td class="dt-arrow">→</td><td class="dt-digit">1</td><td class="dt-arrow">→</td><td class="dt-rev">5432×10+1 = 54321</td></tr>
+        <tr class="dt-final"><td colspan="5">n = 0，循环结束 —— 最终 rev = 54321</td></tr>
+      </table>
+      <div class="num-visual-caption">每一步 <code>rev</code> 在右边"接上"新取出的数字——而 <code>n</code> 每次拆出来的，正好是原数从右往左数的下一位。所以拼出来的 <code>rev</code>，数位顺序正好和原数<strong>完全相反</strong>。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>一个意外的好处——自动去掉"多余的 0"：</b>如果原数末尾本身就有 0（比如 <code>1200</code>），反转之后这些 0 应该跑到结果的最前面，但"数字"是不能有前导 0 的（<code>0021</code> 不是一个合法的整数写法，它就是 <code>21</code>）。这个算法刚好<strong>自动处理好了这件事</strong>，完全不需要你额外写代码去删——往下看具体是怎么发生的。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">ReverseNumber(1200) —— 末尾的 0 是怎么"消失"的</div>
+      <table class="dual-table">
+        <tr><th>n（待拆分）</th><th></th><th>取出的数字</th><th></th><th>rev（结果累积）</th></tr>
+        <tr><td class="dt-n">1200</td><td class="dt-arrow">→</td><td class="dt-digit">0</td><td class="dt-arrow">→</td><td class="dt-rev">0×10+0 = 0</td></tr>
+        <tr><td class="dt-n">120</td><td class="dt-arrow">→</td><td class="dt-digit">0</td><td class="dt-arrow">→</td><td class="dt-rev">0×10+0 = 0</td></tr>
+        <tr><td class="dt-n">12</td><td class="dt-arrow">→</td><td class="dt-digit">2</td><td class="dt-arrow">→</td><td class="dt-rev">0×10+2 = 2</td></tr>
+        <tr><td class="dt-n">1</td><td class="dt-arrow">→</td><td class="dt-digit">1</td><td class="dt-arrow">→</td><td class="dt-rev">2×10+1 = 21</td></tr>
+        <tr class="dt-final"><td colspan="5">n = 0，循环结束 —— 最终 rev = 21（不是 0021！）</td></tr>
+      </table>
+      <div class="num-visual-caption">前两步取出的 0，乘 10 再加 0，结果<strong>一直是 0</strong>，并没有真的往 <code>rev</code> 里"写入"任何东西。直到取到第一个非 0 数字（这里是 2），<code>rev</code> 才真正开始累积数值。这就是为什么前导 0 不需要手动删除——<strong>普通整数本来就不会保留没有意义的前导 0</strong>，这是整数（<code>int</code>）这种数据类型自带的性质，而不是字符串。</div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>预告：</b>判断一个数是不是<strong>回文数</strong>（正读反读都一样，比如 12321），最直接的办法就是用 <code>ReverseNumber</code> 把它反转一遍，再跟原数比较是否相等——下一节我们就会用到这个工具。</div>
+    </div>
+
+    <div class="sub-title" id="keep">④ 变体二：保留原序，替换某一位</div>
+    <div class="section-body">
+      <p>有时候我们不想"反转"数字，只是想<strong>修改其中某一位</strong>，同时让其余各位都待在原来的位置不动——比如"把一个数里所有的 4 都换成 8"。这就需要第三种写法：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 保持原序，替换数字中所有的 4 为 8</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span><span class="pnc">,</span> <span class="fn">x</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">,</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">n</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">while</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">!=</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">int</span> <span class="fn">t</span> <span class="op">=</span> <span class="fn">n</span> <span class="op">%</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="kw">if</span><span class="pnc">(</span><span class="fn">t</span> <span class="op">==</span> <span class="num">4</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">        <span class="fn">t</span> <span class="op">=</span> <span class="num">8</span><span class="pnc">;</span>			<span class="cmt">// 将原始数字中的所有4替换为8</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">    <span class="fn">x</span> <span class="op">+=</span> <span class="fn">t</span> <span class="op">*</span> <span class="fn">i</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">n</span> <span class="op">/=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">12</td><td class="cd">    <span class="fn">i</span> <span class="op">*=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>这里多了一个变量 <code>i</code>，从 1 开始，每循环一次乘以 10（<code>1 → 10 → 100 → 1000 → ...</code>）——它的作用是<strong>记住当前取出的这一位，原本站在哪个位置上</strong>。第一次取出的是个位，<code>i = 1</code>；第二次取出的是十位，<code>i = 10</code>；以此类推。把每个数字乘上它"原本的位权" <code>i</code> 再累加进 <code>x</code>，就能让数字<strong>精确落回原来的位置</strong>，而不会像变体一那样被颠倒顺序。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">把 1234 中的 4 替换成 8 —— 数字按位权"落回"原来的位置</div>
+
+      <div class="slot-step">
+        <div class="slot-step-label">第 1 步：取出个位 t=4 → 替换成 8，i=1，x += 8×1 = 8</div>
+        <div class="slot-row">
+          <div class="slot-cell-wrap"><div class="slot-cell empty">·</div><div class="slot-place">千位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell empty">·</div><div class="slot-place">百位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell empty">·</div><div class="slot-place">十位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell now">8</div><div class="slot-place">个位</div></div>
+        </div>
+      </div>
+
+      <div class="slot-step">
+        <div class="slot-step-label">第 2 步：取出十位 t=3，i=10，x += 3×10 = 30 → x = 38</div>
+        <div class="slot-row">
+          <div class="slot-cell-wrap"><div class="slot-cell empty">·</div><div class="slot-place">千位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell empty">·</div><div class="slot-place">百位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell now">3</div><div class="slot-place">十位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell done">8</div><div class="slot-place">个位</div></div>
+        </div>
+      </div>
+
+      <div class="slot-step">
+        <div class="slot-step-label">第 3 步：取出百位 t=2，i=100，x += 2×100 = 200 → x = 238</div>
+        <div class="slot-row">
+          <div class="slot-cell-wrap"><div class="slot-cell empty">·</div><div class="slot-place">千位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell now">2</div><div class="slot-place">百位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell done">3</div><div class="slot-place">十位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell done">8</div><div class="slot-place">个位</div></div>
+        </div>
+      </div>
+
+      <div class="slot-step">
+        <div class="slot-step-label">第 4 步：取出千位 t=1，i=1000，x += 1×1000 = 1000 → x = 1238，n 变 0，循环结束</div>
+        <div class="slot-row">
+          <div class="slot-cell-wrap"><div class="slot-cell final">1</div><div class="slot-place">千位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell final">2</div><div class="slot-place">百位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell final">3</div><div class="slot-place">十位</div></div>
+          <div class="slot-cell-wrap"><div class="slot-cell final">8</div><div class="slot-place">个位</div></div>
+        </div>
+      </div>
+
+      <div class="num-visual-caption">虽然取出数字的<strong>时间顺序</strong>是个位 → 十位 → 百位 → 千位（从右往左），但因为每一位都乘上了自己"原本的位权" <code>i</code> 再加进 <code>x</code>，所以它们各自落进的<strong>位置</strong>始终和原数一致——最终 <code>x = 1238</code>，正好是 <code>1234</code> 把 4 换成 8 之后的样子。</div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>和变体一最容易混淆的地方：</b>变体一是 <code>rev = rev * 10 + digit</code>——<strong>乘的是累加器 <code>rev</code> 本身</strong>，每加一位都把之前的结果统一往左挪，所以顺序会反过来。变体二是 <code>x += t * i</code>，<code>i</code> 单独累乘 10——<strong>乘的是位权 <code>i</code>，不是累加器</strong>，每个数字直接乘上它该在的位权后加进去，顺序当然不会变。两段代码长得有点像（都有"乘 10"的操作），但乘的对象不同，效果天差地别，一定要看清楚乘号作用在谁身上。</div>
+    </div>
+
+    <div class="sub-title" id="compare">⑤ 三种写法对比</div>
+    <div class="section-body">
+      <p>这三种写法的循环骨架几乎一样（都是 <code>while(n != 0) { ... n /= 10; }</code>），区别只在循环体里多了什么、少了什么，整理成一张表方便记忆：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>写法</th><th>核心语句</th><th>结果顺序</th><th>典型用途</th></tr></thead>
+      <tbody>
+        <tr><td>基础拆分</td><td>digit = n % 10（只取，不存）</td><td>个位先被取出（天然倒序）</td><td>逐位输出、求数字和、统计某位数字出现次数</td></tr>
+        <tr><td>反转数字</td><td>rev = rev * 10 + digit</td><td>整体顺序反转</td><td>判断回文数、数字反转类题目</td></tr>
+        <tr><td>保序替换</td><td>x += t * i；i *= 10</td><td>保持原顺序不变</td><td>修改/统计某一位，同时保留原数的"长相"</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>这套"用 <code>% 10</code> 取一位、用 <code>/ 10</code> 去一位"的循环模板，是后面<strong>回文判断、进制转换、数位 DP</strong>等一大批题目的地基。三种写法的差别全部体现在"取出来的数字怎么处理"这一行上——把这三种处理方式吃透了，遇到新的"按位处理"问题时，往往只是把这一行换成新的逻辑，骨架完全不用动。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块一 · 数学基础 · 1.1 数位拆分</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="index.html">← 返回目录</a>
+      <a class="nav-btn" href="A01_02_回文判断.html">1.2 回文判断 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

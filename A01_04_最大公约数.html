@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.4 最大公约数 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "1.4"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 因数集合重叠可视化（① 什么是最大公约数，复用 STL 集合运算的视觉语言） */
+  .set-row-label { font-size: 11px; color: #6C7086; width: 50px; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .set-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .set-cell { min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; position: relative; }
+  .set-cell.a-only { background: rgba(137,180,250,.2); color: var(--code-fn); border: 1px solid rgba(137,180,250,.4); }
+  .set-cell.b-only { background: rgba(245,194,231,.18); color: var(--code-op); border: 1px solid rgba(245,194,231,.38); }
+  .set-cell.both   { background: rgba(166,227,161,.28); color: var(--code-str); border: 1px solid rgba(166,227,161,.5); }
+  .set-cell.gcdmax { background: rgba(166,227,161,.28); color: var(--code-str); border: 2px solid var(--code-str); box-shadow: 0 0 0 2px rgba(166,227,161,.25); }
+  .set-divider { height: 1px; background: #2A2840; margin: 10px 0 14px 56px; }
+  .set-result-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .set-result-tag { font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; width: 130px; flex-shrink: 0; color: var(--code-str); }
+
+  /* 铺地砖可视化（③ 优化：欧几里得算法的几何讲法） */
+  .carpet-stage { margin-bottom: 20px; }
+  .carpet-stage:last-child { margin-bottom: 0; }
+  .carpet-stage-title { font-size: 12px; color: #A6ADC8; margin-bottom: 10px; font-family: 'Noto Sans SC', sans-serif; }
+  .carpet-floor { display: flex; border-radius: 4px; overflow: hidden; }
+  .carpet-tile { background: rgba(166,227,161,.32); border: 1px solid rgba(166,227,161,.55); box-sizing: border-box; flex-shrink: 0; }
+  .carpet-leftover { background: rgba(250,179,135,.25); border: 1px dashed rgba(250,179,135,.6); box-sizing: border-box; flex-shrink: 0; }
+  .carpet-stage-result { font-size: 12px; color: #A6ADC8; margin-top: 10px; font-family: 'Noto Sans SC', sans-serif; }
+  .carpet-stage-result strong { color: #F2CDCD; font-weight: 700; }
+  .carpet-stage.final .carpet-stage-result strong { color: var(--code-str); }
+
+  /* 递归调用链可视化（递归写法） */
+  .recur-chain { display: flex; flex-direction: column; align-items: center; }
+  .recur-call { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--code-fn); background: #2A2840; border: 1px solid #3A3850; border-radius: 7px; padding: 8px 20px; }
+  .recur-call.base { color: var(--code-str); background: rgba(166,227,161,.22); border-color: rgba(166,227,161,.5); }
+  .recur-arrow-wrap { display: flex; flex-direction: column; align-items: center; padding: 4px 0; }
+  .recur-arrow-label { font-size: 10px; color: #6C7086; font-family: 'Noto Sans SC', sans-serif; margin-bottom: 1px; }
+  .recur-arrow-glyph { color: #6C7086; font-size: 14px; line-height: 1; }
+  .recur-return { font-size: 12px; color: #A6ADC8; font-family: 'Noto Sans SC', sans-serif; margin-top: 12px; text-align: center; max-width: 460px; line-height: 1.7; }
+  .recur-return code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+
+  /* 双轨步骤表（③ 欧几里得算法，复用 1.1/1.2 风格） */
+  .dual-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .dual-table th { font-family: 'Noto Sans SC', sans-serif; font-size: 11px; font-weight: 700; color: #A6ADC8; text-align: center; padding: 6px 8px 12px; border-bottom: 1px solid #2A2840; }
+  .dual-table td { text-align: center; padding: 9px 8px; color: var(--code-text); }
+  .dual-table tr:not(:last-child) td { border-bottom: 1px dashed #2A2840; }
+  .dual-table .dt-a { color: var(--code-fn); }
+  .dual-table .dt-b { color: var(--code-op); }
+  .dual-table .dt-r { color: var(--code-num); font-weight: 700; }
+  .dual-table .dt-arrow { color: #6C7086; font-size: 12px; }
+  .dual-table tr.dt-final td { color: var(--code-str); font-weight: 700; padding-top: 12px; }
+  .dual-table tr.dt-final { border-top: 1px solid #2A2840; }
+
+  /* 检查次数对比条（复用 1.3 风格） */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 130px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { background: none; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="1.4">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块一 数学基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>1.4 最大公约数</span>
+    </div>
+    <h1 class="chapter-title">1.4　最大公约数</h1>
+    <p class="chapter-desc">从枚举到欧几里得算法（辗转相除法）——求两个数最大公约数最经典的优化之路。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是最大公约数</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：枚举法</a></li>
+      <li><span class="toc-num">③</span><a href="#euclid">优化：欧几里得算法</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是最大公约数</div>
+    <div class="section-body">
+      <p>两个整数的<strong>公约数</strong>，是指能同时整除这两个数的正整数；在所有公约数里最大的那一个，就叫做<strong>最大公约数</strong>（Greatest Common Divisor，简称 <strong>GCD</strong>）。比如 <code>12</code> 和 <code>18</code>，先列出各自的因数，再看看哪些是两边都有的：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">12 和 18 的因数集合 —— 重叠部分就是公约数</div>
+      <div class="set-row">
+        <div class="set-row-label">12 的因数</div>
+        <div class="set-cell both">1</div><div class="set-cell both">2</div><div class="set-cell both">3</div><div class="set-cell a-only">4</div><div class="set-cell gcdmax">6</div><div class="set-cell a-only">12</div>
+      </div>
+      <div class="set-row">
+        <div class="set-row-label">18 的因数</div>
+        <div class="set-cell both">1</div><div class="set-cell both">2</div><div class="set-cell both">3</div><div class="set-cell gcdmax">6</div><div class="set-cell b-only">9</div><div class="set-cell b-only">18</div>
+      </div>
+      <div class="set-divider"></div>
+      <div class="set-result-row">
+        <div class="set-result-tag">公约数</div>
+        <div class="set-cell both">1</div><div class="set-cell both">2</div><div class="set-cell both">3</div><div class="set-cell gcdmax">6</div>
+      </div>
+      <div class="num-visual-caption">绿色格子是<strong>两边都有</strong>的因数（公约数）：<code>1、2、3、6</code>，其中带描边的 <code>6</code> 是最大的一个——所以 <code>GCD(12, 18) = 6</code>。蓝色、粉色格子分别是只属于 12、只属于 18 的因数，不是公约数。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>互质：</b>如果两个数的最大公约数是 <code>1</code>（也就是除了 <code>1</code> 之外没有其他公约数），就说这两个数<strong>互质</strong>。比如 <code>GCD(8, 15) = 1</code>，<code>8</code> 和 <code>15</code> 互质——注意互质不要求两个数本身是质数，<code>8</code> 和 <code>15</code> 都是合数，但它们互相之间没有除 1 以外的公共因数。</div>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：枚举法</div>
+    <div class="section-body">
+      <p>最直接的想法：从两个数里较小的那个开始，往下一个个试，第一个能<strong>同时整除两个数</strong>的，就是最大公约数——因为是从大到小找的，找到的第一个必然是最大的：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 枚举法求最大公约数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Gcd</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">smaller</span> <span class="op">=</span> <span class="fn">min</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">);</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="fn">smaller</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">%</span> <span class="fn">i</span> <span class="op">==</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> <span class="fn">b</span> <span class="op">%</span> <span class="fn">i</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">            <span class="kw">return</span> <span class="fn">i</span><span class="pnc">;</span>  <span class="cmt">// 从大到小找，第一个找到的就是最大公约数</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="kw">return</span> <span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 理论上不会执行到这里，i=1 总能同时整除任何数</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>这种写法最坏情况下要从 <code>min(a, b)</code> 一直试到 <code>1</code>，时间复杂度是 <strong>O(min(a, b))</strong>——当两个数很大、而最大公约数又很小的时候（比如两个几乎互质的大数），这个循环会跑很多很多次。</p>
+    </div>
+
+    <div class="sub-title" id="euclid">③ 优化：欧几里得算法</div>
+    <div class="section-body">
+      <p>这里有一个非常巧妙的发现，叫<strong>欧几里得算法</strong>（也叫<strong>辗转相除法</strong>），可以完全不用枚举，飞快地算出最大公约数。理解它最简单的方式，不是看公式，而是想象<strong>铺地砖</strong>。</p>
+      <p>假设有一块长方形的地板，两条边分别是 <code>a</code> 和 <code>b</code>，想用同样大小的<strong>正方形方砖</strong>把它刚好铺满——不能切割方砖，不能留缝，也不能重叠。能完成这件事的<strong>最大方砖边长</strong>，正好就是 <code>a</code> 和 <code>b</code> 的最大公约数：因为方砖边长必须同时能整除 <code>a</code> 和 <code>b</code>（横着摆整数块、竖着摆整数块都要刚好对齐），而我们要的就是这样的边长里<strong>最大</strong>的一个。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>怎么找到这个最大边长，而不用一个个去试？</b>用<strong>较短的那条边</strong>当方砖边长，沿着长边铺过去，能铺几块整的就铺几块——剩下铺不满的那一窄条，就当成一块"新地板"。再对这块新地板重复同样的操作：用它较短的那条边当方砖边长，继续铺、继续剩。一直这样做下去，地板会越铺越小，直到有一次<strong>正好铺满、一点都不剩</strong>——这时候用的方砖边长，就是答案。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">铺地砖求 GCD(48, 18) —— 跟着图走一遍，不用写任何公式</div>
+
+      <div class="carpet-stage">
+        <div class="carpet-stage-title">第 1 轮：地板是 48 × 18，用较短边 18 当方砖边长去铺</div>
+        <div class="carpet-floor" style="width:192px;height:72px;">
+          <div class="carpet-tile" style="width:72px;height:72px;"></div>
+          <div class="carpet-tile" style="width:72px;height:72px;"></div>
+          <div class="carpet-leftover" style="width:48px;height:72px;"></div>
+        </div>
+        <div class="carpet-stage-result">铺了 <strong>2</strong> 块 18×18 的方砖，剩下一条 <strong>12 × 18</strong> 的窄地板还没铺满</div>
+      </div>
+
+      <div class="carpet-stage">
+        <div class="carpet-stage-title">第 2 轮：新地板是 18 × 12，用较短边 12 当方砖边长去铺</div>
+        <div class="carpet-floor" style="width:72px;height:48px;">
+          <div class="carpet-tile" style="width:48px;height:48px;"></div>
+          <div class="carpet-leftover" style="width:24px;height:48px;"></div>
+        </div>
+        <div class="carpet-stage-result">铺了 <strong>1</strong> 块 12×12 的方砖，剩下一条 <strong>6 × 12</strong> 的窄地板还没铺满</div>
+      </div>
+
+      <div class="carpet-stage final">
+        <div class="carpet-stage-title">第 3 轮：新地板是 12 × 6，用较短边 6 当方砖边长去铺</div>
+        <div class="carpet-floor" style="width:48px;height:24px;">
+          <div class="carpet-tile" style="width:24px;height:24px;"></div>
+          <div class="carpet-tile" style="width:24px;height:24px;"></div>
+        </div>
+        <div class="carpet-stage-result">铺了 <strong>2</strong> 块 6×6 的方砖，正好铺满，一点都不剩！</div>
+      </div>
+
+      <div class="num-visual-caption">最后这一块方砖的边长是 <strong>6</strong>——铺满了 12×6 这块地板，没有任何剩余，所以 <code>GCD(48, 18) = 6</code>，和第①节用因数列出来的答案完全一致。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div><b>为什么"换一块新地板继续铺"答案不会变？</b>注意第 1 轮的大地板，其实正好是"2 块 18×18 的方砖"加上"1 条 12×18 的窄地板"拼起来的。如果一块方砖能铺满整个大地板，那它必须也能铺满这两块 18×18 的正方形——既然能铺满正方形，剩下那条窄地板自然也必须能被同样大小的方砖铺满。反过来想同样成立：只要一块方砖能铺满 18×18 的正方形、又能铺满剩下的窄地板，那它就一定能铺满整个大地板。所以，"铺满大地板的最大方砖"和"铺满剩下这条窄地板的最大方砖"，其实是同一个问题，答案必然相同。</div>
+    </div>
+
+    <div class="section-body">
+      <p>把"铺方砖、量剩下多窄"这件事翻译成数字：每一轮"能铺几块整的"，就是除法的<strong>商</strong>；"剩下多窄的一条"，就是除法的<strong>余数</strong>，也就是代码里的 <code>a % b</code>。整个铺地砖的过程，换成数字来写是这样的：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">GCD(48, 18) 的欧几里得算法执行过程</div>
+      <table class="dual-table">
+        <tr><th>a</th><th></th><th>b</th><th></th><th>a % b（新余数）</th></tr>
+        <tr><td class="dt-a">48</td><td class="dt-arrow">÷</td><td class="dt-b">18</td><td class="dt-arrow">余</td><td class="dt-r">12</td></tr>
+        <tr><td class="dt-a">18</td><td class="dt-arrow">÷</td><td class="dt-b">12</td><td class="dt-arrow">余</td><td class="dt-r">6</td></tr>
+        <tr><td class="dt-a">12</td><td class="dt-arrow">÷</td><td class="dt-b">6</td><td class="dt-arrow">余</td><td class="dt-r">0</td></tr>
+        <tr class="dt-final"><td colspan="5">余数变成 0，此时的 b = 6 —— GCD(48, 18) = 6</td></tr>
+      </table>
+      <div class="num-visual-caption">这张表里的每一行，正好对应上面铺地砖每一轮的"铺了几块、剩下多少"——只是不画方块，直接写数字。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 欧几里得算法（循环写法）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Gcd</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">b</span> <span class="op">!=</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">        <span class="typ">int</span> <span class="fn">remainder</span> <span class="op">=</span> <span class="fn">a</span> <span class="op">%</span> <span class="fn">b</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">        <span class="fn">a</span> <span class="op">=</span> <span class="fn">b</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">        <span class="fn">b</span> <span class="op">=</span> <span class="fn">remainder</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">return</span> <span class="fn">a</span><span class="pnc">;</span>  <span class="cmt">// b 变成 0 时，a 就是最大公约数</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>每一轮循环：先算出余数 <code>remainder = a % b</code>，然后把 <code>b</code> 挪到 <code>a</code> 的位置，把余数挪到 <code>b</code> 的位置——对应的就是"用 <code>(b, a%b)</code> 代替 <code>(a, b)</code>"。当 <code>b</code> 变成 <code>0</code> 时，说明上一轮的 <code>a</code> 已经能被上一轮的 <code>b</code> 整除，循环结束，此时的 <code>a</code> 就是最终答案。</p>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>欧几里得算法的时间复杂度是 <strong>O(log(min(a, b)))</strong>——每经过两轮，较小的数至少会减半，所以即使 <code>a</code>、<code>b</code> 是非常大的数（比如几十亿），通常也只需要循环几十次就能算出答案，比枚举法快得不是一个量级。</div>
+    </div>
+
+    <div class="sub-title">递归写法：和铺地砖、循环版本是同一件事</div>
+    <div class="section-body">
+      <p><code>GCD(a, b) = GCD(b, a % b)</code> 这个关系——"求大问题"转化成"求一个更小的同类型问题"——正是<strong>递归</strong>最典型的应用场景。前面铺地砖的每一轮、循环版本的每一次循环，本质上都是在做同一件事：用新的一组 <code>(a, b)</code> 代替旧的一组。用递归来写，可以让这种"自己调用自己、问题越变越小"的结构直接体现在代码里：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 欧几里得算法（递归写法）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Gcd</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">b</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="fn">a</span><span class="pnc">;</span>          <span class="cmt">// 递归出口：地板正好铺满，a 就是答案</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">%</span> <span class="fn">b</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// a 正好能被 b 整除，b 自己就是答案</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">return</span> <span class="fn">Gcd</span><span class="pnc">(</span><span class="fn">b</span><span class="pnc">,</span> <span class="fn">a</span> <span class="op">%</span> <span class="fn">b</span><span class="pnc">);</span>     <span class="cmt">// 否则换成剩下那条窄地板，继续铺</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>第 3 行是递归出口：地板正好铺满（<code>b == 0</code>），<code>a</code> 就是答案。第 4 行是一个小判断：如果 <code>a</code> 正好能被 <code>b</code> 整除，说明 <code>b</code> 自己就已经是最大公约数了，不用再往下多调用一层去确认。剩下第 5 行才是真正的"递归"——换成剩下那条窄地板，继续铺。用 <code>Gcd(48, 18)</code> 走一遍：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">Gcd(48, 18) 的递归调用链</div>
+      <div class="recur-chain">
+        <div class="recur-call">Gcd(48, 18)</div>
+        <div class="recur-arrow-wrap"><div class="recur-arrow-label">48%18≠0，调用</div><div class="recur-arrow-glyph">↓</div></div>
+        <div class="recur-call">Gcd(18, 12)</div>
+        <div class="recur-arrow-wrap"><div class="recur-arrow-label">18%12≠0，调用</div><div class="recur-arrow-glyph">↓</div></div>
+        <div class="recur-call base">Gcd(12, 6)</div>
+        <div class="recur-return">12 % 6 == 0 —— 直接返回 b = 6，这个结果会一路向上传回去，<code>Gcd(48, 18)</code> 最终的结果也是 6</div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>循环和递归，本质是同一个过程的两种写法：</b>循环版本里，每一轮用变量重新赋值（<code>a = b; b = remainder;</code>）来"前进到下一轮"；递归版本里，每一层用一次新的函数调用来"前进到下一轮"——两者经历的中间结果完全对应，只是"记住当前进度"的方式不同：循环靠变量覆盖，递归靠每一层调用自带的参数。两种写法都正确，竞赛代码里因为递归版本更简短，会更常见一些。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+    <div class="section-body">
+      <p>用 <code>GCD(360, 48)</code> 实际数一数两种写法的检查/计算次数，差距非常明显：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">求 GCD(360, 48) —— 两种写法的步骤数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">枚举法</div>
+        <div class="count-bar-track"><div class="count-bar-fill long">25 次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">欧几里得算法</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 12%;">2 步</div></div>
+      </div>
+      <div class="num-visual-caption">枚举法要从 <code>48</code> 往下试到 <code>24</code> 才能找到答案，一共检查了 <strong>25 次</strong>；欧几里得算法只需要两步：<code>360 % 48 = 24</code>，<code>48 % 24 = 0</code>，立刻得到 <code>GCD(360, 48) = 24</code>。</div>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>写法</th><th>核心思路</th><th>时间复杂度</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>枚举法</td><td>从 min(a,b) 往下逐个试除</td><td>O(min(a, b))</td><td>直观但慢，数字大时容易超时</td></tr>
+        <tr><td>欧几里得算法</td><td>GCD(a,b) = GCD(b, a%b)，不断缩小问题规模</td><td>O(log(min(a, b)))</td><td>竞赛标准写法，必须掌握</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>标准库里也有现成的：</b>C++17 开始，标准库 <code>&lt;numeric&gt;</code> 头文件直接提供了 <code>std::gcd(a, b)</code> 函数，效果和这里手写的一样。但不少在线评测系统使用的编译器版本较旧，不一定支持 C++17，所以掌握手写欧几里得算法依然是基本功——既保证任何环境都能用，也是很多更复杂算法（比如下一节的最小公倍数、还有数论里的扩展欧几里得）的基础。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块一 · 数学基础 · 1.4 最大公约数</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A01_03_质数判断.html">← 1.3 质数判断</a>
+      <a class="nav-btn" href="index.html">1.5 最小公倍数（即将推出） →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

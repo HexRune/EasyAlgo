@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.5 最小公倍数 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "1.5"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 倍数对齐可视化（① 什么是最小公倍数，复用集合两行风格） */
+  .set-row-label { font-size: 11px; color: #6C7086; width: 56px; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .set-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .set-cell { min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .set-cell.a-only { background: rgba(137,180,250,.2); color: var(--code-fn); border: 1px solid rgba(137,180,250,.4); }
+  .set-cell.b-only { background: rgba(245,194,231,.18); color: var(--code-op); border: 1px solid rgba(245,194,231,.38); }
+  .set-cell.both   { background: rgba(166,227,161,.2); color: var(--code-str); border: 1px solid rgba(166,227,161,.4); }
+  .set-cell.lcmmin { background: rgba(166,227,161,.3); color: var(--code-str); border: 2px solid var(--code-str); box-shadow: 0 0 0 2px rgba(166,227,161,.25); }
+
+  /* 共享+独有部分拼图（③ 优化：借助最大公约数） */
+  .lcm-split-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .lcm-split-row:last-child { margin-bottom: 0; }
+  .lcm-split-label { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #A6ADC8; width: 52px; flex-shrink: 0; text-align: right; }
+  .lcm-split-cell { min-width: 40px; height: 38px; padding: 0 8px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; }
+  .lcm-split-cell.shared  { background: rgba(166,227,161,.28); color: var(--code-str); border: 1px solid rgba(166,227,161,.5); }
+  .lcm-split-cell.uniqueA { background: rgba(137,180,250,.22); color: var(--code-fn); border: 1px solid rgba(137,180,250,.42); }
+  .lcm-split-cell.uniqueB { background: rgba(245,194,231,.2); color: var(--code-op); border: 1px solid rgba(245,194,231,.4); }
+  .lcm-split-op { color: #6C7086; font-size: 13px; }
+  .lcm-split-result { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: #F2CDCD; padding: 4px 10px; }
+  .lcm-split-divider { height: 1px; background: #2A2840; margin: 12px 0 12px 60px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 130px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="1.5">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块一 数学基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>1.5 最小公倍数</span>
+    </div>
+    <h1 class="chapter-title">1.5　最小公倍数</h1>
+    <p class="chapter-desc">借助上一节学过的最大公约数，几步就能算出最小公倍数——不需要单独的枚举套路。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是最小公倍数</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：枚举法</a></li>
+      <li><span class="toc-num">③</span><a href="#gcd">优化：借助最大公约数</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是最小公倍数</div>
+    <div class="section-body">
+      <p>两个整数的<strong>公倍数</strong>，是指能同时被这两个数整除的数；在所有公倍数里最小的那一个（不算 0），就叫做<strong>最小公倍数</strong>（Least Common Multiple，简称 <strong>LCM</strong>）。上一节求最大公约数是往"因数"的方向找（越找越小），这一节正好反过来，是往"倍数"的方向找（越找越大）。</p>
+      <p>把 <code>4</code> 和 <code>6</code> 的倍数各自列一排，看看哪个数最早同时出现在两排里：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">4 和 6 的倍数 —— 第一个同时出现的数，就是最小公倍数</div>
+      <div class="set-row">
+        <div class="set-row-label">4 的倍数</div>
+        <div class="set-cell a-only">4</div><div class="set-cell a-only">8</div><div class="set-cell lcmmin">12</div><div class="set-cell a-only">16</div><div class="set-cell a-only">20</div><div class="set-cell both">24</div>
+      </div>
+      <div class="set-row">
+        <div class="set-row-label">6 的倍数</div>
+        <div class="set-cell b-only">6</div><div class="set-cell lcmmin">12</div><div class="set-cell b-only">18</div><div class="set-cell both">24</div><div class="set-cell b-only">30</div>
+      </div>
+      <div class="num-visual-caption">两排数往右一格一格数过去，<strong>12</strong> 是第一个同时出现在两排里的数——后面的 <strong>24</strong> 虽然也同时出现，但它不是最先出现的，所以最小公倍数是 <code>12</code>，不是 <code>24</code>。</div>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：枚举法</div>
+    <div class="section-body">
+      <p>最直接的想法：从两个数里较大的那个开始，按它的倍数一格一格往后跳（<code>bigger, 2×bigger, 3×bigger, ...</code>），每跳到一个新的数，就检查它能不能被较小的那个数整除——能整除的第一个，就是答案。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 枚举法求最小公倍数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Lcm</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">bigger</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">smaller</span> <span class="op">=</span> <span class="fn">min</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">);</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">multiple</span> <span class="op">=</span> <span class="fn">bigger</span><span class="pnc">;</span> <span class="pnc">;</span> <span class="fn">multiple</span> <span class="op">+=</span> <span class="fn">bigger</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">multiple</span> <span class="op">%</span> <span class="fn">smaller</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">            <span class="kw">return</span> <span class="fn">multiple</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>用 <code>Lcm(15, 8)</code> 走一遍：从 <code>15</code> 开始，每次加 <code>15</code>，一路检查能不能被 <code>8</code> 整除：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">Lcm(15, 8) 的枚举过程 —— 一共试了 8 次才找到答案</div>
+      <div class="set-row" style="flex-wrap: wrap;">
+        <div class="set-cell a-only">15</div>
+        <div class="set-cell a-only">30</div>
+        <div class="set-cell a-only">45</div>
+        <div class="set-cell a-only">60</div>
+        <div class="set-cell a-only">75</div>
+        <div class="set-cell a-only">90</div>
+        <div class="set-cell a-only">105</div>
+        <div class="set-cell lcmmin">120</div>
+      </div>
+      <div class="num-visual-caption">前面 7 个数（<code>15、30、45、60、75、90、105</code>）除以 <code>8</code> 都有余数，直到第 8 个数 <code>120</code> 才正好整除——<code>Lcm(15, 8) = 120</code>。如果两个数都比较大、最小公倍数又特别大，这种"一格一格跳过去试"的办法会跳很多很多次。</div>
+    </div>
+
+    <div class="sub-title" id="gcd">③ 优化：借助最大公约数</div>
+    <div class="section-body">
+      <p>不需要重新发明一套枚举办法——上一节学过的最大公约数，刚好能帮上大忙。关键想法是：把 <code>a</code> 和 <code>b</code> 都拆成"<strong>两个数共享的部分</strong>"（也就是最大公约数）和"<strong>各自独有的部分</strong>"。最小公倍数，正好就是把这三块——共享的部分、a 独有的部分、b 独有的部分——全部凑在一起，一个都不能少，也不会有重复。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">把 4 和 6 拆成"共享部分" + "各自独有的部分"</div>
+      <div class="lcm-split-row">
+        <div class="lcm-split-label">4 =</div>
+        <div class="lcm-split-cell shared">2</div>
+        <div class="lcm-split-op">×</div>
+        <div class="lcm-split-cell uniqueA">2</div>
+      </div>
+      <div class="lcm-split-row">
+        <div class="lcm-split-label">6 =</div>
+        <div class="lcm-split-cell shared">2</div>
+        <div class="lcm-split-op">×</div>
+        <div class="lcm-split-cell uniqueB">3</div>
+      </div>
+      <div class="lcm-split-divider"></div>
+      <div class="lcm-split-row">
+        <div class="lcm-split-label">LCM =</div>
+        <div class="lcm-split-cell shared">2</div>
+        <div class="lcm-split-op">×</div>
+        <div class="lcm-split-cell uniqueA">2</div>
+        <div class="lcm-split-op">×</div>
+        <div class="lcm-split-cell uniqueB">3</div>
+        <div class="lcm-split-op">=</div>
+        <div class="lcm-split-result">12</div>
+      </div>
+      <div class="num-visual-caption">绿色的 <strong>2</strong> 是 4 和 6 共享的部分（也就是 <code>GCD(4,6)=2</code>），蓝色的 <strong>2</strong> 是 4 甩开共享部分后自己独有的，粉色的 <strong>3</strong> 是 6 独有的。把三块乘起来，正好凑出又能被 4 整除、又能被 6 整除的最小的数：<code>2×2×3=12</code>。共享的部分只需要算<strong>一次</strong>（不用左右各算一遍再重复），这正是最小公倍数比"a 直接乘 b"要小的原因。</div>
+    </div>
+
+    <div class="section-body">
+      <p>换一种说法："4 独有的部分"其实就是 <code>4 ÷ 共享部分</code>，"6 独有的部分"就是 <code>6 ÷ 共享部分</code>。所以最小公倍数可以直接写成：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 借助最大公约数求最小公倍数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Lcm</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">return</span> <span class="fn">a</span> <span class="op">/</span> <span class="fn">Gcd</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">)</span> <span class="op">*</span> <span class="fn">b</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>一定要先除再乘，不要写成 <code>a * b / Gcd(a, b)</code>：</b>两种写法数学上结果一样，但计算的<strong>中间过程</strong>不一样安全。<code>a / Gcd(a,b)</code> 算出来的是"a 独有的部分"，这个数不会比 <code>a</code> 本身大，再乘以 <code>b</code> 风险比较小；而 <code>a * b</code> 是直接把两个原数相乘，哪怕最终答案不大，<strong>中间这一步</strong>也可能先溢出。比如 <code>a = b = 100000</code> 时，最终的最小公倍数其实只有 <code>100000</code>（很小），但 <code>a * b</code> 会先算出 <code>100亿</code>，早就超过了 <code>int</code> 能装的范围（约 21 亿）——明明答案没问题，却因为算的顺序不对而出错。<code>a / Gcd(a,b) * b</code> 从头到尾都不会经过这么大的中间值，更安全。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+    <div class="section-body">
+      <p>用 <code>Lcm(63, 40)</code>（这两个数互质，最大公约数是 1）实际数一数两种写法的步骤数：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">求 Lcm(63, 40) —— 两种写法的步骤数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">枚举法</div>
+        <div class="count-bar-track"><div class="count-bar-fill long">40 次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">借助最大公约数</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 16%;">6 步</div></div>
+      </div>
+      <div class="num-visual-caption">两个数互质（最大公约数是 1）时，枚举法要试到"较小的那个数"那么多次才能找到答案，这里整整试了 <strong>40 次</strong>；而欧几里得算法求 <code>GCD(63, 40)</code> 只需要 <strong>6 步</strong>，之后再除一下、乘一下就直接得到答案——两个数互质恰好是枚举法的最坏情况，也正是这种写法和优化写法差距最大的时候。</div>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>写法</th><th>核心思路</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>枚举法</td><td>按较大数的倍数往后跳，逐个试除</td><td>直观但慢，两数互质时最坏，要跳"较小数"那么多次</td></tr>
+        <tr><td>借助最大公约数</td><td>Lcm(a,b) = a / Gcd(a,b) * b</td><td>复用上一节的 Gcd，几步就能算出答案，竞赛标准写法</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>和上一节一样，C++17 的 <code>&lt;numeric&gt;</code> 头文件也直接提供了 <code>std::lcm(a, b)</code>，效果和这里手写的一致。但同样要注意编译器版本兼容问题，手写这个公式依然是竞赛里的基本功——尤其是"先除再乘"这个细节，很多题目就是因为顺序写反了而在大数据下出错。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块一 · 数学基础 · 1.5 最小公倍数</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A01_04_最大公约数.html">← 1.4 最大公约数</a>
+      <a class="nav-btn" href="index.html">1.6 进制转换（即将推出） →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
