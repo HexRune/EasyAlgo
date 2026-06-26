@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.7 快速幂 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "1.7"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 二进制拆解可视化（① 概念 / ③ 优化，复用 1.6 位值分解风格） */
+  .place-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .place-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .place-cell { width: 42px; height: 42px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .place-cell.hi { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.45); }
+  .place-cell.off { background: #16141F; color: #45475A; border: 1px dashed #2A2840; }
+  .place-weight { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--code-num); }
+  .place-name { font-size: 10.5px; color: #6C7086; }
+  .place-formula { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #CBA6F7; margin: 16px 0 4px; }
+  .place-divider { height: 1px; background: #2A2840; margin: 18px 0; }
+
+  /* 双轨步骤表（② 朴素累乘 ③ 优化，复用既有风格） */
+  .dual-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+  .dual-table th { font-family: 'Noto Sans SC', sans-serif; font-size: 11px; font-weight: 700; color: #A6ADC8; text-align: center; padding: 6px 6px 12px; border-bottom: 1px solid #2A2840; }
+  .dual-table td { text-align: center; padding: 9px 6px; color: var(--code-text); }
+  .dual-table tr:not(:last-child) td { border-bottom: 1px dashed #2A2840; }
+  .dual-table .dt-n { color: var(--code-fn); }
+  .dual-table .dt-arrow { color: #6C7086; font-size: 11px; }
+  .dual-table .dt-digit { color: var(--code-num); font-weight: 700; }
+  .dual-table .dt-rev { color: var(--code-str); }
+  .dual-table .dt-skip { color: #6C7086; }
+  .dual-table tr.dt-final td { color: var(--code-str); font-weight: 700; padding-top: 12px; }
+  .dual-table tr.dt-final { border-top: 1px solid #2A2840; }
+
+  /* 递归调用链（递归写法） */
+  .recur-chain { display: flex; flex-direction: column; align-items: center; }
+  .recur-call { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--code-fn); background: #2A2840; border: 1px solid #3A3850; border-radius: 7px; padding: 7px 16px; }
+  .recur-call.base { color: var(--code-str); background: rgba(166,227,161,.22); border-color: rgba(166,227,161,.5); }
+  .recur-arrow-wrap { display: flex; flex-direction: column; align-items: center; padding: 4px 0; }
+  .recur-arrow-label { font-size: 10px; color: #6C7086; font-family: 'Noto Sans SC', sans-serif; margin-bottom: 1px; }
+  .recur-arrow-glyph { color: #6C7086; font-size: 14px; line-height: 1; }
+  .recur-return-chain { display: flex; flex-direction: column; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px dashed #2A2840; width: 100%; }
+  .recur-return-row { font-size: 12px; color: #A6ADC8; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+  .recur-return-row strong { color: var(--code-str); }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 130px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="1.7">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块一 数学基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>1.7 快速幂</span>
+    </div>
+    <h1 class="chapter-title">1.7　快速幂</h1>
+    <p class="chapter-desc">借助上一节学过的二进制，把算 a 的 b 次方从"乘 b 次"变成"乘几十次"。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是快速幂</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：累乘 b 次</a></li>
+      <li><span class="toc-num">③</span><a href="#fast">优化：按二进制位决定乘不乘</a></li>
+      <li><span class="toc-num">④</span><a href="#mod">模运算版本：避免数字爆炸</a></li>
+      <li><span class="toc-num">⑤</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是快速幂</div>
+    <div class="section-body">
+      <p><strong>快速幂</strong>解决的问题很简单：算 <code>a</code> 的 <code>b</code> 次方（<code>a<sup>b</sup></code>），但要算得<strong>比直接乘 b 次快得多</strong>。比如 <code>2</code> 的 <code>13</code> 次方，最直接的办法是把 <code>2</code> 连续乘 <code>13</code> 次；如果 <code>b</code> 变成一百万，直接乘一百万次就太慢了。这一节要解决的，就是怎么用少得多的乘法次数，算出同样的结果。</p>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：累乘 b 次</div>
+    <div class="section-body">
+      <p>最直接的想法：用一个变量保存结果，循环 <code>b</code> 次，每次都乘上一个 <code>a</code>。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 朴素写法：连续乘 b 次</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">long</span> <span class="kw">long</span> <span class="fn">FastPow</span><span class="pnc">(</span><span class="kw">long</span> <span class="kw">long</span> <span class="fn">a</span><span class="pnc">,</span> <span class="kw">long</span> <span class="kw">long</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">long</span> <span class="kw">long</span> <span class="fn">result</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="kw">long</span> <span class="kw">long</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">b</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">        <span class="fn">result</span> <span class="op">*=</span> <span class="fn">a</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">return</span> <span class="fn">result</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>算 <code>2</code> 的 <code>13</code> 次方，这种写法要循环 <strong>13 次</strong>，做 <strong>13 次乘法</strong>。如果 <code>b</code> 是一百万，就要做一百万次乘法——这就是要优化的地方。</p>
+    </div>
+
+    <div class="sub-title" id="fast">③ 优化：按二进制位决定乘不乘</div>
+    <div class="section-body">
+      <p>上一节学过，任何一个数都能拆成若干个 2 的次方相加——这正是二进制的意义。<code>13</code> 拆开就是 <code>8 + 4 + 1</code>（二进制 <code>1101</code>）。指数也是数字，同样可以这么拆：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">把指数 13 拆成二进制 —— 哪些"翻倍幂"需要乘进去</div>
+      <div class="place-row">
+        <div class="place-cell-wrap">
+          <div class="place-cell hi">1</div>
+          <div class="place-weight">a<sup>8</sup></div>
+          <div class="place-name">第4位</div>
+        </div>
+        <div class="place-cell-wrap">
+          <div class="place-cell hi">1</div>
+          <div class="place-weight">a<sup>4</sup></div>
+          <div class="place-name">第3位</div>
+        </div>
+        <div class="place-cell-wrap">
+          <div class="place-cell off">0</div>
+          <div class="place-weight">a<sup>2</sup></div>
+          <div class="place-name">第2位</div>
+        </div>
+        <div class="place-cell-wrap">
+          <div class="place-cell hi">1</div>
+          <div class="place-weight">a<sup>1</sup></div>
+          <div class="place-name">第1位</div>
+        </div>
+      </div>
+      <div class="place-formula">13 = 8 + 4 + 1　→　a<sup>13</sup> = a<sup>8</sup> × a<sup>4</sup> × a<sup>1</sup></div>
+      <div class="num-visual-caption">13 的二进制是 <code>1101</code>——绿色格子（位是 <code>1</code>）对应的"翻倍幂"要乘进最终结果，灰色虚线格子（位是 <code>0</code>）对应的直接跳过。<code>a<sup>1</sup>、a<sup>2</sup>、a<sup>4</sup>、a<sup>8</sup></code> 这一串"翻倍幂"，每一个都只需要把前一个<strong>平方一次</strong>就能得到——这正是快速幂比朴素写法快的根本原因：用很少的几次"平方"，就能凑出任意大小的指数。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 快速幂（迭代写法）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">long</span> <span class="kw">long</span> <span class="fn">FastPow</span><span class="pnc">(</span><span class="kw">long</span> <span class="kw">long</span> <span class="fn">a</span><span class="pnc">,</span> <span class="kw">long</span> <span class="kw">long</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">long</span> <span class="kw">long</span> <span class="fn">result</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">b</span> <span class="op">&gt;</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">b</span> <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">1</span><span class="pnc">)</span>   <span class="cmt">// 当前最低位是 1，要乘进去</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">            <span class="fn">result</span> <span class="op">*=</span> <span class="fn">a</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">        <span class="fn">a</span> <span class="op">*=</span> <span class="fn">a</span><span class="pnc">;</span>          <span class="cmt">// a 翻倍：a, a², a⁴, a⁸, ...</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">        <span class="fn">b</span> <span class="op">/=</span> <span class="num">2</span><span class="pnc">;</span>          <span class="cmt">// 处理下一个二进制位</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="kw">return</span> <span class="fn">result</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>每一轮循环，<code>b % 2</code> 看的正好是 <code>b</code> 当前最低位的二进制——和 1.1、1.6 节拆数字的方式一模一样，只是这里是对 <code>b</code> 做"二进制版的拆数字"。<code>a</code> 每轮自己翻倍（平方一次），<code>b</code> 每轮除以 2（去掉已经处理过的那一位）。用 <code>FastPow(2, 13)</code> 走一遍：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">FastPow(2, 13) 的执行过程</div>
+      <table class="dual-table">
+        <tr><th>b</th><th>末位</th><th>是否乘进 result</th><th>result</th><th>a（下一轮的值）</th></tr>
+        <tr><td class="dt-n">13</td><td class="dt-digit">1</td><td class="dt-rev">乘：1×2</td><td class="dt-rev">2</td><td class="dt-n">2×2=4</td></tr>
+        <tr><td class="dt-n">6</td><td class="dt-digit">0</td><td class="dt-skip">跳过</td><td class="dt-rev">2</td><td class="dt-n">4×4=16</td></tr>
+        <tr><td class="dt-n">3</td><td class="dt-digit">1</td><td class="dt-rev">乘：2×16</td><td class="dt-rev">32</td><td class="dt-n">16×16=256</td></tr>
+        <tr><td class="dt-n">1</td><td class="dt-digit">1</td><td class="dt-rev">乘：32×256</td><td class="dt-rev">8192</td><td class="dt-n">256×256=65536</td></tr>
+        <tr class="dt-final"><td colspan="5">b 变成 0，循环结束 —— result = 8192</td></tr>
+      </table>
+      <div class="num-visual-caption">只用了 <strong>4 轮循环、4 次平方</strong>，外加 <strong>3 次乘进 result</strong>，一共 <strong>7 次乘法</strong>，就算出了 <code>2<sup>13</sup> = 8192</code>——比朴素写法的 13 次乘法明显更少，而且 <code>b</code> 越大，省下来的乘法次数差距会越夸张。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div><b>递归写法同样很自然：</b>"算 a 的 b 次方"可以转化成"先算 a 的 b/2 次方，再把结果平方一次；如果 b 是奇数，平方完之后再多乘一个 a"——这正是把问题规模直接砍半，和前面学过的递归思路完全一致：</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 快速幂（递归写法）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">long</span> <span class="kw">long</span> <span class="fn">FastPow</span><span class="pnc">(</span><span class="kw">long</span> <span class="kw">long</span> <span class="fn">a</span><span class="pnc">,</span> <span class="kw">long</span> <span class="kw">long</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">b</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 递归出口：任何数的0次方是1</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">long</span> <span class="kw">long</span> <span class="fn">half</span> <span class="op">=</span> <span class="fn">FastPow</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span> <span class="op">/</span> <span class="num">2</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">b</span> <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">        <span class="kw">return</span> <span class="fn">half</span> <span class="op">*</span> <span class="fn">half</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">else</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">        <span class="kw">return</span> <span class="fn">half</span> <span class="op">*</span> <span class="fn">half</span> <span class="op">*</span> <span class="fn">a</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">FastPow(2, 13) 的递归调用链</div>
+      <div class="recur-chain">
+        <div class="recur-call">FastPow(2, 13)</div>
+        <div class="recur-arrow-wrap"><div class="recur-arrow-label">调用</div><div class="recur-arrow-glyph">↓</div></div>
+        <div class="recur-call">FastPow(2, 6)</div>
+        <div class="recur-arrow-wrap"><div class="recur-arrow-label">调用</div><div class="recur-arrow-glyph">↓</div></div>
+        <div class="recur-call">FastPow(2, 3)</div>
+        <div class="recur-arrow-wrap"><div class="recur-arrow-label">调用</div><div class="recur-arrow-glyph">↓</div></div>
+        <div class="recur-call">FastPow(2, 1)</div>
+        <div class="recur-arrow-wrap"><div class="recur-arrow-label">调用</div><div class="recur-arrow-glyph">↓</div></div>
+        <div class="recur-call base">FastPow(2, 0)</div>
+        <div class="recur-return-row" style="margin-top:8px;">b == 0，递归到底 —— 直接返回 <strong>1</strong></div>
+        <div class="recur-return-chain">
+          <div class="recur-return-row">FastPow(2,1) 收到 half=1（b 是奇数）→ 返回 1×1×2 = <strong>2</strong></div>
+          <div class="recur-return-row">FastPow(2,3) 收到 half=2（b 是奇数）→ 返回 2×2×2 = <strong>8</strong></div>
+          <div class="recur-return-row">FastPow(2,6) 收到 half=8（b 是偶数）→ 返回 8×8 = <strong>64</strong></div>
+          <div class="recur-return-row">FastPow(2,13) 收到 half=64（b 是奇数）→ 返回 64×64×2 = <strong>8192</strong></div>
+        </div>
+      </div>
+      <div class="num-visual-caption">每一层调用，指数都直接<strong>砍掉一半</strong>（<code>b / 2</code>），只需要 4 层调用就从 13 走到了 0——这和迭代版本"每轮循环 b 除以 2"是同一个过程，只是用函数调用代替了循环。</div>
+    </div>
+
+    <div class="sub-title" id="mod">④ 模运算版本：避免数字爆炸</div>
+    <div class="section-body">
+      <p>竞赛题里很少会让你算出 <code>a<sup>b</sup></code> 真实的值——因为这个数往往大得惊人，连 <code>long long</code> 都装不下。比如 <code>7<sup>30</sup></code>，真实值有 26 位数字，远远超过 <code>long long</code> 能表示的范围（约 19 位数字）。所以题目通常会要求"答案对某个数取模"，比如"<code>a<sup>b</sup> mod 1000000007</code>"——这样答案永远是一个不大的数，不会溢出。</p>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>诀窍：每一步都顺手取模，而不是算到最后再取模。</b>取模运算有一个好用的性质：<code>(x × y) mod m</code> 和 <code>((x mod m) × (y mod m)) mod m</code> 结果完全一样。也就是说，<strong>只要保证参与乘法的两个数本身都不大</strong>，乘积自然也不会大到溢出——所以只需要在每次乘法之后立刻取模，把数字"压"回一个安全的范围，而不是等最后数字已经爆炸了再处理（那时候已经晚了）。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 快速幂（带模运算）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">long</span> <span class="kw">long</span> <span class="fn">FastPow</span><span class="pnc">(</span><span class="kw">long</span> <span class="kw">long</span> <span class="fn">a</span><span class="pnc">,</span> <span class="kw">long</span> <span class="kw">long</span> <span class="fn">b</span><span class="pnc">,</span> <span class="kw">long</span> <span class="kw">long</span> <span class="fn">mod</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">long</span> <span class="kw">long</span> <span class="fn">result</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="fn">a</span> <span class="op">%=</span> <span class="fn">mod</span><span class="pnc">;</span>   <span class="cmt">// 一开始先把 a 压到 mod 范围内</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">b</span> <span class="op">&gt;</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">b</span> <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">1</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">            <span class="fn">result</span> <span class="op">=</span> <span class="fn">result</span> <span class="op">*</span> <span class="fn">a</span> <span class="op">%</span> <span class="fn">mod</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">        <span class="fn">a</span> <span class="op">=</span> <span class="fn">a</span> <span class="op">*</span> <span class="fn">a</span> <span class="op">%</span> <span class="fn">mod</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="fn">b</span> <span class="op">/=</span> <span class="num">2</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="kw">return</span> <span class="fn">result</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>和不取模的版本相比，只多了三处 <code>% mod</code>：开头压一次 <code>a</code>，每次乘进 <code>result</code> 之后压一次，每次 <code>a</code> 自己翻倍之后再压一次。用 <code>FastPow(7, 13, 1000)</code> 走一遍（求 <code>7<sup>13</sup></code> 的末三位）：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">FastPow(7, 13, 1000) 的执行过程 —— 数字始终保持在 1000 以内</div>
+      <table class="dual-table">
+        <tr><th>b</th><th>末位</th><th>是否乘进 result</th><th>result</th><th>a（已取模）</th></tr>
+        <tr><td class="dt-n">13</td><td class="dt-digit">1</td><td class="dt-rev">乘：1×7%1000</td><td class="dt-rev">7</td><td class="dt-n">7×7%1000=49</td></tr>
+        <tr><td class="dt-n">6</td><td class="dt-digit">0</td><td class="dt-skip">跳过</td><td class="dt-rev">7</td><td class="dt-n">49×49%1000=401</td></tr>
+        <tr><td class="dt-n">3</td><td class="dt-digit">1</td><td class="dt-rev">乘：7×401%1000</td><td class="dt-rev">807</td><td class="dt-n">401×401%1000=801</td></tr>
+        <tr><td class="dt-n">1</td><td class="dt-digit">1</td><td class="dt-rev">乘：807×801%1000</td><td class="dt-rev">407</td><td class="dt-n">801×801%1000=601</td></tr>
+        <tr class="dt-final"><td colspan="5">b 变成 0，循环结束 —— result = 407（即 7<sup>13</sup> mod 1000 = 407）</td></tr>
+      </table>
+      <div class="num-visual-caption">全程参与乘法的两个数都没有超过 <code>1000</code>，所以乘积最大也只有约 <code>1000×1000=100万</code>，<code>long long</code> 轻松装得下——而 <code>7<sup>13</sup></code> 真实的值是 <code>96889010407</code>，如果不取模直接硬乘，数字会越滚越大。</div>
+    </div>
+
+    <div class="sub-title" id="compare">⑤ 完整代码与对比</div>
+    <div class="section-body">
+      <p>用 <code>b = 1000</code> 数一数两种写法各需要多少次乘法：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">算 a 的 1000 次方 —— 两种写法的乘法次数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">朴素写法</div>
+        <div class="count-bar-track"><div class="count-bar-fill long">999 次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">快速幂</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 8%;">约 10 次</div></div>
+      </div>
+      <div class="num-visual-caption">朴素写法要循环 999 次；快速幂只需要把 <code>1000</code> 不断除以 2 直到变成 <code>0</code>，大约 <strong>10 轮</strong>就能搞定——<code>b</code> 越大，这个差距越惊人：<code>b</code> 是十亿时，朴素写法要循环近十亿次，快速幂大约还是只需要 <strong>30 轮</strong>左右。</div>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>写法</th><th>核心思路</th><th>时间复杂度</th></tr></thead>
+      <tbody>
+        <tr><td>朴素写法</td><td>循环 b 次，每次乘一个 a</td><td>O(b)</td></tr>
+        <tr><td>快速幂</td><td>按 b 的二进制位决定要不要乘，a 每轮自己平方</td><td>O(log b)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>快速幂几乎是后面很多算法的"零件"——矩阵快速幂（把数字换成矩阵，同样的拆解思路）、模意义下求逆元（要用到快速幂算 <code>a<sup>mod-2</sup></code>）都直接建立在这一节的基础上。记住"按二进制位决定乘不乘，底数每轮自己平方"这个骨架，比死记代码更重要。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块一 · 数学基础 · 1.7 快速幂</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A01_06_进制转换.html">← 1.6 进制转换</a>
+      <a class="nav-btn" href="index.html">1.8 线性筛素数（即将推出） →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
