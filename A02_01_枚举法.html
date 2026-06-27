@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2.1 枚举法 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "2.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 双轨步骤表（② 鸡兔同笼） */
+  .dual-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .dual-table th { font-family: 'Noto Sans SC', sans-serif; font-size: 11px; font-weight: 700; color: #A6ADC8; text-align: center; padding: 6px 8px 12px; border-bottom: 1px solid #2A2840; }
+  .dual-table td { text-align: center; padding: 8px 8px; color: var(--code-text); }
+  .dual-table tr:not(:last-child) td { border-bottom: 1px dashed #2A2840; }
+  .dual-table .dt-n { color: var(--code-fn); }
+  .dual-table .dt-arrow { color: #6C7086; font-size: 12px; }
+  .dual-table .dt-digit { color: var(--code-num); font-weight: 700; }
+  .dual-table .dt-rev { color: var(--code-str); }
+  .dual-table .dt-skip { color: #6C7086; }
+  .dual-table tr.dt-final td { color: var(--code-str); font-weight: 700; padding-top: 12px; }
+  .dual-table tr.dt-final { border-top: 1px solid #2A2840; }
+  .dual-table tr.dt-ellipsis td { color: #45475A; font-style: italic; }
+
+  /* 网格可视化（③ 多层枚举：勾股数组） */
+  .grid-visual { display: flex; flex-direction: column; gap: 4px; }
+  .grid-row { display: flex; gap: 4px; align-items: center; }
+  .grid-row-label { width: 32px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6C7086; text-align: right; flex-shrink: 0; }
+  .grid-cell { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; flex-shrink: 0; }
+  .grid-cell.empty { background: #16141F; border: 1px solid #211f2e; }
+  .grid-cell.hit { background: rgba(166,227,161,.32); color: var(--code-str); border: 1px solid rgba(166,227,161,.55); font-weight: 700; }
+
+  /* 效率估算表（④ 枚举的效率问题） */
+  .scale-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+  .scale-range { width: 110px; color: var(--code-fn); flex-shrink: 0; }
+  .scale-ops { width: 130px; color: var(--code-num); flex-shrink: 0; }
+  .scale-verdict { font-size: 11.5px; font-family: 'Noto Sans SC', sans-serif; padding: 2px 9px; border-radius: 999px; }
+  .scale-verdict.ok { background: rgba(166,227,161,.22); color: var(--code-str); }
+  .scale-verdict.risky { background: rgba(250,179,135,.22); color: var(--code-num); }
+  .scale-verdict.bad { background: rgba(243,139,168,.22); color: #F38BA8; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="2.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块二 基础算法思想</span>
+      <span class="eyebrow-sep">/</span>
+      <span>2.1 枚举法</span>
+    </div>
+    <h1 class="chapter-title">2.1　枚举法</h1>
+    <p class="chapter-desc">不知道答案是什么，但知道答案藏在一个有限的范围里——那就把这个范围里的每一个可能都试一遍。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是枚举法</a></li>
+      <li><span class="toc-num">②</span><a href="#single">单层枚举：鸡兔同笼</a></li>
+      <li><span class="toc-num">③</span><a href="#multi">多层枚举：嵌套循环试遍所有组合</a></li>
+      <li><span class="toc-num">④</span><a href="#cost">枚举的效率问题</a></li>
+      <li><span class="toc-num">⑤</span><a href="#compare">完整代码与小结</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是枚举法</div>
+    <div class="section-body">
+      <p><strong>枚举法</strong>的思路非常朴素：如果不知道答案具体是什么，但知道答案一定落在某个<strong>有限的范围</strong>里，那就把这个范围里的每一个可能"挨个试一遍"，每试一个就检查它是否满足题目的条件——满足就留下，不满足就跳过。试完整个范围，答案自然就出来了。</p>
+      <p>其实模块一已经在不知不觉中多次用过这个思路了：1.3 节判断质数最基础的写法，是把 <code>2</code> 到 <code>n-1</code> 之间的每个数都拿来试除；1.4 节求最大公约数最基础的写法，是把 <code>min(a,b)</code> 到 <code>1</code> 之间每个数都拿来试一遍能不能同时整除两个数；1.5 节求最小公倍数，是把较大数的倍数一个个列出来试。这些"基础写法"全部都是枚举法——这一节要做的，是把这个套路单独拿出来，正式地讲一遍。</p>
+    </div>
+
+    <div class="sub-title" id="single">② 单层枚举：鸡兔同笼</div>
+    <div class="section-body">
+      <p>经典的"鸡兔同笼"问题：笼子里关着鸡和兔，一共数到 <strong>35 个头</strong>，<strong>94 只脚</strong>，问鸡和兔各有多少只？</p>
+      <p>用代数能解，但用枚举法更简单：鸡的数量一定在 <code>0</code> 到 <code>35</code> 之间（不可能比总头数还多）。只要枚举鸡的数量 <code>chicken</code>，兔子的数量自然就是 <code>35 - chicken</code>（因为头数加起来必须是 35）；再检查这种情况下脚的总数是不是正好 94——满足就是答案。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 枚举法解鸡兔同笼</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">heads</span> <span class="op">=</span> <span class="num">35</span><span class="pnc">,</span> <span class="fn">legs</span> <span class="op">=</span> <span class="num">94</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">chicken</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">chicken</span> <span class="op">&lt;=</span> <span class="fn">heads</span><span class="pnc">;</span> <span class="fn">chicken</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">rabbit</span> <span class="op">=</span> <span class="fn">heads</span> <span class="op">-</span> <span class="fn">chicken</span><span class="pnc">;</span>  <span class="cmt">// 头数加起来必须是35</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">chicken</span> <span class="op">*</span> <span class="num">2</span> <span class="op">+</span> <span class="fn">rabbit</span> <span class="op">*</span> <span class="num">4</span> <span class="op">==</span> <span class="fn">legs</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"鸡："</span> <span class="op">&lt;&lt;</span> <span class="fn">chicken</span> <span class="op">&lt;&lt;</span> <span class="str">" 兔："</span> <span class="op">&lt;&lt;</span> <span class="fn">rabbit</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">枚举鸡的数量，挨个检查脚的总数</div>
+      <table class="dual-table">
+        <tr><th>chicken</th><th>rabbit = 35-chicken</th><th>脚的总数</th><th>是否等于 94？</th></tr>
+        <tr><td class="dt-n">0</td><td>35</td><td>140</td><td class="dt-skip">不等，跳过</td></tr>
+        <tr><td class="dt-n">1</td><td>34</td><td>138</td><td class="dt-skip">不等，跳过</td></tr>
+        <tr class="dt-ellipsis"><td colspan="4">… 中间还要试 21 次，都不满足 …</td></tr>
+        <tr><td class="dt-n">22</td><td>13</td><td>96</td><td class="dt-skip">不等，跳过</td></tr>
+        <tr class="dt-final"><td class="dt-n">23</td><td>12</td><td>94</td><td>✓ 正好相等！找到答案</td></tr>
+      </table>
+      <div class="num-visual-caption">枚举到 <code>chicken=23</code> 时，<code>rabbit=12</code>，脚的总数 <code>23×2+12×4=46+48=94</code>，正好对上——鸡 23 只，兔 12 只。整个过程只试了 <strong>24 次</strong>（<code>chicken</code> 从 0 到 23），比凑代数方程直接好懂。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div><b>枚举的关键不是"试所有变量"，而是"试到刚好够用的那一个"。</b>这道题表面上有两个未知数（鸡、兔），但只要枚举其中一个（鸡的数量），另一个（兔的数量）就被头数的限制唯一确定了，根本不需要单独再枚举一遍。能少枚举一个变量，代码就少一层循环，速度也快得多。</div>
+    </div>
+
+    <div class="sub-title" id="multi">③ 多层枚举：嵌套循环试遍所有组合</div>
+    <div class="section-body">
+      <p>但有些问题，几个未知数之间互相独立，没法用一个把另一个"顶"出来，这时候就需要<strong>嵌套循环</strong>——外层循环枚举第一个变量，内层循环在外层每一种取值下，再枚举第二个变量，把所有组合都试一遍。</p>
+      <p>经典例子：找出 <code>1</code> 到 <code>20</code> 之间所有的<strong>勾股数组</strong>——也就是三个数 <code>a &lt; b &lt; c</code>，满足 <code>a² + b² = c²</code>（直角三角形两条直角边的平方和等于斜边的平方，比如经典的 3、4、5）。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 嵌套循环找勾股数组</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">limit</span> <span class="op">=</span> <span class="num">20</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">a</span> <span class="op">&lt;=</span> <span class="fn">limit</span><span class="pnc">;</span> <span class="fn">a</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">b</span> <span class="op">=</span> <span class="fn">a</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">b</span> <span class="op">&lt;=</span> <span class="fn">limit</span><span class="pnc">;</span> <span class="fn">b</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// b 从 a+1 开始，保证 a&lt;b</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="typ">int</span> <span class="fn">cSquare</span> <span class="op">=</span> <span class="fn">a</span> <span class="op">*</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span> <span class="op">*</span> <span class="fn">b</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="typ">int</span> <span class="fn">c</span> <span class="op">=</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">sqrt</span><span class="pnc">(</span><span class="fn">cSquare</span><span class="pnc">);</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">c</span> <span class="op">*</span> <span class="fn">c</span> <span class="op">==</span> <span class="fn">cSquare</span> <span class="op">&amp;&amp;</span> <span class="fn">c</span> <span class="op">&lt;=</span> <span class="fn">limit</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">            <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">b</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">c</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>判断"是不是整数的平方根"要小心精度问题：</b>第 7 行用 <code>sqrt()</code> 算出来的是浮点数，直接转成 <code>int</code> 可能因为精度误差差 1（比如该是 5 却算成 4.999999）。第 8 行用 <code>c * c == cSquare</code> 再做一次整数验证，就是为了避免被这种浮点误差坑——这和 1.3 节判断质数时强调的 <code>i * i &lt;= n</code> 是同一个道理：能用整数运算验证的地方，尽量不要依赖浮点数。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">1~20 范围内，嵌套循环试过的部分组合（a 行 × b 列）</div>
+      <div class="grid-visual">
+        <div class="grid-row">
+          <div class="grid-row-label"></div>
+          <div class="grid-row-label">4</div><div class="grid-row-label">5</div><div class="grid-row-label">8</div><div class="grid-row-label">10</div><div class="grid-row-label">12</div><div class="grid-row-label">15</div><div class="grid-row-label">16</div><div class="grid-row-label">20</div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-row-label">a=3</div>
+          <div class="grid-cell hit">5</div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-row-label">a=5</div>
+          <div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell hit">13</div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-row-label">a=6</div>
+          <div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell hit">10</div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-row-label">a=8</div>
+          <div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell hit">17</div><div class="grid-cell empty"></div><div class="grid-cell empty"></div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-row-label">a=9</div>
+          <div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell hit">15</div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-row-label">a=12</div>
+          <div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell empty"></div><div class="grid-cell hit">20</div><div class="grid-cell empty"></div>
+        </div>
+      </div>
+      <div class="num-visual-caption">每一个绿色格子表示一组成功的勾股数——比如 <code>a=3,b=4</code> 那一格写着 <code>5</code>，表示 <code>3²+4²=5²</code>，是一组合法的勾股数组。这张表只展示了命中的部分，实际代码会把 <code>a</code> 从 1 到 20、<code>b</code> 从 <code>a+1</code> 到 20 的<strong>所有组合</strong>都检查一遍——一共检查了 <strong>190 对</strong>组合，最终找到 <strong>6 组</strong>勾股数：<code>(3,4,5) (5,12,13) (6,8,10) (8,15,17) (9,12,15) (12,16,20)</code>。</div>
+    </div>
+
+    <div class="sub-title" id="cost">④ 枚举的效率问题</div>
+    <div class="section-body">
+      <p>枚举法最大的优点是简单可靠，缺点是<strong>慢</strong>——尤其是嵌套循环，每多一层循环，总的检查次数往往是<strong>相乘</strong>而不是相加。如果 <code>a</code>、<code>b</code> 各自的范围是 <code>n</code>，双层枚举大约要检查 <code>n²</code> 次；三层枚举大约要检查 <code>n³</code> 次——范围一旦变大，次数会爆炸式增长。</p>
+      <p>竞赛里有一个常用的粗略估算：一台普通电脑每秒大约能执行 <strong>1 亿（10⁸）次</strong>简单运算。题目通常会限制程序运行时间在 1~2 秒以内，所以枚举的总次数最好控制在 <strong>1 亿次左右或以下</strong>，超过太多就可能超时。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">双层枚举的检查次数，随范围增长得有多快</div>
+      <div class="scale-row">
+        <div class="scale-range">n = 100</div>
+        <div class="scale-ops">约 1 万次</div>
+        <div class="scale-verdict ok">✓ 完全没问题</div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-range">n = 1000</div>
+        <div class="scale-ops">约 100 万次</div>
+        <div class="scale-verdict ok">✓ 完全没问题</div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-range">n = 10000</div>
+        <div class="scale-ops">约 1 亿次</div>
+        <div class="scale-verdict risky">⚠ 接近上限，要留意</div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-range">n = 100000</div>
+        <div class="scale-ops">约 100 亿次</div>
+        <div class="scale-verdict bad">✗ 大概率超时</div>
+      </div>
+      <div class="num-visual-caption">同样是"双层枚举"，<code>n</code> 从 1 万变成 10 万（只大了 10 倍），检查次数却从 1 亿变成了 100 亿（大了 100 倍）——这就是嵌套循环"相乘"的威力，增长速度比想象中快得多。遇到范围较大的题目，枚举法往往不够用，需要换更聪明的思路（前面模块一学的优化技巧，以及后面要学的二分、动态规划等，都是为了避开这种"硬枚举"的代价）。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>缩小枚举范围，往往比换算法更简单。</b>就像鸡兔同笼那样，能用一个变量"顶替"另一个，就尽量少枚举一层；能从更紧的范围开始（比如 1.3 节"只检查到 √n"），就不要从头开始检查。很多时候，枚举法本身没有错，错的是枚举的范围或层数没有压缩到位。</div>
+    </div>
+
+    <div class="sub-title" id="compare">⑤ 完整代码与小结</div>
+
+    <table class="api-table">
+      <thead><tr><th>类型</th><th>特点</th><th>典型例子</th></tr></thead>
+      <tbody>
+        <tr><td>单层枚举</td><td>一个变量被另一个变量的关系唯一确定</td><td>鸡兔同笼、1.3~1.5 节的基础写法</td></tr>
+        <tr><td>多层枚举</td><td>多个变量互相独立，需要嵌套循环试遍组合</td><td>找勾股数组、找满足条件的数字组合</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>枚举法是几乎所有算法思路的<strong>起点</strong>——遇到一道新题，先想"能不能枚举出来"，往往是最快确认"这题到底在问什么"的办法，哪怕最终因为范围太大需要换更快的算法，枚举出来的暴力解法也常常能帮你先拿到部分分数，或者用来验证正式算法的结果是否正确。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块二 · 基础算法思想 · 2.1 枚举法</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A01_08_线性筛素数.html">← 1.8 线性筛素数</a>
+      <a class="nav-btn" href="index.html">2.2 数组标记法（即将推出） →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

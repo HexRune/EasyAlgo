@@ -294,20 +294,7 @@
     </div>
 
     <div class="section-body">
-      <p>具体怎么做到"只让最小质因子标记"？做法是：从小到大处理每一个数 <code>i</code>，把它和"目前已经找到的每一个质数"依次配对相乘，每配对出一个新的合数，就记下"这个合数的最小质因子是谁"。关键规则是：<strong>一旦配对用的质数超过了 <code>i</code> 自己的最小质因子，就立刻停止配对</strong>——因为再往下配对出来的那个合数，应该交给"<code>i</code> 自己的最小质因子"去标记，不该让现在这个更大的质数抢先标记。</p>
-    </div>
-
-    <div class="num-visual">
-      <div class="num-visual-title">i = 6 时为什么只标记一次，就停下来了</div>
-      <div class="mark-row">
-        <div class="mark-tag once">配对 2×6=12</div>
-        <div class="mark-note">质数 2 ≤ 6 自己的最小质因子（2）—— 允许配对，标记 12 的最小质因子是 2</div>
-      </div>
-      <div class="mark-row">
-        <div class="mark-tag dup">原本想配对 3×6=18</div>
-        <div class="mark-note">质数 3 &gt; 6 自己的最小质因子（2）—— <strong>立刻停止</strong>，不允许这次配对</div>
-      </div>
-      <div class="num-visual-caption">为什么不能让 <code>3</code> 配对 <code>6</code> 得到 <code>18</code>？因为 <code>18</code> 真正的最小质因子是 <code>2</code>（<code>18=2×9</code>），不是 <code>3</code>。如果这里放行，<code>18</code> 就会被"提早"标记成"最小质因子是 3"，等到后面 <code>i=9</code> 时，<code>2×9=18</code> 又会被正确地标记一次——同一个数被标记了两次，又走回了埃氏筛法的老问题。停在这里，恰恰是为了把 <code>18</code> "让"给后面更合适的机会去标记。</div>
+      <p>具体代码是这样写的——从小到大处理每一个数 <code>i</code>，把它和"目前已经找到的每一个质数"依次配对相乘，每配对出一个新的合数，就记下"这个合数的最小质因子是谁"：</p>
     </div>
 
     <div class="code-block">
@@ -339,6 +326,23 @@
           <tr><td class="ln">23</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="section-body">
+      <p>关键就在第 15~18 行这个判断：<strong>一旦配对用的质数 <code>p</code> 超过了 <code>i</code> 自己的最小质因子，就立刻 <code>break</code> 停止配对</strong>——因为再往下配对出来的那个合数，应该交给"<code>i</code> 自己的最小质因子"去标记，不该让现在这个更大的质数抢先标记。用 <code>i = 6</code> 走一遍，看看这个判断具体在做什么：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">i = 6 时为什么只标记一次，就停下来了</div>
+      <div class="mark-row">
+        <div class="mark-tag once">配对 2×6=12</div>
+        <div class="mark-note">质数 2 ≤ 6 自己的最小质因子（2）—— 允许配对，标记 12 的最小质因子是 2</div>
+      </div>
+      <div class="mark-row">
+        <div class="mark-tag dup">原本想配对 3×6=18</div>
+        <div class="mark-note">质数 3 &gt; 6 自己的最小质因子（2）—— <strong>触发第 15 行的判断，立刻 break</strong>，不允许这次配对</div>
+      </div>
+      <div class="num-visual-caption">为什么不能让 <code>3</code> 配对 <code>6</code> 得到 <code>18</code>？因为 <code>18</code> 真正的最小质因子是 <code>2</code>（<code>18=2×9</code>），不是 <code>3</code>。如果这里放行，<code>18</code> 就会被"提早"标记成"最小质因子是 3"，等到后面 <code>i=9</code> 时，<code>2×9=18</code> 又会被正确地标记一次——同一个数被标记了两次，又走回了埃氏筛法的老问题。<code>break</code> 在这里，恰恰是为了把 <code>18</code> "让"给后面更合适的机会去标记。</div>
     </div>
 
     <div class="callout perf">
