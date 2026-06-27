@@ -251,22 +251,38 @@
         <table class="code-table">
           <tr><td class="ln">1</td><td class="cd"><span class="typ">bool</span> <span class="fn">IsPalindrome</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <!-- <tr><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&lt;</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span></td></tr> -->
-          <tr><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">%</span> <span class="num">10</span> <span class="op">==</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> <span class="fn">n</span> <span class="op">!=</span> <span class="num">0</span><span class="pnc">))</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">%</span> <span class="num">10</span> <span class="op">==</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> <span class="fn">n</span> <span class="op">!=</span> <span class="num">0</span><span class="pnc">))</span> <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">rev</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
-          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&gt;</span> <span class="fn">rev</span><span class="pnc">)</span>     <span class="cmt">// 只要 n 还比 rev 大，说明还没反转过半</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&gt;</span> <span class="fn">rev</span><span class="pnc">)</span>     <span class="cmt">// 只要 n 还比 rev 大，说明还没反转过半</span></td></tr>
           <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
           <tr><td class="ln">7</td><td class="cd">        <span class="fn">rev</span> <span class="op">=</span> <span class="fn">rev</span> <span class="op">*</span> <span class="num">10</span> <span class="op">+</span> <span class="fn">n</span> <span class="op">%</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">8</td><td class="cd">        <span class="fn">n</span> <span class="op">/=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">9</td><td class="cd">    <span class="pnc">}</span></td></tr>
-          <tr class="hl"><td class="ln">10</td><td class="cd">    <span class="kw">return</span> <span class="fn">n</span> <span class="op">==</span> <span class="fn">rev</span> <span class="op">||</span> <span class="fn">n</span> <span class="op">==</span> <span class="fn">rev</span> <span class="op">/</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">return</span> <span class="fn">n</span> <span class="op">==</span> <span class="fn">rev</span> <span class="op">||</span> <span class="fn">n</span> <span class="op">==</span> <span class="fn">rev</span> <span class="op">/</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
       </div>
     </div>
 
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>这一次，"以 0 结尾"的特判不能省——和第③节的结论正好相反！</b>第③节用<strong>完整反转</strong>的写法演示过，<code>120</code> 这种结尾是 0 的数不需要额外特判，因为完整反转会让结尾的 0 跑到开头变成前导 0，直接消失，两边位数不同，自然对不上。但<strong>只反转一半</strong>的写法是提前在中途就停下来比较的，并不会真的把所有位都反转完——如果省略这个特判，结尾为 0 的数会出问题。试一下 <code>n = 10</code>：</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">如果省略特判，IsPalindrome(10) 会被错误地判断成回文数</div>
+      <table class="dual-table">
+        <tr><th>循环前 n</th><th>循环前 rev</th><th>n &gt; rev ?</th><th></th><th>反转后 n / rev</th></tr>
+        <tr><td class="dt-n">10</td><td class="dt-rev">0</td><td class="dt-cond">10 &gt; 0 ✓ 继续</td><td class="dt-arrow">→</td><td>n=1　rev=0</td></tr>
+        <tr><td class="dt-n">1</td><td class="dt-rev">0</td><td class="dt-cond">1 &gt; 0 ✓ 继续</td><td class="dt-arrow">→</td><td>n=0　rev=1</td></tr>
+        <tr><td class="dt-n">0</td><td class="dt-rev">1</td><td class="dt-cond">0 &gt; 1 ✗ 停止</td><td class="dt-arrow"></td><td></td></tr>
+        <tr class="dt-trap"><td colspan="5">n=0，rev=1 —— n==rev/10（1/10=0）刚好成立，错误判定为回文数！</td></tr>
+      </table>
+      <div class="num-visual-caption">问题出在第一步：<code>10</code> 末尾的 <code>0</code> 被最先取出来，存进 <code>rev</code> 之后还是 <code>0</code>（<strong>0 不携带任何信息</strong>），相当于这一步"白白浪费"了。等循环结束时，<code>n</code> 恰好变成了 <code>0</code>，而任何个位数除以 <code>10</code> 都等于 <code>0</code>——<code>n == rev / 10</code> 这个本来用来处理"奇数位、中间多算一位"的检查，这时候会被结尾的 0 意外触发，把明显不对称的 <code>10</code> 错判成回文数。<code>20、30、100</code> 等结尾是 0 的数都会踩到同样的坑，必须在一开始就直接排除。</div>
+    </div>
+
     <div class="section-body">
-      <p>循环条件变成了 <code>n &gt; rev</code>——只要剩下没反转的那部分（<code>n</code>）还比已经反转出来的那部分（<code>rev</code>）大，就继续反转下一位。当 <code>rev</code> "追上" <code>n</code> 时，说明已经反转了差不多一半，停下来比较。用 <code>12321</code> 走一遍看看每一步：</p>
+      <p>排除掉负数和结尾为 0（但不是 0 本身）这两种情况之后，剩下的数字才能放心地走"只反转一半"的流程。循环条件是 <code>n &gt; rev</code>——只要剩下没反转的那部分（<code>n</code>）还比已经反转出来的那部分（<code>rev</code>）大，就继续反转下一位。当 <code>rev</code> "追上" <code>n</code> 时，说明已经反转了差不多一半，停下来比较。用 <code>12321</code> 走一遍看看每一步：</p>
     </div>
 
     <div class="num-visual">
@@ -279,7 +295,7 @@
         <tr><td class="dt-n">12</td><td class="dt-rev">123</td><td class="dt-cond">12 &gt; 123 ✗ 停止</td><td class="dt-arrow"></td><td></td></tr>
         <tr class="dt-final"><td colspan="5">最终 n=12，rev=123 —— n == rev/10（123/10=12），是回文数 ✓</td></tr>
       </table>
-      <div class="num-visual-caption">注意最后一步：<code>12321</code> 总共 5 位，是<strong>奇数位</strong>，中间的 <code>3</code> 在反转过程中被"多算"进了 <code>rev</code> 里（<code>rev=123</code> 比 <code>n=12</code> 多一位）。这时候不能直接比较 <code>n == rev</code>，而要去掉 <code>rev</code> 最后一位（也就是中间那个多出来的数字）再比较：<code>rev / 10 = 12</code>，正好等于 <code>n</code>。如果原数是<strong>偶数位</strong>（比如 <code>1221</code>），两部分会刚好对半分，直接 <code>n == rev</code> 就够了，不需要再除以 10。</div>
+      <div class="num-visual-caption">注意最后一步：<code>12321</code> 总共 5 位，是<strong>奇数位</strong>，中间的 <code>3</code> 在反转过程中被"多算"进了 <code>rev</code> 里（<code>rev=123</code> 比 <code>n=12</code> 多一位）。这时候不能直接比较 <code>n == rev</code>，而要去掉 <code>rev</code> 最后一位（也就是中间那个多出来的数字）再比较：<code>rev / 10 = 12</code>，正好等于 <code>n</code>。如果原数是<strong>偶数位</strong>（比如 <code>1221</code>），两部分会刚好对半分，直接 <code>n == rev</code> 就够了，不需要再除以 10。注意这里的 <code>12321</code> 不以 0 结尾，所以不会触发上面提到的那个坑。</div>
     </div>
 
     <div class="callout perf">

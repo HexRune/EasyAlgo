@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.8 线性筛素数 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "1.8"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 筛法格子可视化（② 埃氏筛法 ④ 线性筛） */
+  .sieve-stage { margin-bottom: 18px; }
+  .sieve-stage:last-child { margin-bottom: 0; }
+  .sieve-stage-label { font-size: 11.5px; color: #A6ADC8; margin-bottom: 8px; font-family: 'Noto Sans SC', sans-serif; }
+  .sieve-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+  .sieve-cell { width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; flex-shrink: 0; position: relative; }
+  .sieve-cell.prime    { background: rgba(166,227,161,.28); color: var(--code-str); border: 1px solid rgba(166,227,161,.5); }
+  .sieve-cell.crossed  { background: #16141F; color: #45475A; border: 1px dashed #2A2840; text-decoration: line-through; }
+  .sieve-cell.new-cross{ background: rgba(243,139,168,.22); color: #F38BA8; border: 1px solid rgba(243,139,168,.45); text-decoration: line-through; }
+  .sieve-cell.plain    { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+
+  /* 重复标记对比 / 调用过程（③ ④ 用） */
+  .mark-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .mark-row:last-child { margin-bottom: 0; }
+  .mark-tag { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; padding: 4px 10px; border-radius: 5px; }
+  .mark-tag.dup { background: rgba(243,139,168,.2); color: #F38BA8; }
+  .mark-tag.once { background: rgba(166,227,161,.22); color: var(--code-str); }
+  .mark-note { font-size: 11.5px; color: #A6ADC8; font-family: 'Noto Sans SC', sans-serif; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 130px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="1.8">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块一 数学基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>1.8 线性筛素数</span>
+    </div>
+    <h1 class="chapter-title">1.8　线性筛素数</h1>
+    <p class="chapter-desc">一次性"筛"出一个范围内所有的质数，而不是对每个数都跑一遍 1.3 节的 IsPrime——模块一的最后一站。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要"批量筛"</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：埃氏筛法</a></li>
+      <li><span class="toc-num">③</span><a href="#opt">优化：从 i×i 开始标记</a></li>
+      <li><span class="toc-num">④</span><a href="#linear">进阶：线性筛</a></li>
+      <li><span class="toc-num">⑤</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要"批量筛"</div>
+    <div class="section-body">
+      <p>1.3 节的 <code>IsPrime</code> 能很快判断<strong>一个</strong>数是不是质数。但如果题目要求"找出 1 到 100 万之间所有的质数"，对每个数都单独跑一遍 <code>IsPrime</code>，总共要做大约 <code>100万 × √(100万)</code> 次运算——这是一个非常大的数字，太慢了。</p>
+      <p>这一节换一个思路：不再一个一个去"问"每个数"你是不是质数"，而是反过来——<strong>每找到一个质数，就把它的所有倍数都标记成"不是质数"</strong>。标记完之后，没被标记过的数，自然就是质数。这种"批量打标记"的办法，就是<strong>筛法</strong>。</p>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：埃氏筛法</div>
+    <div class="section-body">
+      <p>这是最早、最经典的筛法，叫<strong>埃拉托斯特尼筛法</strong>（简称埃氏筛）：从 <code>2</code> 开始，如果一个数还没被标记过，它就是质数，把它的倍数（<code>2倍、3倍、4倍...</code>）全部标记成"合数"；然后看下一个数，重复同样的操作。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">用埃氏筛法找出 2~30 之间的质数</div>
+
+      <div class="sieve-stage">
+        <div class="sieve-stage-label">第 1 步：2 没被标记，是质数 —— 标记 2 的所有倍数</div>
+        <div class="sieve-grid">
+          <div class="sieve-cell prime">2</div>
+          <div class="sieve-cell plain">3</div>
+          <div class="sieve-cell new-cross">4</div>
+          <div class="sieve-cell plain">5</div>
+          <div class="sieve-cell new-cross">6</div>
+          <div class="sieve-cell plain">7</div>
+          <div class="sieve-cell new-cross">8</div>
+          <div class="sieve-cell plain">9</div>
+          <div class="sieve-cell new-cross">10</div>
+          <div class="sieve-cell plain">11</div>
+          <div class="sieve-cell new-cross">12</div>
+          <div class="sieve-cell plain">13</div>
+          <div class="sieve-cell new-cross">14</div>
+          <div class="sieve-cell plain">15</div>
+          <div class="sieve-cell new-cross">16</div>
+          <div class="sieve-cell plain">17</div>
+          <div class="sieve-cell new-cross">18</div>
+          <div class="sieve-cell plain">19</div>
+          <div class="sieve-cell new-cross">20</div>
+          <div class="sieve-cell plain">21</div>
+          <div class="sieve-cell new-cross">22</div>
+          <div class="sieve-cell plain">23</div>
+          <div class="sieve-cell new-cross">24</div>
+          <div class="sieve-cell plain">25</div>
+          <div class="sieve-cell new-cross">26</div>
+          <div class="sieve-cell plain">27</div>
+          <div class="sieve-cell new-cross">28</div>
+          <div class="sieve-cell plain">29</div>
+          <div class="sieve-cell new-cross">30</div>
+        </div>
+      </div>
+
+      <div class="sieve-stage">
+        <div class="sieve-stage-label">第 2 步：3 没被标记，是质数 —— 标记 3 的所有倍数（6、12、18、24、30 之前已经被 2 标记过了）</div>
+        <div class="sieve-grid">
+          <div class="sieve-cell prime">2</div>
+          <div class="sieve-cell prime">3</div>
+          <div class="sieve-cell crossed">4</div>
+          <div class="sieve-cell plain">5</div>
+          <div class="sieve-cell crossed">6</div>
+          <div class="sieve-cell plain">7</div>
+          <div class="sieve-cell crossed">8</div>
+          <div class="sieve-cell new-cross">9</div>
+          <div class="sieve-cell crossed">10</div>
+          <div class="sieve-cell plain">11</div>
+          <div class="sieve-cell crossed">12</div>
+          <div class="sieve-cell plain">13</div>
+          <div class="sieve-cell crossed">14</div>
+          <div class="sieve-cell new-cross">15</div>
+          <div class="sieve-cell crossed">16</div>
+          <div class="sieve-cell plain">17</div>
+          <div class="sieve-cell crossed">18</div>
+          <div class="sieve-cell plain">19</div>
+          <div class="sieve-cell crossed">20</div>
+          <div class="sieve-cell new-cross">21</div>
+          <div class="sieve-cell crossed">22</div>
+          <div class="sieve-cell plain">23</div>
+          <div class="sieve-cell crossed">24</div>
+          <div class="sieve-cell plain">25</div>
+          <div class="sieve-cell crossed">26</div>
+          <div class="sieve-cell new-cross">27</div>
+          <div class="sieve-cell crossed">28</div>
+          <div class="sieve-cell plain">29</div>
+          <div class="sieve-cell crossed">30</div>
+        </div>
+      </div>
+
+      <div class="sieve-stage">
+        <div class="sieve-stage-label">第 3 步：5 没被标记，是质数 —— 标记 5 的倍数（25 是唯一新被标记的）；之后 7、11... 都找不到新的倍数可标了</div>
+        <div class="sieve-grid">
+          <div class="sieve-cell prime">2</div>
+          <div class="sieve-cell prime">3</div>
+          <div class="sieve-cell crossed">4</div>
+          <div class="sieve-cell prime">5</div>
+          <div class="sieve-cell crossed">6</div>
+          <div class="sieve-cell prime">7</div>
+          <div class="sieve-cell crossed">8</div>
+          <div class="sieve-cell crossed">9</div>
+          <div class="sieve-cell crossed">10</div>
+          <div class="sieve-cell prime">11</div>
+          <div class="sieve-cell crossed">12</div>
+          <div class="sieve-cell prime">13</div>
+          <div class="sieve-cell crossed">14</div>
+          <div class="sieve-cell crossed">15</div>
+          <div class="sieve-cell crossed">16</div>
+          <div class="sieve-cell prime">17</div>
+          <div class="sieve-cell crossed">18</div>
+          <div class="sieve-cell prime">19</div>
+          <div class="sieve-cell crossed">20</div>
+          <div class="sieve-cell crossed">21</div>
+          <div class="sieve-cell crossed">22</div>
+          <div class="sieve-cell prime">23</div>
+          <div class="sieve-cell crossed">24</div>
+          <div class="sieve-cell new-cross">25</div>
+          <div class="sieve-cell crossed">26</div>
+          <div class="sieve-cell crossed">27</div>
+          <div class="sieve-cell crossed">28</div>
+          <div class="sieve-cell prime">29</div>
+          <div class="sieve-cell crossed">30</div>
+        </div>
+      </div>
+
+      <div class="num-visual-caption">绿色是确定的质数，粉色是"这一步新标记"的合数，灰色虚线是"之前已经标记过"的合数。最终剩下没被标记的 <strong>2 3 5 7 11 13 17 19 23 29</strong>，正是 2~30 之间全部的质数。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 埃氏筛法</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">Sieve</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">bool</span><span class="pnc">&gt;</span> <span class="fn">isComposite</span><span class="pnc">(</span><span class="fn">n</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="kw">false</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">primes</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">2</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">isComposite</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span>  <span class="cmt">// 没被标记过，是质数</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">            <span class="fn">primes</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="fn">i</span><span class="pnc">);</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">            <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="fn">i</span> <span class="op">*</span> <span class="num">2</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">+=</span> <span class="fn">i</span><span class="pnc">)</span>  <span class="cmt">// 标记 i 的所有倍数</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">            <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">                <span class="fn">isComposite</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">            <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="kw">return</span> <span class="fn">primes</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="opt">③ 优化：从 i×i 开始标记</div>
+    <div class="section-body">
+      <p>看一下第 3 步标记 5 的倍数时发生的事——<code>5×2=10</code>、<code>5×3=15</code>、<code>5×4=20</code> 这几个数，<strong>早就已经被 2 或 3 标记过了</strong>，重新标记一遍纯属浪费。其实可以直接从 <code>5×5=25</code> 开始标记——因为任何比 <code>i×i</code> 小的 <code>i</code> 的倍数，必然能写成"<strong>更小的数 × i</strong>"，而这个"更小的数"自己也是某个更小质数的倍数，早就被那个更小的质数标记过了。这个优化和 1.3 节"只检查到 √n"是同一个道理。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 埃氏筛法（从 i×i 开始标记）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">Sieve</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">bool</span><span class="pnc">&gt;</span> <span class="fn">isComposite</span><span class="pnc">(</span><span class="fn">n</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="kw">false</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">primes</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">2</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">isComposite</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">            <span class="fn">primes</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="fn">i</span><span class="pnc">);</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">            <span class="kw">for</span> <span class="pnc">(</span><span class="kw">long</span> <span class="kw">long</span> <span class="fn">j</span> <span class="op">=</span> <span class="pnc">(</span><span class="kw">long</span> <span class="kw">long</span><span class="pnc">)</span><span class="fn">i</span> <span class="op">*</span> <span class="fn">i</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">+=</span> <span class="fn">i</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">            <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">                <span class="fn">isComposite</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">            <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="kw">return</span> <span class="fn">primes</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>注意 <code>i * i</code> 要小心溢出：</b>如果 <code>n</code> 比较大（比如十万以上），<code>i</code> 也可能达到几百，<code>i * i</code> 用 <code>int</code> 计算可能会超出范围。写成 <code>(long long)i * i</code>，先把其中一个数转换成 <code>long long</code> 再相乘，可以避免这个问题。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>不过，这个优化还没有解决根本问题。</b>即使从 <code>i×i</code> 开始标记，<code>12</code> 还是会被 <code>2</code> 标记一次（当 <code>i=2</code> 时），<strong>也会被 3 标记一次</strong>（当 <code>i=3</code> 时，但因为 12&lt;3×3=9 不成立所以这次反而不会发生——这里只是想说明，合数被多个质数重复标记这件事，光靠"从 i×i 开始"是消除不掉的，只是减少了一部分）。下一节要解决的，正是这个"重复劳动"的问题。</div>
+    </div>
+
+    <div class="sub-title" id="linear">④ 进阶：线性筛</div>
+    <div class="section-body">
+      <p>回头看 2~30 这个例子：<code>12</code> 被标记了两次——一次是 <code>2</code> 的倍数（<code>2×6</code>），一次是 <code>3</code> 的倍数（<code>3×4</code>）；<code>30</code> 更夸张，被 <code>2、3、5</code> 各标记了一次，一共三次。这些重复劳动加起来，让埃氏筛法没有真正做到"每个数只处理一次"。</p>
+      <p><strong>线性筛</strong>（也叫欧拉筛）要解决的就是这个问题：让每一个合数<strong>只被标记一次</strong>——具体来说，只让它的"<strong>最小质因子</strong>"标记它，其他比这个更大的质因子，都不准再标记。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">12 在两种筛法下被标记的次数</div>
+      <div class="mark-row">
+        <div class="mark-tag dup">埃氏筛法</div>
+        <div class="mark-note">12 被 <code>2×6</code> 标记一次，又被 <code>3×4</code> 标记一次 —— 重复劳动了 1 次</div>
+      </div>
+      <div class="mark-row">
+        <div class="mark-tag once">线性筛</div>
+        <div class="mark-note">只允许 <code>12</code> 的<strong>最小质因子</strong>（也就是 <code>2</code>）标记它，<code>3</code> 不准再标记 —— 只标记 1 次</div>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>具体怎么做到"只让最小质因子标记"？做法是：从小到大处理每一个数 <code>i</code>，把它和"目前已经找到的每一个质数"依次配对相乘，每配对出一个新的合数，就记下"这个合数的最小质因子是谁"。关键规则是：<strong>一旦配对用的质数超过了 <code>i</code> 自己的最小质因子，就立刻停止配对</strong>——因为再往下配对出来的那个合数，应该交给"<code>i</code> 自己的最小质因子"去标记，不该让现在这个更大的质数抢先标记。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">i = 6 时为什么只标记一次，就停下来了</div>
+      <div class="mark-row">
+        <div class="mark-tag once">配对 2×6=12</div>
+        <div class="mark-note">质数 2 ≤ 6 自己的最小质因子（2）—— 允许配对，标记 12 的最小质因子是 2</div>
+      </div>
+      <div class="mark-row">
+        <div class="mark-tag dup">原本想配对 3×6=18</div>
+        <div class="mark-note">质数 3 &gt; 6 自己的最小质因子（2）—— <strong>立刻停止</strong>，不允许这次配对</div>
+      </div>
+      <div class="num-visual-caption">为什么不能让 <code>3</code> 配对 <code>6</code> 得到 <code>18</code>？因为 <code>18</code> 真正的最小质因子是 <code>2</code>（<code>18=2×9</code>），不是 <code>3</code>。如果这里放行，<code>18</code> 就会被"提早"标记成"最小质因子是 3"，等到后面 <code>i=9</code> 时，<code>2×9=18</code> 又会被正确地标记一次——同一个数被标记了两次，又走回了埃氏筛法的老问题。停在这里，恰恰是为了把 <code>18</code> "让"给后面更合适的机会去标记。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 线性筛（欧拉筛）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">LinearSieve</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">minPrimeFactor</span><span class="pnc">(</span><span class="fn">n</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">);</span>  <span class="cmt">// 0 表示还不知道</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">primes</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">2</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">minPrimeFactor</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span>  <span class="cmt">// 没被标记过，i 自己是质数</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">            <span class="fn">minPrimeFactor</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">i</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">            <span class="fn">primes</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="fn">i</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">12</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">primes</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">            <span class="typ">int</span> <span class="fn">p</span> <span class="op">=</span> <span class="fn">primes</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">15</td><td class="cd">            <span class="kw">if</span> <span class="pnc">(</span><span class="fn">p</span> <span class="op">&gt;</span> <span class="fn">minPrimeFactor</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">||</span> <span class="pnc">(</span><span class="kw">long</span> <span class="kw">long</span><span class="pnc">)</span><span class="fn">p</span> <span class="op">*</span> <span class="fn">i</span> <span class="op">&gt;</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">16</td><td class="cd">            <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd">                <span class="kw">break</span><span class="pnc">;</span>  <span class="cmt">// 超过了i的最小质因子，停止配对</span></td></tr>
+          <tr class="hl"><td class="ln">18</td><td class="cd">            <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">            <span class="fn">minPrimeFactor</span><span class="pnc">[</span><span class="fn">p</span> <span class="op">*</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">p</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="kw">return</span> <span class="fn">primes</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>因为每个合数<strong>确确实实只被标记一次</strong>，整个算法做的"标记"次数刚好等于合数的个数，时间复杂度是严格的 <strong>O(n)</strong>——这也是"线性筛"这个名字的来源。比埃氏筛法的 O(n log log n) 更快，不过对于 CSP-J/S 常见的数据范围，两者实际跑起来的速度差距并不算特别夸张，重要的是理解这个"只标记一次"的思路。</div>
+    </div>
+
+    <div class="sub-title" id="compare">⑤ 完整代码与对比</div>
+    <div class="section-body">
+      <p>用 <code>n = 1000</code> 数一数两种筛法总共做了多少次标记：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">筛出 1~1000 的所有质数 —— 总标记次数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">埃氏筛法</div>
+        <div class="count-bar-track"><div class="count-bar-fill long">1958 次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">线性筛</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 43%;">831 次</div></div>
+      </div>
+      <div class="num-visual-caption">1~1000 之间一共有 <strong>831</strong> 个合数。线性筛恰好标记了 <strong>831</strong> 次——一个合数都不多标，一个都不少标；埃氏筛法标记了 <strong>1958</strong> 次，多出来的 <strong>1127</strong> 次，全部都是像 <code>12</code>、<code>30</code> 那样被多个质数重复标记的浪费。</div>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>写法</th><th>核心思路</th><th>时间复杂度</th></tr></thead>
+      <tbody>
+        <tr><td>埃氏筛法</td><td>每找到一个质数，标记它的所有倍数</td><td>O(n log log n)</td></tr>
+        <tr><td>埃氏筛（优化）</td><td>从 i×i 开始标记，跳过早被标记过的部分</td><td>O(n log log n)，常数更小</td></tr>
+        <tr><td>线性筛</td><td>每个合数只由它的最小质因子标记一次</td><td>O(n)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div><b>模块一到这里就结束了。</b>从最基础的拆数字（1.1），到判断回文、质数，再到约数、倍数、进制转换、快速幂，最后是批量筛质数——这一路用到的核心工具，几乎都是"循环 + 取余/整除"这一个骨架的变体。后面模块二开始，会进入枚举、模拟这些更偏"解题思路"而不是"数学技巧"的内容。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块一 · 数学基础 · 1.8 线性筛素数</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A01_07_快速幂.html">← 1.7 快速幂</a>
+      <a class="nav-btn" href="index.html">模块二·基础算法思想（即将推出） →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
