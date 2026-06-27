@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.1 冒泡排序 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "3.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 数组比较交换可视化 */
+  .bubble-pass { margin-bottom: 18px; }
+  .bubble-pass:last-child { margin-bottom: 0; }
+  .bubble-pass-label { font-size: 11.5px; color: #A6ADC8; margin-bottom: 10px; font-family: 'Noto Sans SC', sans-serif; }
+  .bubble-row { display: flex; gap: 6px; align-items: center; }
+  .bubble-cell { width: 36px; height: 36px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; flex-shrink: 0; transition: all .15s; }
+  .bubble-cell.base   { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .bubble-cell.cmp     { background: rgba(250,179,135,.25); color: var(--code-num); border: 1px solid rgba(250,179,135,.45); }
+  .bubble-cell.swapped { background: rgba(243,139,168,.22); color: #F38BA8; border: 1px solid rgba(243,139,168,.45); }
+  .bubble-cell.settled { background: rgba(166,227,161,.28); color: var(--code-str); border: 1px solid rgba(166,227,161,.5); }
+  .bubble-vs { color: #6C7086; font-size: 12px; padding: 0 2px; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 130px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="3.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块三 简单排序</span>
+      <span class="eyebrow-sep">/</span>
+      <span>3.1 冒泡排序</span>
+    </div>
+    <h1 class="chapter-title">3.1　冒泡排序</h1>
+    <p class="chapter-desc">反复比较相邻两个数，谁大谁就往后挪——最大的数会像气泡一样，一轮一轮"冒"到最后面。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是冒泡排序</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：相邻比较交换</a></li>
+      <li><span class="toc-num">③</span><a href="#opt">优化：提前发现已经排好序</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是冒泡排序</div>
+    <div class="section-body">
+      <p><strong>冒泡排序</strong>的规则只有一句话：<strong>从左到右，挨个比较相邻的两个数，如果前面的比后面的大，就交换它们的位置</strong>。把这个规则从数组开头扫到结尾，叫做"一轮"——一轮扫完，整个数组里<strong>最大的那个数</strong>一定会被"挤"到最后一位，就像气泡从水底一点点"冒"到水面，这正是"冒泡"这个名字的来源。</p>
+      <p>排完一轮还不够——还需要再扫几轮，每一轮都能确定一个新的"最大值"归位到正确的位置上，直到整个数组都排好为止。</p>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：相邻比较交换</div>
+    <div class="section-body">
+      <p>用数组 <code>{5, 2, 8, 1, 9}</code> 来演示。外层循环控制"扫几轮"，内层循环负责"这一轮挨个比较相邻的数"：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 冒泡排序基础写法</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">void</span> <span class="fn">BubbleSort</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">arr</span><span class="pnc">[],</span> <span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 一共扫 n-1 轮</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="fn">n</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 范围逐轮缩小</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">            <span class="kw">if</span> <span class="pnc">(</span><span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">&gt;</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">])</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">            <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">                <span class="typ">int</span> <span class="fn">temp</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">                <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">                <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">temp</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">            <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么内层范围要逐轮缩小（<code>n - 1 - i</code>）？</b>第 1 轮结束后，最大值已经"冒"到了最后一位，第 2 轮就不需要再比到最后一位了（它肯定不需要再动）；第 2 轮结束后，第二大的值也归位了，第 3 轮的范围又能再缩小一点。每轮少比一位，省下来的比较次数会逐渐累积。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">{5, 2, 8, 1, 9} 冒泡排序的完整过程</div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">原数组</div>
+        <div class="bubble-row">
+          <div class="bubble-cell base">5</div><div class="bubble-cell base">2</div><div class="bubble-cell base">8</div><div class="bubble-cell base">1</div><div class="bubble-cell base">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">第 1 轮：5&gt;2 交换，5&lt;=8 不动，8&gt;1 交换，8&lt;=9 不动 —— 9 归位</div>
+        <div class="bubble-row">
+          <div class="bubble-cell swapped">2</div><div class="bubble-cell swapped">5</div><div class="bubble-cell swapped">1</div><div class="bubble-cell swapped">8</div><div class="bubble-cell settled">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">第 2 轮：2&lt;=5 不动，5&gt;1 交换，5&lt;=8 不动 —— 8 归位</div>
+        <div class="bubble-row">
+          <div class="bubble-cell base">2</div><div class="bubble-cell swapped">1</div><div class="bubble-cell swapped">5</div><div class="bubble-cell settled">8</div><div class="bubble-cell settled">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">第 3 轮：2&gt;1 交换，1&lt;=5 不动 —— 5 归位</div>
+        <div class="bubble-row">
+          <div class="bubble-cell swapped">1</div><div class="bubble-cell swapped">2</div><div class="bubble-cell settled">5</div><div class="bubble-cell settled">8</div><div class="bubble-cell settled">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">第 4 轮：1&lt;=2 不动 —— 全部排好</div>
+        <div class="bubble-row">
+          <div class="bubble-cell settled">1</div><div class="bubble-cell settled">2</div><div class="bubble-cell settled">5</div><div class="bubble-cell settled">8</div><div class="bubble-cell settled">9</div>
+        </div>
+      </div>
+
+      <div class="num-visual-caption">绿色格子表示这一轮结束后<strong>已经归位、之后不会再变动</strong>的数。每一轮都能确定一个新的归位数字，5 个数最多需要 <code>n-1=4</code> 轮就能全部排好。</div>
+    </div>
+
+    <div class="sub-title" id="opt">③ 优化：提前发现已经排好序</div>
+    <div class="section-body">
+      <p>看第 4 轮——从头比到尾，<strong>一次交换都没有发生</strong>。这说明数组已经排好了，剩下的轮次都是在白跑。可以在每轮开始前设一个"这一轮有没有发生交换"的标记，如果一轮下来都没有交换过，直接提前结束，不用傻乎乎地把 <code>n-1</code> 轮都跑完。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 冒泡排序（提前结束）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">void</span> <span class="fn">BubbleSort</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">arr</span><span class="pnc">[],</span> <span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">        <span class="typ">bool</span> <span class="fn">hasSwapped</span> <span class="op">=</span> <span class="kw">false</span><span class="pnc">;</span>  <span class="cmt">// 这一轮有没有发生过交换</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="fn">n</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">            <span class="kw">if</span> <span class="pnc">(</span><span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">&gt;</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">])</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">            <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">                <span class="typ">int</span> <span class="fn">temp</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">                <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">                <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">temp</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">                <span class="fn">hasSwapped</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">            <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">16</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">hasSwapped</span><span class="pnc">)</span> <span class="kw">break</span><span class="pnc">;</span>  <span class="cmt">// 这一轮没交换过，说明已经排好了</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">已经排好序的数组 {1,2,3,4,5} —— 优化效果最明显的情况</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">不加提前结束</div>
+        <div class="count-bar-track"><div class="count-bar-fill long">10 次比较</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">加了提前结束</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 40%;">4 次比较</div></div>
+      </div>
+      <div class="num-visual-caption">数组本来就是排好的，第 1 轮扫一遍（4 次比较）就会发现<strong>一次交换都没有</strong>，立刻 <code>break</code> 跳出——不加这个判断的话，还要白白扫完剩下 3 轮，多做 6 次没有意义的比较。数组越接近"已经排好"，这个优化省下来的就越多；如果数组本来就很混乱，这个优化基本不会带来什么帮助（最坏情况仍然要扫完所有轮次）。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+
+    <table class="api-table">
+      <thead><tr><th>情况</th><th>比较次数</th><th>时间复杂度</th></tr></thead>
+      <tbody>
+        <tr><td>最坏情况（完全逆序）</td><td>约 n²/2 次</td><td>O(n²)</td></tr>
+        <tr><td>最好情况（已经排好，加了提前结束）</td><td>约 n 次</td><td>O(n)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>冒泡排序的核心代价在于<strong>嵌套循环</strong>——外层 <code>n</code> 轮，内层平均要比 <code>n/2</code> 次，总共大约 <code>n²/2</code> 次比较，这正是 2.1 节"枚举的效率问题"里提到过的嵌套循环增长方式。冒泡排序很少在正式比赛里直接拿来对大数据排序（数据量大时跑不动），但它的"相邻比较交换"思想，会在后面学到的<strong>冒泡式判重、相邻关系处理</strong>等场景里反复出现，并且是理解后面更快排序算法（插入、快排）的一个很好的起点。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块三 · 简单排序 · 3.1 冒泡排序</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A02_03_模拟法.html">← 2.3 模拟法</a>
+      <a class="nav-btn" href="index.html">3.2 选择排序（即将推出） →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

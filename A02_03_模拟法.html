@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2.3 模拟法 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "2.3"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 圆圈位置可视化（② 传球游戏） */
+  .circle-people { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .circle-person { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; flex-shrink: 0; }
+  .circle-person.ball { background: rgba(166,227,161,.3); color: var(--code-str); border: 2px solid var(--code-str); box-shadow: 0 0 0 2px rgba(166,227,161,.22); }
+
+  /* 双轨步骤表（复用既有风格） */
+  .dual-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .dual-table th { font-family: 'Noto Sans SC', sans-serif; font-size: 11px; font-weight: 700; color: #A6ADC8; text-align: center; padding: 6px 8px 12px; border-bottom: 1px solid #2A2840; }
+  .dual-table td { text-align: center; padding: 8px 8px; color: var(--code-text); }
+  .dual-table tr:not(:last-child) td { border-bottom: 1px dashed #2A2840; }
+  .dual-table .dt-n { color: var(--code-fn); }
+  .dual-table .dt-arrow { color: #6C7086; font-size: 12px; }
+  .dual-table .dt-digit { color: var(--code-num); font-weight: 700; }
+  .dual-table .dt-rev { color: var(--code-str); }
+  .dual-table .dt-skip { color: #F38BA8; }
+  .dual-table tr.dt-final td { color: var(--code-str); font-weight: 700; padding-top: 12px; }
+  .dual-table tr.dt-final { border-top: 1px solid #2A2840; }
+
+  /* 约瑟夫环淘汰过程 */
+  .joseph-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .joseph-row:last-child { margin-bottom: 0; }
+  .joseph-cell { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; flex-shrink: 0; }
+  .joseph-cell.alive { background: rgba(166,227,161,.28); color: var(--code-str); border: 1px solid rgba(166,227,161,.5); }
+  .joseph-cell.out   { background: #16141F; color: #45475A; border: 1px dashed #2A2840; text-decoration: line-through; }
+  .joseph-cell.winner{ background: rgba(166,227,161,.4); color: var(--code-str); border: 2px solid var(--code-str); box-shadow: 0 0 0 2px rgba(166,227,161,.25); }
+  .joseph-step-label { font-size: 11px; color: #6C7086; margin-bottom: 6px; text-align: center; font-family: 'Noto Sans SC', sans-serif; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="2.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块二 基础算法思想</span>
+      <span class="eyebrow-sep">/</span>
+      <span>2.3 模拟法</span>
+    </div>
+    <h1 class="chapter-title">2.3　模拟法</h1>
+    <p class="chapter-desc">题目把整个过程讲得明明白白，那就照着题目说的，一步一步在代码里"演"一遍。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是模拟法</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础模拟：传球游戏</a></li>
+      <li><span class="toc-num">③</span><a href="#joseph">综合例子：约瑟夫环</a></li>
+      <li><span class="toc-num">④</span><a href="#summary">完整代码与小结</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是模拟法</div>
+    <div class="section-body">
+      <p>有些题目不需要找什么巧妙的数学规律——题目本身就是一套<strong>过程描述</strong>："第一步做什么，然后怎么变化，再下一步又做什么"。遇到这种题，最直接的办法就是<strong>模拟法</strong>：照着题目描述的规则，一步一步在代码里"重新演一遍"这个过程，演完之后，程序里的状态就是答案。</p>
+      <p>模拟法和 2.1 节的枚举法不一样——枚举法是"不知道答案，把所有可能都试一遍去找"；模拟法是"过程是确定的，照着做一遍，自然就知道结果"。很多综合性强的题目，会同时用到前面学过的数组、循环、分支，甚至要结合 2.2 节的数组标记法——这一节就是把这些工具放在一起，做一次综合演练。</p>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础模拟：传球游戏</div>
+    <div class="section-body">
+      <p><code>6</code> 个人站成一圈，编号 <code>0~5</code>。球一开始在 <code>0</code> 号手里，每一轮都往前传 <code>2</code> 个位置（比如从 <code>0</code> 号传到 <code>2</code> 号）。传了 <code>4</code> 轮之后，球在谁手里？</p>
+      <p>这道题没有什么公式，照着规则模拟就行——唯一需要注意的技巧是：站成一圈，传到末尾要能<strong>绕回到开头</strong>。这正好是取余运算最常见的用法之一：用 <code>(当前位置 + 步数) % 总人数</code>，就能让位置自动"绕圈"，超过末尾会自动从头开始算。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 模拟传球游戏</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="num">6</span><span class="pnc">,</span> <span class="fn">k</span> <span class="op">=</span> <span class="num">2</span><span class="pnc">,</span> <span class="fn">m</span> <span class="op">=</span> <span class="num">4</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">pos</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>  <span class="cmt">// 球一开始在0号手里</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">m</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="fn">pos</span> <span class="op">=</span> <span class="pnc">(</span><span class="fn">pos</span> <span class="op">+</span> <span class="fn">k</span><span class="pnc">)</span> <span class="op">%</span> <span class="fn">n</span><span class="pnc">;</span>  <span class="cmt">// 往前传k个位置，超出范围自动绕回开头</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"球最后在 "</span> <span class="op">&lt;&lt;</span> <span class="fn">pos</span> <span class="op">&lt;&lt;</span> <span class="str">" 号手里"</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">球的传递轨迹（n=6，每次传2个位置，共传4轮）</div>
+      <table class="dual-table">
+        <tr><th>轮次</th><th>计算</th><th>新位置</th></tr>
+        <tr><td class="dt-n">第1轮</td><td>(0+2) % 6</td><td class="dt-rev">2</td></tr>
+        <tr><td class="dt-n">第2轮</td><td>(2+2) % 6</td><td class="dt-rev">4</td></tr>
+        <tr><td class="dt-n">第3轮</td><td>(4+2) % 6 = 6 % 6</td><td class="dt-rev">0　（绕回了开头）</td></tr>
+        <tr class="dt-final"><td class="dt-n">第4轮</td><td>(0+2) % 6</td><td>2　—— 最终答案</td></tr>
+      </table>
+      <div class="circle-people" style="margin-top:16px;">
+        <div class="circle-person">0</div>
+        <div class="circle-person">1</div>
+        <div class="circle-person ball">2</div>
+        <div class="circle-person">3</div>
+        <div class="circle-person">4</div>
+        <div class="circle-person">5</div>
+      </div>
+      <div class="num-visual-caption">第 3 轮的时候，位置算出了 <code>6</code>，但只有 <code>0~5</code> 六个位置——取余之后自动变成了 <code>0</code>，相当于绕回了一圈的开头。这就是"取余实现循环"的关键：<strong>不管加多少次，结果永远落在合法范围内</strong>，不需要手动判断"是不是超出范围了，要不要减回去"。</div>
+    </div>
+
+    <div class="sub-title" id="joseph">③ 综合例子：约瑟夫环</div>
+    <div class="section-body">
+      <p>把"传球游戏"的循环位置技巧，和上一节学的数组标记法结合起来，就能解决一个经典问题——<strong>约瑟夫环</strong>：<code>n</code> 个人站成一圈，编号 <code>1</code> 到 <code>n</code>，从 <code>1</code> 号开始报数，每数到 <code>k</code> 的那个人<strong>出局</strong>，然后从下一个人重新开始报数，一直重复，直到只剩下最后一个人——问最后留下来的是几号？</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 约瑟夫环模拟</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Josephus</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">k</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">bool</span><span class="pnc">&gt;</span> <span class="fn">eliminated</span><span class="pnc">(</span><span class="fn">n</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="kw">false</span><span class="pnc">);</span>  <span class="cmt">// 标记谁已经出局了</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">pos</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>           <span class="cmt">// 当前指向的人（用0~n-1表示，真实编号是pos+1）</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">int</span> <span class="fn">remaining</span> <span class="op">=</span> <span class="fn">n</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">int</span> <span class="fn">count</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>         <span class="cmt">// 当前报到的数字</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">remaining</span> <span class="op">&gt;</span> <span class="num">1</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">eliminated</span><span class="pnc">[</span><span class="fn">pos</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">])</span>  <span class="cmt">// 这个人还在场，才轮到他报数</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">            <span class="fn">count</span><span class="op">++</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">            <span class="kw">if</span> <span class="pnc">(</span><span class="fn">count</span> <span class="op">==</span> <span class="fn">k</span><span class="pnc">)</span>  <span class="cmt">// 报到了k，这个人出局</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">            <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">15</td><td class="cd">                <span class="fn">eliminated</span><span class="pnc">[</span><span class="fn">pos</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">                <span class="fn">remaining</span><span class="op">--</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">                <span class="fn">count</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>  <span class="cmt">// 重新从0开始报数</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">            <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">20</td><td class="cd">        <span class="fn">pos</span> <span class="op">=</span> <span class="pnc">(</span><span class="fn">pos</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">)</span> <span class="op">%</span> <span class="fn">n</span><span class="pnc">;</span>  <span class="cmt">// 移动到下一个位置，绕圈</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd"></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">eliminated</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span>  <span class="cmt">// 找到唯一没出局的人</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd">            <span class="kw">return</span> <span class="fn">i</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">30</td><td class="cd">    <span class="kw">return</span> <span class="op">-</span><span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 不会执行到这里</span></td></tr>
+          <tr><td class="ln">31</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div>这段代码同时用到了三个前面学过的工具：<code>eliminated</code> 数组是 2.2 节的<strong>数组标记法</strong>（标记谁出局了）；<code>pos = (pos+1) % n</code> 是这一节刚学的<strong>取余绕圈</strong>；<code>if (!eliminated[...])</code> 加 <code>count++</code> 则是最朴素的<strong>条件判断和计数</strong>。模拟法经常就是这样——单独看每一部分都不难，难的是把它们正确地组合在一起，照着题目描述的顺序一步步实现。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">n=5 人，每数到 k=2 就出局 —— 完整的淘汰过程</div>
+
+      <div class="joseph-step-label">初始状态：1 2 3 4 5 全部在场</div>
+      <div class="joseph-row">
+        <div class="joseph-cell alive">1</div>
+        <div class="joseph-cell alive">2</div>
+        <div class="joseph-cell alive">3</div>
+        <div class="joseph-cell alive">4</div>
+        <div class="joseph-cell alive">5</div>
+      </div>
+
+      <div class="joseph-step-label" style="margin-top:14px;">从1开始报数：1(报1)，2(报2)——2号出局</div>
+      <div class="joseph-row">
+        <div class="joseph-cell alive">1</div>
+        <div class="joseph-cell out">2</div>
+        <div class="joseph-cell alive">3</div>
+        <div class="joseph-cell alive">4</div>
+        <div class="joseph-cell alive">5</div>
+      </div>
+
+      <div class="joseph-step-label">从3继续：3(报1)，4(报2)——4号出局</div>
+      <div class="joseph-row">
+        <div class="joseph-cell alive">1</div>
+        <div class="joseph-cell out">2</div>
+        <div class="joseph-cell alive">3</div>
+        <div class="joseph-cell out">4</div>
+        <div class="joseph-cell alive">5</div>
+      </div>
+
+      <div class="joseph-step-label">从5继续：5(报1)，跳过已出局的2，1(报2)——1号出局</div>
+      <div class="joseph-row">
+        <div class="joseph-cell out">1</div>
+        <div class="joseph-cell out">2</div>
+        <div class="joseph-cell alive">3</div>
+        <div class="joseph-cell out">4</div>
+        <div class="joseph-cell alive">5</div>
+      </div>
+
+      <div class="joseph-step-label">从3继续：跳过已出局的1、2，3(报1)，跳过4，5(报2)——5号出局</div>
+      <div class="joseph-row">
+        <div class="joseph-cell out">1</div>
+        <div class="joseph-cell out">2</div>
+        <div class="joseph-cell alive">3</div>
+        <div class="joseph-cell out">4</div>
+        <div class="joseph-cell out">5</div>
+      </div>
+
+      <div class="joseph-step-label" style="margin-top:14px;">只剩 3 号 —— 游戏结束</div>
+      <div class="joseph-row">
+        <div class="joseph-cell winner">3</div>
+      </div>
+
+      <div class="num-visual-caption">淘汰顺序是 <strong>2 → 4 → 1 → 5</strong>，最后留下来的是 <strong>3 号</strong>。注意已经出局的人不会被重新数到——这正是代码里 <code>if (!eliminated[pos+1])</code> 这一层判断在做的事：跳过已经离场的人，只给还在场的人报数。</div>
+    </div>
+
+    <div class="sub-title" id="summary">④ 完整代码与小结</div>
+
+    <table class="api-table">
+      <thead><tr><th>用到的工具</th><th>对应代码</th><th>来自哪一节</th></tr></thead>
+      <tbody>
+        <tr><td>循环绕圈</td><td>pos = (pos + 1) % n</td><td>2.3 节本节内容</td></tr>
+        <tr><td>状态标记</td><td>eliminated[i] = true</td><td>2.2 数组标记法</td></tr>
+        <tr><td>条件计数</td><td>count++; if (count == k)</td><td>第4、5章 分支与循环</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>模拟法本身没有什么"算法"可言——它考察的是<strong>能不能把题目的文字描述，原原本本翻译成代码</strong>。读题的时候，建议先把过程拆成一句一句的步骤（"先做什么""再做什么""什么时候停"），再对照着把每一句翻译成一行或一段代码，往往比想着"要用什么算法"更容易下手。模块二到这里就结束了——枚举试遍可能、标记记录状态、模拟还原过程，这三件事是后面几乎所有复杂算法的地基。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块二 · 基础算法思想 · 2.3 模拟法</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A02_02_数组标记法.html">← 2.2 数组标记法</a>
+      <a class="nav-btn" href="A03_01_冒泡排序.html">模块三·简单排序 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

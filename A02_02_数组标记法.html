@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2.2 数组标记法 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "2.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 字母计数可视化（② 统计出现次数） */
+  .count-bars { display: flex; flex-direction: column; gap: 6px; }
+  .count-bar-item { display: flex; align-items: center; gap: 10px; }
+  .count-bar-letter { width: 22px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--code-fn); text-align: center; flex-shrink: 0; }
+  .count-bar-blocks { display: flex; gap: 3px; }
+  .count-bar-block { width: 20px; height: 20px; border-radius: 4px; background: rgba(166,227,161,.32); border: 1px solid rgba(166,227,161,.55); }
+  .count-bar-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6C7086; margin-left: 4px; }
+
+  /* 数组格子可视化（③④ 标记/缺失数字） */
+  .arr-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .arr-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .arr-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .arr-cell { min-width: 34px; height: 34px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .arr-cell.base { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .arr-cell.hi   { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.45); }
+  .arr-cell.bad  { background: rgba(243,139,168,.25); color: #F38BA8; border: 1px solid rgba(243,139,168,.45); }
+  .arr-cell.empty{ background: #16141F; color: #45475A; border: 1px dashed #2A2840; }
+  .arr-idx { font-size: 10px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+  .arr-step { margin-bottom: 14px; }
+  .arr-step:last-child { margin-bottom: 0; }
+  .arr-step-label { font-size: 11px; color: #6C7086; margin-bottom: 6px; font-family: 'Noto Sans SC', sans-serif; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="2.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块二 基础算法思想</span>
+      <span class="eyebrow-sep">/</span>
+      <span>2.2 数组标记法</span>
+    </div>
+    <h1 class="chapter-title">2.2　数组标记法</h1>
+    <p class="chapter-desc">用一个数组当"小本本"，随手记下每个数字的状态——出现过没有、出现了几次、被标记过没有。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是数组标记法</a></li>
+      <li><span class="toc-num">②</span><a href="#count">用数组统计出现次数</a></li>
+      <li><span class="toc-num">③</span><a href="#seen">用数组标记"是否出现过"</a></li>
+      <li><span class="toc-num">④</span><a href="#missing">应用：找出缺失的数字</a></li>
+      <li><span class="toc-num">⑤</span><a href="#summary">完整代码与小结</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是数组标记法</div>
+    <div class="section-body">
+      <p>很多问题需要反复"查一下某个数字之前出现过没有""数一下某个数字出现了几次"。如果每次都要重新扫一遍所有数据去查，会很慢——更聪明的办法是：开一个数组，<strong>用下标对应数值本身</strong>，把"这个数值的状态"直接存在对应的格子里。要查的时候，直接用数值当下标去访问数组，<strong>一步到位</strong>，不用再扫一遍。</p>
+      <p>其实 1.8 节的筛法已经用过这个思路了——<code>isComposite</code> 数组和 <code>minPrimeFactor</code> 数组，下标就是数字本身，格子里存的是"这个数被标记过没有""这个数的最小质因子是谁"。这一节把这个技巧从筛法里单独拎出来，看看它还能解决哪些问题。</p>
+    </div>
+
+    <div class="sub-title" id="count">② 用数组统计出现次数</div>
+    <div class="section-body">
+      <p>最常见的用法：统计每个值各出现了多少次。比如统计字符串 <code>"hello world"</code> 里每个字母出现的次数——开一个大小为 26 的数组，下标 <code>0~25</code> 分别对应 <code>a~z</code>，每遇到一个字母，就把对应格子的计数加一。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 统计字符串中每个字母的出现次数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"hello world"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">count</span><span class="pnc">[</span><span class="num">26</span><span class="pnc">]</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">0</span><span class="pnc">};</span>  <span class="cmt">// 26个字母各自的计数器，初始全是0</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">char</span> <span class="fn">ch</span> <span class="op">:</span> <span class="fn">s</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">ch</span> <span class="op">&gt;=</span> <span class="str">'a'</span> <span class="op">&amp;&amp;</span> <span class="fn">ch</span> <span class="op">&lt;=</span> <span class="str">'z'</span><span class="pnc">)</span>  <span class="cmt">// 跳过空格等非字母字符</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">        <span class="fn">count</span><span class="pnc">[</span><span class="fn">ch</span> <span class="op">-</span> <span class="str">'a'</span><span class="pnc">]</span><span class="op">++</span><span class="pnc">;</span>  <span class="cmt">// 字符转下标，对应格子加一</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div><b><code>ch - 'a'</code> 这一步眼熟吗？</b>1.6 节进制转换时用过几乎一样的写法（<code>s[i] - '0'</code> 把字符变成数字）。这里同样是利用字符本身的编码顺序——<code>'a'</code> 到 <code>'z'</code> 在内存里是连续排列的，相减就能得到"这是第几个字母"，直接拿来当数组下标。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">"hello world" 各字母出现次数统计结果</div>
+      <div class="count-bars">
+        <div class="count-bar-item"><div class="count-bar-letter">d</div><div class="count-bar-blocks"><div class="count-bar-block"></div></div><div class="count-bar-num">1 次</div></div>
+        <div class="count-bar-item"><div class="count-bar-letter">e</div><div class="count-bar-blocks"><div class="count-bar-block"></div></div><div class="count-bar-num">1 次</div></div>
+        <div class="count-bar-item"><div class="count-bar-letter">h</div><div class="count-bar-blocks"><div class="count-bar-block"></div></div><div class="count-bar-num">1 次</div></div>
+        <div class="count-bar-item"><div class="count-bar-letter">l</div><div class="count-bar-blocks"><div class="count-bar-block"></div><div class="count-bar-block"></div><div class="count-bar-block"></div></div><div class="count-bar-num">3 次</div></div>
+        <div class="count-bar-item"><div class="count-bar-letter">o</div><div class="count-bar-blocks"><div class="count-bar-block"></div><div class="count-bar-block"></div></div><div class="count-bar-num">2 次</div></div>
+        <div class="count-bar-item"><div class="count-bar-letter">r</div><div class="count-bar-blocks"><div class="count-bar-block"></div></div><div class="count-bar-num">1 次</div></div>
+        <div class="count-bar-item"><div class="count-bar-letter">w</div><div class="count-bar-blocks"><div class="count-bar-block"></div></div><div class="count-bar-num">1 次</div></div>
+      </div>
+      <div class="num-visual-caption">扫一遍字符串，每个字母只需要 <strong>O(1)</strong> 的时间（一次减法、一次加一）就能把计数加上去——不管字符串多长，统计的总时间都只和字符串长度成正比，不需要"每个字母再去数一遍整个字符串"那种更慢的写法。</div>
+    </div>
+
+    <div class="sub-title" id="seen">③ 用数组标记"是否出现过"</div>
+    <div class="section-body">
+      <p>有时候不需要数"出现了几次"，只需要知道"出现过没有"——这时候数组里存的不是计数，而是一个简单的 <code>true/false</code>。经典场景：判断一个数组里有没有<strong>重复的数字</strong>。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 找出数组中第一个重复的数字</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">arr</span><span class="pnc">[]</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">3</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">9</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">6</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">bool</span> <span class="fn">seen</span><span class="pnc">[</span><span class="num">10</span><span class="pnc">]</span> <span class="op">=</span> <span class="pnc">{</span><span class="kw">false</span><span class="pnc">};</span>  <span class="cmt">// 数组里的数字都在0~9之间</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span> <span class="op">:</span> <span class="fn">arr</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">seen</span><span class="pnc">[</span><span class="fn">x</span><span class="pnc">])</span>  <span class="cmt">// 这个数之前已经出现过</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"第一个重复的数字是: "</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="kw">break</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">    <span class="fn">seen</span><span class="pnc">[</span><span class="fn">x</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span>  <span class="cmt">// 标记这个数已经出现过</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="arr-visual">
+      <div class="num-visual-title">扫描 {3, 1, 4, 1, 5, 9, 2, 6}，seen 数组逐步被填充</div>
+      <div class="arr-step">
+        <div class="arr-step-label">扫到 3、1、4：分别标记 seen[3]、seen[1]、seen[4] 为 true</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-cell empty">0</div><div class="arr-idx">0</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell hi">1</div><div class="arr-idx">1</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell empty">0</div><div class="arr-idx">2</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell hi">1</div><div class="arr-idx">3</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell hi">1</div><div class="arr-idx">4</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell empty">0</div><div class="arr-idx">5</div></div>
+        </div>
+      </div>
+      <div class="arr-step">
+        <div class="arr-step-label">再扫到第二个 1：seen[1] 已经是 true 了 —— 找到重复！</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-cell empty">0</div><div class="arr-idx">0</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell bad">1</div><div class="arr-idx">1</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell empty">0</div><div class="arr-idx">2</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell hi">1</div><div class="arr-idx">3</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell hi">1</div><div class="arr-idx">4</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell empty">0</div><div class="arr-idx">5</div></div>
+        </div>
+      </div>
+      <div class="num-visual-caption">数组下标对应"数值本身"，格子里的内容对应"这个数值出不出现过"——查一个数有没有出现过，直接访问 <code>seen[x]</code> 就行，<strong>不需要</strong>把整个数组从头扫一遍去比较，这正是数组标记法比"逐个比较"快的原因。</div>
+    </div>
+
+    <div class="sub-title" id="missing">④ 应用：找出缺失的数字</div>
+    <div class="section-body">
+      <p>再看一个稍微反过来用的例子：<code>1</code> 到 <code>8</code> 之间本该有 8 个不同的数，现在给出了其中 7 个：<code>1 2 4 5 6 7 8</code>，找出缺的是哪一个。思路是：先把"出现过的数"都标记一下，再扫一遍 <code>1</code> 到 <code>8</code>，<strong>没被标记过的那个</strong>就是答案。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 找出 1~n 之间缺失的数字</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="num">8</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">nums</span><span class="pnc">[]</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">6</span><span class="pnc">,</span> <span class="num">7</span><span class="pnc">,</span> <span class="num">8</span><span class="pnc">};</span>  <span class="cmt">// 缺了一个数</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">bool</span> <span class="fn">appeared</span><span class="pnc">[</span><span class="num">9</span><span class="pnc">]</span> <span class="op">=</span> <span class="pnc">{</span><span class="kw">false</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// 第一遍：把出现过的数字都标记一下</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span> <span class="op">:</span> <span class="fn">nums</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">    <span class="fn">appeared</span><span class="pnc">[</span><span class="fn">x</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="cmt">// 第二遍：找出没被标记过的那个数</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">appeared</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"缺失的数字是: "</span> <span class="op">&lt;&lt;</span> <span class="fn">i</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="arr-visual">
+      <div class="num-visual-title">appeared 数组标记完之后的样子（下标 1~8）</div>
+      <div class="arr-row">
+        <div class="arr-cell-wrap"><div class="arr-cell hi">✓</div><div class="arr-idx">1</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell hi">✓</div><div class="arr-idx">2</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell bad">✗</div><div class="arr-idx">3</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell hi">✓</div><div class="arr-idx">4</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell hi">✓</div><div class="arr-idx">5</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell hi">✓</div><div class="arr-idx">6</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell hi">✓</div><div class="arr-idx">7</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell hi">✓</div><div class="arr-idx">8</div></div>
+      </div>
+      <div class="num-visual-caption">第二遍扫描 <code>1~8</code>，发现下标 <strong>3</strong> 对应的格子没被标记——缺失的数字就是 <strong>3</strong>。这种"先标记、再扫一遍找空缺"的两段式写法，是数组标记法非常典型的应用模式。</div>
+    </div>
+
+    <div class="sub-title" id="summary">⑤ 完整代码与小结</div>
+
+    <table class="api-table">
+      <thead><tr><th>用法</th><th>数组存的内容</th><th>典型场景</th></tr></thead>
+      <tbody>
+        <tr><td>计数标记</td><td>整数（出现的次数）</td><td>统计字母/数字出现频率</td></tr>
+        <tr><td>布尔标记</td><td>true / false（出现过没有）</td><td>判断重复、找缺失的数字</td></tr>
+        <tr><td>筛法标记</td><td>true / false 或具体数值（如最小质因子）</td><td>1.8 节的埃氏筛、线性筛</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>数组标记法的核心永远是同一句话：<strong>把数值本身当成数组下标</strong>，用"一次访问"代替"扫一遍比较"。这个技巧贯穿了从 1.8 节筛法到这一节统计/查重，再到后面模块会用到的 <code>visited</code> 数组（标记搜索时哪些位置已经走过）——记住这个思路，比记住某一道具体题目的代码更重要。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块二 · 基础算法思想 · 2.2 数组标记法</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A02_01_枚举法.html">← 2.1 枚举法</a>
+      <a class="nav-btn" href="A02_03_模拟法.html">2.3 模拟法 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
