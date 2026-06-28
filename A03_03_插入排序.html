@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.3 插入排序 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "3.3"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 数组可视化 */
+  .bubble-pass { margin-bottom: 18px; }
+  .bubble-pass:last-child { margin-bottom: 0; }
+  .bubble-pass-label { font-size: 11.5px; color: #A6ADC8; margin-bottom: 10px; font-family: 'Noto Sans SC', sans-serif; }
+  .bubble-row { display: flex; gap: 6px; align-items: center; }
+  .bubble-cell { width: 36px; height: 36px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .bubble-cell.sorted   { background: rgba(166,227,161,.22); color: var(--code-str); border: 1px solid rgba(166,227,161,.42); }
+  .bubble-cell.current  { background: rgba(250,179,135,.28); color: var(--code-num); border: 2px solid var(--code-num); }
+  .bubble-cell.unsorted { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .bubble-divider { width: 1px; align-self: stretch; background: repeating-linear-gradient(to bottom, #45475A 0, #45475A 3px, transparent 3px, transparent 6px); margin: 0 2px; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 130px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="3.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块三 简单排序</span>
+      <span class="eyebrow-sep">/</span>
+      <span>3.3 插入排序</span>
+    </div>
+    <h1 class="chapter-title">3.3　插入排序</h1>
+    <p class="chapter-desc">就像打牌时理牌一样——手里的牌已经排好了，新摸一张牌，找准位置插进去就行。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是插入排序</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：像理牌一样插入</a></li>
+      <li><span class="toc-num">③</span><a href="#strength">插入排序的强项：数据接近有序时特别快</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是插入排序</div>
+    <div class="section-body">
+      <p>想象打扑克牌时<strong>理牌</strong>的过程：手里已经有几张牌，按大小排好了；每摸到一张新牌，不需要把手里的牌全部重新排一遍——只需要从后往前找，把新牌插进合适的位置就行，前面已经排好的牌之间的顺序完全不受影响。</p>
+      <p><strong>插入排序</strong>就是把这个过程搬到数组上：把数组分成"前面已经排好的部分"和"后面还没处理的部分"，每次从"还没处理"里取出第一个数，往"已经排好"的部分里找到该插入的位置，插进去——重复这个动作，直到所有数都插入完毕。</p>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：像理牌一样插入</div>
+    <div class="section-body">
+      <p>同样用 <code>{5, 2, 8, 1, 9}</code> 演示。一开始只把第一个数（<code>5</code>）看作"已经排好"的部分（一张牌当然算排好了），从第二个数开始，一个个往前插：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 插入排序</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">void</span> <span class="fn">InsertionSort</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">arr</span><span class="pnc">[],</span> <span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 从第2个数开始，逐个取出来插</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">        <span class="typ">int</span> <span class="fn">current</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span>  <span class="cmt">// 取出当前这张"新牌"</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="fn">i</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span>      <span class="cmt">// 从已排好部分的最后一个开始往前找</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">        <span class="kw">while</span> <span class="pnc">(</span><span class="fn">j</span> <span class="op">&gt;=</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">&gt;</span> <span class="fn">current</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">            <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">];</span>  <span class="cmt">// 比current大，往后挪一位腾位置</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">            <span class="fn">j</span><span class="op">--</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">12</td><td class="cd">        <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">current</span><span class="pnc">;</span>  <span class="cmt">// 腾出的空位正好插入current</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">{5, 2, 8, 1, 9} 插入排序的完整过程</div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">原数组（5 算作"已排好"的部分，只有一张牌天然有序）</div>
+        <div class="bubble-row">
+          <div class="bubble-cell sorted">5</div><div class="bubble-divider"></div><div class="bubble-cell unsorted">2</div><div class="bubble-cell unsorted">8</div><div class="bubble-cell unsorted">1</div><div class="bubble-cell unsorted">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">i=1：取出 2，5 比 2 大，往后挪，2 插到最前面</div>
+        <div class="bubble-row">
+          <div class="bubble-cell sorted">2</div><div class="bubble-cell sorted">5</div><div class="bubble-divider"></div><div class="bubble-cell unsorted">8</div><div class="bubble-cell unsorted">1</div><div class="bubble-cell unsorted">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">i=2：取出 8，5 不比 8 大，不用挪，8 留在原地</div>
+        <div class="bubble-row">
+          <div class="bubble-cell sorted">2</div><div class="bubble-cell sorted">5</div><div class="bubble-cell sorted">8</div><div class="bubble-divider"></div><div class="bubble-cell unsorted">1</div><div class="bubble-cell unsorted">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">i=3：取出 1，8、5、2 都比 1 大，全部往后挪，1 插到最前面</div>
+        <div class="bubble-row">
+          <div class="bubble-cell sorted">1</div><div class="bubble-cell sorted">2</div><div class="bubble-cell sorted">5</div><div class="bubble-cell sorted">8</div><div class="bubble-divider"></div><div class="bubble-cell unsorted">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">i=4：取出 9，8 不比 9 大，不用挪，9 留在原地 —— 全部排好</div>
+        <div class="bubble-row">
+          <div class="bubble-cell sorted">1</div><div class="bubble-cell sorted">2</div><div class="bubble-cell sorted">5</div><div class="bubble-cell sorted">8</div><div class="bubble-cell sorted">9</div>
+        </div>
+      </div>
+
+      <div class="num-visual-caption">绿色是"已经排好"的部分，虚线右边是"还没处理"的部分，橙色是正在被插入的那个数。<code>i=3</code> 取出 <code>1</code> 时，前面三个数都比它大，要连续挪三次才能腾出最前面的位置——插入排序"挪的次数"取决于新数要往前插多远，越靠前插，挪的次数越多。</div>
+    </div>
+
+    <div class="sub-title" id="strength">③ 插入排序的强项：数据接近有序时特别快</div>
+    <div class="section-body">
+      <p>看上面的例子能发现一个规律：<strong>如果新数比"已排好部分"的最后一个还大，连一次都不用挪</strong>（就像 <code>i=2</code> 和 <code>i=4</code> 那样，<code>while</code> 循环条件一开始就不满足）。这意味着，如果原数组本来就<strong>已经接近排好序</strong>，插入排序几乎不需要挪动任何数据，速度会非常快。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">n=10 个数 —— 已排序 vs 完全逆序，比较次数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">已经排好序</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 25%;">9 次比较，0 次移动</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">完全逆序</div>
+        <div class="count-bar-track"><div class="count-bar-fill long">45 次比较，45 次移动</div></div>
+      </div>
+      <div class="num-visual-caption">如果数组本来就是排好的，每个新数都只需要和"已排好部分"的最后一个比一次（发现不比它大，立刻停止），<code>10</code> 个数总共只要 <strong>9 次比较</strong>，完全不需要移动，是 <strong>O(n)</strong>；如果数组完全逆序，每个新数都要插到最前面，比较和移动次数都暴涨到 <strong>45 次</strong>（也就是 <code>n(n-1)/2</code>），变成了 <strong>O(n²)</strong>。两种情况的差距非常悬殊。</div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>这个"对接近有序的数据特别友好"的特性非常实用。</b>很多实际场景里，数据并不是完全随机打乱的——比如一份已经排好序的成绩单，只是新插入了几条记录；这时候插入排序往往比冒泡、选择更快。后面要学的<strong>归并排序</strong>等高级排序算法，在处理"小规模数据"或者"基本有序的数据片段"时，内部也常常会切换成插入排序来收尾，因为这正是插入排序的拿手好戏。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+
+    <table class="api-table">
+      <thead><tr><th>情况</th><th>比较/移动次数</th><th>时间复杂度</th></tr></thead>
+      <tbody>
+        <tr><td>最好情况（已经排好序）</td><td>约 n 次，0 次移动</td><td>O(n)</td></tr>
+        <tr><td>最坏情况（完全逆序）</td><td>约 n²/2 次</td><td>O(n²)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>三种简单排序的共同点：</b>冒泡、选择、插入排序的最坏情况都是 <strong>O(n²)</strong>，本质上都是"嵌套循环挨个比较"——区别只在于具体怎么挪动数据：冒泡靠相邻交换，选择靠找最小值后整体换一次，插入靠把新数据"挤"进已排好的部分。三者各有各的小优势（冒泡能提前结束、选择交换次数少、插入对近乎有序的数据特别快），但要应对大规模数据，还需要后面模块九要学的<strong>分治排序</strong>（快速排序、归并排序），才能真正突破 O(n²) 的瓶颈。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块三 · 简单排序 · 3.3 插入排序</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A03_02_选择排序.html">← 3.2 选择排序</a>
+      <a class="nav-btn" href="A03_04_桶排序.html">3.4 桶排序 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

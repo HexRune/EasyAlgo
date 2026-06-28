@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.2 选择排序 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "3.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 数组可视化 */
+  .bubble-pass { margin-bottom: 18px; }
+  .bubble-pass:last-child { margin-bottom: 0; }
+  .bubble-pass-label { font-size: 11.5px; color: #A6ADC8; margin-bottom: 10px; font-family: 'Noto Sans SC', sans-serif; }
+  .bubble-row { display: flex; gap: 6px; align-items: center; }
+  .bubble-cell { width: 36px; height: 36px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; flex-shrink: 0; position: relative; }
+  .bubble-cell.base    { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .bubble-cell.minpick { background: rgba(250,179,135,.28); color: var(--code-num); border: 2px solid var(--code-num); }
+  .bubble-cell.settled { background: rgba(166,227,161,.28); color: var(--code-str); border: 1px solid rgba(166,227,161,.5); }
+  .bubble-cell.scanning{ background: rgba(137,180,250,.18); color: var(--code-fn); border: 1px dashed rgba(137,180,250,.4); }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 130px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="3.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块三 简单排序</span>
+      <span class="eyebrow-sep">/</span>
+      <span>3.2 选择排序</span>
+    </div>
+    <h1 class="chapter-title">3.2　选择排序</h1>
+    <p class="chapter-desc">每一轮都先找出"剩下里面最小的那个"，再把它放到该在的位置上——交换次数比冒泡排序少得多。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是选择排序</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：找最小值放到前面</a></li>
+      <li><span class="toc-num">③</span><a href="#vs">和冒泡排序的对比：交换次数更少</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是选择排序</div>
+    <div class="section-body">
+      <p><strong>选择排序</strong>的思路换了个角度：冒泡排序是"相邻的两个比一比，谁大谁往后"；选择排序则是每一轮先<strong>把剩下还没排好的部分整个看一遍，找出其中最小的那个</strong>，然后把它和这一轮"应该放的位置"交换。第一轮找出整个数组的最小值放到第 1 位，第二轮在剩下的部分里找最小值放到第 2 位，以此类推。</p>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：找最小值放到前面</div>
+    <div class="section-body">
+      <p>还是用 <code>{5, 2, 8, 1, 9}</code> 演示。外层循环控制"现在要确定第几个位置"，内层循环负责"在剩下的范围里找最小值的下标"：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 选择排序</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">void</span> <span class="fn">SelectionSort</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">arr</span><span class="pnc">[],</span> <span class="typ">int</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 确定第 i 个位置该放谁</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">        <span class="typ">int</span> <span class="fn">minIndex</span> <span class="op">=</span> <span class="fn">i</span><span class="pnc">;</span>  <span class="cmt">// 先假设当前位置就是最小值</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="fn">i</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 在剩下的部分里找真正的最小值</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">            <span class="kw">if</span> <span class="pnc">(</span><span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">&lt;</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">minIndex</span><span class="pnc">])</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">            <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">                <span class="fn">minIndex</span> <span class="op">=</span> <span class="fn">j</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">            <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">        <span class="typ">int</span> <span class="fn">temp</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span>  <span class="cmt">// 把找到的最小值换到第 i 位</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd">        <span class="fn">arr</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">minIndex</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">15</td><td class="cd">        <span class="fn">arr</span><span class="pnc">[</span><span class="fn">minIndex</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">temp</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>注意交换发生在内层循环结束之后，不是循环内部。</b>内层循环只负责"找位置"（不断更新 <code>minIndex</code>，但不真正移动任何数据），找完一整轮才做<strong>一次</strong>交换——这是选择排序和冒泡排序最大的写法差异：冒泡是"边比边换"，选择是"先找全，再换一次"。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">{5, 2, 8, 1, 9} 选择排序的完整过程</div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">原数组</div>
+        <div class="bubble-row">
+          <div class="bubble-cell base">5</div><div class="bubble-cell base">2</div><div class="bubble-cell base">8</div><div class="bubble-cell base">1</div><div class="bubble-cell base">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">第 1 轮：在 5,2,8,1,9 里找最小值——是下标3的 1，和下标0交换</div>
+        <div class="bubble-row">
+          <div class="bubble-cell minpick">1</div><div class="bubble-cell base">2</div><div class="bubble-cell base">8</div><div class="bubble-cell base">5</div><div class="bubble-cell base">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">第 2 轮：在 2,8,5,9 里找最小值——是下标1的 2，本来就在对的位置，交换后不变</div>
+        <div class="bubble-row">
+          <div class="bubble-cell settled">1</div><div class="bubble-cell minpick">2</div><div class="bubble-cell base">8</div><div class="bubble-cell base">5</div><div class="bubble-cell base">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">第 3 轮：在 8,5,9 里找最小值——是下标3的 5，和下标2交换</div>
+        <div class="bubble-row">
+          <div class="bubble-cell settled">1</div><div class="bubble-cell settled">2</div><div class="bubble-cell minpick">5</div><div class="bubble-cell base">8</div><div class="bubble-cell base">9</div>
+        </div>
+      </div>
+
+      <div class="bubble-pass">
+        <div class="bubble-pass-label">第 4 轮：在 8,9 里找最小值——是下标3的 8，本来就在对的位置</div>
+        <div class="bubble-row">
+          <div class="bubble-cell settled">1</div><div class="bubble-cell settled">2</div><div class="bubble-cell settled">5</div><div class="bubble-cell minpick">8</div><div class="bubble-cell settled">9</div>
+        </div>
+      </div>
+
+      <div class="num-visual-caption">橙色格子是这一轮刚刚归位的最小值，绿色格子是之前已经归位、不会再变动的数。注意第 2 轮和第 4 轮"找到的最小值"正好已经待在该在的位置上——代码里仍然会执行交换语句，只是把同一个数和自己换了一下，没有实际效果。</div>
+    </div>
+
+    <div class="sub-title" id="vs">③ 和冒泡排序的对比：交换次数更少</div>
+    <div class="section-body">
+      <p>冒泡排序每发现一对顺序错误的相邻数，就立刻交换一次——一轮下来可能交换很多次。选择排序则不一样：<strong>每一轮，无论内层循环比较了多少次，最多只会真正交换一次</strong>（找到最小值之后，和当前位置换一下）。如果"交换"这个操作的代价比"比较"更高（比如交换的是很大的结构体，不只是几个整数），选择排序往往更划算。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">20 个随机数排序 —— 两种算法的交换次数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">冒泡排序</div>
+        <div class="count-bar-track"><div class="count-bar-fill long">112 次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">选择排序</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 13%;">15 次</div></div>
+      </div>
+      <div class="num-visual-caption">同样的 20 个随机数，冒泡排序交换了 <strong>112 次</strong>，选择排序只交换了 <strong>15 次</strong>（最多 <code>n-1=19</code> 次，部分轮次"最小值已经在对的位置"时甚至不需要真正移动）。不过两者的<strong>比较</strong>次数是一样多的（都是约 <code>n²/2</code> 次）——选择排序省的是交换，不是比较。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+
+    <table class="api-table">
+      <thead><tr><th>排序方式</th><th>比较次数</th><th>交换次数</th><th>时间复杂度</th></tr></thead>
+      <tbody>
+        <tr><td>冒泡排序</td><td>约 n²/2</td><td>最坏约 n²/2，最好 0</td><td>O(n²)，最好情况可优化到 O(n)</td></tr>
+        <tr><td>选择排序</td><td>约 n²/2</td><td>固定最多 n-1 次</td><td>O(n²)，无法用"提前结束"优化</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>选择排序没有"提前结束"这种优化。</b>即使数组已经排好序了，选择排序依然要把每一轮的"找最小值"老老实实做一遍（虽然每次都不需要真正交换），比较次数没法像冒泡排序那样在最好情况下降到 O(n)——这是选择排序明显的劣势：它的运行时间几乎不受数据原始顺序的影响，好情况和坏情况差别不大。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块三 · 简单排序 · 3.2 选择排序</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A03_01_冒泡排序.html">← 3.1 冒泡排序</a>
+      <a class="nav-btn" href="A03_03_插入排序.html">3.3 插入排序 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.4 桶排序 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "3.4"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 原数组流入桶可视化 */
+  .arr-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .arr-cell { min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+
+  /* 桶可视化 */
+  .bucket-row { display: flex; gap: 4px; justify-content: center; align-items: flex-end; }
+  .bucket-col { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .bucket-stack { display: flex; flex-direction: column-reverse; gap: 2px; min-height: 6px; }
+  .bucket-chip { width: 28px; height: 18px; border-radius: 4px; background: rgba(166,227,161,.3); border: 1px solid rgba(166,227,161,.5); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--code-str); font-weight: 700; }
+  .bucket-slot { width: 28px; height: 28px; border-radius: 5px; background: #16141F; border: 1px dashed #2A2840; }
+  .bucket-idx { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #6C7086; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 140px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="3.4">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块三 简单排序</span>
+      <span class="eyebrow-sep">/</span>
+      <span>3.4 桶排序</span>
+    </div>
+    <h1 class="chapter-title">3.4　桶排序</h1>
+    <p class="chapter-desc">不比较，直接按数值"对号入座"——用空间换时间，换来一种完全不同的排序思路。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是桶排序</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：用数组直接统计</a></li>
+      <li><span class="toc-num">③</span><a href="#cost">代价：用空间换时间</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是桶排序</div>
+    <div class="section-body">
+      <p>前面三种排序（冒泡、选择、插入）有一个共同点：都靠"两两比较"决定谁该排在前面。<strong>桶排序</strong>换了一个完全不同的思路——它根本不比较任何两个数，而是直接利用数值本身的大小，把每个数"扔"进对应的桶里，最后按桶的顺序把所有数倒出来，就是排好序的结果。</p>
+      <p>这其实就是 2.2 节"数组标记法"里<strong>统计出现次数</strong>的直接应用：开一个数组当"桶"，下标对应数值，每个桶记录这个数值出现了多少次。统计完之后，从头到尾扫一遍桶，每个桶里有几个数，就连续输出几次——自然就是从小到大排好的顺序。</p>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：用数组直接统计</div>
+    <div class="section-body">
+      <p>用数组 <code>{7, 2, 9, 2, 5, 2, 9}</code> 演示（数值范围是 <code>0~9</code>）：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 桶排序</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">void</span> <span class="fn">BucketSort</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">arr</span><span class="pnc">[],</span> <span class="typ">int</span> <span class="fn">n</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">maxValue</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">bucket</span><span class="pnc">(</span><span class="fn">maxValue</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">);</span>  <span class="cmt">// 每个桶记录该数值出现的次数</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">        <span class="fn">bucket</span><span class="pnc">[</span><span class="fn">arr</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]]</span><span class="op">++</span><span class="pnc">;</span>  <span class="cmt">// 这个数值对应的桶计数加一</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="typ">int</span> <span class="fn">index</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">value</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">value</span> <span class="op">&lt;=</span> <span class="fn">maxValue</span><span class="pnc">;</span> <span class="fn">value</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 按桶的顺序，从小到大倒出来</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="kw">while</span> <span class="pnc">(</span><span class="fn">bucket</span><span class="pnc">[</span><span class="fn">value</span><span class="pnc">]</span> <span class="op">&gt;</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">            <span class="fn">arr</span><span class="pnc">[</span><span class="fn">index</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">value</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">            <span class="fn">index</span><span class="op">++</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">            <span class="fn">bucket</span><span class="pnc">[</span><span class="fn">value</span><span class="pnc">]</span><span class="op">--</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">{7, 2, 9, 2, 5, 2, 9} —— 每个数直接"对号入座"进对应的桶</div>
+      <div class="arr-row">
+        <div class="arr-cell">7</div><div class="arr-cell">2</div><div class="arr-cell">9</div><div class="arr-cell">2</div><div class="arr-cell">5</div><div class="arr-cell">2</div><div class="arr-cell">9</div>
+      </div>
+      <div class="bucket-row" style="margin-top:18px;">
+        <div class="bucket-col"><div class="bucket-stack"><div class="bucket-slot"></div></div><div class="bucket-idx">0</div></div>
+        <div class="bucket-col"><div class="bucket-stack"><div class="bucket-slot"></div></div><div class="bucket-idx">1</div></div>
+        <div class="bucket-col"><div class="bucket-stack"><div class="bucket-chip">2</div><div class="bucket-chip">2</div><div class="bucket-chip">2</div></div><div class="bucket-idx">2</div></div>
+        <div class="bucket-col"><div class="bucket-stack"><div class="bucket-slot"></div></div><div class="bucket-idx">3</div></div>
+        <div class="bucket-col"><div class="bucket-stack"><div class="bucket-slot"></div></div><div class="bucket-idx">4</div></div>
+        <div class="bucket-col"><div class="bucket-stack"><div class="bucket-chip">5</div></div><div class="bucket-idx">5</div></div>
+        <div class="bucket-col"><div class="bucket-stack"><div class="bucket-slot"></div></div><div class="bucket-idx">6</div></div>
+        <div class="bucket-col"><div class="bucket-stack"><div class="bucket-chip">7</div></div><div class="bucket-idx">7</div></div>
+        <div class="bucket-col"><div class="bucket-stack"><div class="bucket-slot"></div></div><div class="bucket-idx">8</div></div>
+        <div class="bucket-col"><div class="bucket-stack"><div class="bucket-chip">9</div><div class="bucket-chip">9</div></div><div class="bucket-idx">9</div></div>
+      </div>
+      <div class="num-visual-caption">桶 2 里堆了 3 个（因为 <code>2</code> 出现了 3 次），桶 5、7 各 1 个，桶 9 有 2 个，其余桶是空的。按桶的编号从 <code>0</code> 到 <code>9</code> 顺序读出来：<strong>2 2 2 5 7 9 9</strong>——完全不需要做任何比较，排序就完成了。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div>这正是 2.2 节统计字母出现次数那段代码的"翻版"——只是那里统计完只是用来"看一看次数"，这里统计完之后，<strong>把桶按顺序读出来</strong>，结果天然就是排好序的数组。同一个"用数组当统计表"的技巧，换一种使用方式，就从"统计工具"变成了"排序算法"。</div>
+    </div>
+
+    <div class="sub-title" id="cost">③ 代价：用空间换时间</div>
+    <div class="section-body">
+      <p>桶排序快得不可思议——只需要扫一遍原数组（统计），再扫一遍桶数组（按顺序倒出来），总共大约 <code>n + maxValue</code> 次操作，比前面几种排序的 <strong>O(n²)</strong> 快得多。但它有一个隐藏的代价：<strong>桶的数量取决于数值的范围，不是数据的个数</strong>。</p>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>如果数值范围特别大，桶排序反而会很浪费。</b>假设只有 <code>5</code> 个数，但它们的取值范围是 <code>0</code> 到 <code>10</code> 亿，按这一节的写法就要开一个 <strong>10 亿大小</strong>的桶数组——内存根本装不下，而且绝大多数桶都是空的，纯属浪费。桶排序只适合"数值范围本身不会比数据量大太多"的场景，比如给 <code>0~100</code> 分的考试成绩排序、给 <code>1~6</code> 点的骰子结果排序。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">1000 个数 —— 数值范围大小对桶排序的影响</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">范围 0~100</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 15%;">约1100次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">范围 0~10亿</div>
+        <div class="count-bar-track"><div class="count-bar-fill long">开不出这么大的数组</div></div>
+      </div>
+      <div class="num-visual-caption">数据量同样是 <code>1000</code> 个，数值范围是 <code>0~100</code> 时桶排序又快又省，范围一旦变成 <code>0~10亿</code>，所需要的桶数组大小会直接超出内存限制——这正是桶排序"用空间换时间"必须权衡的地方：空间够、范围小，桶排序是神器；空间不够、范围大，桶排序根本用不了。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+
+    <table class="api-table">
+      <thead><tr><th>排序方式</th><th>核心操作</th><th>时间复杂度</th><th>额外空间</th></tr></thead>
+      <tbody>
+        <tr><td>冒泡 / 选择 / 插入</td><td>两两比较、挪动</td><td>O(n²)</td><td>几乎不需要</td></tr>
+        <tr><td>桶排序</td><td>按数值直接归位，无需比较</td><td>O(n + maxValue)</td><td>O(maxValue) 大小的桶数组</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>桶排序是模块三里唯一一个<strong>不靠比较</strong>的排序算法——这种"不比较、直接按值归位"的思路非常重要，后面学到的很多统计类问题（比如找出现次数最多的数、给数据分段统计）都用得到。但也正因为它依赖数值范围，桶排序不是万能的：碰到范围很大、或者数据是小数、字符串这类"不能直接当数组下标"的情况，就需要用回前面比较类的排序，或者把数据先"映射"到一个小范围（这个技巧叫<strong>离散化</strong>，会在模块十五详细介绍）。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块三 · 简单排序 · 3.4 桶排序</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A03_03_插入排序.html">← 3.3 插入排序</a>
+      <a class="nav-btn" href="index.html">模块四·贪心算法（即将推出） →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
