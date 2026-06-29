@@ -36,9 +36,10 @@
   .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
   .count-bar-label { width: 130px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
   .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
-  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
   .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
   .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
 
   .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
   .api-table thead tr { background: var(--teal-light); }
@@ -195,11 +196,11 @@
       <div class="num-visual-title">已经排好序的数组 {1,2,3,4,5} —— 优化效果最明显的情况</div>
       <div class="count-bar-row">
         <div class="count-bar-label">不加提前结束</div>
-        <div class="count-bar-track"><div class="count-bar-fill long">10 次比较</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">10 次比较</div></div>
       </div>
       <div class="count-bar-row">
         <div class="count-bar-label">加了提前结束</div>
-        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 40%;">4 次比较</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 40%;"></div><div class="count-bar-value">4 次比较</div></div>
       </div>
       <div class="num-visual-caption">数组本来就是排好的，第 1 轮扫一遍（4 次比较）就会发现<strong>一次交换都没有</strong>，立刻 <code>break</code> 跳出——不加这个判断的话，还要白白扫完剩下 3 轮，多做 6 次没有意义的比较。数组越接近"已经排好"，这个优化省下来的就越多；如果数组本来就很混乱，这个优化基本不会带来什么帮助（最坏情况仍然要扫完所有轮次）。</div>
     </div>

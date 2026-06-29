@@ -54,9 +54,10 @@
   .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
   .count-bar-label { width: 130px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
   .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
-  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
   .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
   .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
 </style>
 </head>
 <body>
@@ -215,11 +216,11 @@
       <div class="num-visual-title">求 Lcm(63, 40) —— 两种写法的步骤数对比</div>
       <div class="count-bar-row">
         <div class="count-bar-label">枚举法</div>
-        <div class="count-bar-track"><div class="count-bar-fill long">40 次</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">40 次</div></div>
       </div>
       <div class="count-bar-row">
         <div class="count-bar-label">借助最大公约数</div>
-        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 16%;">6 步</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 16%;"></div><div class="count-bar-value">6 步</div></div>
       </div>
       <div class="num-visual-caption">两个数互质（最大公约数是 1）时，枚举法要试到"较小的那个数"那么多次才能找到答案，这里整整试了 <strong>40 次</strong>；而欧几里得算法求 <code>GCD(63, 40)</code> 只需要 <strong>6 步</strong>，之后再除一下、乘一下就直接得到答案——两个数互质恰好是枚举法的最坏情况，也正是这种写法和优化写法差距最大的时候。</div>
     </div>

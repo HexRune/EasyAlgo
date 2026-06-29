@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5.2 差分 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "5.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 数组可视化 */
+  .arr-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .arr-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .arr-cell { min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .arr-cell.base { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .arr-cell.hi   { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.45); }
+  .arr-cell.plus { background: rgba(137,180,250,.22); color: var(--code-fn); border: 1px solid rgba(137,180,250,.42); }
+  .arr-cell.minus{ background: rgba(243,139,168,.2); color: #F38BA8; border: 1px solid rgba(243,139,168,.4); }
+  .arr-idx { font-size: 10px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+  .arr-row-label { font-size: 11px; color: #6C7086; width: 90px; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .arr-row-with-label { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .arr-row-with-label:last-child { margin-bottom: 0; }
+
+  /* 高台/楼梯可视化（① 概念引入） */
+  .stair-row { display: flex; align-items: flex-end; gap: 4px; height: 90px; }
+  .stair-bar { width: 32px; border-radius: 4px 4px 0 0; display: flex; align-items: flex-start; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; color: #1A1828; padding-top: 3px; }
+  .stair-bar.lv1 { background: rgba(166,227,161,.5); }
+  .stair-bar.lv2 { background: rgba(137,180,250,.5); }
+  .stair-bar.lv3 { background: rgba(250,179,135,.5); }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 150px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="5.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块五 区间处理技巧</span>
+      <span class="eyebrow-sep">/</span>
+      <span>5.2 差分</span>
+    </div>
+    <h1 class="chapter-title">5.2　差分</h1>
+    <p class="chapter-desc">前缀和负责"快速查询区间的和"，差分负责反过来——"快速修改一整段区间"。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要差分</a></li>
+      <li><span class="toc-num">②</span><a href="#build">差分数组的原理</a></li>
+      <li><span class="toc-num">③</span><a href="#update">用差分 O(1) 完成区间加法</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要差分</div>
+    <div class="section-body">
+      <p>上一节前缀和解决的是"原数组不变，反复查询某一段的和"——但如果反过来，题目要反复对数组做"<strong>给第 L 到第 R 个数都加上 v</strong>"这种操作呢？直接写循环，把区间里每个数都加一遍，单次操作要花 <code>O(区间长度)</code> 的时间——如果区间很长、操作次数又很多，照样会很慢。</p>
+      <p><strong>差分</strong>就是用来解决这个问题的：它能把"给一整段区间加 <code>v</code>"这件事，变成只需要修改<strong>两个位置</strong>，时间复杂度直接降到 <strong>O(1)</strong>。</p>
+    </div>
+
+    <div class="sub-title" id="build">② 差分数组的原理</div>
+    <div class="section-body">
+      <p>差分数组 <code>diff</code> 记录的是<strong>相邻两个数之间的差距</strong>：<code>diff[i] = arr[i] - arr[i-1]</code>（约定 <code>arr[0] = 0</code>）。可以把原数组想象成一排<strong>台阶</strong>，每一级台阶相对上一级"升高了多少"或"降低了多少"，正是 <code>diff</code> 数组存的内容。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">用"台阶升降"理解差分：arr = {2, 2, 5, 5, 5, 3}</div>
+      <div class="stair-row">
+        <div class="stair-bar lv1" style="height:40%;">2</div>
+        <div class="stair-bar lv1" style="height:40%;">2</div>
+        <div class="stair-bar lv2" style="height:100%;">5</div>
+        <div class="stair-bar lv2" style="height:100%;">5</div>
+        <div class="stair-bar lv2" style="height:100%;">5</div>
+        <div class="stair-bar lv3" style="height:60%;">3</div>
+      </div>
+      <div class="num-visual-caption">从第 1 级到第 2 级，高度没变（差距 <code>0</code>）；从第 2 级到第 3 级，突然升高了 <code>3</code>（<code>5-2=3</code>）；第 3、4 级之间没有变化；第 5 级到第 6 级，又降低了 <code>2</code>（<code>3-5=-2</code>）。<code>diff</code> 数组只关心"每一步升降了多少"，不关心台阶的绝对高度——这正是它能高效处理"区间统一升降"的关键。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>差分和前缀和是一对"互逆"的操作：</b>对原数组求差分，得到 <code>diff</code> 数组；反过来对 <code>diff</code> 数组求<strong>前缀和</strong>，正好能还原出原数组——<code>diff[1]+diff[2]+...+diff[i]</code> 算出来就是 <code>arr[i]</code>。这一点很重要：差分数组本身不是用来"看"的，它是一个中间工具，最终都要通过前缀和还原成真正的数组。</div>
+    </div>
+
+    <div class="sub-title" id="update">③ 用差分 O(1) 完成区间加法</div>
+    <div class="section-body">
+      <p>现在看核心操作：给原数组第 <code>L</code> 到第 <code>R</code> 个数都加上 <code>v</code>，在差分数组上只需要两步：<code>diff[L] += v</code>，<code>diff[R+1] -= v</code>。</p>
+      <p>用"台阶"来理解：<strong>从第 L 级开始，往后每一级都要比原来高 <code>v</code></strong>——这件事只需要在第 <code>L</code> 级"垫高" <code>v</code>（<code>diff[L] += v</code>），后面的台阶因为是"接着上一级往上叠"的，会自动跟着一起抬高，不需要逐个去改；而第 <code>R</code> 级之后<strong>不应该再继续抬高了</strong>，所以要在第 <code>R+1</code> 级"退回去" <code>v</code>（<code>diff[R+1] -= v</code>），把多出来的高度抵消掉，让 <code>R</code> 之后的台阶恢复到原来的相对高度。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 差分数组实现区间加法</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">void</span> <span class="fn">RangeAdd</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">diff</span><span class="pnc">[],</span> <span class="typ">int</span> <span class="fn">l</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">r</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">v</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="fn">diff</span><span class="pnc">[</span><span class="fn">l</span><span class="pnc">]</span> <span class="op">+=</span> <span class="fn">v</span><span class="pnc">;</span>      <span class="cmt">// 从第l个数开始，整体抬高v</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="fn">diff</span><span class="pnc">[</span><span class="fn">r</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">-=</span> <span class="fn">v</span><span class="pnc">;</span>  <span class="cmt">// 第r+1个数开始，把多出来的v退回去</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>用一个长度 8、初始全是 <code>0</code> 的数组演示，依次做 <code>3</code> 次区间加法：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">3 次区间加法操作 —— diff 数组的变化过程</div>
+
+      <div class="arr-row-with-label">
+        <div class="arr-row-label">初始 diff</div>
+        <div class="arr-row">
+          <div class="arr-cell base">0</div><div class="arr-cell base">0</div><div class="arr-cell base">0</div><div class="arr-cell base">0</div><div class="arr-cell base">0</div><div class="arr-cell base">0</div><div class="arr-cell base">0</div><div class="arr-cell base">0</div>
+        </div>
+      </div>
+      <div class="arr-row-with-label">
+        <div class="arr-row-label">区间[2,5]加3</div>
+        <div class="arr-row">
+          <div class="arr-cell base">0</div><div class="arr-cell plus">3</div><div class="arr-cell base">0</div><div class="arr-cell base">0</div><div class="arr-cell base">0</div><div class="arr-cell minus">-3</div><div class="arr-cell base">0</div><div class="arr-cell base">0</div>
+        </div>
+      </div>
+      <div class="arr-row-with-label">
+        <div class="arr-row-label">区间[4,7]加2</div>
+        <div class="arr-row">
+          <div class="arr-cell base">0</div><div class="arr-cell base">3</div><div class="arr-cell base">0</div><div class="arr-cell plus">2</div><div class="arr-cell base">0</div><div class="arr-cell base">-3</div><div class="arr-cell base">0</div><div class="arr-cell minus">-2</div>
+        </div>
+      </div>
+      <div class="arr-row-with-label">
+        <div class="arr-row-label">区间[1,3]加-1</div>
+        <div class="arr-row">
+          <div class="arr-cell minus">-1</div><div class="arr-cell base">3</div><div class="arr-cell base">0</div><div class="arr-cell plus">3</div><div class="arr-cell base">0</div><div class="arr-cell base">-3</div><div class="arr-cell base">0</div><div class="arr-cell base">-2</div>
+        </div>
+      </div>
+      <div class="arr-row-with-label" style="margin-top:8px;">
+        <div class="arr-row-label">最终 diff</div>
+        <div class="arr-row">
+          <div class="arr-cell hi">-1</div><div class="arr-cell hi">3</div><div class="arr-cell hi">0</div><div class="arr-cell hi">3</div><div class="arr-cell hi">0</div><div class="arr-cell hi">-3</div><div class="arr-cell hi">0</div><div class="arr-cell hi">-2</div>
+        </div>
+      </div>
+      <div class="arr-row-with-label" style="margin-top:8px;">
+        <div class="arr-row-label">还原后的数组</div>
+        <div class="arr-row">
+          <div class="arr-cell hi">-1</div><div class="arr-cell hi">2</div><div class="arr-cell hi">2</div><div class="arr-cell hi">5</div><div class="arr-cell hi">5</div><div class="arr-cell hi">2</div><div class="arr-cell hi">2</div><div class="arr-cell hi">0</div>
+        </div>
+      </div>
+      <div class="num-visual-caption">每次操作都只动了 <strong>2 个位置</strong>（蓝色是 <code>+v</code>，粉色是 <code>-v</code>），不管区间多长，代价都一样。<code>3</code> 次操作做完之后，对 <code>diff</code> 数组求一次前缀和，就能直接还原出最终的数组 <code>{-1,2,2,5,5,2,2,0}</code>——和真的去逐个执行 3 次区间加法、暴力模拟出来的结果完全一致。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 还原最终数组（对 diff 求前缀和）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">result</span><span class="pnc">[</span><span class="fn">n</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">0</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="fn">result</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">result</span><span class="pnc">[</span><span class="fn">i</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">+</span> <span class="fn">diff</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span>  <span class="cmt">// 和5.1节求前缀和的写法完全一样</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+    <div class="section-body">
+      <p>假设数组长度 <code>n=1000</code>，一共要做 <code>1000</code> 次区间加法操作（每次区间长度平均按 <code>500</code> 估算）：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">1000 次区间加法 —— 两种做法的总运算次数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">每次直接修改区间</div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">约 50 万次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">差分（操作+还原）</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 0.4%;"></div><div class="count-bar-value">约 3000 次</div></div>
+      </div>
+      <div class="num-visual-caption">每次操作都直接把区间里的数逐个加一遍，<code>1000</code> 次操作、每次平均改 <code>500</code> 个数，总共约 <code>50万</code> 次；差分每次操作只改 <code>2</code> 个位置（<code>1000×2=2000</code> 次），最后再花一次 <code>O(n)</code> 还原出最终数组（<code>1000</code> 次），总共约 <code>3000</code> 次——快了 <strong>160 倍以上</strong>。</div>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>做法</th><th>单次区间加法</th><th>q 次操作总复杂度</th></tr></thead>
+      <tbody>
+        <tr><td>直接修改区间</td><td>O(区间长度)</td><td>O(n × q)（最坏情况）</td></tr>
+        <tr><td>差分</td><td>O(1)</td><td>O(n + q)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>前缀和与差分正好是<strong>一对搭档</strong>：前缀和应对"数据不变、反复查询区间和"，差分应对"反复做区间加法、最后统一查看结果"。如果题目既要<strong>频繁修改</strong>区间，又要<strong>随时查询</strong>任意区间的和（而不是等所有操作做完才查一次），这两个简单工具就都不够用了——需要用到模块十五的<strong>树状数组、线段树</strong>，它们能同时支持高效的区间修改和区间查询，是这一类问题的进阶解法。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块五 · 区间处理技巧 · 5.2 差分</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A05_01_前缀和.html">← 5.1 前缀和</a>
+      <a class="nav-btn" href="A05_03_二维前缀和.html">5.3 二维前缀和 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

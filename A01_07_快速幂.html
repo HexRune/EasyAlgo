@@ -59,9 +59,10 @@
   .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
   .count-bar-label { width: 130px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
   .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
-  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
   .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
   .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
 
   .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
   .api-table thead tr { background: var(--teal-light); }
@@ -78,8 +79,8 @@
 
   <!-- ═══ 章节头 ═══ -->
   <header class="chapter-header" data-ch="1.7">
-    <div class="chapter-eyebrow">  
-      <a href="index.html">← 目录</a> 
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
       <span class="eyebrow-sep">/</span>
       <span>算法文档 · 模块一 数学基础</span>
       <span class="eyebrow-sep">/</span>
@@ -315,11 +316,11 @@
       <div class="num-visual-title">算 a 的 1000 次方 —— 两种写法的乘法次数对比</div>
       <div class="count-bar-row">
         <div class="count-bar-label">朴素写法</div>
-        <div class="count-bar-track"><div class="count-bar-fill long">999 次</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">999 次</div></div>
       </div>
       <div class="count-bar-row">
         <div class="count-bar-label">快速幂</div>
-        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 10%;">约10次</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 8%;"></div><div class="count-bar-value">约 10 次</div></div>
       </div>
       <div class="num-visual-caption">朴素写法要循环 999 次；快速幂只需要把 <code>1000</code> 不断除以 2 直到变成 <code>0</code>，大约 <strong>10 轮</strong>就能搞定——<code>b</code> 越大，这个差距越惊人：<code>b</code> 是十亿时，朴素写法要循环近十亿次，快速幂大约还是只需要 <strong>30 轮</strong>左右。</div>
     </div>

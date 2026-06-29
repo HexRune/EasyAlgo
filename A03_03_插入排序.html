@@ -35,9 +35,10 @@
   .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
   .count-bar-label { width: 130px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
   .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
-  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
   .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
   .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
 
   .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
   .api-table thead tr { background: var(--teal-light); }
@@ -162,11 +163,11 @@
       <div class="num-visual-title">n=10 个数 —— 已排序 vs 完全逆序，比较次数对比</div>
       <div class="count-bar-row">
         <div class="count-bar-label">已经排好序</div>
-        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 25%;">9 次比较，0 次移动</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 20%;"></div><div class="count-bar-value">9 次比较，0 次移动</div></div>
       </div>
       <div class="count-bar-row">
         <div class="count-bar-label">完全逆序</div>
-        <div class="count-bar-track"><div class="count-bar-fill long">45 次比较，45 次移动</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">45 次比较，45 次移动</div></div>
       </div>
       <div class="num-visual-caption">如果数组本来就是排好的，每个新数都只需要和"已排好部分"的最后一个比一次（发现不比它大，立刻停止），<code>10</code> 个数总共只要 <strong>9 次比较</strong>，完全不需要移动，是 <strong>O(n)</strong>；如果数组完全逆序，每个新数都要插到最前面，比较和移动次数都暴涨到 <strong>45 次</strong>（也就是 <code>n(n-1)/2</code>），变成了 <strong>O(n²)</strong>。两种情况的差距非常悬殊。</div>
     </div>

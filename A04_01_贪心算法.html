@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4.1 贪心算法 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "4.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 时间轴可视化（② 区间调度） */
+  .timeline { position: relative; padding: 28px 0 16px; }
+  .timeline-axis { position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: #2A2840; }
+  .timeline-ruler { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: #45475A; margin-top: 4px; }
+  .interval-row { position: relative; height: 30px; margin-bottom: 6px; }
+  .interval-bar { position: absolute; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; top: 2px; }
+  .interval-bar.cand   { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .interval-bar.picked { background: rgba(166,227,161,.32); color: var(--code-str); border: 1.5px solid var(--code-str); }
+  .interval-bar.skip   { background: rgba(243,139,168,.16); color: #F38BA8; border: 1px dashed rgba(243,139,168,.4); }
+
+  /* 背包可视化（③ 部分背包） */
+  .knap-row { display: flex; align-items: stretch; gap: 4px; height: 46px; border-radius: 7px; overflow: hidden; border: 1px solid #2A2840; }
+  .knap-seg { display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; flex-shrink: 0; }
+  .knap-seg.a { background: linear-gradient(135deg, #A6E3A1, #B8EFB5); }
+  .knap-seg.b { background: linear-gradient(135deg, #89B4FA, #A8C8FC); }
+  .knap-seg.c { background: linear-gradient(135deg, #FAB387, #FCC9A8); }
+  .knap-cap-label { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #6C7086; margin-top: 6px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="4.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块四 贪心算法</span>
+      <span class="eyebrow-sep">/</span>
+      <span>4.1 贪心算法</span>
+    </div>
+    <h1 class="chapter-title">4.1　贪心算法</h1>
+    <p class="chapter-desc">每一步都先选眼前看起来最好的那个——有时候这样真的能拿到全局最优解，但不是每次都行。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是贪心算法</a></li>
+      <li><span class="toc-num">②</span><a href="#interval">经典例子一：区间调度问题</a></li>
+      <li><span class="toc-num">③</span><a href="#knapsack">经典例子二：部分背包问题</a></li>
+      <li><span class="toc-num">④</span><a href="#limit">贪心算法的局限</a></li>
+      <li><span class="toc-num">⑤</span><a href="#summary">完整代码与小结</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是贪心算法</div>
+    <div class="section-body">
+      <p><strong>贪心算法</strong>的策略很直接：每走一步，都选<strong>当前看起来最好</strong>的那个选择，走完之后不再回头修改——不去比较"如果当时选了别的会怎样"，只管眼前这一步怎么选最划算。</p>
+      <p>这和 2.1 节的枚举法刚好相反：枚举法是"所有可能都试一遍，比较着找最优"，贪心算法是"想都不用想，每一步直接选最优的那个"——快很多，但<strong>不是每一道题都能这样做</strong>。关键在于：选了眼前最好的，最后凑出来的整体方案，是不是也一定是最好的？这一节用两个经典例子，一个"贪心能成功"，一个"贪心会失败"，把这件事讲清楚。</p>
+    </div>
+
+    <div class="sub-title" id="interval">② 经典例子一：区间调度问题</div>
+    <div class="section-body">
+      <p>有 <code>6</code> 个活动，每个活动有固定的起止时间，同一时间只能参加一个活动（时间不能有重叠），问最多能参加多少个活动？活动列表：<code>(1,3) (2,5) (4,7) (6,9) (8,10) (9,11)</code>。</p>
+      <p>贪心策略：<strong>每次都选"结束时间最早"的那个活动</strong>（前提是它和已经选中的活动不冲突）。直觉上，结束得越早，留给后面的时间就越多，越不容易挡住后续的选择。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">6 个活动按结束时间贪心选择</div>
+      <div class="timeline">
+        <div class="interval-row"><div class="interval-bar picked" style="left:9.1%; width:18.2%;">(1,3)</div></div>
+        <div class="interval-row"><div class="interval-bar skip" style="left:18.2%; width:27.3%;">(2,5)</div></div>
+        <div class="interval-row"><div class="interval-bar picked" style="left:36.4%; width:27.3%;">(4,7)</div></div>
+        <div class="interval-row"><div class="interval-bar skip" style="left:54.5%; width:27.3%;">(6,9)</div></div>
+        <div class="interval-row"><div class="interval-bar picked" style="left:72.7%; width:18.2%;">(8,10)</div></div>
+        <div class="interval-row"><div class="interval-bar skip" style="left:81.8%; width:18.2%;">(9,11)</div></div>
+        <div class="timeline-axis"></div>
+        <div class="timeline-ruler"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span></div>
+      </div>
+      <div class="num-visual-caption">绿色是贪心选中的活动：先选结束最早的 <code>(1,3)</code>；下一个能选的、且和 <code>(1,3)</code> 不冲突（开始时间 ≥ 3）里结束最早的是 <code>(4,7)</code>，跳过了 <code>(2,5)</code>（虽然它也不冲突，但结束更晚，会挡住更多后续机会）；接着同理选中 <code>(8,10)</code>，跳过 <code>(6,9)</code>。最终选中 <strong>3 个</strong>活动：<code>(1,3) (4,7) (8,10)</code>——经过暴力穷举验证，<code>3</code> 确实是这道题能选到的最多活动数，贪心策略给出了正确答案。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 区间调度（按结束时间贪心）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="fn">Activity</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">start</span><span class="pnc">,</span> <span class="fn">end</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">int</span> <span class="fn">MaxActivities</span><span class="pnc">(</span><span class="fn">vector</span><span class="pnc">&lt;</span><span class="fn">Activity</span><span class="pnc">&gt;</span> <span class="fn">activities</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">    <span class="fn">sort</span><span class="pnc">(</span><span class="fn">activities</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">activities</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="pnc">[](</span><span class="fn">Activity</span> <span class="fn">a</span><span class="pnc">,</span> <span class="fn">Activity</span> <span class="fn">b</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">        <span class="kw">return</span> <span class="fn">a</span><span class="pnc">.</span><span class="fn">end</span> <span class="op">&lt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">;</span>  <span class="cmt">// 按结束时间从小到大排序</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">    <span class="pnc">});</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="typ">int</span> <span class="fn">count</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="typ">int</span> <span class="fn">lastEnd</span> <span class="op">=</span> <span class="op">-</span><span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 上一个选中活动的结束时间</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="fn">Activity</span> <span class="fn">a</span> <span class="op">:</span> <span class="fn">activities</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">16</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">start</span> <span class="op">&gt;=</span> <span class="fn">lastEnd</span><span class="pnc">)</span>  <span class="cmt">// 和上一个选中的活动不冲突</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">            <span class="fn">count</span><span class="op">++</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">            <span class="fn">lastEnd</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="kw">return</span> <span class="fn">count</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="knapsack">③ 经典例子二：部分背包问题</div>
+    <div class="section-body">
+      <p>有 <code>3</code> 种物品，背包能装的总重量是 <code>50</code>。每种物品都可以<strong>只取一部分</strong>（比如取半袋大米，重量和价值都按比例打对折）——这一点很重要，因为它决定了贪心策略能不能用，下一节会说明为什么。三种物品：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>物品</th><th>重量</th><th>价值</th><th>性价比（价值÷重量）</th></tr></thead>
+      <tbody>
+        <tr><td>A</td><td>10</td><td>60</td><td>6.0</td></tr>
+        <tr><td>B</td><td>20</td><td>100</td><td>5.0</td></tr>
+        <tr><td>C</td><td>30</td><td>120</td><td>4.0</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-body">
+      <p>贪心策略：<strong>按"性价比"从高到低排序</strong>，能装多少就先装多少——先把性价比最高的物品尽量整个装满，背包还有剩余空间再装下一个性价比高的，直到背包装满为止。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">背包容量 50，按性价比贪心装入 A → B → C 的一部分</div>
+      <div class="knap-row">
+        <div class="knap-seg a" style="width:20%;">A 重10 值60</div>
+        <div class="knap-seg b" style="width:40%;">B 重20 值100</div>
+        <div class="knap-seg c" style="width:40%;">C 装2/3 重20 值80</div>
+      </div>
+      <div class="knap-cap-label"><span>0</span><span>背包容量上限：50</span></div>
+      <div class="num-visual-caption">先整个装入 <strong>A</strong>（性价比最高，重10、值60），剩余容量 <code>40</code>；再整个装入 <strong>B</strong>（重20、值100），剩余容量 <code>20</code>；最后剩余容量不够装下整个 <strong>C</strong>（重30），只装入 <code>20/30 = 2/3</code>，对应价值 <code>120 × 2/3 = 80</code>。三部分加起来总价值 <code>60 + 100 + 80 = </code><strong>240</strong>，这正是部分背包问题的最优解。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 部分背包（按性价比贪心）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="fn">Item</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">double</span> <span class="fn">weight</span><span class="pnc">,</span> <span class="fn">value</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">double</span> <span class="fn">FractionalKnapsack</span><span class="pnc">(</span><span class="fn">vector</span><span class="pnc">&lt;</span><span class="fn">Item</span><span class="pnc">&gt;</span> <span class="fn">items</span><span class="pnc">,</span> <span class="typ">double</span> <span class="fn">capacity</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">    <span class="fn">sort</span><span class="pnc">(</span><span class="fn">items</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">items</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="pnc">[](</span><span class="fn">Item</span> <span class="fn">a</span><span class="pnc">,</span> <span class="fn">Item</span> <span class="fn">b</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">        <span class="kw">return</span> <span class="fn">a</span><span class="pnc">.</span><span class="fn">value</span> <span class="op">/</span> <span class="fn">a</span><span class="pnc">.</span><span class="fn">weight</span> <span class="op">&gt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">value</span> <span class="op">/</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">weight</span><span class="pnc">;</span>  <span class="cmt">// 性价比从高到低</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">    <span class="pnc">});</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="typ">double</span> <span class="fn">totalValue</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="fn">Item</span> <span class="fn">it</span> <span class="op">:</span> <span class="fn">items</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">capacity</span> <span class="op">&gt;=</span> <span class="fn">it</span><span class="pnc">.</span><span class="fn">weight</span><span class="pnc">)</span>  <span class="cmt">// 装得下整个物品</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">            <span class="fn">totalValue</span> <span class="op">+=</span> <span class="fn">it</span><span class="pnc">.</span><span class="fn">value</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">            <span class="fn">capacity</span> <span class="op">-=</span> <span class="fn">it</span><span class="pnc">.</span><span class="fn">weight</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="kw">else</span>  <span class="cmt">// 装不下整个，只装能装下的那一部分</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">22</td><td class="cd">            <span class="fn">totalValue</span> <span class="op">+=</span> <span class="fn">it</span><span class="pnc">.</span><span class="fn">value</span> <span class="op">*</span> <span class="pnc">(</span><span class="fn">capacity</span> <span class="op">/</span> <span class="fn">it</span><span class="pnc">.</span><span class="fn">weight</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">            <span class="kw">break</span><span class="pnc">;</span>  <span class="cmt">// 背包已经装满，结束</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">    <span class="kw">return</span> <span class="fn">totalValue</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="limit">④ 贪心算法的局限</div>
+    <div class="section-body">
+      <p>两个例子都成功了，但<strong>千万不要因此觉得贪心总是管用</strong>。换一个看起来很像的问题——把"部分背包"改成"<strong>0/1 背包</strong>"：每种物品要么整个拿走，要么完全不拿，<strong>不能只拿一部分</strong>。这个小小的改动，会让"按性价比贪心"彻底失效。</p>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>反例：</b>物品 A（重 <code>10</code>，值 <code>60</code>，性价比 <code>6</code>）、物品 B（重 <code>20</code>，值 <code>100</code>，性价比 <code>5</code>），背包容量 <code>20</code>，这次不允许只拿一部分。按性价比贪心，先拿 A（重10，值60），剩余容量 <code>10</code>，装不下整个 B 了——贪心只能拿到 <strong>60</strong>。但实际上，<strong>只拿 B 一个</strong>（重20，正好装满，值100）反而更好——<code>100 &gt; 60</code>。贪心策略在这里给出了错误答案。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">0/1 背包：贪心方案 vs 真正最优方案</div>
+      <div class="knap-row" style="margin-bottom: 14px;">
+        <div class="knap-seg a" style="width:50%;">A 重10 值60</div>
+        <div class="knap-seg" style="width:50%; background:#16141F; border: 1px dashed #2A2840; color:#45475A;">空（装不下B）</div>
+      </div>
+      <div class="knap-cap-label" style="margin-bottom:14px;"><span>贪心方案：只有 60</span><span>背包容量：20</span></div>
+      <div class="knap-row">
+        <div class="knap-seg b" style="width:100%;">B 重20 值100</div>
+      </div>
+      <div class="knap-cap-label"><span>实际最优：100（贪心选错了）</span><span>背包容量：20</span></div>
+      <div class="num-visual-caption">为什么部分背包能贪心，0/1 背包不能？因为部分背包"装不下整个就拿一部分"，性价比最高的物品永远不会"浪费"任何空间；而 0/1 背包一旦装不下，那部分本该属于高性价比物品的空间，就会被<strong>白白浪费</strong>，反而可能让总价值更低的方案胜出。<strong>0/1 背包问题需要用到模块十二要学的动态规划</strong>，把"装"和"不装"两种选择都纳入考虑，才能找到真正的最优解——这正是贪心和动态规划最核心的区别：贪心选了就不回头，动态规划会把所有可能的选择都比较一遍。</div>
+    </div>
+
+    <div class="sub-title" id="summary">⑤ 完整代码与小结</div>
+
+    <table class="api-table">
+      <thead><tr><th>问题</th><th>贪心策略</th><th>贪心是否有效</th></tr></thead>
+      <tbody>
+        <tr><td>区间调度</td><td>按结束时间从早到晚选择</td><td>✓ 有效，能得到最优解</td></tr>
+        <tr><td>部分背包</td><td>按性价比从高到低尽量多装</td><td>✓ 有效，能得到最优解</td></tr>
+        <tr><td>0/1 背包</td><td>按性价比从高到低尽量多装</td><td>✗ 无效，可能得到错误答案</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>用贪心算法解题前，最好先问自己一句：<strong>"选了眼前最好的，真的不会让后面吃亏吗？"</strong>区间调度和部分背包之所以贪心有效，是因为可以证明"每一步的局部最优选择，不会妨碍达到全局最优"；0/1 背包做不到这一点，因为"整存整取"的限制，让局部最优有时候反而会堵死更好的全局方案。贪心算法用对了地方，效率极高；用错了地方，得到的答案看起来合理，实际上是错的——这正是它最需要小心的地方。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块四 · 贪心算法 · 4.1 贪心算法</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A03_04_桶排序.html">← 3.4 桶排序</a>
+      <a class="nav-btn" href="A05_01_前缀和.html">模块五·区间处理技巧 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

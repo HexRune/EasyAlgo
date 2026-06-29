@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5.1 前缀和 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "5.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 数组+前缀和对照可视化 */
+  .arr-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .arr-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .arr-cell { min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .arr-cell.base { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .arr-cell.hi   { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.45); }
+  .arr-cell.q1   { background: rgba(137,180,250,.22); color: var(--code-fn); border: 1px solid rgba(137,180,250,.42); }
+  .arr-cell.q2   { background: rgba(250,179,135,.25); color: var(--code-num); border: 1px solid rgba(250,179,135,.45); }
+  .arr-idx { font-size: 10px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+  .arr-row-label { font-size: 11px; color: #6C7086; width: 70px; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .arr-row-with-label { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .arr-row-with-label:last-child { margin-bottom: 0; }
+
+  /* 区间查询公式可视化 */
+  .query-eq { display: flex; align-items: center; gap: 10px; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 14px; margin: 10px 0; flex-wrap: wrap; }
+  .query-box { padding: 6px 14px; border-radius: 6px; font-weight: 700; }
+  .query-box.r { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.45); }
+  .query-box.l { background: rgba(250,179,135,.22); color: var(--code-num); border: 1px solid rgba(250,179,135,.42); }
+  .query-box.result { background: rgba(137,180,250,.2); color: var(--code-fn); border: 1px solid rgba(137,180,250,.4); }
+  .query-op { color: #6C7086; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 150px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="5.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块五 区间处理技巧</span>
+      <span class="eyebrow-sep">/</span>
+      <span>5.1 前缀和</span>
+    </div>
+    <h1 class="chapter-title">5.1　前缀和</h1>
+    <p class="chapter-desc">提前算好"从头到这里的总和"，后面任何一段区间的和都能一步算出来，不用每次重新累加。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要前缀和</a></li>
+      <li><span class="toc-num">②</span><a href="#build">构建前缀和数组</a></li>
+      <li><span class="toc-num">③</span><a href="#query">用前缀和 O(1) 回答区间和查询</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要前缀和</div>
+    <div class="section-body">
+      <p>假设有一组数据（比如某店铺连续 <code>8</code> 天的销售额），题目会反复问"第 <code>L</code> 天到第 <code>R</code> 天一共卖了多少"——这种"区间求和"的问题如果问一次两次，直接挨个加起来就行；但如果要回答<strong>很多次</strong>这样的问题，每次都重新累加一遍，会非常浪费——明明很多天都被反复加过很多遍。</p>
+      <p><strong>前缀和</strong>的思路是：提前花一次力气，把"从第一天到第 <code>i</code> 天的总和"都算好、存起来；之后无论问哪一段区间的和，只需要做一次<strong>减法</strong>，不需要再重新累加。</p>
+    </div>
+
+    <div class="sub-title" id="build">② 构建前缀和数组</div>
+    <div class="section-body">
+      <p>用 <code>8</code> 天的销售额 <code>{3, 1, 4, 1, 5, 9, 2, 6}</code> 演示。开一个"前缀和数组" <code>prefix</code>，让 <code>prefix[i]</code> 表示<strong>原数组前 <code>i</code> 个数的总和</strong>（约定 <code>prefix[0] = 0</code>，表示"一个数都没加"）：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 构建前缀和数组</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">arr</span><span class="pnc">[]</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">3</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">9</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">6</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="num">8</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">n</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">0</span><span class="pnc">};</span>  <span class="cmt">// prefix[0]=0，表示"前0个数的和"</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">    <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">i</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">+</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">i</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">];</span>  <span class="cmt">// 前i个数的和 = 前i-1个数的和 + 第i个数</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么 <code>prefix</code> 要开 <code>n+1</code> 大小、从下标 <code>1</code> 开始存？</b>把 <code>prefix[0]</code> 留给"空区间，一个数都没加"，<code>prefix[i]</code> 对应原数组<strong>第 <code>i</code> 个数（从 1 开始数）</strong>为止的总和——这样下标和"第几个数"对得整整齐齐，避免反复处理"减一"这种容易出错的细节，下一节求区间和的时候会感受到这样设计的方便之处。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">原数组与前缀和数组对照</div>
+      <div class="arr-row-with-label">
+        <div class="arr-row-label">原数组下标</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-idx">1</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">2</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">3</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">4</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">5</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">6</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">7</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">8</div></div>
+        </div>
+      </div>
+      <div class="arr-row-with-label">
+        <div class="arr-row-label">arr（销售额）</div>
+        <div class="arr-row">
+          <div class="arr-cell base">3</div><div class="arr-cell base">1</div><div class="arr-cell base">4</div><div class="arr-cell base">1</div><div class="arr-cell base">5</div><div class="arr-cell base">9</div><div class="arr-cell base">2</div><div class="arr-cell base">6</div>
+        </div>
+      </div>
+      <div class="arr-row-with-label" style="margin-top:12px;">
+        <div class="arr-row-label">prefix 下标</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-idx">0</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">1</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">2</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">3</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">4</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">5</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">6</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">7</div></div>
+          <div class="arr-cell-wrap"><div class="arr-idx">8</div></div>
+        </div>
+      </div>
+      <div class="arr-row-with-label">
+        <div class="arr-row-label">prefix（累加和）</div>
+        <div class="arr-row">
+          <div class="arr-cell hi">0</div><div class="arr-cell hi">3</div><div class="arr-cell hi">4</div><div class="arr-cell hi">8</div><div class="arr-cell hi">9</div><div class="arr-cell hi">14</div><div class="arr-cell hi">23</div><div class="arr-cell hi">25</div><div class="arr-cell hi">31</div>
+        </div>
+      </div>
+      <div class="num-visual-caption"><code>prefix[5] = 14</code>，表示原数组第 <code>1~5</code> 天的销售额总和是 <code>3+1+4+1+5=14</code>；<code>prefix[8] = 31</code>，是全部 8 天的总和。每一格都只比前一格多加了一个新数，构建整个 <code>prefix</code> 数组只需要 <strong>O(n)</strong> 的时间。</div>
+    </div>
+
+    <div class="sub-title" id="query">③ 用前缀和 O(1) 回答区间和查询</div>
+    <div class="section-body">
+      <p>想知道原数组第 <code>L</code> 天到第 <code>R</code> 天（包含两端）的总和，不需要再挨个累加——直接用 <code>prefix[R] - prefix[L-1]</code> 就行。可以把 <code>prefix[i]</code> 想象成"汽车开到第 <code>i</code> 公里时的总里程表读数"：要知道从第 <code>L</code> 公里到第 <code>R</code> 公里之间<strong>开了多远</strong>，只需要用"到达 <code>R</code> 时的读数"减去"到达 <code>L</code> 之前（也就是 <code>L-1</code>）时的读数"——中间重复的部分会在减法里自动抵消掉。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">查询第 3 天到第 6 天的总销售额（区间 [3,6]）</div>
+      <div class="arr-row" style="justify-content:center;">
+        <div class="arr-cell q2">3</div><div class="arr-cell q2">1</div><div class="arr-cell hi">4</div><div class="arr-cell hi">1</div><div class="arr-cell hi">5</div><div class="arr-cell hi">9</div><div class="arr-cell q1">2</div><div class="arr-cell q1">6</div>
+      </div>
+      <div class="query-eq" style="margin-top:18px;">
+        <div class="query-box result">区间[3,6]的和</div>
+        <div class="query-op">=</div>
+        <div class="query-box r">prefix[6] = 23</div>
+        <div class="query-op">−</div>
+        <div class="query-box l">prefix[2] = 4</div>
+        <div class="query-op">=</div>
+        <div class="query-box result">19</div>
+      </div>
+      <div class="num-visual-caption">绿色高亮的 <code>4,1,5,9</code> 正是第 3~6 天的数据，直接相加确实是 <code>19</code>，和前缀和算出来的结果完全一致。蓝色 <code>3,1</code>（第1~2天）是 <code>prefix[2]</code> 已经包含、但查询区间不需要的部分，被减法直接抵消；橙色 <code>2,6</code>（第7~8天）则从来没有被包含进 <code>prefix[6]</code>，自然也不会出现在结果里。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 用前缀和回答区间和查询</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">RangeSum</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">prefix</span><span class="pnc">[],</span> <span class="typ">int</span> <span class="fn">l</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">r</span><span class="pnc">)</span>  <span class="cmt">// 查询原数组第l到第r个数的和</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">return</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">r</span><span class="pnc">]</span> <span class="op">-</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">l</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>查询区间从第 1 天开始时要小心：</b>如果 <code>l = 1</code>，公式里要用到 <code>prefix[0]</code>——这正是为什么一开始要专门留出 <code>prefix[0] = 0</code> 这个"空区间"。如果没有这一位，<code>l=1</code> 时就要单独写一个特判（"如果从第一个数开始，直接用 <code>prefix[r]</code>，否则用减法"），多留这一位刚好省掉了这个麻烦。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+    <div class="section-body">
+      <p>假设数组长度 <code>n=1000</code>，一共要回答 <code>1000</code> 次区间和查询：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">1000 次区间和查询 —— 两种做法的总运算次数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">每次直接累加</div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">约 100 万次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">前缀和（预处理+查询）</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 0.2%;"></div><div class="count-bar-value">约 2000 次</div></div>
+      </div>
+      <div class="num-visual-caption">每次查询都重新累加，最坏情况下每次要加 <code>n</code> 次，<code>1000</code> 次查询总共要做约 <code>n×q=100万</code> 次加法；前缀和只需要 <strong>一次性</strong>花 <code>O(n)</code> 构建数组，之后每次查询都是 <code>O(1)</code> 的减法，总共约 <code>n+q=2000</code> 次运算——足足快了 <strong>500 倍</strong>。查询次数越多，前缀和的优势就越明显。</div>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>做法</th><th>预处理</th><th>单次查询</th><th>q 次查询总复杂度</th></tr></thead>
+      <tbody>
+        <tr><td>每次直接累加</td><td>无</td><td>O(n)</td><td>O(n × q)</td></tr>
+        <tr><td>前缀和</td><td>O(n)</td><td>O(1)</td><td>O(n + q)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>前缀和是<strong>"多次查询、数据本身不变"</strong>这类问题的标准解法——只要发现题目要反复问"某一段的和是多少"，且原数组中途不会被修改，几乎可以直接想到前缀和。如果数据中途还会被频繁<strong>修改</strong>（比如"把第3到第7个数都加5"这种区间更新），前缀和就不够用了——下一节的<strong>差分</strong>正是用来解决"频繁区间修改"问题的对应工具，两者常常配合在一起使用。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块五 · 区间处理技巧 · 5.1 前缀和</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A04_01_贪心算法.html">← 4.1 贪心算法</a>
+      <a class="nav-btn" href="A05_02_差分.html">5.2 差分 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

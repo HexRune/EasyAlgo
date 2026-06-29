@@ -36,9 +36,10 @@
   .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
   .count-bar-label { width: 140px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
   .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
-  .count-bar-fill { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #1A1828; border-radius: 5px; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
   .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
   .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
 
   .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
   .api-table thead tr { background: var(--teal-light); }
@@ -157,11 +158,11 @@
       <div class="num-visual-title">1000 个数 —— 数值范围大小对桶排序的影响</div>
       <div class="count-bar-row">
         <div class="count-bar-label">范围 0~100</div>
-        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 15%;">约1100次</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 11%;"></div><div class="count-bar-value">约 1100 次操作</div></div>
       </div>
       <div class="count-bar-row">
         <div class="count-bar-label">范围 0~10亿</div>
-        <div class="count-bar-track"><div class="count-bar-fill long">开不出这么大的数组</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">开不出这么大的数组</div></div>
       </div>
       <div class="num-visual-caption">数据量同样是 <code>1000</code> 个，数值范围是 <code>0~100</code> 时桶排序又快又省，范围一旦变成 <code>0~10亿</code>，所需要的桶数组大小会直接超出内存限制——这正是桶排序"用空间换时间"必须权衡的地方：空间够、范围小，桶排序是神器；空间不够、范围大，桶排序根本用不了。</div>
     </div>
@@ -187,7 +188,7 @@
     <p>算法文档 · 模块三 · 简单排序 · 3.4 桶排序</p>
     <div class="chapter-nav">
       <a class="nav-btn ghost" href="A03_03_插入排序.html">← 3.3 插入排序</a>
-      <a class="nav-btn" href="index.html">模块四·贪心算法（即将推出） →</a>
+      <a class="nav-btn" href="A04_01_贪心算法.html">模块四·贪心算法 →</a>
     </div>
   </footer>
 

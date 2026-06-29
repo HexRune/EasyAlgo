@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5.3 二维前缀和 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "5.3"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 二维网格可视化 */
+  .g2d { display: inline-flex; flex-direction: column; gap: 3px; }
+  .g2d-row { display: flex; gap: 3px; }
+  .g2d-cell { width: 44px; height: 36px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .g2d-cell.outside  { background: #16141F; color: #45475A; border: 1px dashed #2A2840; }
+  .g2d-cell.above    { background: rgba(137,180,250,.24); color: var(--code-fn); border: 1px solid rgba(137,180,250,.45); }
+  .g2d-cell.left     { background: rgba(245,194,231,.2); color: var(--code-op); border: 1px solid rgba(245,194,231,.4); }
+  .g2d-cell.overlap  { background: rgba(250,179,135,.28); color: var(--code-num); border: 1px solid rgba(250,179,135,.5); }
+  .g2d-cell.new      { background: rgba(166,227,161,.32); color: var(--code-str); border: 2px solid var(--code-str); }
+  .g2d-cell.target   { background: rgba(166,227,161,.28); color: var(--code-str); border: 1px solid rgba(166,227,161,.5); }
+  .g2d-cell.subtop   { background: rgba(243,139,168,.22); color: #F38BA8; border: 1px solid rgba(243,139,168,.42); }
+  .g2d-cell.subleft  { background: rgba(243,139,168,.22); color: #F38BA8; border: 1px solid rgba(243,139,168,.42); }
+  .g2d-cell.addback  { background: rgba(137,180,250,.3); color: var(--code-fn); border: 2px solid var(--code-fn); }
+  .g2d-wrap { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+  .g2d-legend { display: flex; flex-direction: column; gap: 7px; font-size: 11px; color: #A6ADC8; font-family: 'Noto Sans SC', sans-serif; padding-top: 4px; }
+  .g2d-legend-item { display: flex; align-items: center; gap: 7px; }
+  .g2d-legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+
+  /* 双轨步骤表（复用既有风格） */
+  .dual-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .dual-table th { font-family: 'Noto Sans SC', sans-serif; font-size: 11px; font-weight: 700; color: #A6ADC8; text-align: center; padding: 6px 8px 12px; border-bottom: 1px solid #2A2840; }
+  .dual-table td { text-align: center; padding: 8px 8px; color: var(--code-text); }
+  .dual-table tr:not(:last-child) td { border-bottom: 1px dashed #2A2840; }
+  .dual-table tr.dt-final td { color: var(--code-str); font-weight: 700; padding-top: 12px; }
+  .dual-table tr.dt-final { border-top: 1px solid #2A2840; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 150px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="5.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块五 区间处理技巧</span>
+      <span class="eyebrow-sep">/</span>
+      <span>5.3 二维前缀和</span>
+    </div>
+    <h1 class="chapter-title">5.3　二维前缀和</h1>
+    <p class="chapter-desc">把 5.1 节"一段区间求和"的思路搬到二维网格上——任意一块矩形区域的和，也能 O(1) 查出来。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">从一维到二维</a></li>
+      <li><span class="toc-num">②</span><a href="#build">构建二维前缀和数组</a></li>
+      <li><span class="toc-num">③</span><a href="#query">查询任意矩形区域的和</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 从一维到二维</div>
+    <div class="section-body">
+      <p>5.1 节解决的是"一维数组里，第 L 个到第 R 个数的和"。如果数据变成了<strong>二维网格</strong>（比如一张表格、一块棋盘），问题也升级成了"<strong>某一块矩形区域</strong>里所有数的和"——比如查一个班级座位表里"第 2 到 3 排、第 2 到 3 列的学生成绩总和"。思路完全一样：提前花一次力气把"前缀和"准备好，之后任意一块矩形区域的和，都能几步算出来，不需要重新挨个累加。</p>
+    </div>
+
+    <div class="sub-title" id="build">② 构建二维前缀和数组</div>
+    <div class="section-body">
+      <p>定义 <code>prefix[i][j]</code> 表示：从网格的<strong>左上角</strong>到第 <code>i</code> 行第 <code>j</code> 列这一块矩形区域里，所有数的总和。要推出 <code>prefix[i][j]</code>，可以利用已经算好的三块更小的区域，而不需要重新挨个加一遍。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">构建 prefix[i][j] 用到的四块区域</div>
+      <div class="g2d-wrap">
+        <div class="g2d">
+          <div class="g2d-row"><div class="g2d-cell overlap">A</div><div class="g2d-cell overlap">A</div><div class="g2d-cell above">B</div><div class="g2d-cell outside">·</div></div>
+          <div class="g2d-row"><div class="g2d-cell overlap">A</div><div class="g2d-cell overlap">A</div><div class="g2d-cell above">B</div><div class="g2d-cell outside">·</div></div>
+          <div class="g2d-row"><div class="g2d-cell left">C</div><div class="g2d-cell left">C</div><div class="g2d-cell new">？</div><div class="g2d-cell outside">·</div></div>
+          <div class="g2d-row"><div class="g2d-cell outside">·</div><div class="g2d-cell outside">·</div><div class="g2d-cell outside">·</div><div class="g2d-cell outside">·</div></div>
+        </div>
+        <div class="g2d-legend">
+          <div class="g2d-legend-item"><div class="g2d-legend-swatch" style="background:rgba(166,227,161,.32); border:2px solid var(--code-str);"></div>？= 要求的 prefix[i][j]，问号格是新加进来的 arr[i][j]</div>
+          <div class="g2d-legend-item"><div class="g2d-legend-swatch" style="background:rgba(137,180,250,.24);"></div>B = "正上方"区域 = prefix[i-1][j]</div>
+          <div class="g2d-legend-item"><div class="g2d-legend-swatch" style="background:rgba(245,194,231,.2);"></div>C = "正左方"区域 = prefix[i][j-1]</div>
+          <div class="g2d-legend-item"><div class="g2d-legend-swatch" style="background:rgba(250,179,135,.28);"></div>A = 重叠区域 = prefix[i-1][j-1]</div>
+        </div>
+      </div>
+      <div class="num-visual-caption">"正上方"区域 B 和"正左方"区域 C 加起来，几乎覆盖了整块目标矩形——只缺一个格子（问号格 <code>arr[i][j]</code> 本身没被包含进 B 或 C）。但 B 和 C 在左上角<strong>重叠了一块</strong>（橙色区域 A），直接加起来会把这块重叠区域<strong>多算一次</strong>，所以要减掉一次重叠部分，再把缺的那个新格子加上，正好凑出完整的目标区域。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 构建二维前缀和</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">grid</span><span class="pnc">[</span><span class="fn">n</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">][</span><span class="fn">m</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">];</span>     <span class="cmt">// 原网格，1-indexed</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">n</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">][</span><span class="fn">m</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">0</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;=</span> <span class="fn">m</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">        <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">i</span><span class="op">-</span><span class="num">1</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">+</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="op">-</span><span class="num">1</span><span class="pnc">]</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">                       <span class="op">-</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">i</span><span class="op">-</span><span class="num">1</span><span class="pnc">][</span><span class="fn">j</span><span class="op">-</span><span class="num">1</span><span class="pnc">]</span> <span class="op">+</span> <span class="fn">grid</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">];</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">具体算一格：用 4×4 网格算出 prefix[3][3]</div>
+      <table class="dual-table">
+        <tr><th>区域</th><th>含义</th><th>数值</th></tr>
+        <tr><td>prefix[2][3]</td><td>正上方区域（B）</td><td>24</td></tr>
+        <tr><td>prefix[3][2]</td><td>正左方区域（C）</td><td>24</td></tr>
+        <tr><td>prefix[2][2]</td><td>重叠区域（A，要减掉）</td><td>-14</td></tr>
+        <tr><td>grid[3][3]</td><td>新加入的格子本身</td><td>+2</td></tr>
+        <tr class="dt-final"><td colspan="2">prefix[3][3] = 24 + 24 - 14 + 2</td><td>36</td></tr>
+      </table>
+      <div class="num-visual-caption">这正是上面图示里 B + C - A + 新格子 的具体数字版本——四块区域提前都已经算好（或者刚刚求出来），凑出新的一格只需要一次加法、一次减法、再一次加法，<strong>不需要重新扫一遍这块矩形区域</strong>。</div>
+    </div>
+
+    <div class="sub-title" id="query">③ 查询任意矩形区域的和</div>
+    <div class="section-body">
+      <p>有了完整的 <code>prefix</code> 数组，查询任意矩形区域（左上角 <code>(r1,c1)</code>，右下角 <code>(r2,c2)</code>）的和，用的是<strong>同一套"加加减减"的思路</strong>，只是反过来用：先取一个包含目标区域的大矩形，再把多余的部分减掉。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">查询区域 (2,2)~(3,3) 的和，需要哪几块区域</div>
+      <div class="g2d-wrap">
+        <div class="g2d">
+          <div class="g2d-row"><div class="g2d-cell addback">D</div><div class="g2d-cell subtop">E</div><div class="g2d-cell subtop">E</div><div class="g2d-cell outside">·</div></div>
+          <div class="g2d-row"><div class="g2d-cell subleft">F</div><div class="g2d-cell target">？</div><div class="g2d-cell target">？</div><div class="g2d-cell outside">·</div></div>
+          <div class="g2d-row"><div class="g2d-cell subleft">F</div><div class="g2d-cell target">？</div><div class="g2d-cell target">？</div><div class="g2d-cell outside">·</div></div>
+          <div class="g2d-row"><div class="g2d-cell outside">·</div><div class="g2d-cell outside">·</div><div class="g2d-cell outside">·</div><div class="g2d-cell outside">·</div></div>
+        </div>
+        <div class="g2d-legend">
+          <div class="g2d-legend-item"><div class="g2d-legend-swatch" style="background:rgba(166,227,161,.28);"></div>？= 要查询的目标区域 (2,2)~(3,3)</div>
+          <div class="g2d-legend-item"><div class="g2d-legend-swatch" style="background:rgba(243,139,168,.22);"></div>E = 目标正上方，要减掉 = prefix[1][3]</div>
+          <div class="g2d-legend-item"><div class="g2d-legend-swatch" style="background:rgba(243,139,168,.22);"></div>F = 目标正左方，要减掉 = prefix[3][1]</div>
+          <div class="g2d-legend-item"><div class="g2d-legend-swatch" style="background:rgba(137,180,250,.3); border:2px solid var(--code-fn);"></div>D = 左上角，被减了两次，要加回来 = prefix[1][1]</div>
+        </div>
+      </div>
+      <div class="num-visual-caption">先取"从左上角到 (3,3)"这一整块大矩形（<code>prefix[3][3]</code>，包含了目标区域和 D、E、F 全部），减去正上方多出来的 E，再减去正左方多出来的 F——但 D 这个角块同时属于 E 和 F，被减了<strong>两次</strong>，所以要把 D 单独加回来一次，结果正好只剩下目标区域。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 查询矩形区域和</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">RangeSum2D</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">prefix</span><span class="pnc">[][</span><span class="fn">M</span><span class="pnc">],</span> <span class="typ">int</span> <span class="fn">r1</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">c1</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">r2</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">c2</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">return</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">r2</span><span class="pnc">][</span><span class="fn">c2</span><span class="pnc">]</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">         <span class="op">-</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">r1</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">][</span><span class="fn">c2</span><span class="pnc">]</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">         <span class="op">-</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">r2</span><span class="pnc">][</span><span class="fn">c1</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">]</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">         <span class="op">+</span> <span class="fn">prefix</span><span class="pnc">[</span><span class="fn">r1</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">][</span><span class="fn">c1</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">代入数字验证：区域 (2,2)~(3,3) 的和</div>
+      <table class="dual-table">
+        <tr><th>项</th><th>数值</th></tr>
+        <tr><td>prefix[3][3]（大矩形）</td><td>36</td></tr>
+        <tr><td>− prefix[1][3]（减正上方）</td><td>− 6</td></tr>
+        <tr><td>− prefix[3][1]（减正左方）</td><td>− 15</td></tr>
+        <tr><td>+ prefix[1][1]（角块加回来）</td><td>+ 1</td></tr>
+        <tr class="dt-final"><td>结果</td><td>16</td></tr>
+      </table>
+      <div class="num-visual-caption"><code>36 − 6 − 15 + 1 = 16</code>——直接把这块区域的 4 个数（<code>6,7,1,2</code>）相加，结果也是 <code>16</code>，完全一致。不管目标矩形有多大，查询永远只需要这 <strong>4 次数组访问</strong>，时间复杂度是 <strong>O(1)</strong>。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+    <div class="section-body">
+      <p>假设网格大小是 <code>100×100</code>，一共要回答 <code>1000</code> 次矩形区域查询（每次区域平均覆盖一半的网格）：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">1000 次矩形区域查询 —— 两种做法的总运算次数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">每次直接累加</div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">约 250 万次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">二维前缀和</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 0.4%;"></div><div class="count-bar-value">约 1 万次</div></div>
+      </div>
+      <div class="num-visual-caption">每次查询都重新扫一遍矩形区域，按平均覆盖一半网格（<code>50×50=2500</code> 个格子）估算，<code>1000</code> 次查询总共约 <code>250万</code> 次加法；二维前缀和只需要 <code>O(n×m)=10000</code> 次构建一次，之后每次查询只要 <code>4</code> 次数组访问，总共约 <code>1万</code> 次——快了 <strong>250 倍</strong>。</div>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>做法</th><th>预处理</th><th>单次查询</th></tr></thead>
+      <tbody>
+        <tr><td>每次直接累加</td><td>无</td><td>O(区域大小)</td></tr>
+        <tr><td>二维前缀和</td><td>O(n × m)</td><td>O(1)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>二维前缀和的"加加减减"看起来比一维多了几步，但本质上还是同一个思想：<strong>提前把可以复用的部分算好，查询时只用加减法拼出答案，不再重新扫一遍</strong>。模块五的三件工具到这里就集齐了——前缀和负责"区间/区域的和"，差分负责"区间/区域的修改"，而二维前缀和则是把这套思路从一条线搬到了一整张表格上。后面遇到"网格""矩阵""二维表格"相关的区域统计问题，这一节的思路往往就是最直接的突破口。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块五 · 区间处理技巧 · 5.3 二维前缀和</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A05_02_差分.html">← 5.2 差分</a>
+      <a class="nav-btn" href="index.html">模块六·单调栈与单调队列 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
