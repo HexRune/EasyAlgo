@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7.2 二分查找 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "7.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 数组+区间可视化 */
+  .arr-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .arr-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .arr-cell { min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+  .arr-cell.base    { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .arr-cell.mid     { background: rgba(166,227,161,.3); color: var(--code-str); border: 2px solid var(--code-str); }
+  .arr-cell.midbad  { background: rgba(243,139,168,.22); color: #F38BA8; border: 2px solid #F38BA8; }
+  .arr-cell.excluded{ background: #16141F; color: #45475A; border: 1px dashed #2A2840; }
+  .arr-idx { font-size: 9.5px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+  .bin-step-label { font-size: 11.5px; color: #A6ADC8; margin-bottom: 8px; font-family: 'Noto Sans SC', sans-serif; }
+  .bin-step { margin-bottom: 16px; }
+  .bin-step:last-child { margin-bottom: 0; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 150px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="7.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块七 双指针与二分查找</span>
+      <span class="eyebrow-sep">/</span>
+      <span>7.2 二分查找</span>
+    </div>
+    <h1 class="chapter-title">7.2　二分查找</h1>
+    <p class="chapter-desc">每看一次中间的数，就能排除掉一半的范围——在有序数组里，这是查找的最快方式。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是二分查找</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：每次排除一半</a></li>
+      <li><span class="toc-num">③</span><a href="#vs">和双指针的区别：排除速度不一样</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是二分查找</div>
+    <div class="section-body">
+      <p>想象在字典里查一个字——不会从第一页开始一页页翻，而是直接<strong>翻到中间</strong>，看看要找的字在前半部分还是后半部分，然后只在那一半里继续翻——每翻一次，能找的范围就缩小一半。<strong>二分查找</strong>就是把这个直觉写成算法：在一个<strong>已经排好序</strong>的数组里，每次检查中间的数，根据比较结果排除掉一半的范围，直到找到目标或者范围缩小到空为止。</p>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：每次排除一半</div>
+    <div class="section-body">
+      <p>用 <code>left</code>、<code>right</code> 维护当前还需要查找的范围。每一轮取中间下标 <code>mid</code>，比较 <code>arr[mid]</code> 和目标值：<strong>相等</strong>就直接返回；<strong>偏小</strong>说明目标在右半部分，把 <code>left</code> 移到 <code>mid+1</code>；<strong>偏大</strong>说明目标在左半部分，把 <code>right</code> 移到 <code>mid-1</code>。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 二分查找</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">BinarySearch</span><span class="pnc">(</span><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">arr</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">target</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">left</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">,</span> <span class="fn">right</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">left</span> <span class="op">&lt;=</span> <span class="fn">right</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">        <span class="typ">int</span> <span class="fn">mid</span> <span class="op">=</span> <span class="fn">left</span> <span class="op">+</span> <span class="pnc">(</span><span class="fn">right</span> <span class="op">-</span> <span class="fn">left</span><span class="pnc">)</span> <span class="op">/</span> <span class="num">2</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">arr</span><span class="pnc">[</span><span class="fn">mid</span><span class="pnc">]</span> <span class="op">==</span> <span class="fn">target</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">            <span class="kw">return</span> <span class="fn">mid</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">        <span class="kw">else</span> <span class="kw">if</span> <span class="pnc">(</span><span class="fn">arr</span><span class="pnc">[</span><span class="fn">mid</span><span class="pnc">]</span> <span class="op">&lt;</span> <span class="fn">target</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">            <span class="fn">left</span> <span class="op">=</span> <span class="fn">mid</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 目标在右半部分</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">        <span class="kw">else</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd">            <span class="fn">right</span> <span class="op">=</span> <span class="fn">mid</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 目标在左半部分</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="kw">return</span> <span class="op">-</span><span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 没找到</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>为什么写 <code>mid = left + (right - left) / 2</code>，不直接写 <code>(left + right) / 2</code>？</b>这是为了防止溢出——如果 <code>left</code> 和 <code>right</code> 都已经是很大的数（接近 <code>int</code> 的上限），<code>left + right</code> 这一步加法本身就可能先溢出，哪怕最终算出来的 <code>mid</code> 没什么问题。<code>left + (right - left) / 2</code> 先算两者的差（不会比 <code>right</code> 本身大），再加回 <code>left</code>，全程不会经过比 <code>right</code> 更大的中间值，是更安全的写法——和 1.5 节最小公倍数公式"先除再乘"防止溢出是同一种思路。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">{2,5,8,12,16,23,38,45,56,67,72}，target=45 —— 二分查找执行过程</div>
+
+      <div class="bin-step">
+        <div class="bin-step-label">第1轮：left=0, right=10, mid=5 → arr[5]=23，太小，往右找（left=6）</div>
+        <div class="arr-row">
+          <div class="arr-cell base">2</div><div class="arr-cell base">5</div><div class="arr-cell base">8</div><div class="arr-cell base">12</div><div class="arr-cell base">16</div><div class="arr-cell midbad">23</div><div class="arr-cell base">38</div><div class="arr-cell base">45</div><div class="arr-cell base">56</div><div class="arr-cell base">67</div><div class="arr-cell base">72</div>
+        </div>
+      </div>
+
+      <div class="bin-step">
+        <div class="bin-step-label">第2轮：left=6, right=10, mid=8 → arr[8]=56，太大，往左找（right=7）</div>
+        <div class="arr-row">
+          <div class="arr-cell excluded">2</div><div class="arr-cell excluded">5</div><div class="arr-cell excluded">8</div><div class="arr-cell excluded">12</div><div class="arr-cell excluded">16</div><div class="arr-cell excluded">23</div><div class="arr-cell base">38</div><div class="arr-cell base">45</div><div class="arr-cell midbad">56</div><div class="arr-cell base">67</div><div class="arr-cell base">72</div>
+        </div>
+      </div>
+
+      <div class="bin-step">
+        <div class="bin-step-label">第3轮：left=6, right=7, mid=6 → arr[6]=38，太小，往右找（left=7）</div>
+        <div class="arr-row">
+          <div class="arr-cell excluded">2</div><div class="arr-cell excluded">5</div><div class="arr-cell excluded">8</div><div class="arr-cell excluded">12</div><div class="arr-cell excluded">16</div><div class="arr-cell excluded">23</div><div class="arr-cell midbad">38</div><div class="arr-cell base">45</div><div class="arr-cell excluded">56</div><div class="arr-cell excluded">67</div><div class="arr-cell excluded">72</div>
+        </div>
+      </div>
+
+      <div class="bin-step">
+        <div class="bin-step-label">第4轮：left=7, right=7, mid=7 → arr[7]=45，找到！</div>
+        <div class="arr-row">
+          <div class="arr-cell excluded">2</div><div class="arr-cell excluded">5</div><div class="arr-cell excluded">8</div><div class="arr-cell excluded">12</div><div class="arr-cell excluded">16</div><div class="arr-cell excluded">23</div><div class="arr-cell excluded">38</div><div class="arr-cell mid">45</div><div class="arr-cell excluded">56</div><div class="arr-cell excluded">67</div><div class="arr-cell excluded">72</div>
+        </div>
+      </div>
+
+      <div class="num-visual-caption">灰色虚线格子是已经被排除、不可能再被访问到的区域。<code>11</code> 个数的数组，只用了 <strong>4 次</strong>比较就找到了目标——如果用最朴素的线性查找（从头一个个比对），最坏情况要比较 <code>11</code> 次。每一轮被排除的区域都<strong>越来越大</strong>，这正是二分查找比双指针更快的原因：双指针每次最多排除一个元素，二分查找每次能排除大约一半的范围。</div>
+    </div>
+
+    <div class="sub-title" id="vs">③ 和双指针的区别：排除速度不一样</div>
+    <div class="section-body">
+      <p>7.1 节的对撞指针和这一节的二分查找，本质上都是利用数组的<strong>有序性</strong>，不断排除"不可能存在答案"的部分。区别在于排除的<strong>速度</strong>：对撞指针每一步只能确定排除<strong>一个</strong>元素（<code>left</code> 或 <code>right</code> 挪一格）；二分查找每一步能直接排除<strong>大约一半</strong>的剩余范围——这也是为什么二分查找的时间复杂度是 <strong>O(log n)</strong>，比双指针的 <strong>O(n)</strong> 还要快得多。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th></th><th>对撞指针</th><th>二分查找</th></tr></thead>
+      <tbody>
+        <tr><td>每一步排除的范围</td><td>一个元素</td><td>大约一半的剩余范围</td></tr>
+        <tr><td>时间复杂度</td><td>O(n)</td><td>O(log n)</td></tr>
+        <tr><td>典型场景</td><td>需要同时关注两个位置的配对关系（如两数之和）</td><td>只需要判断"在不在、往哪边找"</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+    <div class="section-body">
+      <p>数组长度 <code>n=1000000</code>（一百万）：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">n=1,000,000 的有序数组 —— 查找一个数最坏需要多少次比较</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">线性查找</div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">最多100万次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">二分查找</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 0.002%;"></div><div class="count-bar-value">最多20次</div></div>
+      </div>
+      <div class="num-visual-caption">线性查找最坏情况要把一百万个数全部看一遍；二分查找每次排除一半，<code>log<sub>2</sub>(1000000) ≈ 19.9</code>，最多 <strong>20 次</strong>比较就能确定结果（或者确认不存在）——数据规模越大，二分查找的优势越是碾压性的。这也是为什么"判断能不能用二分"，往往是看到"有序"两个字之后第一个该想到的优化方向。</div>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>查找方式</th><th>前提条件</th><th>时间复杂度</th></tr></thead>
+      <tbody>
+        <tr><td>线性查找</td><td>无（数组顺序任意）</td><td>O(n)</td></tr>
+        <tr><td>二分查找</td><td>数组必须已经排好序</td><td>O(log n)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>二分查找的应用远不止"在数组里找一个数"——只要能把问题转化成"判断某个候选答案是否满足条件，并且满足条件的答案具有单调性（比如'够不够大''行不行得通'，越界后答案不会再变回来）"，就可以用二分去猜这个答案，这种用法叫<strong>二分答案</strong>，会在后面的进阶内容里见到。模块七到这里就结束了——双指针和二分查找，都是建立在"数据有序、可以放心排除不可能区域"这个基础上的两种不同效率的优化思路。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块七 · 双指针与二分查找 · 7.2 二分查找</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A07_01_双指针.html">← 7.1 双指针</a>
+      <a class="nav-btn" href="index.html">模块八·递推与递归（即将推出） →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

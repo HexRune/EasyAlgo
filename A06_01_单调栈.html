@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6.1 单调栈 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "6.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 栈可视化（竖直堆叠） */
+  .stack-stage { display: flex; gap: 24px; align-items: flex-end; margin-bottom: 16px; flex-wrap: wrap; }
+  .stack-stage:last-child { margin-bottom: 0; }
+  .stack-col { display: flex; flex-direction: column-reverse; gap: 4px; min-height: 40px; align-items: center; }
+  .stack-chip { width: 40px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+  .stack-chip.in   { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .stack-chip.out  { background: rgba(243,139,168,.22); color: #F38BA8; border: 1px dashed rgba(243,139,168,.45); }
+  .stack-meta { display: flex; flex-direction: column; gap: 4px; justify-content: flex-end; min-height: 90px; }
+  .stack-meta-label { font-size: 11px; color: #A6ADC8; font-family: 'Noto Sans SC', sans-serif; }
+  .stack-meta-cur { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--code-num); }
+
+  /* 双轨步骤表 */
+  .dual-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+  .dual-table th { font-family: 'Noto Sans SC', sans-serif; font-size: 11px; font-weight: 700; color: #A6ADC8; text-align: center; padding: 6px 6px 12px; border-bottom: 1px solid #2A2840; }
+  .dual-table td { text-align: center; padding: 8px 6px; color: var(--code-text); }
+  .dual-table tr:not(:last-child) td { border-bottom: 1px dashed #2A2840; }
+  .dual-table .dt-pop { color: #F38BA8; }
+  .dual-table .dt-keep { color: var(--code-str); }
+
+  /* 数组结果展示 */
+  .arr-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .arr-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .arr-cell { min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .arr-cell.res { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.45); }
+  .arr-idx { font-size: 10px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 150px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="6.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块六 单调栈与单调队列</span>
+      <span class="eyebrow-sep">/</span>
+      <span>6.1 单调栈</span>
+    </div>
+    <h1 class="chapter-title">6.1　单调栈</h1>
+    <p class="chapter-desc">栈里始终保持递增或递减——靠这一个小规则，把"找右边第一个更大的数"从 O(n²) 降到 O(n)。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要单调栈</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">用单调栈找右边第一个更大的数</a></li>
+      <li><span class="toc-num">③</span><a href="#why-fast">为什么单调栈是 O(n) 的</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要单调栈</div>
+    <div class="section-body">
+      <p>有一类常见问题：给一个数组，对<strong>每一个数</strong>，都要找出它<strong>右边第一个比它大</strong>的数。最直接的想法是枚举法——对每个数，往右一个个找，直到找到更大的为止。这种写法最坏情况下是 <strong>O(n²)</strong>（2.1 节讨论过，数据量一大就容易超时）。</p>
+      <p><strong>单调栈</strong>能把这件事优化到 <strong>O(n)</strong>。它是一种特殊用法的栈：在往栈里塞新数据之前，<strong>先把栈顶那些"不再有用"的数据清理掉</strong>，让栈里剩下的数据始终保持<strong>递增或递减</strong>的顺序——这正是"单调"这个名字的来源。</p>
+    </div>
+
+    <div class="sub-title" id="basic">② 用单调栈找右边第一个更大的数</div>
+    <div class="section-body">
+      <p>用数组 <code>{3, 1, 4, 1, 5, 9, 2, 6}</code> 演示。维护一个栈，<strong>栈里存的是下标</strong>，并且要求栈底到栈顶对应的数值<strong>递减</strong>。从左到右扫描每个数 <code>arr[i]</code>：只要栈顶元素对应的数值<strong>比 <code>arr[i]</code> 小</strong>，说明栈顶那个数找到了它"右边第一个更大的数"——就是 <code>arr[i]</code> 本身，把栈顶弹出并记录答案；重复这个弹出动作，直到栈顶比 <code>arr[i]</code> 大（或者栈空了）为止，再把 <code>i</code> 压入栈。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 单调栈求右边第一个更大的数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">NextGreater</span><span class="pnc">(</span><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">arr</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">result</span><span class="pnc">(</span><span class="fn">n</span><span class="pnc">,</span> <span class="op">-</span><span class="num">1</span><span class="pnc">);</span>  <span class="cmt">// 默认-1，表示没有找到更大的数</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">stack</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">st</span><span class="pnc">;</span>  <span class="cmt">// 存下标，栈里的数值保持递减</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">        <span class="kw">while</span> <span class="pnc">(!</span><span class="fn">st</span><span class="pnc">.</span><span class="fn">empty</span><span class="pnc">()</span> <span class="op">&amp;&amp;</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">st</span><span class="pnc">.</span><span class="fn">top</span><span class="pnc">()]</span> <span class="op">&lt;</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">            <span class="fn">result</span><span class="pnc">[</span><span class="fn">st</span><span class="pnc">.</span><span class="fn">top</span><span class="pnc">()]</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span>  <span class="cmt">// arr[i]就是栈顶元素要找的答案</span></td></tr>
+          <tr class="hl"><td class="ln">12</td><td class="cd">            <span class="fn">st</span><span class="pnc">.</span><span class="fn">pop</span><span class="pnc">();</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd">        <span class="fn">st</span><span class="pnc">.</span><span class="fn">push</span><span class="pnc">(</span><span class="fn">i</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="kw">return</span> <span class="fn">result</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">{3, 1, 4, 1, 5, 9, 2, 6} —— 单调栈逐步执行过程</div>
+
+      <div class="stack-stage">
+        <div class="stack-meta"><div class="stack-meta-label">i=0, i=1：3、1 直接入栈（栈顶比新数大，不用弹）</div><div class="stack-meta-cur">栈（从下到上）：3 1</div></div>
+        <div class="stack-col"><div class="stack-chip in">1</div><div class="stack-chip in">3</div></div>
+      </div>
+
+      <div class="stack-stage">
+        <div class="stack-meta"><div class="stack-meta-label">i=2(值4)：栈顶1&lt;4弹出 → result[1]=4；栈顶3&lt;4弹出 → result[0]=4；4入栈</div><div class="stack-meta-cur">栈（从下到上）：4</div></div>
+        <div class="stack-col"><div class="stack-chip in">4</div></div>
+        <div class="stack-col"><div class="stack-chip out">1</div><div class="stack-chip out">3</div></div>
+      </div>
+
+      <div class="stack-stage">
+        <div class="stack-meta"><div class="stack-meta-label">i=3(值1)：栈顶4&gt;1，不弹，1直接入栈</div><div class="stack-meta-cur">栈（从下到上）：4 1</div></div>
+        <div class="stack-col"><div class="stack-chip in">1</div><div class="stack-chip in">4</div></div>
+      </div>
+
+      <div class="stack-stage">
+        <div class="stack-meta"><div class="stack-meta-label">i=4(值5)：栈顶1&lt;5弹出 → result[3]=5；栈顶4&lt;5弹出 → result[2]=5；5入栈</div><div class="stack-meta-cur">栈（从下到上）：5</div></div>
+        <div class="stack-col"><div class="stack-chip in">5</div></div>
+        <div class="stack-col"><div class="stack-chip out">1</div><div class="stack-chip out">4</div></div>
+      </div>
+
+      <div class="stack-stage">
+        <div class="stack-meta"><div class="stack-meta-label">i=5(值9)：栈顶5&lt;9弹出 → result[4]=9；9入栈</div><div class="stack-meta-cur">栈（从下到上）：9</div></div>
+        <div class="stack-col"><div class="stack-chip in">9</div></div>
+        <div class="stack-col"><div class="stack-chip out">5</div></div>
+      </div>
+
+      <div class="stack-stage">
+        <div class="stack-meta"><div class="stack-meta-label">i=6(值2)：栈顶9&gt;2，不弹，2直接入栈</div><div class="stack-meta-cur">栈（从下到上）：9 2</div></div>
+        <div class="stack-col"><div class="stack-chip in">2</div><div class="stack-chip in">9</div></div>
+      </div>
+
+      <div class="stack-stage">
+        <div class="stack-meta"><div class="stack-meta-label">i=7(值6)：栈顶2&lt;6弹出 → result[6]=6；栈顶9&gt;6，不弹；6入栈</div><div class="stack-meta-cur">栈（从下到上）：9 6</div></div>
+        <div class="stack-col"><div class="stack-chip in">6</div><div class="stack-chip in">9</div></div>
+        <div class="stack-col"><div class="stack-chip out">2</div></div>
+      </div>
+
+      <div class="num-visual-caption">灰色格子是仍留在栈里的数，粉色虚线格子是这一步被弹出、同时确定了答案的数。扫描结束后，栈里剩下的 <code>9</code> 和 <code>6</code> 始终没有被弹出——它们右边再也没有比自己更大的数了，对应的答案保持默认值 <code>-1</code>。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">最终结果：每个数右边第一个比它大的数</div>
+      <div class="arr-row">
+        <div class="arr-cell-wrap"><div class="arr-cell">3</div><div class="arr-idx">原数组</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell">1</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell">4</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell">1</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell">5</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell">9</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell">2</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell">6</div></div>
+      </div>
+      <div class="arr-row" style="margin-top:8px;">
+        <div class="arr-cell-wrap"><div class="arr-cell res">4</div><div class="arr-idx">结果</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell res">4</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell res">5</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell res">5</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell res">9</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell res">-1</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell res">6</div></div>
+        <div class="arr-cell-wrap"><div class="arr-cell res">-1</div></div>
+      </div>
+      <div class="num-visual-caption">和暴力枚举法逐个验证的结果完全一致：<code>{4,4,5,5,9,-1,6,-1}</code>。<code>9</code> 是整个数组里最大的数，右边不可能有比它更大的，所以结果是 <code>-1</code>；<code>6</code> 是数组最后一个数，右边没有任何数，同样是 <code>-1</code>。</div>
+    </div>
+
+    <div class="sub-title" id="why-fast">③ 为什么单调栈是 O(n) 的</div>
+    <div class="section-body">
+      <p>看起来代码里有一层 <code>for</code> 套一层 <code>while</code>，很像两层嵌套循环，容易让人误以为是 O(n²)——但其实不是。关键在于：<strong>每个数最多只会被压入栈一次，也最多只会被弹出一次</strong>。一旦某个数被弹出，它就再也不会被重新压回栈里了。</p>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>整个数组扫描一遍，是 <code>n</code> 次入栈操作；而出栈操作的<strong>总次数</strong>，无论 <code>while</code> 循环在哪些位置触发了多少次，加起来也不可能超过 <code>n</code> 次（因为总共只有 <code>n</code> 个数能被弹出）。所以入栈、出栈两类操作加起来一共最多 <code>2n</code> 次，整体时间复杂度是严格的 <strong>O(n)</strong>，而不是 O(n²)——这是单调栈类问题里非常经典的"均摊复杂度"分析思路。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">20 个随机数 —— 暴力法 vs 单调栈，比较次数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">暴力枚举</div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">57 次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">单调栈</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 58%;"></div><div class="count-bar-value">33 次</div></div>
+      </div>
+      <div class="num-visual-caption">这组数据规模还比较小，差距看起来不算夸张；但暴力法是 <strong>O(n²)</strong> 增长，单调栈是 <strong>O(n)</strong> 增长——数据量一旦变大（比如几十万个数），两者的差距会迅速拉开到几个数量级，暴力法很可能超时，单调栈依然能轻松应对。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+
+    <table class="api-table">
+      <thead><tr><th>做法</th><th>核心思路</th><th>时间复杂度</th></tr></thead>
+      <tbody>
+        <tr><td>暴力枚举</td><td>对每个数，往右逐个找更大的数</td><td>O(n²)</td></tr>
+        <tr><td>单调栈</td><td>维护递减的栈，提前清理不再有用的数据</td><td>O(n)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>"找右边第一个更大的数"只是单调栈最基础的用法。</b>同样的框架稍作调整：把比较符号从 <code>&lt;</code> 换成 <code>&gt;</code>，就能找"右边第一个更小的数"；把循环方向从左到右改成从右到左，就能找"左边第一个更大/更小的数"。这套"维护单调性、提前清理无用数据"的思路，后面在直方图最大矩形、股票买卖等问题里都会反复出现——掌握了这一节的框架，遇到变体时只需要调整比较条件，不需要重新设计算法。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块六 · 单调栈与单调队列 · 6.1 单调栈</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A05_03_二维前缀和.html">← 5.3 二维前缀和</a>
+      <a class="nav-btn" href="A06_02_单调队列.html">6.2 单调队列 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

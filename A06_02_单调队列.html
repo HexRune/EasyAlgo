@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6.2 单调队列 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "6.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 滑动窗口可视化 */
+  .arr-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .arr-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .arr-cell { min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+  .arr-cell.out    { background: #16141F; color: #45475A; border: 1px dashed #2A2840; }
+  .arr-cell.in-win { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .arr-cell.dq     { background: rgba(137,180,250,.24); color: var(--code-fn); border: 1.5px solid var(--code-fn); }
+  .arr-cell.maxv   { background: rgba(166,227,161,.3); color: var(--code-str); border: 2px solid var(--code-str); }
+  .arr-idx { font-size: 10px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+  .window-step-label { font-size: 11.5px; color: #A6ADC8; margin-bottom: 8px; font-family: 'Noto Sans SC', sans-serif; }
+  .window-step { margin-bottom: 18px; }
+  .window-step:last-child { margin-bottom: 0; }
+
+  /* 双端队列结构可视化 */
+  .deque-row { display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .deque-chip { min-width: 38px; height: 32px; padding: 0 4px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; background: rgba(137,180,250,.24); color: var(--code-fn); border: 1px solid rgba(137,180,250,.45); }
+  .deque-label { font-size: 9px; color: #6C7086; font-family: 'Noto Sans SC', sans-serif; }
+  .deque-end-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 150px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="6.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块六 单调栈与单调队列</span>
+      <span class="eyebrow-sep">/</span>
+      <span>6.2 单调队列</span>
+    </div>
+    <h1 class="chapter-title">6.2　单调队列</h1>
+    <p class="chapter-desc">窗口在数组上滑动，每移动一步都要知道窗口里的最大值——单调队列能做到全程 O(n)。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要单调队列</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">用单调队列求滑动窗口最大值</a></li>
+      <li><span class="toc-num">③</span><a href="#vs">和单调栈的区别</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要单调队列</div>
+    <div class="section-body">
+      <p>有一类问题：一个固定大小为 <code>k</code> 的"窗口"，从数组最左边开始，每次往右滑动一格，每滑动一步都要知道<strong>当前窗口里的最大值</strong>。最直接的想法是每滑动一次，就把窗口里的 <code>k</code> 个数重新比一遍找最大值——数组长度是 <code>n</code> 时，总共要做大约 <code>O(n×k)</code> 次比较，如果 <code>k</code> 比较大，会很慢。</p>
+      <p><strong>单调队列</strong>能把这个问题优化到 <strong>O(n)</strong>。它和 6.1 节的单调栈是近亲——同样是"维护单调性、提前清理不再有用的数据"，区别在于单调队列用的是<strong>双端队列</strong>（两端都能进出），需要同时处理"窗口滑出去"和"新数据更优"这两种淘汰情况。</p>
+    </div>
+
+    <div class="sub-title" id="basic">② 用单调队列求滑动窗口最大值</div>
+    <div class="section-body">
+      <p>用数组 <code>{1, 3, -1, -3, 5, 3, 6, 7}</code>、窗口大小 <code>k=3</code> 演示。维护一个双端队列，<strong>队列里存下标，对应的数值从队头到队尾保持递减</strong>。每来一个新数 <code>arr[i]</code>，要做两件事：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 单调队列求滑动窗口最大值</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">SlidingWindowMax</span><span class="pnc">(</span><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">arr</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">k</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">deque</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">dq</span><span class="pnc">;</span>  <span class="cmt">// 存下标，对应数值从队头到队尾递减</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">result</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">dq</span><span class="pnc">.</span><span class="fn">empty</span><span class="pnc">()</span> <span class="op">&amp;&amp;</span> <span class="fn">dq</span><span class="pnc">.</span><span class="fn">front</span><span class="pnc">()</span> <span class="op">&lt;=</span> <span class="fn">i</span> <span class="op">-</span> <span class="fn">k</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">            <span class="fn">dq</span><span class="pnc">.</span><span class="fn">pop_front</span><span class="pnc">();</span>  <span class="cmt">// 队头已经滑出窗口范围，清理掉</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">        <span class="kw">while</span> <span class="pnc">(!</span><span class="fn">dq</span><span class="pnc">.</span><span class="fn">empty</span><span class="pnc">()</span> <span class="op">&amp;&amp;</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">dq</span><span class="pnc">.</span><span class="fn">back</span><span class="pnc">()]</span> <span class="op">&lt;</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">15</td><td class="cd">            <span class="fn">dq</span><span class="pnc">.</span><span class="fn">pop_back</span><span class="pnc">();</span>  <span class="cmt">// 队尾比新数小，再也不可能是最大值了，清理掉</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd">        <span class="fn">dq</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="fn">i</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"></td></tr>
+          <tr><td class="ln">19</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">i</span> <span class="op">&gt;=</span> <span class="fn">k</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">)</span>  <span class="cmt">// 窗口已经凑够k个数，可以记录答案了</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">21</td><td class="cd">            <span class="fn">result</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="fn">arr</span><span class="pnc">[</span><span class="fn">dq</span><span class="pnc">.</span><span class="fn">front</span><span class="pnc">()]);</span>  <span class="cmt">// 队头永远是当前窗口的最大值</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="kw">return</span> <span class="fn">result</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么队尾比新数小就能直接淘汰？</b>假设队尾的数是 <code>x</code>，新数是 <code>y</code>，且 <code>x &lt; y</code>。因为 <code>y</code> 的下标比 <code>x</code> 更靠右，<code>y</code> 会比 <code>x</code><strong>更晚滑出窗口</strong>；又因为 <code>y</code> 比 <code>x</code> 大，<strong>只要 <code>y</code> 还在窗口里，<code>x</code> 就永远不可能是最大值</strong>——<code>x</code> 已经被 <code>y</code> 全面比下去了，留着它毫无意义，直接清理掉。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">{1, 3, -1, -3, 5, 3, 6, 7}，k=3 —— 窗口滑动过程</div>
+
+      <div class="window-step">
+        <div class="window-step-label">i=0,1,2：1先入队；3比1大，1被淘汰，3入队；-1不比3大，直接入队 —— 窗口凑够3个，最大值是队头3</div>
+        <div class="arr-row">
+          <div class="arr-cell maxv">1</div><div class="arr-cell maxv">3</div><div class="arr-cell maxv">-1</div><div class="arr-cell out">-3</div><div class="arr-cell out">5</div><div class="arr-cell out">3</div><div class="arr-cell out">6</div><div class="arr-cell out">7</div>
+        </div>
+        <div class="deque-row" style="margin-top:10px;"><div class="deque-end-wrap"><div class="deque-label">队头</div><div class="deque-chip">3</div></div><div class="deque-end-wrap"><div class="deque-label">队尾</div><div class="deque-chip">-1</div></div></div>
+      </div>
+
+      <div class="window-step">
+        <div class="window-step-label">i=3(值-3)：不比队尾-1大，直接入队 —— 窗口[1,3]最大值仍是队头3</div>
+        <div class="arr-row">
+          <div class="arr-cell out">1</div><div class="arr-cell maxv">3</div><div class="arr-cell maxv">-1</div><div class="arr-cell maxv">-3</div><div class="arr-cell out">5</div><div class="arr-cell out">3</div><div class="arr-cell out">6</div><div class="arr-cell out">7</div>
+        </div>
+        <div class="deque-row" style="margin-top:10px;"><div class="deque-end-wrap"><div class="deque-label">队头</div><div class="deque-chip">3</div></div><div class="deque-end-wrap"><div class="deque-label"></div><div class="deque-chip">-1</div></div><div class="deque-end-wrap"><div class="deque-label">队尾</div><div class="deque-chip">-3</div></div></div>
+      </div>
+
+      <div class="window-step">
+        <div class="window-step-label">i=4(值5)：队头下标1已滑出窗口[2,4]，弹出；5比-3、-1、3都大，全部淘汰；5入队</div>
+        <div class="arr-row">
+          <div class="arr-cell out">1</div><div class="arr-cell out">3</div><div class="arr-cell maxv">-1</div><div class="arr-cell maxv">-3</div><div class="arr-cell maxv">5</div><div class="arr-cell out">3</div><div class="arr-cell out">6</div><div class="arr-cell out">7</div>
+        </div>
+        <div class="deque-row" style="margin-top:10px;"><div class="deque-end-wrap"><div class="deque-label">队头=队尾</div><div class="deque-chip">5</div></div></div>
+      </div>
+
+      <div class="window-step">
+        <div class="window-step-label">i=5(值3)：不比队尾5大，直接入队 —— 窗口[3,5]最大值仍是队头5</div>
+        <div class="arr-row">
+          <div class="arr-cell out">1</div><div class="arr-cell out">3</div><div class="arr-cell out">-1</div><div class="arr-cell maxv">-3</div><div class="arr-cell maxv">5</div><div class="arr-cell maxv">3</div><div class="arr-cell out">6</div><div class="arr-cell out">7</div>
+        </div>
+        <div class="deque-row" style="margin-top:10px;"><div class="deque-end-wrap"><div class="deque-label">队头</div><div class="deque-chip">5</div></div><div class="deque-end-wrap"><div class="deque-label">队尾</div><div class="deque-chip">3</div></div></div>
+      </div>
+
+      <div class="window-step">
+        <div class="window-step-label">i=6(值6)：6比3、5都大，全部淘汰；6入队 —— 窗口[4,6]最大值是6</div>
+        <div class="arr-row">
+          <div class="arr-cell out">1</div><div class="arr-cell out">3</div><div class="arr-cell out">-1</div><div class="arr-cell out">-3</div><div class="arr-cell maxv">5</div><div class="arr-cell maxv">3</div><div class="arr-cell maxv">6</div><div class="arr-cell out">7</div>
+        </div>
+        <div class="deque-row" style="margin-top:10px;"><div class="deque-end-wrap"><div class="deque-label">队头=队尾</div><div class="deque-chip">6</div></div></div>
+      </div>
+
+      <div class="window-step">
+        <div class="window-step-label">i=7(值7)：7比6大，淘汰；7入队 —— 窗口[5,7]最大值是7</div>
+        <div class="arr-row">
+          <div class="arr-cell out">1</div><div class="arr-cell out">3</div><div class="arr-cell out">-1</div><div class="arr-cell out">-3</div><div class="arr-cell out">5</div><div class="arr-cell maxv">3</div><div class="arr-cell maxv">6</div><div class="arr-cell maxv">7</div>
+        </div>
+        <div class="deque-row" style="margin-top:10px;"><div class="deque-end-wrap"><div class="deque-label">队头=队尾</div><div class="deque-chip">7</div></div></div>
+      </div>
+
+      <div class="num-visual-caption">每个窗口的最大值依次是：<strong>3, 3, 5, 5, 6, 7</strong>——和暴力法逐个比较验证的结果完全一致。注意队列里存活下来的数值始终保持<strong>从队头到队尾递减</strong>（比如 <code>5, 3</code>、<code>3, -3</code> 这种顺序），这正是"单调"二字的含义。</div>
+    </div>
+
+    <div class="sub-title" id="vs">③ 和单调栈的区别</div>
+    <div class="section-body">
+      <p>单调队列和单调栈用的是同一种"维护单调性、提前清理无用数据"的思想，但解决的问题形状不一样：单调栈关心的是<strong>"这个数和它两侧最近的更大/更小值"</strong>的关系，扫描方向是一条线走到底，元素一旦弹出就永久消失；单调队列关心的是<strong>"固定窗口范围内"</strong>的最值，窗口会随着扫描不断"滑走"旧数据，所以需要<strong>双端</strong>操作——队头负责清理"已经滑出窗口"的旧数据，队尾负责清理"被新数据比下去"的数据。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th></th><th>单调栈</th><th>单调队列</th></tr></thead>
+      <tbody>
+        <tr><td>数据结构</td><td>栈（一端进出）</td><td>双端队列（两端都能进出）</td></tr>
+        <tr><td>典型问题</td><td>找左/右两侧第一个更大/更小的数</td><td>固定窗口内的最大/最小值</td></tr>
+        <tr><td>清理时机</td><td>新数据破坏单调性时</td><td>新数据破坏单调性时 + 窗口滑出范围时</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+    <div class="section-body">
+      <p>数组长度 <code>n=50</code>，窗口大小 <code>k=10</code>，对比两种做法的操作次数：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">n=50, k=10 —— 暴力法 vs 单调队列，操作次数对比</div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">暴力法</div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">410 次</div></div>
+      </div>
+      <div class="count-bar-row">
+        <div class="count-bar-label">单调队列</div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 23%;"></div><div class="count-bar-value">95 次</div></div>
+      </div>
+      <div class="num-visual-caption">暴力法每滑动一步都要把窗口内 <code>k</code> 个数重新比一遍，总共约 <code>(n-k+1)×k≈410</code> 次；单调队列同样依靠"每个数最多入队一次、出队一次"的均摊分析，总操作次数不超过 <code>2n=100</code> 次，实测 <strong>95</strong> 次——和 6.1 节单调栈的复杂度证明思路完全一致。<code>k</code> 越大，暴力法的代价越高，单调队列的优势就越明显。</div>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>做法</th><th>核心思路</th><th>时间复杂度</th></tr></thead>
+      <tbody>
+        <tr><td>暴力法</td><td>每次滑动都重新比较窗口内所有数</td><td>O(n × k)</td></tr>
+        <tr><td>单调队列</td><td>维护递减双端队列，队头即最大值</td><td>O(n)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>模块六到这里就结束了——单调栈和单调队列都建立在同一个核心技巧上：<strong>维护数据的单调性，把"不可能再有用"的数据提前清理掉，避免反复比较</strong>。这个思想后面在直方图最大矩形、接雨水、多重背包优化等问题里都会反复出现。遇到"找某个方向上第一个更大/更小的值"，先想单调栈；遇到"固定窗口内的最值"，先想单调队列。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块六 · 单调栈与单调队列 · 6.2 单调队列</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A06_01_单调栈.html">← 6.1 单调栈</a>
+      <a class="nav-btn" href="index.html">模块七·双指针与二分查找（即将推出） →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

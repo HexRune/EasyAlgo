@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7.1 双指针 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "7.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 数组+指针可视化 */
+  .arr-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .arr-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .arr-cell { min-width: 32px; height: 32px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+  .arr-cell.base { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .arr-cell.left  { background: rgba(137,180,250,.26); color: var(--code-fn); border: 2px solid var(--code-fn); }
+  .arr-cell.right { background: rgba(245,194,231,.22); color: var(--code-op); border: 2px solid var(--code-op); }
+  .arr-cell.both  { background: rgba(166,227,161,.3); color: var(--code-str); border: 2px solid var(--code-str); }
+  .arr-cell.passed{ background: #16141F; color: #45475A; border: 1px dashed #2A2840; }
+  .arr-idx { font-size: 9.5px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+  .ptr-step-label { font-size: 11.5px; color: #A6ADC8; margin-bottom: 8px; font-family: 'Noto Sans SC', sans-serif; }
+  .ptr-step { margin-bottom: 16px; }
+  .ptr-step:last-child { margin-bottom: 0; }
+
+  /* 双轨步骤表 */
+  .dual-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+  .dual-table th { font-family: 'Noto Sans SC', sans-serif; font-size: 11px; font-weight: 700; color: #A6ADC8; text-align: center; padding: 6px 6px 12px; border-bottom: 1px solid #2A2840; }
+  .dual-table td { text-align: center; padding: 8px 6px; color: var(--code-text); }
+  .dual-table tr:not(:last-child) td { border-bottom: 1px dashed #2A2840; }
+  .dual-table tr.dt-final td { color: var(--code-str); font-weight: 700; padding-top: 12px; }
+  .dual-table tr.dt-final { border-top: 1px solid #2A2840; }
+
+  /* 检查次数对比条 */
+  .count-bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+  .count-bar-label { width: 150px; font-size: 12px; color: #A6ADC8; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .count-bar-track { flex: 1; height: 22px; background: #16141F; border-radius: 5px; overflow: hidden; position: relative; }
+  .count-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; }
+  .count-bar-fill.long { background: linear-gradient(90deg, #F38BA8, #F2A6BE); width: 100%; }
+  .count-bar-fill.short { background: linear-gradient(90deg, #A6E3A1, #B8EFB5); }
+  .count-bar-value { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #ffffff; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="7.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块七 双指针与二分查找</span>
+      <span class="eyebrow-sep">/</span>
+      <span>7.1 双指针</span>
+    </div>
+    <h1 class="chapter-title">7.1　双指针</h1>
+    <p class="chapter-desc">用两个下标在数组上协同移动，往往能把一层嵌套循环"拆"掉，从 O(n²) 降到 O(n)。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是双指针</a></li>
+      <li><span class="toc-num">②</span><a href="#opposite">对撞指针：有序数组两数之和</a></li>
+      <li><span class="toc-num">③</span><a href="#same">快慢指针：去除有序数组的重复项</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与对比</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是双指针</div>
+    <div class="section-body">
+      <p><strong>双指针</strong>是指在数组（或字符串）上同时维护<strong>两个下标</strong>，让它们按照某种规则协同移动，一次遍历就能完成原本需要嵌套循环才能做的事。常见的用法有两种：<strong>对撞指针</strong>——一个从最左边出发，一个从最右边出发，两边向中间靠拢；<strong>快慢指针</strong>——两个指针同方向移动，但移动的速度或条件不一样。</p>
+    </div>
+
+    <div class="sub-title" id="opposite">② 对撞指针：有序数组两数之和</div>
+    <div class="section-body">
+      <p>经典问题：给一个<strong>已经排好序</strong>的数组，找出其中两个数，使它们的和正好等于目标值。暴力做法是双层循环，枚举所有的两数组合，时间复杂度 <strong>O(n²)</strong>。</p>
+      <p>利用数组"已经排好序"这个性质，可以用对撞指针把它优化到 <strong>O(n)</strong>：<code>left</code> 指向最左边，<code>right</code> 指向最右边，看两者之和与目标值的关系——<strong>和太小</strong>，说明需要换一个更大的数，只能把 <code>left</code> 往右移；<strong>和太大</strong>，说明需要换一个更小的数，只能把 <code>right</code> 往左移；<strong>正好相等</strong>，就是答案。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 对撞指针求两数之和</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">pair</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">,</span> <span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">TwoSumSorted</span><span class="pnc">(</span><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">arr</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">target</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">left</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">,</span> <span class="fn">right</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">left</span> <span class="op">&lt;</span> <span class="fn">right</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="typ">int</span> <span class="fn">sum</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">left</span><span class="pnc">]</span> <span class="op">+</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">right</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">sum</span> <span class="op">==</span> <span class="fn">target</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">            <span class="kw">return</span> <span class="pnc">{</span><span class="fn">left</span><span class="pnc">,</span> <span class="fn">right</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">        <span class="kw">else</span> <span class="kw">if</span> <span class="pnc">(</span><span class="fn">sum</span> <span class="op">&lt;</span> <span class="fn">target</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">            <span class="fn">left</span><span class="op">++</span><span class="pnc">;</span>  <span class="cmt">// 和太小，换一个更大的数</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">        <span class="kw">else</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd">            <span class="fn">right</span><span class="op">--</span><span class="pnc">;</span>  <span class="cmt">// 和太大，换一个更小的数</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="kw">return</span> <span class="pnc">{</span><span class="op">-</span><span class="num">1</span><span class="pnc">,</span> <span class="op">-</span><span class="num">1</span><span class="pnc">};</span>  <span class="cmt">// 没找到</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>为什么"和太小就移 <code>left</code>，和太大就移 <code>right</code>"是安全的，不会漏掉答案？</b>假设当前 <code>arr[left]+arr[right]</code> 太小了——因为数组是<strong>有序的</strong>，<code>arr[right]</code> 已经是 <code>right</code> 这一侧能选到的最大值，如果连这个最大值配上 <code>arr[left]</code> 都不够大，那 <code>arr[left]</code> 配上 <code>right</code> 左边那些更小的数，结果只会更小——所以"<code>arr[left]</code> 配任何 <code>≤right</code> 的数"这条路已经彻底走不通了，<code>left</code> 必须往右换成更大的数。同理，<code>right</code> 太大时，<code>arr[right]</code> 配任何 <code>≥left</code> 的数也都行不通，只能把 <code>right</code> 往左移。</div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">{2, 4, 7, 11, 15, 18, 22}，目标和 18 —— 对撞指针执行过程</div>
+
+      <div class="ptr-step">
+        <div class="ptr-step-label">left=0(值2), right=6(值22)，和=24，太大，right左移</div>
+        <div class="arr-row">
+          <div class="arr-cell left">2</div><div class="arr-cell base">4</div><div class="arr-cell base">7</div><div class="arr-cell base">11</div><div class="arr-cell base">15</div><div class="arr-cell base">18</div><div class="arr-cell right">22</div>
+        </div>
+      </div>
+      <div class="ptr-step">
+        <div class="ptr-step-label">left=0(值2), right=5(值18)，和=20，太大，right左移</div>
+        <div class="arr-row">
+          <div class="arr-cell left">2</div><div class="arr-cell base">4</div><div class="arr-cell base">7</div><div class="arr-cell base">11</div><div class="arr-cell base">15</div><div class="arr-cell right">18</div><div class="arr-cell passed">22</div>
+        </div>
+      </div>
+      <div class="ptr-step">
+        <div class="ptr-step-label">left=0(值2), right=4(值15)，和=17，太小，left右移</div>
+        <div class="arr-row">
+          <div class="arr-cell left">2</div><div class="arr-cell base">4</div><div class="arr-cell base">7</div><div class="arr-cell base">11</div><div class="arr-cell right">15</div><div class="arr-cell passed">18</div><div class="arr-cell passed">22</div>
+        </div>
+      </div>
+      <div class="ptr-step">
+        <div class="ptr-step-label">left=1(值4), right=4(值15)，和=19，太大，right左移</div>
+        <div class="arr-row">
+          <div class="arr-cell passed">2</div><div class="arr-cell left">4</div><div class="arr-cell base">7</div><div class="arr-cell base">11</div><div class="arr-cell right">15</div><div class="arr-cell passed">18</div><div class="arr-cell passed">22</div>
+        </div>
+      </div>
+      <div class="ptr-step">
+        <div class="ptr-step-label">left=1(值4), right=3(值11)，和=15，太小，left右移</div>
+        <div class="arr-row">
+          <div class="arr-cell passed">2</div><div class="arr-cell left">4</div><div class="arr-cell base">7</div><div class="arr-cell right">11</div><div class="arr-cell passed">15</div><div class="arr-cell passed">18</div><div class="arr-cell passed">22</div>
+        </div>
+      </div>
+      <div class="ptr-step">
+        <div class="ptr-step-label">left=2(值7), right=3(值11)，和=18，找到！</div>
+        <div class="arr-row">
+          <div class="arr-cell passed">2</div><div class="arr-cell passed">4</div><div class="arr-cell both">7</div><div class="arr-cell both">11</div><div class="arr-cell passed">15</div><div class="arr-cell passed">18</div><div class="arr-cell passed">22</div>
+        </div>
+      </div>
+
+      <div class="num-visual-caption">只用了 <strong>6 次</strong>比较就找到了答案（<code>7+11=18</code>），暴力双层循环最坏情况要比较 <code>12</code> 次。两个指针一共最多移动 <code>n</code> 次（<code>left</code> 只会前进、<code>right</code> 只会后退，加起来不会超过数组长度），所以整体是严格的 <strong>O(n)</strong>。</div>
+    </div>
+
+    <div class="sub-title" id="same">③ 快慢指针：去除有序数组的重复项</div>
+    <div class="section-body">
+      <p>另一种常见用法是<strong>快慢指针</strong>——两个指针同方向移动，但角色不同：<code>fast</code> 负责"探路"，把数组从头到尾扫一遍；<code>slow</code> 负责"占坑"，记录"目前已经处理好、不重复的部分"应该写到哪个位置。经典场景：给一个已经排好序的数组，<strong>原地</strong>去掉所有重复的元素，只保留每个数值一份。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 快慢指针去除有序数组重复项</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">RemoveDuplicates</span><span class="pnc">(</span><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;&amp;</span> <span class="fn">arr</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">arr</span><span class="pnc">.</span><span class="fn">empty</span><span class="pnc">())</span> <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">slow</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>  <span class="cmt">// slow指向"已确认不重复区域"的最后一个位置</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">fast</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">fast</span> <span class="op">&lt;</span> <span class="fn">arr</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span> <span class="fn">fast</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">arr</span><span class="pnc">[</span><span class="fn">fast</span><span class="pnc">]</span> <span class="op">!=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">slow</span><span class="pnc">])</span>  <span class="cmt">// fast发现了一个新值</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">            <span class="fn">slow</span><span class="op">++</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">            <span class="fn">arr</span><span class="pnc">[</span><span class="fn">slow</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">fast</span><span class="pnc">];</span>  <span class="cmt">// 把新值"占坑"写到slow的位置</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="kw">return</span> <span class="fn">slow</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 去重后的新长度</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">{1, 1, 2, 2, 2, 3, 4, 4, 5} —— 快慢指针去重过程</div>
+      <table class="dual-table">
+        <tr><th>fast</th><th>arr[fast]</th><th>arr[slow]</th><th>是否新值</th><th>操作</th></tr>
+        <tr><td>1</td><td>1</td><td>1</td><td>否，相同</td><td>跳过</td></tr>
+        <tr><td>2</td><td>2</td><td>1</td><td>是，不同</td><td>slow→1，arr[1]=2</td></tr>
+        <tr><td>3</td><td>2</td><td>2</td><td>否，相同</td><td>跳过</td></tr>
+        <tr><td>4</td><td>2</td><td>2</td><td>否，相同</td><td>跳过</td></tr>
+        <tr><td>5</td><td>3</td><td>2</td><td>是，不同</td><td>slow→2，arr[2]=3</td></tr>
+        <tr><td>6</td><td>4</td><td>3</td><td>是，不同</td><td>slow→3，arr[3]=4</td></tr>
+        <tr><td>7</td><td>4</td><td>4</td><td>否，相同</td><td>跳过</td></tr>
+        <tr><td>8</td><td>5</td><td>4</td><td>是，不同</td><td>slow→4，arr[4]=5</td></tr>
+        <tr class="dt-final"><td colspan="5">最终 slow=4，去重后数组：{1, 2, 3, 4, 5}，长度 5</td></tr>
+      </table>
+      <div class="num-visual-caption"><code>fast</code> 像探路者一样一格不漏地往前走，<code>slow</code> 只在"发现新值"的时候才往前挪一格——挪动的那一刻，顺便把新值写到 <code>slow</code> 现在的位置上，相当于把不重复的数字一个个"搬"到数组前面，整个过程不需要额外的数组空间，原地完成。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+
+    <table class="api-table">
+      <thead><tr><th>类型</th><th>移动规则</th><th>典型应用</th></tr></thead>
+      <tbody>
+        <tr><td>对撞指针</td><td>从两端向中间靠拢</td><td>有序数组两数之和、判断回文、反转数组</td></tr>
+        <tr><td>快慢指针</td><td>同方向移动，速度或触发条件不同</td><td>原地去重、移除特定元素、链表找环</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>双指针能生效的前提，往往是数据具备某种<strong>单调性</strong>（比如本节两个例子都依赖"数组已经排好序"）——正是这种单调性，才能保证"指针只往一个方向移动、不需要回头"，从而把原本 O(n²) 的嵌套枚举，压缩成 O(n) 的一次遍历。这个思路和 6.1、6.2 节"利用单调性提前排除不可能的选项"是同一套逻辑，只是用指针代替了栈和队列。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块七 · 双指针与二分查找 · 7.1 双指针</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A06_02_单调队列.html">← 6.2 单调队列</a>
+      <a class="nav-btn" href="A07_02_二分查找.html">7.2 二分查找 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
