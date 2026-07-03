@@ -10,9 +10,6 @@
 <style>
    /* ── index.html 专属样式 ── */
 
-  /* 页面宽度比章节页稍宽 */
-  .page-wrap { max-width: 900px; margin: 0 auto; padding: 0 24px 80px; }
-
   /* Hero 头图 */
   .hero {
     background: var(--surface);
@@ -622,19 +619,100 @@
   </div>
   <!-- /.stl-mega-card -->
 
-  <div class="chapter-grid">
+  <!-- 第十二章：整块大卡片，内部分组跳转 -->
+  <div class="stl-mega-card collapsed">
 
-    <!-- 第十二章（未完成） -->
-    <a class="chapter-card disabled" href="#">
-      <div class="card-num amber">12</div>
+    <div class="stl-mega-head" onclick="this.parentElement.classList.toggle('collapsed')">
+      <div class="card-num">12</div>
       <div class="card-body">
-        <div class="card-chapter">第十二章 <span class="coming-chip">即将推出</span></div>
-        <div class="card-title">类与面向对象编程</div>
-        <div class="card-desc">class · 封装 · 继承 · 多态</div>
+        <div class="card-chapter">第十二章</div>
+        <div class="card-title">类与面向对象</div>
+        <div class="card-desc">class · 封装与访问控制 · 构造析构 · 运算符重载 · 继承 · 多态 —— 点击下方任意专题卡片直达对应页面</div>
       </div>
-    </a>
+      <span class="mega-collapse-badge"><span class="mcb-icon">⌄</span></span>
+    </div>
+
+    <div class="stl-groups">
+
+      <!-- 先导课 -->
+      <div class="stl-intro-row">
+        <a class="stl-intro-item" href="12_00_类与面向对象.html">
+          <span class="sii-icon">📦</span>
+          <span class="sii-text">
+            <span class="sii-name">面向对象是什么？本章学什么？</span>
+            <span class="sii-desc">先导课 · 封装 / 继承 / 多态三大特性 · 关键字速查 · 学习路径</span>
+          </span>
+          <span class="sii-arrow">→</span>
+        </a>
+      </div>
+
+      <!-- 基础语法（CSP-J） -->
+      <div class="stl-group g-adapt">
+        <div class="stl-group-label">
+          <span class="stl-group-dot"></span>
+          <span class="stl-group-name">基础语法</span>
+          <span class="stl-group-hint">CSP-J 考纲内容</span>
+        </div>
+        <div class="stl-items">
+          <a class="stl-item" href="12_01_从struct到class.html">
+            <span class="si-name">从 struct 到 class</span>
+            <span class="si-desc">面向对象的起点</span>
+          </a>
+          <a class="stl-item" href="12_02_类的定义与对象.html">
+            <span class="si-name">类的定义与对象</span>
+            <span class="si-desc">成员变量 · 成员函数 · this</span>
+          </a>
+          <a class="stl-item" href="12_03_封装与访问控制.html">
+            <span class="si-name">封装与访问控制</span>
+            <span class="si-desc">public · private · protected</span>
+          </a>
+          <a class="stl-item" href="12_04_构造与析构函数.html">
+            <span class="si-name">构造与析构函数</span>
+            <span class="si-desc">初始化列表 · 对象生命周期</span>
+          </a>
+          <a class="stl-item" href="12_05_运算符重载.html">
+            <span class="si-name">运算符重载</span>
+            <span class="si-desc">operator · 配合 sort 排序</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 进阶特性（拓展） -->
+      <div class="stl-group g-assoc">
+        <div class="stl-group-label">
+          <span class="stl-group-dot"></span>
+          <span class="stl-group-name">进阶特性</span>
+          <span class="stl-group-hint">超出 CSP-J 大纲，感兴趣可深入学习</span>
+        </div>
+        <div class="stl-items">
+          <a class="stl-item" href="12_06_拷贝构造函数.html">
+            <span class="si-name">拷贝构造函数</span>
+            <span class="si-desc">深拷贝 vs 浅拷贝</span>
+          </a>
+          <a class="stl-item" href="12_07_静态成员.html">
+            <span class="si-name">静态成员 static</span>
+            <span class="si-desc">所有对象共享同一份</span>
+          </a>
+          <a class="stl-item" href="12_08_继承基础.html">
+            <span class="si-name">继承基础</span>
+            <span class="si-desc">基类 · 派生类 · protected</span>
+          </a>
+          <a class="stl-item" href="12_09_虚函数与多态.html">
+            <span class="si-name">虚函数与多态</span>
+            <span class="si-desc">virtual · 动态绑定 · vtable</span>
+          </a>
+          <a class="stl-item" href="12_10_抽象类与纯虚函数.html">
+            <span class="si-name">抽象类与纯虚函数</span>
+            <span class="si-desc">= 0 · 接口设计</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+    <!-- /.stl-groups -->
 
   </div>
+  <!-- /.stl-mega-card (ch12) -->
 
   <!-- ═══ 算法文档 ═══ -->
   <div class="book-label">

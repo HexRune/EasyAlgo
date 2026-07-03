@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.1 从 struct 到 class — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "12.1"; }
+
+  /* ── 子导航组件（复用 ch12 风格）── */
+  .ch12-subnav { margin-bottom: 28px; }
+  .ch12-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch12-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto; display: flex; flex-direction: column;
+  }
+  .ch12-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch12-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch12-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch12-group-name { color: var(--text-secondary); }
+  .ch12-group.current .ch12-group-name { color: var(--grp-color); }
+  .ch12-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .ch12-group:not(.current) .ch12-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch12-group:not(.current):hover .ch12-group-head { background: var(--grp-color-light); }
+  .ch12-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch12-group:not(.current):hover .ch12-group-name { color: var(--grp-color); }
+  .ch12-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch12-group:not(.current):hover .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch12-group.current .ch12-expand-badge { display: none; }
+  .ch12-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch12-group:not(.current) .ch12-items { display: none; }
+  .ch12-group.expanded .ch12-items { display: flex; }
+  .ch12-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch12-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch12-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch12-group.c-intro { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch12-group.c-csp   { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch12-group.c-ext   { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+
+  /* ── 本页专属样式 ── */
+
+  /* struct vs class 对比表 */
+  .cmp-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .cmp-table thead tr { background: var(--teal-light); }
+  .cmp-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #9FE1CB; }
+  .cmp-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .cmp-table tr:last-child td { border-bottom: none; }
+  .cmp-table tr:nth-child(even) td { background: #F7FEFC; }
+  .cmp-table td:first-child { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
+
+  /* 访问控制 SVG 图示 */
+  .diagram-block {
+    background: var(--code-bg);
+    border-radius: var(--r-md);
+    padding: 24px 20px 18px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    overflow-x: auto;
+    text-align: center;
+  }
+  .diagram-block figcaption {
+    font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7;
+    font-family: 'Noto Sans SC', sans-serif;
+    border-top: 1px solid #2A2840; padding-top: 12px;
+  }
+  .diagram-block figcaption code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0;
+  }
+
+  /* 步骤列表 */
+  .problem-list { list-style: none; padding: 0; margin: 14px 0; }
+  .problem-list li {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 14px; color: var(--text-secondary); line-height: 1.7;
+  }
+  .problem-list li:last-child { border-bottom: none; }
+  .prob-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); border: 1px solid var(--coral-mid);
+    color: var(--coral); font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; margin-top: 2px;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="12.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十二章 · 类与面向对象</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.1 从 struct 到 class</span>
+    </div>
+    <h1 class="chapter-title">12.1　从 struct 到 class</h1>
+    <p class="chapter-desc">数据和操作分开放，到底有什么问题？本节从你已经熟悉的 struct 出发，理解"面向对象"到底解决了什么。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch12-subnav">
+    <div class="ch12-subnav-groups">
+
+      <div class="ch12-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">先导课</span>
+          <span class="ch12-group-count">1</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-csp current expanded">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">基础语法</span>
+          <span class="ch12-group-count">5</span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item active" href="12_01_从struct到class.html">从 struct 到 class</a>
+          <a class="ch12-item" href="12_02_类的定义与对象.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
+          <a class="ch12-item" href="12_04_构造与析构函数.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_06_运算符重载.html">运算符重载</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-ext" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">进阶特性</span>
+          <span class="ch12-group-count">5</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_05_拷贝构造函数.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
+          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">12.1.1</span><a href="#s1">面向过程的困境</a></li>
+      <li><span class="toc-num">12.1.2</span><a href="#s2">struct 的先天不足</a></li>
+      <li><span class="toc-num">12.1.3</span><a href="#s3">class 登场：装上保险锁</a></li>
+      <li><span class="toc-num">12.1.4</span><a href="#s4">struct vs class 对比</a></li>
+      <li><span class="toc-num">12.1.5</span><a href="#s5">用售货机理解 class</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="s1">12.1.1　面向过程的困境</div>
+    <div class="section-body">
+      <p>假设你要写一个程序管理学生信息。最开始你可能这样写：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">};</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="cmt">// 打印学生信息——放在 struct 外面</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="typ">void</span> <span class="fn">PrintStudent</span>(<span class="typ">Student</span> s) {</td></tr>
+          <tr><td class="ln">8</td><td class="cd">    cout &lt;&lt; s.name &lt;&lt; <span class="str">" : "</span> &lt;&lt; s.score &lt;&lt; endl;</td></tr>
+          <tr><td class="ln">9</td><td class="cd">}</td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">void</span> <span class="fn">SetScore</span>(<span class="typ">Student</span>&amp; s, <span class="typ">int</span> val) {</td></tr>
+          <tr class="hl-warn"><td class="ln">12</td><td class="cd">    s.score = val;   <span class="cmt">// ⚠️ 没有保护，传什么就存什么</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>这样写能跑，但随着程序变大，你会碰到三个麻烦：</p>
+    </div>
+
+    <ul class="problem-list">
+      <li>
+        <span class="prob-num">1</span>
+        <span><strong>函数散落各处</strong>——操作 Student 的函数遍布各个文件，改一处很容易漏掉另一处，找 bug 如同大海捞针。</span>
+      </li>
+      <li>
+        <span class="prob-num">2</span>
+        <span><strong>数据毫无保护</strong>——任何地方都能直接写 <code>s.score = -9999</code>，没有任何拦截，数据随时可能被意外破坏。</span>
+      </li>
+      <li>
+        <span class="prob-num">3</span>
+        <span><strong>很难复用</strong>——想在另一个项目用这个"学生"概念，要把一堆零散的函数全都搬走，还容易漏掉某个。</span>
+      </li>
+    </ul>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>面向过程 vs 面向对象</b><br>
+        我们之前写的程序，是把数据（struct）和操作数据的函数<strong>分开</strong>放的，这叫<strong>面向过程</strong>编程。<br>
+        面向对象的思路则是：把数据和相关操作<strong>打包在一起</strong>，变成一个"对象"——对外只暴露必要的接口，内部细节全部隐藏。
+      </div>
+    </div>
+
+    <div class="sub-title" id="s2">12.1.2　struct 的先天不足</div>
+    <div class="section-body">
+      <p>在 C++ 里，<code>struct</code> 已经比 C 强大很多——它也可以定义成员函数。但它有一个先天不足：<strong>所有成员默认对外完全公开</strong>。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">void</span> <span class="fn">Print</span>() {          <span class="cmt">// struct 也可以有函数</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        cout &lt;&lt; name &lt;&lt; <span class="str">" : "</span> &lt;&lt; score &lt;&lt; endl;</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">8</td><td class="cd">};</td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="typ">Student</span> s;</td></tr>
+          <tr class="hl-warn"><td class="ln">12</td><td class="cd">    s.score = <span class="num">-999</span>;   <span class="cmt">// ⚠️ 没有任何阻拦，直接改掉了</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    s.<span class="fn">Print</span>();</td></tr>
+          <tr><td class="ln">14</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>struct 的默认行为：</b>成员变量对外完全暴露，任何地方的代码都能随意修改，很容易出现"数据被意外破坏"的 bug。</div>
+    </div>
+
+    <div class="sub-title" id="s3">12.1.3　class 登场：装上保险锁</div>
+    <div class="section-body">
+      <p><code>class</code> 与 <code>struct</code> 的语法几乎一模一样，最关键的区别只有一个：<strong>成员默认是私有的（private）</strong>，外部代码看不见也改不了。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">private</span>:                      <span class="cmt">// 🔒 外部无法直接访问</span></td></tr>
+          <tr class="hl-warn"><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr class="hl-warn"><td class="ln">4</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="kw">public</span>:                       <span class="cmt">// 🔓 对外公开的接口</span></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">    <span class="typ">void</span> <span class="fn">SetScore</span>(<span class="typ">int</span> val) {</td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">        <span class="kw">if</span> (val &gt;= <span class="num">0</span> &amp;&amp; val &lt;= <span class="num">100</span>)  <span class="cmt">// ✅ 在这里加校验</span></td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">            score = val;</td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="typ">int</span>  <span class="fn">GetScore</span>() { <span class="kw">return</span> score; }</td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="typ">void</span> <span class="fn">Print</span>()    { cout &lt;&lt; name &lt;&lt; <span class="str">" : "</span> &lt;&lt; score &lt;&lt; endl; }</td></tr>
+          <tr><td class="ln">13</td><td class="cd">};</td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="typ">Student</span> s;</td></tr>
+          <tr class="hl-warn"><td class="ln">17</td><td class="cd">    <span class="cmt">// s.score = -999;   ❌ 编译错误！private 成员不能直接访问</span></td></tr>
+          <tr class="hl-ref"><td class="ln">18</td><td class="cd">    s.<span class="fn">SetScore</span>(<span class="num">95</span>);      <span class="cmt">// ✅ 只能通过公开接口修改</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    s.<span class="fn">Print</span>();</td></tr>
+          <tr><td class="ln">20</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title">访问控制图解</div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 660 210" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:620px; width:100%;">
+        <defs>
+          <marker id="arr-green" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#A6E3A1"/>
+          </marker>
+          <marker id="arr-red" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#F38BA8"/>
+          </marker>
+          <marker id="arr-gray" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#6C7086"/>
+          </marker>
+        </defs>
+
+        <!-- 外部代码边界 -->
+        <rect x="8" y="8" width="644" height="188" rx="10"
+              fill="none" stroke="#3A3850" stroke-width="1" stroke-dasharray="6,3"/>
+        <text x="18" y="25" font-family="'Noto Sans SC',sans-serif"
+              font-size="11" fill="#45475A">外部代码</text>
+
+        <!-- class 盒子 -->
+        <rect x="200" y="24" width="280" height="158" rx="10"
+              fill="#16141F" stroke="#CBA6F7" stroke-width="1.5"/>
+        <text x="340" y="46" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="13"
+              fill="#CBA6F7" font-weight="700">class Student</text>
+
+        <!-- private 区 -->
+        <rect x="216" y="56" width="110" height="110" rx="6"
+              fill="rgba(243,139,168,.08)" stroke="#F38BA8" stroke-width="1"/>
+        <text x="271" y="74" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#F38BA8" font-weight="700">private 🔒</text>
+        <text x="271" y="96"  text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#CDD6F4">name</text>
+        <text x="271" y="114" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#CDD6F4">score</text>
+        <text x="271" y="148" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#585B70">只有类内部</text>
+        <text x="271" y="162" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#585B70">才能访问</text>
+
+        <!-- public 区 -->
+        <rect x="344" y="56" width="120" height="110" rx="6"
+              fill="rgba(166,227,161,.06)" stroke="#A6E3A1" stroke-width="1"/>
+        <text x="404" y="74" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6E3A1" font-weight="700">public 🔓</text>
+        <text x="404" y="96"  text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">SetScore()</text>
+        <text x="404" y="113" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">GetScore()</text>
+        <text x="404" y="130" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">Print()</text>
+
+        <!-- 外部 → public（允许）-->
+        <line x1="158" y1="106" x2="342" y2="106"
+              stroke="#A6E3A1" stroke-width="1.5" marker-end="url(#arr-green)"/>
+        <text x="82" y="100" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6E3A1">外部调用</text>
+        <text x="82" y="114" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6E3A1">✅ 允许</text>
+
+        <!-- 外部 → private（拒绝）-->
+        <line x1="158" y1="148" x2="213" y2="130"
+              stroke="#F38BA8" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-red)"/>
+        <text x="52" y="155" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#F38BA8">直接访问 score</text>
+        <text x="68" y="169" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#F38BA8">❌ 编译错误</text>
+
+        <!-- public 内部 → private -->
+        <line x1="344" y1="106" x2="328" y2="106"
+              stroke="#6C7086" stroke-width="1.2" marker-end="url(#arr-gray)"/>
+        <text x="340" y="145" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#45475A">内部可访问</text>
+
+        <!-- 右侧用户图示 -->
+        <text x="590" y="100" text-anchor="middle"
+              font-family="system-ui,sans-serif" font-size="26" fill="#CDD6F4">🧑</text>
+        <text x="590" y="120" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">外部代码</text>
+        <line x1="574" y1="100" x2="466" y2="100"
+              stroke="#A6E3A1" stroke-width="1.5" marker-end="url(#arr-green)"/>
+      </svg>
+      <figcaption>
+        外部代码只能通过 <code>public</code> 接口与类交互；<code>private</code> 数据只有类内部的函数才能访问。<br>
+        试图在外部直接写 <code>s.score = -999</code> 会让编译器报错，在写代码阶段就阻止了这类错误。
+      </figcaption>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div>
+        <b>关键理解：</b><code>private</code> 不是"这行代码会出错"，而是"编译器直接<strong>拒绝编译</strong>"。错误在写代码的时候就被发现，而不是等到程序运行出 bug 才知道。这是一个很大的优势。
+      </div>
+    </div>
+
+    <div class="sub-title" id="s4">12.1.4　struct vs class 对比</div>
+    <div class="section-body">
+      <p>很多同学以为 <code>struct</code> 和 <code>class</code> 是两种完全不同的东西。其实在 C++ 里，它们几乎完全相同，<strong>唯一的区别是默认访问权限</strong>。</p>
+    </div>
+
+    <table class="cmp-table">
+      <thead>
+        <tr><th>比较项</th><th>struct</th><th>class</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>成员默认权限</td>
+          <td><code>public</code>（对外公开）</td>
+          <td><code>private</code>（对外隐藏）</td>
+        </tr>
+        <tr>
+          <td>能否定义成员函数</td>
+          <td>✅ 可以</td>
+          <td>✅ 可以</td>
+        </tr>
+        <tr>
+          <td>能否使用 public / private</td>
+          <td>✅ 可以，但要手动写出来</td>
+          <td>✅ 可以，private 是默认值</td>
+        </tr>
+        <tr>
+          <td>继承时的默认权限</td>
+          <td>public 继承</td>
+          <td>private 继承</td>
+        </tr>
+        <tr>
+          <td>竞赛中的惯例用法</td>
+          <td>纯数据打包（存边、存坐标等）</td>
+          <td>数据 + 行为封装在一起</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div>
+        <b>竞赛惯例：</b>在 CSP-J / NOIP 中，如果只是把几个数据绑在一起（例如存边的起点、终点、权重），用 <code>struct</code> 即可，代码更简洁。需要封装行为、保护数据时再用 <code>class</code>。两者混用也完全没问题——选更自然的那个就行。
+      </div>
+    </div>
+
+    <div class="sub-title" id="s5">12.1.5　用售货机理解 class</div>
+    <div class="section-body">
+      <p>讲了这么多，用一个生活中的例子来把这些概念串起来。</p>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 640 220" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:600px; width:100%;">
+        <defs>
+          <marker id="arr-g2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#A6E3A1"/>
+          </marker>
+          <marker id="arr-r2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#F38BA8"/>
+          </marker>
+        </defs>
+
+        <!-- 售货机主体 -->
+        <rect x="200" y="15" width="240" height="190" rx="12"
+              fill="#16141F" stroke="#CBA6F7" stroke-width="2"/>
+        <text x="320" y="40" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="12"
+              fill="#CBA6F7" font-weight="700">自动售货机（class）</text>
+
+        <!-- 内部区域（private） -->
+        <rect x="215" y="52" width="95" height="135" rx="6"
+              fill="rgba(243,139,168,.07)" stroke="#F38BA8" stroke-width="1"/>
+        <text x="262" y="70" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#F38BA8" font-weight="700">内部机械 🔒</text>
+        <text x="262" y="89"  text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">库存数量</text>
+        <text x="262" y="105" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">出货机构</text>
+        <text x="262" y="121" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">收款系统</text>
+        <text x="262" y="145" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#45475A">（你看不到）</text>
+
+        <!-- 按钮区（public） -->
+        <rect x="325" y="52" width="99" height="135" rx="6"
+              fill="rgba(166,227,161,.06)" stroke="#A6E3A1" stroke-width="1"/>
+        <text x="374" y="70" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6E3A1" font-weight="700">对外按钮 🔓</text>
+        <!-- 按钮 1 -->
+        <rect x="335" y="79" width="79" height="24" rx="5"
+              fill="rgba(166,227,161,.15)" stroke="#A6E3A1" stroke-width="1"/>
+        <text x="374" y="95" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">投币()</text>
+        <!-- 按钮 2 -->
+        <rect x="335" y="112" width="79" height="24" rx="5"
+              fill="rgba(166,227,161,.15)" stroke="#A6E3A1" stroke-width="1"/>
+        <text x="374" y="128" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">选商品()</text>
+        <!-- 按钮 3 -->
+        <rect x="335" y="145" width="79" height="24" rx="5"
+              fill="rgba(166,227,161,.15)" stroke="#A6E3A1" stroke-width="1"/>
+        <text x="374" y="161" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">取货()</text>
+
+        <!-- 用户 -->
+        <text x="80" y="105" text-anchor="middle"
+              font-family="system-ui,sans-serif" font-size="32" fill="#CDD6F4">🧑</text>
+        <text x="80" y="130" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">用户</text>
+        <text x="80" y="144" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">（外部代码）</text>
+
+        <!-- 用户 → 按钮（允许）-->
+        <line x1="112" y1="115" x2="198" y2="124"
+              stroke="#A6E3A1" stroke-width="1.5" marker-end="url(#arr-g2)"/>
+        <text x="148" y="110" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#A6E3A1">可以按按钮</text>
+
+        <!-- 用户 → 内部（拒绝）-->
+        <line x1="108" y1="95" x2="212" y2="80"
+              stroke="#F38BA8" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#arr-r2)"/>
+        <text x="130" y="76" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#F38BA8">不能直接拿货❌</text>
+
+        <!-- 右侧说明 -->
+        <text x="570" y="80"  text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">只需按按钮</text>
+        <text x="570" y="96"  text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">不用知道</text>
+        <text x="570" y="112" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">里面怎么</text>
+        <text x="570" y="128" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">运转的</text>
+      </svg>
+      <figcaption>
+        售货机内部的机械构造对应 <code>private</code> 成员——用户看不见也摸不着；<br>
+        机器外面的投币口、按钮、出货口对应 <code>public</code> 方法——这就是对外提供的"接口"。<br>
+        这正是 <code>class</code> 封装思想的核心：<strong>隐藏复杂性，对外只暴露简洁的接口</strong>。
+      </figcaption>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🎯</span>
+      <div>
+        <b>记住这个类比：</b><br>
+        ・<strong>售货机内部机械</strong> → <code>private</code> 成员变量（外部无法直接访问）<br>
+        ・<strong>对外的投币口/按钮</strong> → <code>public</code> 成员函数（对外提供的操作）<br>
+        ・<strong>用户</strong> → 外部代码（只通过接口与对象交互）
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.1 从 struct 到 class</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="12_00_类与面向对象.html">← 12.0 概述</a>
+      <a class="nav-btn" href="12_02_类的定义与对象.html">12.2 类的定义与对象 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

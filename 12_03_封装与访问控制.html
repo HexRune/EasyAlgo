@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.3 封装与访问控制 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "12.3"; }
+
+  /* ── 子导航（ch12 通用） ── */
+  .ch12-subnav { margin-bottom: 28px; }
+  .ch12-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch12-group { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); overflow: hidden; transition: border-color .15s, background .15s; flex: 0 0 auto; display: flex; flex-direction: column; }
+  .ch12-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch12-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch12-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch12-group-name { color: var(--text-secondary); }
+  .ch12-group.current .ch12-group-name { color: var(--grp-color); }
+  .ch12-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .ch12-group:not(.current) .ch12-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch12-group:not(.current):hover .ch12-group-head { background: var(--grp-color-light); }
+  .ch12-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch12-group:not(.current):hover .ch12-group-name { color: var(--grp-color); }
+  .ch12-expand-badge { margin-left: auto; flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); font-size: 11px; line-height: 1; color: var(--text-muted); transition: all .15s; }
+  .ch12-group:not(.current):hover .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch12-group.current .ch12-expand-badge { display: none; }
+  .ch12-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch12-group:not(.current) .ch12-items { display: none; }
+  .ch12-group.expanded .ch12-items { display: flex; }
+  .ch12-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch12-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch12-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch12-group.c-intro { --grp-color: var(--accent);   --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch12-group.c-csp   { --grp-color: var(--teal-mid); --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch12-group.c-ext   { --grp-color: var(--blue-mid); --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+
+  /* ── 本页专属 ── */
+
+  /* 三权限对比卡片 */
+  .access-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+  @media (max-width: 640px) { .access-cards { grid-template-columns: 1fr; } }
+  .access-card { border-radius: var(--r-md); padding: 16px 18px; border: 1px solid var(--border); }
+  .access-card.pub { border-top: 3px solid var(--teal-mid);  background: var(--teal-light); }
+  .access-card.pri { border-top: 3px solid var(--coral-mid); background: var(--coral-light); }
+  .access-card.pro { border-top: 3px solid var(--blue-mid);  background: var(--blue-light); }
+  .ac-kw   { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .pub .ac-kw { color: var(--teal); }
+  .pri .ac-kw { color: var(--coral); }
+  .pro .ac-kw { color: var(--blue-mid); }
+  .ac-icon { font-size: 20px; float: right; margin-top: -2px; }
+  .ac-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.65; }
+  .ac-who  { margin-top: 10px; font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+  .ac-who span { display: block; font-size: 12px; font-weight: 400; text-transform: none; letter-spacing: 0; margin-top: 2px; color: var(--text-secondary); }
+
+  /* SVG 图示容器 */
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+
+  /* 权限对比表 */
+  .access-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .access-table thead tr { background: var(--teal-light); }
+  .access-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #9FE1CB; }
+  .access-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; text-align: center; }
+  .access-table td:first-child { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--text-primary); background: var(--surface); }
+  .access-table tr:last-child td { border-bottom: none; }
+  .yes { color: var(--teal);  font-weight: 700; }
+  .no  { color: var(--coral); font-weight: 700; }
+
+  /* getter/setter 流程示意 */
+  .gs-flow { display: flex; align-items: center; gap: 10px; margin: 18px 0; flex-wrap: wrap; }
+  .gs-box { border-radius: var(--r-md); padding: 12px 16px; font-size: 13px; line-height: 1.6; flex: 1; min-width: 140px; }
+  .gs-box.data { background: var(--coral-light); border: 1px solid var(--coral-mid); color: var(--coral); font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+  .gs-box.fn   { background: var(--teal-light);  border: 1px solid var(--teal-mid);  color: var(--teal);  font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+  .gs-box.ext  { background: var(--surface); border: 1px solid var(--border); color: var(--text-secondary); font-size: 12.5px; }
+  .gs-arrow { font-size: 18px; color: var(--text-muted); flex-shrink: 0; }
+  .gs-label { font-size: 10.5px; color: var(--text-muted); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="12.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十二章 · 类与面向对象</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.3 封装与访问控制</span>
+    </div>
+    <h1 class="chapter-title">12.3　封装与访问控制</h1>
+    <p class="chapter-desc">为什么要把数据"藏"起来？<code>public</code>、<code>private</code>、<code>protected</code> 三个关键字各管什么——用门禁卡的比喻彻底搞清楚。</p>
+  </header>
+
+  <!-- ═══ 子导航 ═══ -->
+  <nav class="ch12-subnav">
+    <div class="ch12-subnav-groups">
+
+      <div class="ch12-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">先导课</span>
+          <span class="ch12-group-count">1</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-csp current expanded">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">基础语法</span>
+          <span class="ch12-group-count">5</span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
+          <a class="ch12-item" href="12_02_类的定义与对象.html">类的定义与对象</a>
+          <a class="ch12-item active" href="12_03_封装与访问控制.html">封装与访问控制</a>
+          <a class="ch12-item" href="12_04_构造与析构函数.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_05_运算符重载.html">运算符重载</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-ext" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">进阶特性</span>
+          <span class="ch12-group-count">5</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
+          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">12.3.1</span><a href="#s1">封装是什么</a></li>
+      <li><span class="toc-num">12.3.2</span><a href="#s2">三个访问控制关键字</a></li>
+      <li><span class="toc-num">12.3.3</span><a href="#s3">代码里怎么写</a></li>
+      <li><span class="toc-num">12.3.4</span><a href="#s4">getter 与 setter</a></li>
+      <li><span class="toc-num">12.3.5</span><a href="#s5">竞赛中怎么用</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <!-- ── 12.3.1 封装是什么 ── -->
+    <div class="sub-title" id="s1">12.3.1　封装是什么</div>
+    <div class="section-body">
+      <p>想象你的银行账户。银行当然知道你账户里有多少钱，但它不会把账本直接放在柜台上让任何人随便翻看。你只能通过"存款"、"取款"、"查余额"这几个固定窗口来操作——这就是封装。</p>
+      <p><strong>封装的核心思想：把数据藏起来，只对外提供受控的操作接口。</strong> 这样做有两个好处：</p>
+    </div>
+
+    <div class="access-cards" style="grid-template-columns: repeat(2,1fr);">
+      <div class="access-card pub">
+        <div class="ac-kw">保护数据安全 🛡️</div>
+        <div class="ac-desc">外部代码无法直接修改内部数据，必须经过类提供的方法。可以在方法里加校验逻辑，防止非法值写入。</div>
+      </div>
+      <div class="access-card pro">
+        <div class="ac-kw">隐藏实现细节 📦</div>
+        <div class="ac-desc">使用者不需要知道内部怎么实现的，只关心"能做什么"。内部实现改变了，外部代码也不需要跟着改。</div>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>在 C++ 里，封装是靠三个访问控制关键字实现的：<code>public</code>、<code>private</code>、<code>protected</code>。</p>
+    </div>
+
+    <!-- ── 12.3.2 三个访问控制关键字 ── -->
+    <div class="sub-title" id="s2">12.3.2　三个访问控制关键字</div>
+
+    <div class="access-cards">
+      <div class="access-card pub">
+        <span class="ac-icon">🔓</span>
+        <div class="ac-kw">public</div>
+        <div class="ac-desc">公开的。任何地方都能访问——类内部、子类、外部代码全都可以。</div>
+        <div class="ac-who">谁能访问<span>✅ 所有人</span></div>
+      </div>
+      <div class="access-card pri">
+        <span class="ac-icon">🔒</span>
+        <div class="ac-kw">private</div>
+        <div class="ac-desc">私有的。只有<strong>这个类自己</strong>的成员函数才能访问，子类和外部代码都不行。</div>
+        <div class="ac-who">谁能访问<span>✅ 仅本类内部</span></div>
+      </div>
+      <div class="access-card pro">
+        <span class="ac-icon">🏠</span>
+        <div class="ac-kw">protected</div>
+        <div class="ac-desc">受保护的。本类和<strong>子类</strong>能访问，外部代码不行。主要在继承时用到。</div>
+        <div class="ac-who">谁能访问<span>✅ 本类 + 子类</span></div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>用门禁卡来记：</b><br>
+      想象一栋大楼，<code>public</code> 是大厅——所有人都能进；<code>private</code> 是保险库——只有本人能进；<code>protected</code> 是员工专区——本人和家属（子类）能进，其他人不行。</div>
+    </div>
+
+    <table class="access-table">
+      <thead>
+        <tr><th>关键字</th><th>类内部</th><th>子类（继承）</th><th>外部代码</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>public</td>
+          <td class="yes">✅ 可以</td><td class="yes">✅ 可以</td><td class="yes">✅ 可以</td>
+        </tr>
+        <tr>
+          <td>protected</td>
+          <td class="yes">✅ 可以</td><td class="yes">✅ 可以</td><td class="no">❌ 不行</td>
+        </tr>
+        <tr>
+          <td>private</td>
+          <td class="yes">✅ 可以</td><td class="no">❌ 不行</td><td class="no">❌ 不行</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div><b>现阶段记住两个就够了：</b><code>private</code> 把数据藏起来，<code>public</code> 把操作接口暴露出去。<code>protected</code> 在学到继承（12.8）时自然就明白了。</div>
+    </div>
+
+    <!-- ── 12.3.3 代码里怎么写 ── -->
+    <div class="sub-title" id="s3">12.3.3　代码里怎么写</div>
+    <div class="section-body">
+      <p>关键字后面跟一个冒号，之后的所有成员都属于这个权限级别，直到遇到下一个关键字为止。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 银行账户示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">BankAccount</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">private</span>:                         <span class="cmt">// 🔒 以下成员外部不可见</span></td></tr>
+          <tr class="hl-warn"><td class="ln">3</td><td class="cd">    <span class="typ">string</span> owner;</td></tr>
+          <tr class="hl-warn"><td class="ln">4</td><td class="cd">    <span class="typ">double</span> balance;             <span class="cmt">// 余额（外部不能直接改）</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="kw">public</span>:                          <span class="cmt">// 🔓 以下成员对外公开</span></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">    <span class="typ">void</span> <span class="fn">Deposit</span>(<span class="typ">double</span> amount) {</td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">        <span class="kw">if</span> (amount &gt; <span class="num">0</span>)            <span class="cmt">// ✅ 只允许存正数</span></td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">            balance += amount;</td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">    }</td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">    <span class="typ">bool</span> <span class="fn">Withdraw</span>(<span class="typ">double</span> amount) {</td></tr>
+          <tr class="hl-ref"><td class="ln">12</td><td class="cd">        <span class="kw">if</span> (amount &gt; <span class="num">0</span> &amp;&amp; amount &lt;= balance) {</td></tr>
+          <tr class="hl-ref"><td class="ln">13</td><td class="cd">            balance -= amount;</td></tr>
+          <tr class="hl-ref"><td class="ln">14</td><td class="cd">            <span class="kw">return</span> <span class="kw">true</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">15</td><td class="cd">        }</td></tr>
+          <tr class="hl-ref"><td class="ln">16</td><td class="cd">        <span class="kw">return</span> <span class="kw">false</span>;               <span class="cmt">// 余额不足，取款失败</span></td></tr>
+          <tr class="hl-ref"><td class="ln">17</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="typ">double</span> <span class="fn">GetBalance</span>() { <span class="kw">return</span> balance; }</td></tr>
+          <tr><td class="ln">19</td><td class="cd">};</td></tr>
+          <tr><td class="ln">20</td><td class="cd"></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="typ">BankAccount</span> acc;</td></tr>
+          <tr class="hl-warn"><td class="ln">23</td><td class="cd">    <span class="cmt">// acc.balance = 99999;  ❌ 编译错误！private 不可直接访问</span></td></tr>
+          <tr class="hl-ref"><td class="ln">24</td><td class="cd">    acc.<span class="fn">Deposit</span>(<span class="num">1000</span>);          <span class="cmt">// ✅ 通过接口存钱</span></td></tr>
+          <tr class="hl-ref"><td class="ln">25</td><td class="cd">    acc.<span class="fn">Withdraw</span>(<span class="num">200</span>);         <span class="cmt">// ✅ 通过接口取钱</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">    cout &lt;&lt; acc.<span class="fn">GetBalance</span>();   <span class="cmt">// 输出：800</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🎯</span>
+      <div>注意第 8、12 行：<code>Deposit</code> 只允许存正数，<code>Withdraw</code> 会检查余额够不够——<strong>这些校验逻辑只需要写一次，放在类里</strong>。外部无论多少地方调用，都自动受到保护，不可能绕过去。</div>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:640px; width:100%;">
+        <defs>
+          <marker id="a-ok"  markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#1D9E75"/></marker>
+          <marker id="a-no"  markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#E8556D"/></marker>
+          <marker id="a-int" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#6C7086"/></marker>
+        </defs>
+
+        <!-- BankAccount 外框 -->
+        <rect x="180" y="15" width="320" height="190" rx="10"
+              fill="#16141F" stroke="#CBA6F7" stroke-width="1.5"/>
+        <text x="340" y="38" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="13" fill="#CBA6F7" font-weight="700">BankAccount</text>
+
+        <!-- private 区 -->
+        <rect x="196" y="50" width="130" height="140" rx="6"
+              fill="rgba(232,85,109,.07)" stroke="#E8556D" stroke-width="1"/>
+        <text x="261" y="68" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#E8556D" font-weight="700">private 🔒</text>
+        <text x="261" y="90"  text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#CDD6F4">owner</text>
+        <text x="261" y="108" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#CDD6F4">balance</text>
+        <text x="261" y="136" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#45475A">外部无法直接读写</text>
+        <text x="261" y="150" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#45475A">必须通过接口操作</text>
+
+        <!-- public 区 -->
+        <rect x="344" y="50" width="140" height="140" rx="6"
+              fill="rgba(29,158,117,.07)" stroke="#1D9E75" stroke-width="1"/>
+        <text x="414" y="68" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#1D9E75" font-weight="700">public 🔓</text>
+        <rect x="356" y="77"  width="116" height="22" rx="5" fill="rgba(29,158,117,.15)" stroke="#1D9E75" stroke-width="1"/>
+        <text x="414" y="92"  text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">Deposit()</text>
+        <rect x="356" y="108" width="116" height="22" rx="5" fill="rgba(29,158,117,.15)" stroke="#1D9E75" stroke-width="1"/>
+        <text x="414" y="123" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">Withdraw()</text>
+        <rect x="356" y="139" width="116" height="22" rx="5" fill="rgba(29,158,117,.15)" stroke="#1D9E75" stroke-width="1"/>
+        <text x="414" y="154" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">GetBalance()</text>
+
+        <!-- public 内部访问 private -->
+        <line x1="356" y1="119" x2="328" y2="108" stroke="#6C7086" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#a-int)"/>
+        <text x="335" y="128" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#45475A">内部可访问</text>
+
+        <!-- 外部 → public（允许）-->
+        <text x="64" y="103" text-anchor="middle" font-family="system-ui,sans-serif" font-size="28">🧑</text>
+        <text x="64" y="122" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">外部代码</text>
+        <line x1="96" y1="108" x2="178" y2="119" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#a-ok)"/>
+        <text x="134" y="104" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#1D9E75">✅ 可调用</text>
+
+        <!-- 外部 → private（拒绝）-->
+        <line x1="94" y1="90" x2="193" y2="72" stroke="#E8556D" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#a-no)"/>
+        <text x="112" y="72" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#E8556D">❌ 直接访问 balance？拒绝</text>
+
+        <!-- 底部说明 -->
+        <text x="340" y="214" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#45475A">
+          外部只能调用 public 方法；balance 的读写必须经过 Deposit / Withdraw / GetBalance
+        </text>
+      </svg>
+      <figcaption>
+        <code>balance</code> 被 <code>private</code> 保护，外部任何代码都无法直接改写它。<br>
+        存款必须经过 <code>Deposit()</code>，取款必须经过 <code>Withdraw()</code>，校验逻辑就在这两个函数里——漏洞从根本上消除了。
+      </figcaption>
+    </div>
+
+    <!-- ── 12.3.4 getter 与 setter ── -->
+    <div class="sub-title" id="s4">12.3.4　getter 与 setter</div>
+    <div class="section-body">
+      <p>数据藏进 <code>private</code> 之后，如果外部代码需要读或改它，怎么办？答案是提供专门的"读取函数"和"写入函数"，分别叫 <strong>getter</strong> 和 <strong>setter</strong>。</p>
+    </div>
+
+    <div class="gs-flow">
+      <div class="gs-box ext">
+        外部代码<br>
+        <code style="font-size:11px">s.SetScore(95)</code>
+        <div class="gs-label">调用者</div>
+      </div>
+      <div class="gs-arrow">→</div>
+      <div class="gs-box fn">
+        SetScore(val)<br>
+        <span style="font-size:11px;font-weight:400">校验后写入</span>
+        <div class="gs-label">setter（写入）</div>
+      </div>
+      <div class="gs-arrow">→</div>
+      <div class="gs-box data">
+        score<br>
+        <span style="font-size:11px;font-weight:400">private 成员</span>
+        <div class="gs-label">被保护的数据</div>
+      </div>
+      <div class="gs-arrow">←</div>
+      <div class="gs-box fn">
+        GetScore()<br>
+        <span style="font-size:11px;font-weight:400">直接返回值</span>
+        <div class="gs-label">getter（读取）</div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · getter 与 setter</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">private</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="cmt">// getter：只读，不改数据</span></td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">    <span class="typ">string</span> <span class="fn">GetName</span>()  { <span class="kw">return</span> name;  }</td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">    <span class="typ">int</span>    <span class="fn">GetScore</span>() { <span class="kw">return</span> score; }</td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="cmt">// setter：写入前先校验</span></td></tr>
+          <tr class="hl-ref"><td class="ln">12</td><td class="cd">    <span class="typ">void</span> <span class="fn">SetName</span>(<span class="typ">string</span> n) {</td></tr>
+          <tr class="hl-ref"><td class="ln">13</td><td class="cd">        <span class="kw">if</span> (!n.empty()) name = n;  <span class="cmt">// 不允许空名字</span></td></tr>
+          <tr class="hl-ref"><td class="ln">14</td><td class="cd">    }</td></tr>
+          <tr class="hl-ref"><td class="ln">15</td><td class="cd">    <span class="typ">void</span> <span class="fn">SetScore</span>(<span class="typ">int</span> s) {</td></tr>
+          <tr class="hl-ref"><td class="ln">16</td><td class="cd">        <span class="kw">if</span> (s &gt;= <span class="num">0</span> &amp;&amp; s &lt;= <span class="num">100</span>) score = s;  <span class="cmt">// 只允许 0~100</span></td></tr>
+          <tr class="hl-ref"><td class="ln">17</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">18</td><td class="cd">};</td></tr>
+          <tr><td class="ln">19</td><td class="cd"></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="typ">Student</span> s;</td></tr>
+          <tr><td class="ln">22</td><td class="cd">    s.<span class="fn">SetName</span>(<span class="str">"Alice"</span>);</td></tr>
+          <tr><td class="ln">23</td><td class="cd">    s.<span class="fn">SetScore</span>(<span class="num">95</span>);       <span class="cmt">// ✅ 正常写入</span></td></tr>
+          <tr class="hl-warn"><td class="ln">24</td><td class="cd">    s.<span class="fn">SetScore</span>(<span class="num">-10</span>);      <span class="cmt">// ⚠️ 不合法，被 setter 拦截，score 不变</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">    cout &lt;&lt; s.<span class="fn">GetScore</span>();  <span class="cmt">// 输出：95</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>只需要 getter 不需要 setter 时</b>，数据就变成了"只读"——外部能查到值，但永远无法修改，这比任何注释都更有约束力。</div>
+    </div>
+
+    <!-- ── 12.3.5 竞赛中怎么用 ── -->
+    <div class="sub-title" id="s5">12.3.5　竞赛中怎么用</div>
+    <div class="section-body">
+      <p>CSP-J / NOIP 的题目里，并不强制要求每个成员都用 <code>private</code> 封装，很多时候直接用 <code>struct</code> 全部公开也完全没问题。封装最大的价值在于<strong>大项目的维护和防错</strong>。</p>
+      <p>但有一种情况在竞赛中很常见，用封装会更优雅——<strong>带有合法性约束的数据结构</strong>，比如分数必须在 0~100、坐标不能越界等，用 setter 统一拦截比每次赋值都手写 if 判断要干净得多。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>
+        <b>本节小结：封装的三句话</b><br>
+        ① 把<strong>数据</strong>放 <code>private</code>，对外不可见。<br>
+        ② 把<strong>操作</strong>放 <code>public</code>，对外提供接口。<br>
+        ③ 在接口里加<strong>校验逻辑</strong>，拦截非法数据。
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.3 封装与访问控制</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="12_02_类的定义与对象.html">← 12.2 类的定义与对象</a>
+      <a class="nav-btn" href="12_04_构造与析构函数.html">12.4 构造与析构函数 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

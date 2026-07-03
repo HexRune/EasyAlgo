@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.4 构造与析构函数 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "12.4"; }
+
+  /* ── 子导航（ch12 通用） ── */
+  .ch12-subnav { margin-bottom: 28px; }
+  .ch12-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch12-group { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); overflow: hidden; transition: border-color .15s, background .15s; flex: 0 0 auto; display: flex; flex-direction: column; }
+  .ch12-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch12-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch12-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch12-group-name { color: var(--text-secondary); }
+  .ch12-group.current .ch12-group-name { color: var(--grp-color); }
+  .ch12-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .ch12-group:not(.current) .ch12-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch12-group:not(.current):hover .ch12-group-head { background: var(--grp-color-light); }
+  .ch12-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch12-group:not(.current):hover .ch12-group-name { color: var(--grp-color); }
+  .ch12-expand-badge { margin-left: auto; flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); font-size: 11px; line-height: 1; color: var(--text-muted); transition: all .15s; }
+  .ch12-group:not(.current):hover .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch12-group.current .ch12-expand-badge { display: none; }
+  .ch12-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch12-group:not(.current) .ch12-items { display: none; }
+  .ch12-group.expanded .ch12-items { display: flex; }
+  .ch12-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch12-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch12-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch12-group.c-intro { --grp-color: var(--accent);   --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch12-group.c-csp   { --grp-color: var(--teal-mid); --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch12-group.c-ext   { --grp-color: var(--blue-mid); --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+
+  /* ── 本页专属 ── */
+
+  /* 生命周期时间轴 */
+  .timeline {
+    background: var(--code-bg);
+    border-radius: var(--r-md);
+    padding: 24px 28px 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    overflow-x: auto;
+  }
+  .tl-track {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    min-width: 520px;
+  }
+  .tl-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .tl-dot {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700;
+    border: 2px solid;
+  }
+  .tl-dot.birth  { background: rgba(166,227,161,.15); border-color: #A6E3A1; color: #A6E3A1; }
+  .tl-dot.live   { background: rgba(137,180,250,.12); border-color: #89B4FA; color: #89B4FA; font-size: 13px; }
+  .tl-dot.death  { background: rgba(243,139,168,.12); border-color: #F38BA8; color: #F38BA8; }
+  .tl-label { font-size: 11px; color: #A6ADC8; margin-top: 8px; text-align: center; font-family: 'Noto Sans SC', sans-serif; white-space: nowrap; }
+  .tl-label strong { display: block; font-size: 12px; color: #CDD6F4; margin-bottom: 2px; font-family: 'JetBrains Mono', monospace; }
+  .tl-line { flex: 1; height: 2px; background: linear-gradient(90deg, #313244, #45475A); min-width: 60px; }
+  .tl-caption {
+    font-size: 12px; color: #A6ADC8; margin-top: 18px;
+    line-height: 1.7; border-top: 1px solid #2A2840; padding-top: 12px;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .tl-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; }
+
+  /* SVG 图示 */
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+
+  /* 构造函数种类对比卡 */
+  .ctor-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+  @media (max-width: 680px) { .ctor-cards { grid-template-columns: 1fr; } }
+  .ctor-card { border-radius: var(--r-md); padding: 15px 16px; border: 1px solid var(--border); background: var(--surface); }
+  .ctor-card.default { border-top: 3px solid var(--accent-mid); }
+  .ctor-card.param   { border-top: 3px solid var(--teal-mid); }
+  .ctor-card.list    { border-top: 3px solid var(--amber-mid); }
+  .ctor-name { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
+  .ctor-card.default .ctor-name { color: var(--accent); }
+  .ctor-card.param   .ctor-name { color: var(--teal); }
+  .ctor-card.list    .ctor-name { color: #F9E2AF; }
+  .ctor-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="12.4">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十二章 · 类与面向对象</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.4 构造与析构函数</span>
+    </div>
+    <h1 class="chapter-title">12.4　构造与析构函数</h1>
+    <p class="chapter-desc">对象创建时自动执行的初始化代码，以及对象消亡时自动执行的清理动作——让类自己管理好自己的"出生"和"死亡"。</p>
+  </header>
+
+  <!-- ═══ 子导航 ═══ -->
+  <nav class="ch12-subnav">
+    <div class="ch12-subnav-groups">
+
+      <div class="ch12-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">先导课</span>
+          <span class="ch12-group-count">1</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-csp current expanded">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">基础语法</span>
+          <span class="ch12-group-count">5</span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
+          <a class="ch12-item" href="12_02_类的定义与对象.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
+          <a class="ch12-item active" href="12_04_构造与析构函数.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_05_运算符重载.html">运算符重载</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-ext" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">进阶特性</span>
+          <span class="ch12-group-count">5</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
+          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">12.4.1</span><a href="#s1">对象的生命周期</a></li>
+      <li><span class="toc-num">12.4.2</span><a href="#s2">构造函数</a></li>
+      <li><span class="toc-num">12.4.3</span><a href="#s3">构造函数的三种形式</a></li>
+      <li><span class="toc-num">12.4.4</span><a href="#s4">初始化列表</a></li>
+      <li><span class="toc-num">12.4.5</span><a href="#s5">析构函数</a></li>
+      <li><span class="toc-num">12.4.6</span><a href="#s6">竞赛中的实用技巧</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <!-- ── 12.4.1 对象的生命周期 ── -->
+    <div class="sub-title" id="s1">12.4.1　对象的生命周期</div>
+    <div class="section-body">
+      <p>每个对象都有自己的"生命周期"——从创建到销毁。C++ 允许你在这两个时间点上<strong>自动</strong>执行代码：对象诞生时运行<strong>构造函数</strong>，对象消亡时运行<strong>析构函数</strong>。</p>
+      <p>你不需要手动调用它们，C++ 会在合适的时机自动触发。</p>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-track">
+        <div class="tl-node">
+          <div class="tl-dot birth">🐣</div>
+          <div class="tl-label"><strong>构造函数</strong>自动执行<br>成员变量初始化</div>
+        </div>
+        <div class="tl-line"></div>
+        <div class="tl-node">
+          <div class="tl-dot live">使用中</div>
+          <div class="tl-label"><strong>对象生存期</strong><br>调用成员函数<br>读写成员变量</div>
+        </div>
+        <div class="tl-line"></div>
+        <div class="tl-node">
+          <div class="tl-dot death">💀</div>
+          <div class="tl-label"><strong>析构函数</strong>自动执行<br>释放资源、做清理</div>
+        </div>
+      </div>
+      <div class="tl-caption">
+        局部对象在离开作用域（<code>}</code>）时自动销毁；<code>new</code> 创建的对象在 <code>delete</code> 时销毁。<br>
+        构造和析构都是自动触发的，不需要也不能手动调用析构函数。
+      </div>
+    </div>
+
+    <!-- ── 12.4.2 构造函数 ── -->
+    <div class="sub-title" id="s2">12.4.2　构造函数</div>
+    <div class="section-body">
+      <p>构造函数是一个<strong>与类同名、没有返回值</strong>的特殊函数。对象创建的那一刻，它自动被调用，负责把成员变量初始化到合法状态。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 最简单的构造函数</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    <span class="typ">Student</span>() {            <span class="cmt">// 构造函数：与类同名，无返回值</span></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">        name  = <span class="str">"未知"</span>;    <span class="cmt">// 对象创建时自动执行</span></td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">        score = <span class="num">0</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">10</td><td class="cd">};</td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr class="hl-ref"><td class="ln">13</td><td class="cd">    <span class="typ">Student</span> s;              <span class="cmt">// 创建对象，构造函数自动执行</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    cout &lt;&lt; s.name  &lt;&lt; endl; <span class="cmt">// 输出：未知</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    cout &lt;&lt; s.score &lt;&lt; endl; <span class="cmt">// 输出：0</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>没有构造函数会怎样？</b>如果你不写构造函数，C++ 会自动生成一个<strong>默认构造函数</strong>——它什么也不做，成员变量的值是随机的垃圾值。这是新手经常遇到的 bug 来源，<strong>养成写构造函数的习惯</strong>可以避免很多麻烦。
+      </div>
+    </div>
+
+    <!-- ── 12.4.3 构造函数的三种形式 ── -->
+    <div class="sub-title" id="s3">12.4.3　构造函数的三种形式</div>
+    <div class="section-body">
+      <p>构造函数可以有参数，也可以重载——同一个类可以有多个构造函数，C++ 会根据你创建对象时传入的参数自动选择合适的那个。</p>
+    </div>
+
+    <div class="ctor-cards">
+      <div class="ctor-card default">
+        <div class="ctor-name">默认构造函数</div>
+        <div class="ctor-desc">不需要参数，直接写 <code>Student s;</code> 时调用。负责设置"合理的初始状态"。</div>
+      </div>
+      <div class="ctor-card param">
+        <div class="ctor-name">带参构造函数</div>
+        <div class="ctor-desc">接受参数，写 <code>Student s("Alice", 95);</code> 时调用。可以在创建时直接指定初始值。</div>
+      </div>
+      <div class="ctor-card list">
+        <div class="ctor-name">委托 / 重载</div>
+        <div class="ctor-desc">同一个类可以有多个构造函数，C++ 根据参数类型和数量自动匹配，叫做<strong>构造函数重载</strong>。</div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 多个构造函数重载</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    <span class="typ">Student</span>() {                       <span class="cmt">// ① 默认构造：无参数</span></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">        name = <span class="str">"未知"</span>; score = <span class="num">0</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">    <span class="typ">Student</span>(<span class="typ">string</span> n, <span class="typ">int</span> s) {       <span class="cmt">// ② 带参构造：指定初始值</span></td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">        name = n; score = s;</td></tr>
+          <tr class="hl-ref"><td class="ln">12</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">13</td><td class="cd">};</td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="typ">Student</span> s1;                       <span class="cmt">// 调用 ① → name="未知", score=0</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="typ">Student</span> s2(<span class="str">"Alice"</span>, <span class="num">95</span>);          <span class="cmt">// 调用 ② → name="Alice", score=95</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="typ">Student</span> s3 = <span class="typ">Student</span>(<span class="str">"Bob"</span>, <span class="num">82</span>); <span class="cmt">// 与 s2 写法等价</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 12.4.4 初始化列表 ── -->
+    <div class="sub-title" id="s4">12.4.4　初始化列表</div>
+    <div class="section-body">
+      <p>除了在构造函数体内赋值，还有一种更简洁、效率更高的写法——<strong>初始化列表</strong>，放在函数参数列表后面，用冒号 <code>:</code> 开头。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 初始化列表写法</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="cmt">// 函数体内赋值（常规写法）</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="typ">Student</span>(<span class="typ">string</span> n, <span class="typ">int</span> s) {</td></tr>
+          <tr><td class="ln">8</td><td class="cd">        name = n;  score = s;   <span class="cmt">// 先默认初始化，再赋值</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">    <span class="cmt">// 初始化列表写法（推荐）</span></td></tr>
+          <tr class="hl-ref"><td class="ln">12</td><td class="cd">    <span class="typ">Student</span>(<span class="typ">string</span> n, <span class="typ">int</span> s) : name(n), score(s) {}</td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="cmt">//                         ↑ 冒号后直接初始化，{}体内为空</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>为什么推荐初始化列表？</b><br>
+        函数体内赋值其实分两步：先用默认方式初始化成员，再赋新值。初始化列表则是<strong>直接用目标值初始化</strong>，省去了多余的一步，对复杂类型（如 <code>string</code>）效率更高。在竞赛中两者效果相同，但养成写初始化列表的习惯是好的。
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>初始化列表还有一个<strong>必须用</strong>的场景：当成员变量是 <code>const</code> 或引用类型时，只能在初始化列表里设置，不能在函数体内赋值。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · const 成员必须用初始化列表</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Config</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr class="hl-warn"><td class="ln">3</td><td class="cd">    <span class="kw">const</span> <span class="typ">int</span> MAX_SIZE;   <span class="cmt">// const 成员：一旦初始化不能修改</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr class="hl-warn"><td class="ln">5</td><td class="cd">    <span class="cmt">// Config() { MAX_SIZE = 100; }  ❌ 编译错误！const 不能赋值</span></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    <span class="typ">Config</span>(<span class="typ">int</span> n) : MAX_SIZE(n) {}  <span class="cmt">// ✅ 只能在初始化列表里设置</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">};</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 12.4.5 析构函数 ── -->
+    <div class="sub-title" id="s5">12.4.5　析构函数</div>
+    <div class="section-body">
+      <p>析构函数是对象"死亡"时自动执行的函数。它的名字是<strong>类名前加波浪号 <code>~</code></strong>，没有参数，也没有返回值。</p>
+      <p>析构函数的主要用途是<strong>释放资源</strong>——比如对象内部用 <code>new</code> 申请了堆内存，就需要在析构函数里 <code>delete</code> 掉，否则会内存泄漏。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 构造函数 + 析构函数完整示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    <span class="typ">Student</span>(<span class="typ">string</span> n, <span class="typ">int</span> s) : name(n), score(s) {</td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">        cout &lt;&lt; name &lt;&lt; <span class="str">" 诞生了！"</span> &lt;&lt; endl;</td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr class="hl-warn"><td class="ln">10</td><td class="cd">    ~<span class="typ">Student</span>() {                   <span class="cmt">// 析构函数：~ + 类名，无参数无返回值</span></td></tr>
+          <tr class="hl-warn"><td class="ln">11</td><td class="cd">        cout &lt;&lt; name &lt;&lt; <span class="str">" 消亡了。"</span> &lt;&lt; endl;</td></tr>
+          <tr class="hl-warn"><td class="ln">12</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">13</td><td class="cd">};</td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="typ">Student</span> s1(<span class="str">"Alice"</span>, <span class="num">95</span>);    <span class="cmt">// 输出：Alice 诞生了！</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="typ">Student</span> s2(<span class="str">"Bob"</span>, <span class="num">82</span>);      <span class="cmt">// 输出：Bob 诞生了！</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="cmt">// main 结束，局部对象按创建的反序销毁：</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">}                               <span class="cmt">// 输出：Bob 消亡了。→ Alice 消亡了。</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 640 180" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:600px; width:100%;">
+        <defs>
+          <marker id="arr-d" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#89B4FA"/>
+          </marker>
+        </defs>
+
+        <!-- 时间轴 -->
+        <line x1="40" y1="88" x2="600" y2="88" stroke="#45475A" stroke-width="1.5"/>
+        <text x="600" y="84" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#45475A">时间 →</text>
+
+        <!-- s1 生命周期 -->
+        <rect x="60" y="46" width="460" height="30" rx="5"
+              fill="rgba(166,227,161,.12)" stroke="#A6E3A1" stroke-width="1"/>
+        <text x="80" y="66" font-family="'JetBrains Mono',monospace" font-size="11" fill="#A6E3A1" font-weight="700">s1 (Alice)</text>
+
+        <!-- s2 生命周期 -->
+        <rect x="160" y="84" width="360" height="30" rx="5"
+              fill="rgba(137,180,250,.12)" stroke="#89B4FA" stroke-width="1"/>
+        <text x="180" y="104" font-family="'JetBrains Mono',monospace" font-size="11" fill="#89B4FA" font-weight="700">s2 (Bob)</text>
+
+        <!-- 构造标记 -->
+        <line x1="60" y1="40" x2="60" y2="122" stroke="#A6E3A1" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="62" y="135" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#A6E3A1">构造 s1</text>
+
+        <line x1="160" y1="40" x2="160" y2="122" stroke="#89B4FA" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="162" y="135" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#89B4FA">构造 s2</text>
+
+        <!-- 析构标记（反序） -->
+        <line x1="520" y1="40" x2="520" y2="122" stroke="#F38BA8" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="476" y="135" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#F38BA8">析构 s2（先）</text>
+
+        <line x1="600" y1="40" x2="600" y2="140" stroke="#F38BA8" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="556" y="155" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#F38BA8">析构 s1（后）</text>
+
+        <!-- main 结束标注 -->
+        <text x="530" y="40" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#585B70">main() 结束</text>
+      </svg>
+      <figcaption>
+        析构顺序与构造顺序<strong>相反</strong>——后创建的对象先销毁（栈式结构）。<br>
+        先构造 <code>s1</code>，再构造 <code>s2</code>；<code>main</code> 结束时先析构 <code>s2</code>，再析构 <code>s1</code>。
+      </figcaption>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div>
+        <b>竞赛中需要写析构函数吗？</b>大多数时候<strong>不需要</strong>。只有当类里面用了 <code>new</code> 手动分配内存时才需要在析构函数里 <code>delete</code>。竞赛中通常避免在类里直接 <code>new</code>，所以析构函数往往可以省略——C++ 会自动生成一个什么都不做的默认析构函数。
+      </div>
+    </div>
+
+    <!-- ── 12.4.6 竞赛中的实用技巧 ── -->
+    <div class="sub-title" id="s6">12.4.6　竞赛中的实用技巧</div>
+    <div class="section-body">
+      <p>在 CSP-J / NOIP 中，构造函数最常见的用途是<strong>给结构体或类设定默认初始值</strong>，让代码更安全、更简洁。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 竞赛常用：带默认值的结构体构造函数</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 存图的边：起点、终点、权重</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">struct</span> <span class="typ">Edge</span> {</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> u, v, w;</td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">    <span class="typ">Edge</span>(<span class="typ">int</span> u, <span class="typ">int</span> v, <span class="typ">int</span> w) : u(u), v(v), w(w) {}</td></tr>
+          <tr><td class="ln">5</td><td class="cd">};</td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 使用时直接传参初始化，更简洁</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">vector&lt;<span class="typ">Edge</span>&gt; edges;</td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">edges.<span class="fn">push_back</span>(<span class="typ">Edge</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">5</span>));  <span class="cmt">// 直接构造，不用逐字段赋值</span></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">edges.<span class="fn">emplace_back</span>(<span class="num">2</span>, <span class="num">3</span>, <span class="num">8</span>);    <span class="cmt">// emplace_back 直接原地构造，更高效</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>
+        <b>本节小结</b><br>
+        ・<strong>构造函数</strong>：与类同名，无返回值，对象创建时自动执行，负责初始化。<br>
+        ・<strong>初始化列表</strong>：冒号后直接初始化成员，比函数体内赋值更简洁高效，<code>const</code> 成员必须用它。<br>
+        ・<strong>析构函数</strong>：<code>~类名()</code>，对象销毁时自动执行，竞赛中通常无需手动写。<br>
+        ・析构顺序与构造顺序<strong>相反</strong>。
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.4 构造与析构函数</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="12_03_封装与访问控制.html">← 12.3 封装与访问控制</a>
+      <a class="nav-btn" href="12_05_运算符重载.html">12.5 运算符重载 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

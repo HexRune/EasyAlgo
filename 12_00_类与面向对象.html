@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.0 类与面向对象 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "12.0"; }
+
+  /* ── 子导航组件（复用 ch11 风格，前缀改为 ch12）── */
+  .ch12-subnav { margin-bottom: 28px; }
+  .ch12-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch12-group {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .15s, background .15s;
+    flex: 0 0 auto; display: flex; flex-direction: column;
+  }
+  .ch12-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch12-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch12-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch12-group-name { color: var(--text-secondary); }
+  .ch12-group.current .ch12-group-name { color: var(--grp-color); }
+  .ch12-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .ch12-group:not(.current) .ch12-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch12-group:not(.current):hover .ch12-group-head { background: var(--grp-color-light); }
+  .ch12-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch12-group:not(.current):hover .ch12-group-name { color: var(--grp-color); }
+  .ch12-expand-badge {
+    margin-left: auto; flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 11px; line-height: 1; color: var(--text-muted);
+    transition: all .15s;
+  }
+  .ch12-group:not(.current):hover .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch12-group.current .ch12-expand-badge { display: none; }
+  .ch12-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch12-group:not(.current) .ch12-items { display: none; }
+  .ch12-group.expanded .ch12-items { display: flex; }
+  .ch12-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch12-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch12-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+
+  /* 分组配色 */
+  .ch12-group.c-intro { --grp-color: var(--accent);    --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch12-group.c-csp   { --grp-color: var(--teal-mid);  --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch12-group.c-ext   { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+
+  /* ── 本页专属样式 ── */
+
+  /* OOP 三大特性图示 */
+  .oop-triad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+  @media (max-width: 640px) { .oop-triad { grid-template-columns: 1fr; } }
+  .oop-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 18px 18px; }
+  .oop-card.encap    { border-top: 3px solid var(--teal-mid); }
+  .oop-card.inherit  { border-top: 3px solid var(--blue-mid); }
+  .oop-card.poly     { border-top: 3px solid var(--accent); }
+  .oop-icon  { font-size: 22px; margin-bottom: 8px; }
+  .oop-title { font-size: 13.5px; font-weight: 700; margin-bottom: 4px; color: var(--text-primary); }
+  .oop-desc  { font-size: 12.5px; color: var(--text-muted); line-height: 1.65; }
+
+  /* 关键字速查表 */
+  .kw-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .kw-table thead tr { background: var(--accent-light); }
+  .kw-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA; }
+  .kw-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .kw-table tr:last-child td { border-bottom: none; }
+  .kw-table tr:nth-child(even) td { background: #FAFAF7; }
+  .kw-table tr:nth-child(even) td:first-child { background: #EEEDFE; }
+  .kw-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-dark); background: var(--accent-light); white-space: nowrap; }
+
+  /* 跳转卡片 */
+  .next-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 24px 0; }
+  @media (max-width: 900px) { .next-steps { grid-template-columns: repeat(2, 1fr); } }
+  .next-step-card { border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px; text-decoration: none; background: var(--surface); transition: border-color .12s, transform .12s; }
+  .next-step-card:hover { transform: translateY(-2px); }
+  .ns-csp  { border-top: 3px solid var(--teal-mid); }
+  .ns-ext  { border-top: 3px solid var(--blue-mid); }
+  .ns-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .ns-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+
+  /* intro banner */
+  .intro-banner {
+    display: flex; gap: 16px; align-items: center;
+    background: linear-gradient(135deg, var(--accent-light), #FAFAF7);
+    border: 1px solid #D4D0F8; border-radius: var(--r-lg);
+    padding: 20px 24px; margin-bottom: 24px;
+  }
+  .intro-banner-icon { font-size: 34px; flex-shrink: 0; }
+  .intro-banner-text { font-size: 13.5px; color: var(--accent-dark); line-height: 1.7; }
+
+  /* SVG diagram container */
+  .diagram-block {
+    background: var(--code-bg);
+    border-radius: var(--r-md);
+    padding: 24px 20px 18px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    overflow-x: auto;
+    text-align: center;
+  }
+  .diagram-block figcaption {
+    font-size: 12px;
+    color: #A6ADC8;
+    margin-top: 14px;
+    line-height: 1.7;
+    font-family: 'Noto Sans SC', sans-serif;
+    border-top: 1px solid #2A2840;
+    padding-top: 12px;
+  }
+  .diagram-block figcaption code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: #CBA6F7;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="12.0">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十二章 · 类与面向对象</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.0 概述</span>
+    </div>
+    <h1 class="chapter-title">十二、类与面向对象</h1>
+    <p class="chapter-desc">把数据和操作打包在一起，用"对象"的方式思考程序。本章从最基础的 <code>class</code> 定义出发，逐步带你理解封装、继承与多态。</p>
+  </header>
+
+  <!-- ═══ 子章节导航（分组） ═══ -->
+  <nav class="ch12-subnav">
+    <div class="ch12-subnav-groups">
+
+      <div class="ch12-group c-intro current expanded">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">先导课</span>
+          <span class="ch12-group-count">1</span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item active" href="12_00_类与面向对象.html">概述</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-csp" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">基础语法</span>
+          <span class="ch12-group-count">5</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
+          <a class="ch12-item" href="12_02_类的定义与对象.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
+          <a class="ch12-item" href="12_04_构造与析构函数.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_05_运算符重载.html">运算符重载</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-ext" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">进阶特性</span>
+          <span class="ch12-group-count">5</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
+          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">12.0.1</span><a href="#s1">面向对象是什么</a></li>
+      <li><span class="toc-num">12.0.2</span><a href="#s2">本章关键字一览</a></li>
+      <li><span class="toc-num">12.0.3</span><a href="#s3">本章学习路径</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="s1">12.0.1　面向对象是什么</div>
+    <div class="section-body">
+      <p>想象一下，你要写一个程序来管理一个班级里所有学生的信息。最开始你会定义一堆变量：<code>name1</code>、<code>score1</code>、<code>name2</code>、<code>score2</code>……然后再写一堆函数来操作这些数据。很快你就会发现，数据和函数到处都是，找起来头疼，改起来更头疼。</p>
+      <p><strong>面向对象的核心思想就是：把属于同一个"东西"的数据和操作，打包在一起。</strong> 一个学生的名字、分数，以及"打印信息"、"修改分数"这些操作——全都放在一个叫 <code>Student</code> 的"类"里。这个类就像一张设计图，按照它可以批量创建很多个学生"对象"。</p>
+    </div>
+
+    <div class="intro-banner">
+      <div class="intro-banner-icon">📦</div>
+      <div class="intro-banner-text">
+        <strong>类（class）</strong>是一张<strong>设计图</strong>，<strong>对象（object）</strong>是按这张图造出来的<strong>实物</strong>。就像"手机"是一个类，而你手上那台具体的手机就是一个对象。一张设计图可以造出无数台手机，一个类也可以创建无数个对象。
+      </div>
+    </div>
+
+    <div class="sub-title">面向对象的三大特性</div>
+    <div class="oop-triad">
+      <div class="oop-card encap">
+        <div class="oop-icon">🔒</div>
+        <div class="oop-title">封装 Encapsulation</div>
+        <div class="oop-desc">把数据藏起来，只对外提供固定的"接口"按钮。外部代码不能乱改内部数据，就像自动售货机只有投币口和出货口，你看不到里面的机器。</div>
+      </div>
+      <div class="oop-card inherit">
+        <div class="oop-icon">🌿</div>
+        <div class="oop-title">继承 Inheritance</div>
+        <div class="oop-desc">子类可以直接获得父类已有的属性和方法，再在上面做扩展。就像"智能手机"继承了"手机"的打电话功能，又额外多了上网功能。</div>
+      </div>
+      <div class="oop-card poly">
+        <div class="oop-icon">🎭</div>
+        <div class="oop-title">多态 Polymorphism</div>
+        <div class="oop-desc">同一行代码，根据对象的实际类型执行不同的动作。就像"按下启动键"，对洗衣机是开始洗衣，对微波炉是开始加热——接口相同，行为不同。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 关键字速查 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">速查</p>
+    <h2 class="section-title">本章关键字一览</h2>
+    <div class="section-body">
+      <p>先有个印象，不需要现在全部记住——学完对应章节后再回来看，每个关键字都会变得清晰。</p>
+    </div>
+    <table class="kw-table">
+      <thead>
+        <tr><th>关键字 / 语法</th><th>作用</th><th>在哪学</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>class</td><td>定义一个类（成员默认私有）</td><td>12.1 / 12.2</td></tr>
+        <tr><td>struct</td><td>结构体（成员默认公开），与 class 本质相同</td><td>12.1</td></tr>
+        <tr><td>public</td><td>公开成员，外部代码可以访问</td><td>12.3</td></tr>
+        <tr><td>private</td><td>私有成员，只有类内部能访问</td><td>12.3</td></tr>
+        <tr><td>protected</td><td>保护成员，子类也能访问，外部不能</td><td>12.3 / 12.8</td></tr>
+        <tr><td>this</td><td>指向当前对象自身的指针</td><td>12.2</td></tr>
+        <tr><td>构造函数</td><td>对象创建时自动执行的初始化代码</td><td>12.4</td></tr>
+        <tr><td>析构函数 ~</td><td>对象销毁时自动执行的清理代码</td><td>12.4</td></tr>
+        <tr><td>operator</td><td>运算符重载，让自定义类型支持 +、&lt; 等符号</td><td>12.5</td></tr>
+        <tr><td>static</td><td>静态成员：所有对象共享同一份</td><td>12.7</td></tr>
+        <tr><td>virtual</td><td>虚函数：运行时动态决定调用哪个版本</td><td>12.9</td></tr>
+        <tr><td>= 0</td><td>纯虚函数：子类必须实现，类本身无法实例化</td><td>12.10</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══ 知识结构图 ═══ -->
+  <section class="section" id="s2">
+    <p class="section-label">知识地图</p>
+    <h2 class="section-title">本章学习路径</h2>
+    <div class="section-body">
+      <p>建议按顺序学习——后面的知识点都建立在前面的基础上。"基础语法"部分覆盖 CSP-J 考纲，"进阶特性"部分是拓展内容。</p>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:660px; width:100%;">
+
+        <!-- 基础语法组标题 -->
+        <rect x="20" y="14" width="290" height="228" rx="10"
+              fill="none" stroke="#1D9E75" stroke-width="1" stroke-dasharray="6,3" opacity=".5"/>
+        <text x="165" y="34" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="11"
+              fill="#1D9E75" font-weight="700" letter-spacing=".08em">CSP-J 基础语法</text>
+
+        <!-- 进阶组标题 -->
+        <rect x="390" y="14" width="290" height="228" rx="10"
+              fill="none" stroke="#2473B8" stroke-width="1" stroke-dasharray="6,3" opacity=".5"/>
+        <text x="535" y="34" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="11"
+              fill="#2473B8" font-weight="700" letter-spacing=".08em">进阶特性（拓展）</text>
+
+        <!-- 基础节点 -->
+        <!-- 12.1 -->
+        <rect x="38" y="46" width="120" height="36" rx="7"
+              fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/>
+        <text x="98" y="61" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#0F6E56" font-weight="700">12.1</text>
+        <text x="98" y="75" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#0F6E56">从 struct 到 class</text>
+
+        <!-- 12.2 -->
+        <rect x="38" y="102" width="120" height="36" rx="7"
+              fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/>
+        <text x="98" y="117" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#0F6E56" font-weight="700">12.2</text>
+        <text x="98" y="131" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#0F6E56">类的定义与对象</text>
+
+        <!-- 12.3 -->
+        <rect x="38" y="158" width="120" height="36" rx="7"
+              fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/>
+        <text x="98" y="173" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#0F6E56" font-weight="700">12.3</text>
+        <text x="98" y="187" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#0F6E56">封装与访问控制</text>
+
+        <!-- 12.4 -->
+        <rect x="178" y="102" width="120" height="36" rx="7"
+              fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/>
+        <text x="238" y="117" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#0F6E56" font-weight="700">12.4</text>
+        <text x="238" y="131" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#0F6E56">构造与析构函数</text>
+
+        <!-- 12.5 -->
+        <rect x="178" y="158" width="120" height="36" rx="7"
+              fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/>
+        <text x="238" y="173" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#0F6E56" font-weight="700">12.5</text>
+        <text x="238" y="187" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#0F6E56">运算符重载</text>
+
+        <!-- 进阶节点 -->
+        <!-- 12.6 -->
+        <rect x="408" y="46" width="120" height="36" rx="7"
+              fill="#E6F1FB" stroke="#2473B8" stroke-width="1.5"/>
+        <text x="468" y="61" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#0C447C" font-weight="700">12.6</text>
+        <text x="468" y="75" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#0C447C">拷贝构造函数</text>
+
+        <!-- 12.7 -->
+        <rect x="548" y="46" width="120" height="36" rx="7"
+              fill="#E6F1FB" stroke="#2473B8" stroke-width="1.5"/>
+        <text x="608" y="61" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#0C447C" font-weight="700">12.7</text>
+        <text x="608" y="75" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#0C447C">静态成员 static</text>
+
+        <!-- 12.8 -->
+        <rect x="408" y="102" width="120" height="36" rx="7"
+              fill="#E6F1FB" stroke="#2473B8" stroke-width="1.5"/>
+        <text x="468" y="117" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#0C447C" font-weight="700">12.8</text>
+        <text x="468" y="131" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#0C447C">继承基础</text>
+
+        <!-- 12.9 -->
+        <rect x="548" y="102" width="120" height="36" rx="7"
+              fill="#E6F1FB" stroke="#2473B8" stroke-width="1.5"/>
+        <text x="608" y="117" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#0C447C" font-weight="700">12.9</text>
+        <text x="608" y="131" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#0C447C">虚函数与多态</text>
+
+        <!-- 12.10 -->
+        <rect x="478" y="158" width="120" height="36" rx="7"
+              fill="#E6F1FB" stroke="#2473B8" stroke-width="1.5"/>
+        <text x="538" y="173" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#0C447C" font-weight="700">12.10</text>
+        <text x="538" y="187" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#0C447C">抽象类与纯虚函数</text>
+
+        <!-- 箭头：基础内部流向 -->
+        <defs>
+          <marker id="arr-teal" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#1D9E75"/>
+          </marker>
+          <marker id="arr-blue" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#2473B8"/>
+          </marker>
+        </defs>
+        <!-- 12.1 → 12.2 -->
+        <line x1="98" y1="82" x2="98" y2="100" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arr-teal)"/>
+        <!-- 12.2 → 12.3 -->
+        <line x1="98" y1="138" x2="98" y2="156" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arr-teal)"/>
+        <!-- 12.2 → 12.4 -->
+        <line x1="158" y1="120" x2="176" y2="120" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arr-teal)"/>
+        <!-- 12.3 → 12.6 -->
+        <line x1="158" y1="176" x2="176" y2="176" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#arr-teal)"/>
+
+        <!-- 箭头：进阶内部流向 -->
+        <!-- 12.8 → 12.9 -->
+        <line x1="528" y1="120" x2="546" y2="120" stroke="#2473B8" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+        <!-- 12.8 → 12.10 -->
+        <line x1="468" y1="138" x2="510" y2="156" stroke="#2473B8" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+        <!-- 12.9 → 12.10 -->
+        <line x1="608" y1="138" x2="575" y2="156" stroke="#2473B8" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+        <!-- 基础 → 进阶跨越箭头 -->
+        <line x1="298" y1="120" x2="406" y2="120"
+              stroke="#45475A" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-blue)"/>
+        <text x="352" y="114" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">掌握基础后</text>
+
+        <!-- 底部说明 -->
+        <text x="350" y="240" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#45475A">
+          建议按 12.1 → 12.2 → 12.3 → 12.4 → 12.5 的顺序完成基础语法，再进入进阶特性
+        </text>
+      </svg>
+      <figcaption>
+        绿色模块为 CSP-J 考纲内容，蓝色模块为进阶拓展内容。<br>
+        <code>12.6 拷贝构造函数</code> 与 <code>12.7 静态成员</code> 是独立专题，可在学完基础后按需选读。
+      </figcaption>
+    </div>
+
+    <div class="sub-title">接下来要学什么</div>
+    <div class="section-body">
+      <p>先从"基础语法"开始，把 class 的核心用法掌握扎实，这部分是 CSP-J 必会内容。"进阶特性"部分建议在理解基础之后再学习。</p>
+    </div>
+
+    <div class="next-steps">
+      <a class="next-step-card ns-csp" href="12_01_从struct到class.html">
+        <div class="ns-label">① 基础起点</div>
+        <div class="ns-title">从 struct 到 class</div>
+      </a>
+      <a class="next-step-card ns-csp" href="12_02_类的定义与对象.html">
+        <div class="ns-label">② 核心概念</div>
+        <div class="ns-title">类的定义与对象</div>
+      </a>
+      <a class="next-step-card ns-csp" href="12_03_封装与访问控制.html">
+        <div class="ns-label">③ 封装思想</div>
+        <div class="ns-title">封装与访问控制</div>
+      </a>
+      <a class="next-step-card ns-csp" href="12_04_构造与析构函数.html">
+        <div class="ns-label">④ 生命周期</div>
+        <div class="ns-title">构造与析构函数</div>
+      </a>
+      <a class="next-step-card ns-csp" href="12_05_运算符重载.html">
+        <div class="ns-label">⑤ 竞赛实用</div>
+        <div class="ns-title">运算符重载</div>
+      </a>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.0 概述</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="11_00_STL概述.html">← 第十一章：STL 标准模板库</a>
+      <a class="nav-btn" href="12_01_从struct到class.html">12.1 从 struct 到 class →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

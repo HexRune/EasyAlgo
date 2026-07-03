@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.2 类的定义与对象 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "12.2"; }
+
+  /* ── 子导航（ch12 通用） ── */
+  .ch12-subnav { margin-bottom: 28px; }
+  .ch12-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch12-group { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); overflow: hidden; transition: border-color .15s, background .15s; flex: 0 0 auto; display: flex; flex-direction: column; }
+  .ch12-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch12-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch12-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch12-group-name { color: var(--text-secondary); }
+  .ch12-group.current .ch12-group-name { color: var(--grp-color); }
+  .ch12-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .ch12-group:not(.current) .ch12-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch12-group:not(.current):hover .ch12-group-head { background: var(--grp-color-light); }
+  .ch12-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch12-group:not(.current):hover .ch12-group-name { color: var(--grp-color); }
+  .ch12-expand-badge { margin-left: auto; flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); font-size: 11px; line-height: 1; color: var(--text-muted); transition: all .15s; }
+  .ch12-group:not(.current):hover .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch12-group.current .ch12-expand-badge { display: none; }
+  .ch12-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch12-group:not(.current) .ch12-items { display: none; }
+  .ch12-group.expanded .ch12-items { display: flex; }
+  .ch12-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch12-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch12-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch12-group.c-intro { --grp-color: var(--accent);   --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch12-group.c-csp   { --grp-color: var(--teal-mid); --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch12-group.c-ext   { --grp-color: var(--blue-mid); --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+
+  /* ── 本页专属 ── */
+
+  /* 类结构解剖图容器 */
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+
+  /* 内存布局卡片 */
+  .mem-layout { display: flex; gap: 12px; margin: 18px 0; flex-wrap: wrap; }
+  .mem-obj { flex: 1; min-width: 140px; border: 1.5px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .mem-obj-head { background: var(--teal-light); border-bottom: 1px solid #9FE1CB; padding: 7px 12px; font-size: 12px; font-weight: 700; color: var(--teal); font-family: 'JetBrains Mono', monospace; }
+  .mem-obj-row { display: flex; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .mem-obj-row:last-child { border-bottom: none; }
+  .mem-field { padding: 6px 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; background: var(--surface); border-right: 1px solid var(--border); flex: 0 0 80px; font-size: 11.5px; }
+  .mem-value { padding: 6px 10px; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; }
+
+  /* this 指针图 */
+  .this-flow { background: var(--code-bg); border-radius: var(--r-md); padding: 20px; margin: 18px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="12.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十二章 · 类与面向对象</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.2 类的定义与对象</span>
+    </div>
+    <h1 class="chapter-title">12.2　类的定义与对象</h1>
+    <p class="chapter-desc">怎么写一个 <code>class</code>？怎么创建对象？成员变量和成员函数怎么用？<code>this</code> 指针又是什么？本节把这些最核心的用法一次讲清楚。</p>
+  </header>
+
+  <!-- ═══ 子导航 ═══ -->
+  <nav class="ch12-subnav">
+    <div class="ch12-subnav-groups">
+
+      <div class="ch12-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">先导课</span>
+          <span class="ch12-group-count">1</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-csp current expanded">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">基础语法</span>
+          <span class="ch12-group-count">5</span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
+          <a class="ch12-item active" href="12_02_类的定义与对象.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
+          <a class="ch12-item" href="12_04_构造与析构函数.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_05_运算符重载.html">运算符重载</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-ext" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">进阶特性</span>
+          <span class="ch12-group-count">5</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
+          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">12.2.1</span><a href="#s1">类的基本结构</a></li>
+      <li><span class="toc-num">12.2.2</span><a href="#s2">创建对象与调用成员</a></li>
+      <li><span class="toc-num">12.2.3</span><a href="#s3">多个对象互相独立</a></li>
+      <li><span class="toc-num">12.2.4</span><a href="#s4">this 指针是什么</a></li>
+      <li><span class="toc-num">12.2.5</span><a href="#s5">在类外定义成员函数</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <!-- ── 12.2.1 类的基本结构 ── -->
+    <div class="sub-title" id="s1">12.2.1　类的基本结构</div>
+    <div class="section-body">
+      <p>一个 <code>class</code> 由两部分组成：<strong>成员变量</strong>（存数据）和<strong>成员函数</strong>（定义操作）。写法如下：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 类的基本结构</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {       <span class="cmt">// class 关键字 + 类名</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:               <span class="cmt">// 访问权限（下一节详讲）</span></td></tr>
+          <tr class="hl-warn"><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;      <span class="cmt">// 成员变量：存储数据</span></td></tr>
+          <tr class="hl-warn"><td class="ln">4</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    <span class="typ">void</span> <span class="fn">Print</span>() {      <span class="cmt">// 成员函数：定义操作</span></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">        cout &lt;&lt; name &lt;&lt; <span class="str">" : "</span> &lt;&lt; score &lt;&lt; endl;</td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">9</td><td class="cd">};                     <span class="cmt">// ← 注意这里有分号！</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 620 190" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:580px; width:100%;">
+
+        <!-- 类的大框 -->
+        <rect x="30" y="14" width="560" height="162" rx="10"
+              fill="#16141F" stroke="#CBA6F7" stroke-width="1.5"/>
+        <text x="310" y="36" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="13"
+              fill="#CBA6F7" font-weight="700">class Student  {  ...  };</text>
+
+        <!-- 成员变量区 -->
+        <rect x="50" y="50" width="220" height="110" rx="7"
+              fill="rgba(249,226,175,.06)" stroke="#F9E2AF" stroke-width="1"/>
+        <text x="160" y="70" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="11"
+              fill="#F9E2AF" font-weight="700">成员变量（数据）</text>
+        <text x="160" y="92"  text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="12" fill="#CDD6F4">string name;</text>
+        <text x="160" y="112" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="12" fill="#CDD6F4">int    score;</text>
+        <text x="160" y="140" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#585B70">每个对象独立拥有一份</text>
+
+        <!-- 成员函数区 -->
+        <rect x="350" y="50" width="220" height="110" rx="7"
+              fill="rgba(137,220,235,.06)" stroke="#89DCEB" stroke-width="1"/>
+        <text x="460" y="70" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="11"
+              fill="#89DCEB" font-weight="700">成员函数（操作）</text>
+        <text x="460" y="92"  text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="12" fill="#CDD6F4">void Print()</text>
+        <text x="460" y="112" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="12" fill="#CDD6F4">void SetScore()</text>
+        <text x="460" y="140" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#585B70">所有对象共用同一份代码</text>
+
+        <!-- 中间分隔 -->
+        <line x1="310" y1="58" x2="310" y2="152"
+              stroke="#45475A" stroke-width="1" stroke-dasharray="4,3"/>
+      </svg>
+      <figcaption>
+        类由<strong>成员变量</strong>和<strong>成员函数</strong>两部分组成。<br>
+        成员变量每个对象各有一份（每个学生的 name、score 都不一样）；成员函数的代码只有一份，所有对象共用。
+      </figcaption>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>类定义的最后一个 <code>}</code> 后面必须加分号 <code>;</code>，这是 C++ 的语法要求，忘记写是新手最常犯的错误之一。</div>
+    </div>
+
+    <!-- ── 12.2.2 创建对象与调用成员 ── -->
+    <div class="sub-title" id="s2">12.2.2　创建对象与调用成员</div>
+    <div class="section-body">
+      <p>类只是一张设计图，本身不占用数据空间。要真正使用它，需要<strong>创建对象</strong>——就像按照设计图造出一台实物。</p>
+      <p>创建对象的方式和定义普通变量一样，之后用 <code>.</code> 来访问它的成员：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 创建对象与调用成员</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr class="hl-ref"><td class="ln">2</td><td class="cd">    <span class="typ">Student</span> s1;          <span class="cmt">// 创建一个 Student 对象，名字叫 s1</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    s1.name  = <span class="str">"Alice"</span>; <span class="cmt">// 用 . 访问成员变量</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    s1.score = <span class="num">95</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    s1.<span class="fn">Print</span>();           <span class="cmt">// 用 . 调用成员函数 → 输出：Alice : 95</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">    <span class="typ">Student</span> s2;          <span class="cmt">// 再创建一个对象 s2，与 s1 完全独立</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    s2.name  = <span class="str">"Bob"</span>;</td></tr>
+          <tr><td class="ln">10</td><td class="cd">    s2.score = <span class="num">82</span>;</td></tr>
+          <tr><td class="ln">11</td><td class="cd">    s2.<span class="fn">Print</span>();           <span class="cmt">// 输出：Bob : 82</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>类比记忆：</b><code>Student s1</code> 就像 <code>int x</code>——只不过类型从内置的 <code>int</code> 换成了你自己定义的 <code>Student</code>。用 <code>.</code> 访问成员，就像用 <code>[]</code> 访问数组元素一样自然。</div>
+    </div>
+
+    <!-- ── 12.2.3 多个对象互相独立 ── -->
+    <div class="sub-title" id="s3">12.2.3　多个对象互相独立</div>
+    <div class="section-body">
+      <p>每个对象都有<strong>自己独立的一份成员变量</strong>，修改 <code>s1</code> 的数据完全不影响 <code>s2</code>。可以用内存布局来理解：</p>
+    </div>
+
+    <div class="mem-layout">
+      <div class="mem-obj">
+        <div class="mem-obj-head">s1（Student）</div>
+        <div class="mem-obj-row">
+          <span class="mem-field">name</span>
+          <span class="mem-value">"Alice"</span>
+        </div>
+        <div class="mem-obj-row">
+          <span class="mem-field">score</span>
+          <span class="mem-value">95</span>
+        </div>
+      </div>
+      <div class="mem-obj">
+        <div class="mem-obj-head">s2（Student）</div>
+        <div class="mem-obj-row">
+          <span class="mem-field">name</span>
+          <span class="mem-value">"Bob"</span>
+        </div>
+        <div class="mem-obj-row">
+          <span class="mem-field">score</span>
+          <span class="mem-value">82</span>
+        </div>
+      </div>
+      <div class="mem-obj">
+        <div class="mem-obj-head">s3（Student）</div>
+        <div class="mem-obj-row">
+          <span class="mem-field">name</span>
+          <span class="mem-value">"Carol"</span>
+        </div>
+        <div class="mem-obj-row">
+          <span class="mem-field">score</span>
+          <span class="mem-value">77</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>三个对象在内存里各自占一块空间，彼此完全独立。但 <code>Print()</code> 这个函数的代码只有一份——调用 <code>s1.Print()</code> 和 <code>s2.Print()</code> 用的是同一段代码，只是操作的数据不同。</p>
+      <p>那函数怎么知道自己在操作的是 <code>s1</code> 还是 <code>s2</code> 的数据？答案就是下一节要讲的 <code>this</code> 指针。</p>
+    </div>
+
+    <!-- ── 12.2.4 this 指针 ── -->
+    <div class="sub-title" id="s4">12.2.4　this 指针是什么</div>
+    <div class="section-body">
+      <p>每次调用成员函数时，C++ 会悄悄地把<strong>当前对象的地址</strong>作为一个隐藏参数传进去，这个隐藏参数就叫 <code>this</code>。</p>
+      <p>你可以把 <code>this</code> 理解为"我自己"——成员函数通过 <code>this</code> 来访问当前对象的数据。</p>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:600px; width:100%;">
+        <defs>
+          <marker id="arr-p" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#CBA6F7"/>
+          </marker>
+          <marker id="arr-t" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#A6E3A1"/>
+          </marker>
+        </defs>
+
+        <!-- s1 对象 -->
+        <rect x="20" y="30" width="120" height="70" rx="7"
+              fill="#1E1C2F" stroke="#CBA6F7" stroke-width="1.5"/>
+        <text x="80" y="50" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#CBA6F7" font-weight="700">s1</text>
+        <text x="80" y="68" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#CDD6F4">name = "Alice"</text>
+        <text x="80" y="84" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#CDD6F4">score = 95</text>
+
+        <!-- s2 对象 -->
+        <rect x="20" y="120" width="120" height="70" rx="7"
+              fill="#1E1C2F" stroke="#CBA6F7" stroke-width="1.5"/>
+        <text x="80" y="140" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#CBA6F7" font-weight="700">s2</text>
+        <text x="80" y="158" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#CDD6F4">name = "Bob"</text>
+        <text x="80" y="174" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#CDD6F4">score = 82</text>
+
+        <!-- Print 函数（共用） -->
+        <rect x="360" y="72" width="240" height="76" rx="7"
+              fill="#16141F" stroke="#A6E3A1" stroke-width="1.5"/>
+        <text x="480" y="94" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#A6E3A1" font-weight="700">void Print()</text>
+        <text x="480" y="114" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="10.5" fill="#CDD6F4">cout &lt;&lt; this-&gt;name</text>
+        <text x="480" y="132" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="10.5" fill="#CDD6F4">     &lt;&lt; this-&gt;score;</text>
+
+        <!-- s1.Print() → this 指向 s1 -->
+        <line x1="142" y1="55" x2="358" y2="98"
+              stroke="#CBA6F7" stroke-width="1.5" marker-end="url(#arr-p)"/>
+        <text x="245" y="68" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#CBA6F7">s1.Print()</text>
+        <text x="245" y="82" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#6C7086">this = &amp;s1</text>
+
+        <!-- s2.Print() → this 指向 s2 -->
+        <line x1="142" y1="155" x2="358" y2="122"
+              stroke="#A6E3A1" stroke-width="1.5" marker-end="url(#arr-t)"/>
+        <text x="245" y="148" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6E3A1">s2.Print()</text>
+        <text x="245" y="162" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#6C7086">this = &amp;s2</text>
+
+        <!-- 共用代码标注 -->
+        <text x="480" y="164" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#45475A">同一份代码，this 不同</text>
+      </svg>
+      <figcaption>
+        <code>s1.Print()</code> 调用时，<code>this</code> 指向 s1，所以打印的是 "Alice : 95"；<br>
+        <code>s2.Print()</code> 调用时，<code>this</code> 指向 s2，同一份代码打印的就是 "Bob : 82"。
+      </figcaption>
+    </div>
+
+    <div class="section-body">
+      <p>大多数时候你不需要显式写出 <code>this-&gt;</code>，直接写成员名字就行，C++ 会自动理解。但有一种情况必须用到它——当函数参数名和成员变量名相同时：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · this 的典型用法</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">void</span> <span class="fn">SetScore</span>(<span class="typ">int</span> score) {      <span class="cmt">// 参数名和成员名都叫 score</span></td></tr>
+          <tr class="hl-warn"><td class="ln">7</td><td class="cd">        score = score;              <span class="cmt">// ❌ 错！两个 score 都指参数，成员没被赋值</span></td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">        <span class="kw">this</span>-&gt;score = score;       <span class="cmt">// ✅ 对！this->score 是成员，右边 score 是参数</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">10</td><td class="cd">};</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div><b>习惯做法：</b>为了避免这类混淆，很多人会给成员变量加前缀（如 <code>m_score</code>）或后缀（如 <code>score_</code>），这样参数名和成员名就不会冲突，就不需要 <code>this-&gt;</code> 了。在竞赛里，用 <code>this-&gt;</code> 或者换个参数名都完全没问题。</div>
+    </div>
+
+    <!-- ── 12.2.5 在类外定义成员函数 ── -->
+    <div class="sub-title" id="s5">12.2.5　在类外定义成员函数</div>
+    <div class="section-body">
+      <p>当成员函数的代码比较长时，可以把<strong>声明</strong>写在类里，<strong>实现</strong>写在类外，用 <code>类名::</code> 来说明这个函数属于哪个类。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 类内声明 + 类外实现</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    <span class="typ">void</span> <span class="fn">Print</span>();          <span class="cmt">// 类内只写声明</span></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">    <span class="typ">void</span> <span class="fn">SetScore</span>(<span class="typ">int</span> s); <span class="cmt">// 类内只写声明</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">};</td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="cmt">// 类外写实现，用 Student:: 表示"属于 Student 类"</span></td></tr>
+          <tr class="hl-warn"><td class="ln">11</td><td class="cd"><span class="typ">void</span> <span class="typ">Student</span>::<span class="fn">Print</span>() {</td></tr>
+          <tr><td class="ln">12</td><td class="cd">    cout &lt;&lt; name &lt;&lt; <span class="str">" : "</span> &lt;&lt; score &lt;&lt; endl;</td></tr>
+          <tr><td class="ln">13</td><td class="cd">}</td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr class="hl-warn"><td class="ln">15</td><td class="cd"><span class="typ">void</span> <span class="typ">Student</span>::<span class="fn">SetScore</span>(<span class="typ">int</span> s) {</td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="kw">if</span> (s &gt;= <span class="num">0</span> &amp;&amp; s &lt;= <span class="num">100</span>) score = s;</td></tr>
+          <tr><td class="ln">17</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>
+        <b>什么时候用类外定义？</b><br>
+        ・竞赛中：函数短小时直接写在类里，简洁优先。<br>
+        ・工程项目中：通常把类的声明放在 <code>.h</code> 头文件，实现放在 <code>.cpp</code> 文件，两者分离便于维护。<br>
+        两种写法效果完全一样，选自己习惯的即可。
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.2 类的定义与对象</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="12_01_从struct到class.html">← 12.1 从 struct 到 class</a>
+      <a class="nav-btn" href="12_03_封装与访问控制.html">12.3 封装与访问控制 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
