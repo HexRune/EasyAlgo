@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.5 运算符重载 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "12.5"; }
+
+  /* ── 子导航（ch12 通用） ── */
+  .ch12-subnav { margin-bottom: 28px; }
+  .ch12-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch12-group { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); overflow: hidden; transition: border-color .15s, background .15s; flex: 0 0 auto; display: flex; flex-direction: column; }
+  .ch12-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch12-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch12-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch12-group-name { color: var(--text-secondary); }
+  .ch12-group.current .ch12-group-name { color: var(--grp-color); }
+  .ch12-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .ch12-group:not(.current) .ch12-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch12-group:not(.current):hover .ch12-group-head { background: var(--grp-color-light); }
+  .ch12-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch12-group:not(.current):hover .ch12-group-name { color: var(--grp-color); }
+  .ch12-expand-badge { margin-left: auto; flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); font-size: 11px; line-height: 1; color: var(--text-muted); transition: all .15s; }
+  .ch12-group:not(.current):hover .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch12-group.current .ch12-expand-badge { display: none; }
+  .ch12-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch12-group:not(.current) .ch12-items { display: none; }
+  .ch12-group.expanded .ch12-items { display: flex; }
+  .ch12-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch12-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch12-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch12-group.c-intro { --grp-color: var(--accent);   --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch12-group.c-csp   { --grp-color: var(--teal-mid); --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch12-group.c-ext   { --grp-color: var(--blue-mid); --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+
+  /* ── 本页专属 ── */
+
+  /* 运算符对照示意 */
+  .op-compare {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    gap: 12px; align-items: center; margin: 20px 0;
+  }
+  .op-box {
+    border-radius: var(--r-md); padding: 14px 16px;
+    font-size: 13px; line-height: 1.65;
+  }
+  .op-box.before { background: var(--coral-light); border: 1px solid var(--coral-mid); }
+  .op-box.after  { background: var(--teal-light);  border: 1px solid var(--teal-mid); }
+  .op-box-label  { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+  .op-box.before .op-box-label { color: var(--coral); }
+  .op-box.after  .op-box-label { color: var(--teal); }
+  .op-arrow { font-size: 22px; color: var(--text-muted); text-align: center; }
+
+  /* 可重载运算符速查表 */
+  .op-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .op-table thead tr { background: var(--teal-light); }
+  .op-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #9FE1CB; }
+  .op-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .op-table tr:last-child td { border-bottom: none; }
+  .op-table tr:nth-child(even) td { background: #F7FEFC; }
+  .op-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--teal); white-space: nowrap; }
+  .op-table td:last-child  { font-size: 12px; color: var(--text-muted); }
+
+  /* sort 示意图容器 */
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="12.5">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十二章 · 类与面向对象</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.5 运算符重载</span>
+    </div>
+    <h1 class="chapter-title">12.5　运算符重载</h1>
+    <p class="chapter-desc">让你自己定义的类型也能用 <code>+</code>、<code>&lt;</code>、<code>==</code> 这些符号——写出来的代码就像操作内置类型一样自然。竞赛中最常用的是 <code>operator&lt;</code>，配合 <code>sort</code> 实现自定义排序。</p>
+  </header>
+
+  <!-- ═══ 子导航 ═══ -->
+  <nav class="ch12-subnav">
+    <div class="ch12-subnav-groups">
+
+      <div class="ch12-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">先导课</span>
+          <span class="ch12-group-count">1</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-csp current expanded">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">基础语法</span>
+          <span class="ch12-group-count">5</span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
+          <a class="ch12-item" href="12_02_类的定义与对象.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
+          <a class="ch12-item" href="12_04_构造与析构函数.html">构造与析构函数</a>
+          <a class="ch12-item active" href="12_05_运算符重载.html">运算符重载</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-ext" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">进阶特性</span>
+          <span class="ch12-group-count">5</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
+          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">12.5.1</span><a href="#s1">什么是运算符重载</a></li>
+      <li><span class="toc-num">12.5.2</span><a href="#s2">基本语法</a></li>
+      <li><span class="toc-num">12.5.3</span><a href="#s3">重载加法运算符</a></li>
+      <li><span class="toc-num">12.5.4</span><a href="#s4">重载比较运算符与 sort</a></li>
+      <li><span class="toc-num">12.5.5</span><a href="#s5">重载流输出运算符</a></li>
+      <li><span class="toc-num">12.5.6</span><a href="#s6">使用规则与注意事项</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <!-- ── 12.5.1 什么是运算符重载 ── -->
+    <div class="sub-title" id="s1">12.5.1　什么是运算符重载</div>
+    <div class="section-body">
+      <p>C++ 内置的 <code>int</code>、<code>double</code> 等类型可以直接用 <code>+</code>、<code>-</code>、<code>&lt;</code> 这些符号运算。但如果你自己定义了一个 <code>Point</code> 类（表示二维坐标点），想把两个点相加，默认是不能直接写 <code>p1 + p2</code> 的——编译器不知道两个 Point 加在一起意味着什么。</p>
+      <p><strong>运算符重载就是告诉编译器：当这个符号作用于我的类型时，应该做什么。</strong></p>
+    </div>
+
+    <div class="op-compare">
+      <div class="op-box before">
+        <div class="op-box-label">没有重载时</div>
+        <code>p1 + p2</code><br>
+        <span style="font-size:12px;color:var(--coral)">❌ 编译错误<br>编译器不知道怎么加两个 Point</span>
+      </div>
+      <div class="op-arrow">→<br><span style="font-size:11px;color:var(--text-muted)">重载后</span></div>
+      <div class="op-box after">
+        <div class="op-box-label">重载之后</div>
+        <code>p1 + p2</code><br>
+        <span style="font-size:12px;color:var(--teal)">✅ 正常运行<br>返回新 Point(x1+x2, y1+y2)</span>
+      </div>
+    </div>
+
+    <!-- ── 12.5.2 基本语法 ── -->
+    <div class="sub-title" id="s2">12.5.2　基本语法</div>
+    <div class="section-body">
+      <p>重载运算符用关键字 <code>operator</code> 后跟要重载的符号来定义，写在类内部：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 运算符重载的基本结构</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">MyClass</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="cmt">// 返回值类型  operator符号  (参数) { ... }</span></td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">    <span class="typ">MyClass</span> <span class="kw">operator</span>+(<span class="kw">const</span> <span class="typ">MyClass</span>&amp; other) {</td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">        <span class="cmt">// 定义 + 的行为，返回运算结果</span></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">bool</span> <span class="kw">operator</span>&lt;(<span class="kw">const</span> <span class="typ">MyClass</span>&amp; other) {</td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="cmt">// 定义 < 的行为，返回 true/false</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">10</td><td class="cd">};</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>参数为什么用 <code>const &amp;</code>？</b><br>
+        写 <code>const MyClass&amp; other</code> 而不是 <code>MyClass other</code>，是因为引用传参不需要复制对象（更快），<code>const</code> 则保证函数不会修改传入的参数。这是重载运算符的惯用写法。
+      </div>
+    </div>
+
+    <!-- ── 12.5.3 重载加法运算符 ── -->
+    <div class="sub-title" id="s3">12.5.3　重载加法运算符</div>
+    <div class="section-body">
+      <p>以二维坐标点 <code>Point</code> 为例，重载 <code>+</code> 让两个点可以直接相加：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 重载 operator+</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="typ">Point</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd">    <span class="typ">int</span> x, y;</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">Point</span>(<span class="typ">int</span> x, <span class="typ">int</span> y) : x(x), y(y) {}</td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">    <span class="typ">Point</span> <span class="kw">operator</span>+(<span class="kw">const</span> <span class="typ">Point</span>&amp; other) <span class="kw">const</span> {</td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">        <span class="kw">return</span> <span class="typ">Point</span>(x + other.x, y + other.y);</td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="typ">bool</span> <span class="kw">operator</span>==(<span class="kw">const</span> <span class="typ">Point</span>&amp; other) <span class="kw">const</span> {</td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="kw">return</span> x == other.x &amp;&amp; y == other.y;</td></tr>
+          <tr><td class="ln">11</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">12</td><td class="cd">};</td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="typ">Point</span> p1(<span class="num">1</span>, <span class="num">2</span>), p2(<span class="num">3</span>, <span class="num">4</span>);</td></tr>
+          <tr class="hl-ref"><td class="ln">16</td><td class="cd">    <span class="typ">Point</span> p3 = p1 + p2;        <span class="cmt">// → Point(4, 6)，调用 operator+</span></td></tr>
+          <tr class="hl-ref"><td class="ln">17</td><td class="cd">    cout &lt;&lt; (p1 == p2);         <span class="cmt">// → 0 (false)，调用 operator==</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div>注意第 5 行函数末尾的 <code>const</code>：这表示这个函数不会修改对象自身的数据。对于只做计算、不改状态的运算符（<code>+</code>、<code>==</code>、<code>&lt;</code> 等），都应该加上这个 <code>const</code>。</div>
+    </div>
+
+    <!-- ── 12.5.4 重载比较运算符与 sort ── -->
+    <div class="sub-title" id="s4">12.5.4　重载比较运算符与 sort</div>
+    <div class="section-body">
+      <p>这是竞赛中运算符重载<strong>最常见、最实用</strong>的场景。<code>std::sort</code> 在排序时会调用 <code>&lt;</code> 来比较元素大小。只要你的类重载了 <code>operator&lt;</code>，就能直接用 <code>sort</code> 排序，无需额外写比较函数。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · operator&lt; 配合 sort 多关键字排序</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span>    age;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    <span class="typ">bool</span> <span class="kw">operator</span>&lt;(<span class="kw">const</span> <span class="typ">Student</span>&amp; other) <span class="kw">const</span> {</td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">        <span class="kw">if</span> (score != other.score)         <span class="cmt">// 第一关键字：分数降序</span></td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">            <span class="kw">return</span> score &gt; other.score;</td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">        <span class="kw">if</span> (age != other.age)             <span class="cmt">// 第二关键字：年龄升序</span></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">            <span class="kw">return</span> age &lt; other.age;</td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">        <span class="kw">return</span> name &lt; other.name;         <span class="cmt">// 第三关键字：姓名字典序</span></td></tr>
+          <tr class="hl-ref"><td class="ln">12</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">13</td><td class="cd">};</td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">16</td><td class="cd">    vector&lt;<span class="typ">Student</span>&gt; v = {</td></tr>
+          <tr><td class="ln">17</td><td class="cd">        {<span class="str">"Alice"</span>, <span class="num">95</span>, <span class="num">16</span>},</td></tr>
+          <tr><td class="ln">18</td><td class="cd">        {<span class="str">"Bob"</span>,   <span class="num">82</span>, <span class="num">17</span>},</td></tr>
+          <tr><td class="ln">19</td><td class="cd">        {<span class="str">"Carol"</span>, <span class="num">95</span>, <span class="num">15</span>},</td></tr>
+          <tr><td class="ln">20</td><td class="cd">    };</td></tr>
+          <tr class="hl-ref"><td class="ln">21</td><td class="cd">    <span class="fn">sort</span>(v.<span class="fn">begin</span>(), v.<span class="fn">end</span>());  <span class="cmt">// 自动调用 operator<</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="cmt">// 排序结果：Carol(95,15) → Alice(95,16) → Bob(82,17)</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 660 200" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:620px; width:100%;">
+        <defs>
+          <marker id="arr-s" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#1D9E75"/>
+          </marker>
+        </defs>
+
+        <!-- sort 盒子 -->
+        <rect x="240" y="15" width="180" height="52" rx="8"
+              fill="#16141F" stroke="#CBA6F7" stroke-width="1.5"/>
+        <text x="330" y="38" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="12" fill="#CBA6F7" font-weight="700">sort(v.begin(), v.end())</text>
+        <text x="330" y="56" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">遇到需要比较两个元素时</text>
+
+        <!-- 调用箭头 -->
+        <line x1="330" y1="67" x2="330" y2="95"
+              stroke="#CBA6F7" stroke-width="1.5" marker-end="url(#arr-s)"/>
+        <text x="340" y="84" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#6C7086">自动调用</text>
+
+        <!-- operator< 盒子 -->
+        <rect x="195" y="96" width="270" height="52" rx="8"
+              fill="#1A2820" stroke="#1D9E75" stroke-width="1.5"/>
+        <text x="330" y="119" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="12" fill="#A6E3A1" font-weight="700">operator&lt;(a, b)</text>
+        <text x="330" y="138" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">你定义的比较逻辑，返回 true/false</text>
+
+        <!-- 左侧：排序前 -->
+        <text x="80" y="30" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#7F849C">排序前</text>
+        <rect x="24" y="40" width="110" height="22" rx="4" fill="rgba(137,180,250,.1)" stroke="#89B4FA" stroke-width="1"/>
+        <text x="79" y="55" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">Alice  95  16</text>
+        <rect x="24" y="68" width="110" height="22" rx="4" fill="rgba(137,180,250,.1)" stroke="#89B4FA" stroke-width="1"/>
+        <text x="79" y="83" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">Bob    82  17</text>
+        <rect x="24" y="96" width="110" height="22" rx="4" fill="rgba(137,180,250,.1)" stroke="#89B4FA" stroke-width="1"/>
+        <text x="79" y="111" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">Carol  95  15</text>
+
+        <!-- 右侧：排序后 -->
+        <text x="580" y="30" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#7F849C">排序后</text>
+        <rect x="526" y="40" width="110" height="22" rx="4" fill="rgba(166,227,161,.1)" stroke="#A6E3A1" stroke-width="1"/>
+        <text x="581" y="55" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">Carol  95  15</text>
+        <rect x="526" y="68" width="110" height="22" rx="4" fill="rgba(166,227,161,.1)" stroke="#A6E3A1" stroke-width="1"/>
+        <text x="581" y="83" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">Alice  95  16</text>
+        <rect x="526" y="96" width="110" height="22" rx="4" fill="rgba(166,227,161,.1)" stroke="#A6E3A1" stroke-width="1"/>
+        <text x="581" y="111" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">Bob    82  17</text>
+
+        <!-- 左右箭头 -->
+        <line x1="136" y1="75" x2="238" y2="42"
+              stroke="#45475A" stroke-width="1.2" marker-end="url(#arr-s)"/>
+        <line x1="465" y1="42" x2="524" y2="75"
+              stroke="#45475A" stroke-width="1.2" marker-end="url(#arr-s)"/>
+
+        <!-- 底部说明 -->
+        <text x="330" y="175" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#45475A">
+          分数相同时比年龄，年龄也相同时比姓名——多关键字排序只需在 operator&lt; 里依次判断
+        </text>
+      </svg>
+      <figcaption>
+        <code>sort</code> 内部每次比较两个元素时，都会调用你写的 <code>operator&lt;</code>。<br>
+        你只需要定义"什么叫做 a 比 b 小"，<code>sort</code> 就能帮你排好整个序列。
+      </figcaption>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div>
+        <b>priority_queue 也一样：</b><code>priority_queue</code> 默认也用 <code>operator&lt;</code> 来比较优先级。重载了 <code>operator&lt;</code>，自定义类型就能直接放进优先队列，无需额外写仿函数。
+      </div>
+    </div>
+
+    <!-- ── 12.5.5 重载流输出运算符 ── -->
+    <div class="sub-title" id="s5">12.5.5　重载流输出运算符</div>
+    <div class="section-body">
+      <p>重载 <code>&lt;&lt;</code> 之后，就可以直接用 <code>cout &lt;&lt; p</code> 打印自定义类型，调试起来非常方便。</p>
+      <p>这个运算符比较特殊，必须写成<strong>类外的全局函数</strong>，因为左边是 <code>ostream</code> 而不是你的类：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 重载 operator&lt;&lt;</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="typ">Point</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd">    <span class="typ">int</span> x, y;</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">Point</span>(<span class="typ">int</span> x, <span class="typ">int</span> y) : x(x), y(y) {}</td></tr>
+          <tr><td class="ln">4</td><td class="cd">};</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="cmt">// 写在类外，第一个参数是 ostream&</span></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">ostream&amp; <span class="kw">operator</span>&lt;&lt;(ostream&amp; os, <span class="kw">const</span> <span class="typ">Point</span>&amp; p) {</td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">    os &lt;&lt; <span class="str">"("</span> &lt;&lt; p.x &lt;&lt; <span class="str">", "</span> &lt;&lt; p.y &lt;&lt; <span class="str">")"</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">    <span class="kw">return</span> os;  <span class="cmt">// 返回 os 以支持链式调用</span></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">}</td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="typ">Point</span> p(<span class="num">3</span>, <span class="num">4</span>);</td></tr>
+          <tr class="hl-ref"><td class="ln">14</td><td class="cd">    cout &lt;&lt; p &lt;&lt; endl;        <span class="cmt">// 输出：(3, 4)</span></td></tr>
+          <tr class="hl-ref"><td class="ln">15</td><td class="cd">    cout &lt;&lt; p &lt;&lt; <span class="str">" and "</span> &lt;&lt; p; <span class="cmt">// 链式调用也正常</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 12.5.6 使用规则与注意事项 ── -->
+    <div class="sub-title" id="s6">12.5.6　使用规则与注意事项</div>
+
+    <table class="op-table">
+      <thead>
+        <tr><th>运算符</th><th>常见用途</th><th>写在类内 / 类外</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>+  -  *  /</td>
+          <td>向量、矩阵、复数等数学对象的运算</td>
+          <td>类内（推荐）</td>
+        </tr>
+        <tr>
+          <td>&lt;  &gt;  ==  !=</td>
+          <td>配合 sort、priority_queue、set 的比较逻辑</td>
+          <td>类内（推荐）</td>
+        </tr>
+        <tr>
+          <td>&lt;&lt;  &gt;&gt;</td>
+          <td>cout / cin 输出输入自定义类型，调试常用</td>
+          <td>必须写在类外</td>
+        </tr>
+        <tr>
+          <td>[]</td>
+          <td>自定义容器的下标访问</td>
+          <td>类内</td>
+        </tr>
+        <tr>
+          <td>++  --</td>
+          <td>迭代器等场景的自增自减</td>
+          <td>类内</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>三条不能打破的规则：</b><br>
+        ① 只能重载已有的运算符，不能发明新符号（比如 <code>**</code> 表示乘方）。<br>
+        ② 不能改变运算符的<strong>优先级</strong>和<strong>结合性</strong>——<code>*</code> 永远比 <code>+</code> 先算。<br>
+        ③ 不能重载 <code>::</code>、<code>.</code>、<code>?:</code>、<code>sizeof</code> 这几个特殊运算符。
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>
+        <b>本节小结</b><br>
+        ・用 <code>operator符号</code> 定义运算符的行为，让自定义类型像内置类型一样好用。<br>
+        ・竞赛中最常用的是 <code>operator&lt;</code>，写好之后 <code>sort</code> 和 <code>priority_queue</code> 都能直接用。<br>
+        ・<code>operator&lt;&lt;</code> 需要写在类外，返回 <code>ostream&amp;</code> 以支持链式输出。<br>
+        ・不能改变优先级，不能创造新符号。
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.5 运算符重载</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="12_04_构造与析构函数.html">← 12.4 构造与析构函数</a>
+      <a class="nav-btn" href="12_06_拷贝构造函数.html">12.6 拷贝构造函数 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

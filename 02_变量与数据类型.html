@@ -296,6 +296,30 @@
     margin-left: 8px;
     font-style: italic;
   }
+
+
+   /* cmath 数学函数表 */
+  .math-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .math-table thead tr { background: #16141F; }
+  .math-table th { padding: 9px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840; }
+  .math-table th:first-child { color: var(--code-text); }
+  .math-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; line-height: 1.6; }
+  .math-table tr:last-child td { border-bottom: none; }
+  .math-table tr:nth-child(even) td { background: #FAFAF7; }
+  .math-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--code-fn); white-space: nowrap; background: #16141F; }
+  .math-table tr:nth-child(even) td:first-child { background: #16141F; }
+  .math-ex  { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-muted); }
+  .math-out { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--code-num); }
+
 </style>
 </head>
 <body>
@@ -324,6 +348,7 @@
       <li><a href="#s6"><span class="toc-num">2.6</span>数据类型转换</a></li>
       <li><a href="#s7"><span class="toc-num">2.7</span>ASCII 编码</a></li>
       <li><a href="#s8"><span class="toc-num">2.8</span>原码、反码与补码</a></li>
+      <li><a href="#s9"><span class="toc-num">2.9</span>cmath 数学库</a></li>
     </ul>
   </nav>
 
@@ -972,6 +997,118 @@
     <div class="callout tip">
       <span class="callout-icon">📚</span>
       <div><b>扩展阅读：</b>C++20 标准正式强制要求有符号整数使用补码表示（此前是实现定义的）。补码不再是"可选方案"，而是所有 C++ 平台的统一标准。理解三种编码的演进历史，有助于真正体会补码设计的精妙之处。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 2.7 cmath ═══ -->
+  <section class="section" id="s9">
+    <p class="section-label">2.9</p>
+    <h2 class="section-title">cmath 数学库</h2>
+    <div class="section-body">
+      <p><code>&lt;cmath&gt;</code> 内置了许多常用的数学计算函数，使用前需要先引入头文件 <code>#include &lt;cmath&gt;</code>。</p>
+    </div>
+
+    <table class="math-table">
+      <thead>
+        <tr><th>函数</th><th>功能说明</th><th>示例</th><th>结果</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>abs(x)</td>
+          <td>返回 x 的绝对值（C++11 起同时支持整数和浮点数）</td>
+          <td class="math-ex">abs(-5)</td>
+          <td class="math-out">5</td>
+        </tr>
+        <tr>
+          <td>ceil(x)</td>
+          <td>向上取整（不小于 x 的最小整数）</td>
+          <td class="math-ex">ceil(1.123)</td>
+          <td class="math-out">2</td>
+        </tr>
+        <tr>
+          <td>floor(x)</td>
+          <td>向下取整（不大于 x 的最大整数）</td>
+          <td class="math-ex">floor(1.91)</td>
+          <td class="math-out">1</td>
+        </tr>
+        <tr>
+          <td>fabs(x)</td>
+          <td>浮点数 x 的绝对值（C 语言遗留，C++11 后可直接用 <code>abs</code>）</td>
+          <td class="math-ex">fabs(-3.14)</td>
+          <td class="math-out">3.14</td>
+        </tr>
+        <tr>
+          <td>pow(x, y)</td>
+          <td>返回 x 的 y 次幂（返回 double）</td>
+          <td class="math-ex">pow(2, 3)</td>
+          <td class="math-out">8</td>
+        </tr>
+        <tr>
+          <td>round(x)</td>
+          <td>四舍五入为最近整数（C++11）</td>
+          <td class="math-ex">round(1.5)</td>
+          <td class="math-out">2</td>
+        </tr>
+        <tr>
+          <td>sqrt(x)</td>
+          <td>返回 x 的算术平方根（返回 double）</td>
+          <td class="math-ex">sqrt(9)</td>
+          <td class="math-out">3</td>
+        </tr>
+        <tr>
+          <td>cos(x)</td>
+          <td>计算 x（弧度制）的余弦值</td>
+          <td class="math-ex">cos(0)</td>
+          <td class="math-out">1</td>
+        </tr>
+        <tr>
+          <td>sin(x)</td>
+          <td>计算 x（弧度制）的正弦值</td>
+          <td class="math-ex">sin(0)</td>
+          <td class="math-out">0</td>
+        </tr>
+        <tr>
+          <td>tan(x)</td>
+          <td>计算 x（弧度制）的正切值</td>
+          <td class="math-ex">tan(0)</td>
+          <td class="math-out">0</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · cmath 示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;cmath&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">abs</span><span class="punc">(</span><span class="op">-</span><span class="num">42</span><span class="punc">)</span>   <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 42</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">ceil</span><span class="punc">(</span><span class="num">4.1</span><span class="punc">)</span>  <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 5</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">floor</span><span class="punc">(</span><span class="num">4.9</span><span class="punc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 4</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">pow</span><span class="punc">(</span><span class="num">2</span><span class="punc">,</span> <span class="num">8</span><span class="punc">)</span>  <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 256</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">round</span><span class="punc">(</span><span class="num">4.5</span><span class="punc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 5</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">sqrt</span><span class="punc">(</span><span class="num">16</span><span class="punc">)</span>  <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 4</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">⚠️</span>
+      <div><b>浮点精度陷阱：</b><code>pow</code> 和 <code>sqrt</code> 返回 <code>double</code> 类型，赋值给整数时可能因浮点误差出错。例如 <code>int x = sqrt(25)</code> 理论上得 5，但浮点精度问题可能得到 4.999999，截断后变成 4。<br><b>安全做法：</b><code>int x = (int)round(sqrt(25));</code></div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>C++11 中 abs 的改进：</b>C++11 起，<code>&lt;cmath&gt;</code> 中的 <code>abs</code> 已针对 <code>double</code>、<code>float</code>、<code>long double</code> 做了重载，可以直接对浮点数使用 <code>abs()</code>，不再需要单独用 <code>fabs()</code>。绝大多数现代 OJ 平台支持 C++11，直接用 <code>abs</code> 即可。</div>
     </div>
   </section>
 

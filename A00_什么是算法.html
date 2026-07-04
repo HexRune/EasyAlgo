@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A00 什么是算法 — C++ 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "A.0"; }
+
+  /* ── 算法文档配色 token（复用 CSS 变量，accent 改为 amber）── */
+  :root {
+    --algo-accent:     var(--amber);
+    --algo-accent-mid: var(--amber-mid);
+    --algo-light:      var(--amber-light);
+  }
+
+  /* SVG 图示容器 */
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+
+  /* 时间复杂度对比表 */
+  .complexity-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .complexity-table thead tr { background: var(--amber-light); }
+  .complexity-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--amber); border-bottom: 1px solid #E8D5A0; }
+  .complexity-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .complexity-table tr:last-child td { border-bottom: none; }
+  .complexity-table tr:nth-child(even) td { background: #FFFDF5; }
+  .complexity-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--amber); }
+  .complexity-table .fast  { color: var(--teal);  font-weight: 700; }
+  .complexity-table .mid   { color: var(--amber); font-weight: 700; }
+  .complexity-table .slow  { color: var(--coral); font-weight: 700; }
+
+  /* 两栏卡片 */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+  .info-col { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); }
+  .info-col-head { padding: 10px 14px; font-size: 12.5px; font-weight: 700; }
+  .info-col.time  .info-col-head { background: var(--amber-light); color: var(--amber); border-bottom: 1px solid #E8D5A0; }
+  .info-col.space .info-col-head { background: var(--blue-light);  color: var(--blue-mid); border-bottom: 1px solid #93c5fd; }
+  .info-col-body { padding: 12px 14px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.7; background: var(--surface); }
+
+  /* n 值估算卡 */
+  .n-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0; }
+  @media (max-width: 680px) { .n-cards { grid-template-columns: repeat(2, 1fr); } }
+  .n-card { border-radius: var(--r-md); padding: 12px; border: 1px solid var(--border); background: var(--surface); text-align: center; }
+  .n-card-range { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .n-card-algo  { font-size: 11.5px; color: var(--text-muted); line-height: 1.55; }
+  .n-card.ok    { border-top: 3px solid var(--teal-mid); }
+  .n-card.warn  { border-top: 3px solid var(--amber-mid); }
+  .n-card.slow  { border-top: 3px solid var(--coral-mid); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="A.0">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档</span>
+      <span class="eyebrow-sep">/</span>
+      <span>A00 · 什么是算法</span>
+    </div>
+    <h1 class="chapter-title">A00　什么是算法</h1>
+    <p class="chapter-desc">什么是算法？怎么判断一个算法的好坏？在深入学习具体算法之前，先建立起这两个最基本的认识。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">A00.1</span><a href="#s1">什么是算法</a></li>
+      <li><span class="toc-num">A00.2</span><a href="#s2">用一道题感受算法的差异</a></li>
+      <li><span class="toc-num">A00.3</span><a href="#s3">时间复杂度：算法有多快</a></li>
+      <li><span class="toc-num">A00.4</span><a href="#s4">空间复杂度：算法用多少内存</a></li>
+      <li><span class="toc-num">A00.5</span><a href="#s5">常见复杂度速查</a></li>
+      <li><span class="toc-num">A00.6</span><a href="#s6">竞赛中的估算方法</a></li>
+      <li><span class="toc-num">A00.7</span><a href="#s7">从这里开始学什么</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <!-- ── A00.1 什么是算法 ── -->
+    <div class="sub-title" id="s1">A00.1　什么是算法</div>
+    <div class="section-body">
+      <p>算法是解决某类问题的<strong>一套明确的步骤</strong>。它必须满足三个条件：每一步都足够具体（不能模糊），步骤有限（不能无限执行），最终有结果（不能没有输出）。</p>
+      <p>你每天都在用算法：查字典时从中间翻开缩小范围，这是二分查找；整理扑克牌时把新摸的牌插到合适位置，这是插入排序；导航时选最短路，这是最短路径算法。</p>
+      <p>在竞赛中，算法的核心问题只有两个：<strong>能不能做到</strong>，以及<strong>快不快、省不省内存</strong>。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>算法 vs 代码</b><br>
+        算法是解题的<strong>思路和步骤</strong>，代码是把这个思路翻译成计算机能执行的语言。同一个算法可以用 C++、Python、Java 实现，结果相同，速度略有差异。学算法的重点在于理解思路，而不是背代码。
+      </div>
+    </div>
+
+    <!-- ── A00.2 用一道题感受算法的差异 ── -->
+    <div class="sub-title" id="s2">A00.2　用一道题感受算法的差异</div>
+    <div class="section-body">
+      <p>问题：给你一个 1 到 n 的整数，求它们的总和。</p>
+      <p>这个问题有两种做法，效率天壤之别：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 方法一：逐个累加</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> sum = <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++)</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    sum += i;               <span class="cmt">// 执行 n 次加法</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 方法二：高斯公式</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> sum = n * (n + <span class="num">1</span>) / <span class="num">2</span>;  <span class="cmt">// 执行 1 次乘法、1 次加法、1 次除法</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>当 n = 10 时，两种方法都很快，看不出差别。但当 n = 1,000,000,000（十亿）时，方法一需要执行十亿次加法——耗时约几秒；方法二仍然只需要 3 次运算，瞬间出结果。</p>
+      <p><strong>这就是算法好坏的核心体现：随着问题规模增大，不同算法的速度差距会急剧拉开。</strong></p>
+    </div>
+
+    <!-- ── A00.3 时间复杂度 ── -->
+    <div class="sub-title" id="s3">A00.3　时间复杂度：算法有多快</div>
+    <div class="section-body">
+      <p>我们用<strong>时间复杂度</strong>来描述算法的速度，写作 <code>O(...)</code>（读作"大O"）。它表示随着数据规模 n 增大，算法所需操作次数的增长趋势。</p>
+      <p>注意：时间复杂度不是精确的运行时间，而是一种<strong>量级估算</strong>——我们只关心最主要的增长因素，忽略常数和低阶项。</p>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:600px; width:100%;">
+
+        <!-- 坐标系 -->
+        <line x1="60" y1="220" x2="600" y2="220" stroke="#45475A" stroke-width="1.5"/>
+        <line x1="60" y1="220" x2="60"  y2="20"  stroke="#45475A" stroke-width="1.5"/>
+        <text x="610" y="224" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#7F849C">n（数据规模）</text>
+        <text x="30"  y="18"  font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#7F849C">操作次数</text>
+
+        <!-- x 轴刻度 -->
+        <text x="60"  y="235" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#9399B2">0</text>
+        <text x="200" y="235" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#9399B2">250</text>
+        <text x="340" y="235" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#9399B2">500</text>
+        <text x="480" y="235" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#9399B2">750</text>
+        <text x="590" y="235" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#9399B2">1000</text>
+
+        <!-- O(1)：水平线 -->
+        <line x1="62" y1="215" x2="595" y2="215" stroke="#A6E3A1" stroke-width="2"/>
+        <text x="598" y="213" font-family="'JetBrains Mono',monospace" font-size="10" fill="#A6E3A1">O(1)</text>
+
+        <!-- O(log n)：缓慢上升 -->
+        <path d="M62,210 Q150,185 300,165 Q450,152 595,145"
+              fill="none" stroke="#89B4FA" stroke-width="2"/>
+        <text x="598" y="148" font-family="'JetBrains Mono',monospace" font-size="10" fill="#89B4FA">O(log n)</text>
+
+        <!-- O(n)：直线 -->
+        <line x1="62" y1="218" x2="595" y2="100" stroke="#F9E2AF" stroke-width="2"/>
+        <text x="598" y="100" font-family="'JetBrains Mono',monospace" font-size="10" fill="#F9E2AF">O(n)</text>
+
+        <!-- O(n log n)：略快于直线 -->
+        <path d="M62,218 Q200,130 350,80 Q450,56 530,42"
+              fill="none" stroke="#FAB387" stroke-width="2"/>
+        <text x="533" y="40" font-family="'JetBrains Mono',monospace" font-size="10" fill="#FAB387">O(n log n)</text>
+
+        <!-- O(n²)：快速弯曲 -->
+        <path d="M62,218 Q120,200 160,170 Q200,135 230,90 Q250,60 265,30"
+              fill="none" stroke="#F38BA8" stroke-width="2"/>
+        <text x="270" y="28" font-family="'JetBrains Mono',monospace" font-size="10" fill="#F38BA8">O(n²)</text>
+
+        <!-- 虚线参考 -->
+        <line x1="60" y1="120" x2="600" y2="120" stroke="#313244" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="50" y="123" text-anchor="end" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#9399B2">可接受</text>
+
+        <!-- 图例 -->
+        <text x="340" y="255" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#A6ADC8">
+          越平坦的曲线代表越高效的算法——随 n 增大，操作次数增长越慢
+        </text>
+      </svg>
+      <figcaption>
+        五种常见时间复杂度的增长曲线。<code>O(1)</code> 最理想（常数时间），<code>O(n²)</code> 增长最快。<br>
+        虚线以上区域表示当 n 较大时算法会变得很慢，在竞赛中通常会超时。
+      </figcaption>
+    </div>
+
+    <div class="section-body">
+      <p>怎么计算时间复杂度？只需要数"代码里最深层的循环大约执行了多少次"：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 从代码结构判断复杂度</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// O(1)：没有循环，操作次数固定</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> sum = n * (n + <span class="num">1</span>) / <span class="num">2</span>;</td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// O(n)：一层循环，执行 n 次</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">0</span>; i &lt; n; i++) { ... }</td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// O(n²)：两层嵌套循环，执行 n×n 次</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">0</span>; i &lt; n; i++)</td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> j = <span class="num">0</span>; j &lt; n; j++) { ... }</td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="cmt">// O(log n)：每次把范围缩小一半（如二分查找）</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="kw">while</span> (lo &lt;= hi) {</td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="typ">int</span> mid = (lo + hi) / <span class="num">2</span>;</td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="kw">if</span> (...)  lo = mid + <span class="num">1</span>;  <span class="kw">else</span>  hi = mid - <span class="num">1</span>;</td></tr>
+          <tr><td class="ln">15</td><td class="cd">}                          <span class="cmt">// 每次范围减半，最多执行 log₂n 次</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── A00.4 空间复杂度 ── -->
+    <div class="sub-title" id="s4">A00.4　空间复杂度：算法用多少内存</div>
+    <div class="section-body">
+      <p>除了速度，算法还需要内存。<strong>空间复杂度</strong>描述算法需要多少额外内存，同样用 <code>O(...)</code> 表示。</p>
+    </div>
+
+    <div class="two-col">
+      <div class="info-col time">
+        <div class="info-col-head">⏱️ 时间复杂度</div>
+        <div class="info-col-body">
+          算法执行的<strong>操作次数</strong>随 n 的增长趋势。<br>
+          操作次数越少，程序跑得越快。<br>
+          竞赛中一般要求 <strong>1 秒内不超过约 10⁸ 次</strong>操作。
+        </div>
+      </div>
+      <div class="info-col space">
+        <div class="info-col-head">💾 空间复杂度</div>
+        <div class="info-col-body">
+          算法使用的<strong>额外内存量</strong>随 n 的增长趋势。<br>
+          内存越少，越不容易 MLE（内存超限）。<br>
+          竞赛中一般限制 <strong>256MB</strong>，约能存 6400 万个 int。
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>时间换空间 vs 空间换时间</b><br>
+        这两者经常需要权衡：前缀和用 O(n) 额外空间，换来 O(1) 的查询时间；暴力枚举不用额外空间，但时间可能很慢。竞赛里通常时间限制更严，所以往往愿意多用一点内存换速度。
+      </div>
+    </div>
+
+    <!-- ── A00.5 常见复杂度速查 ── -->
+    <div class="sub-title" id="s5">A00.5　常见复杂度速查</div>
+
+    <table class="complexity-table">
+      <thead>
+        <tr><th>复杂度</th><th>名称</th><th>典型场景</th><th>n=10⁶ 时的操作次数</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>O(1)</td>
+          <td>常数时间</td>
+          <td>数组下标访问、数学公式</td>
+          <td class="fast">1 次</td>
+        </tr>
+        <tr>
+          <td>O(log n)</td>
+          <td>对数时间</td>
+          <td>二分查找、倍增</td>
+          <td class="fast">约 20 次</td>
+        </tr>
+        <tr>
+          <td>O(√n)</td>
+          <td>平方根时间</td>
+          <td>质数判断、分块</td>
+          <td class="fast">约 1000 次</td>
+        </tr>
+        <tr>
+          <td>O(n)</td>
+          <td>线性时间</td>
+          <td>一次遍历、前缀和</td>
+          <td class="fast">100 万次</td>
+        </tr>
+        <tr>
+          <td>O(n log n)</td>
+          <td>线性对数</td>
+          <td>sort、归并排序</td>
+          <td class="mid">约 2000 万次</td>
+        </tr>
+        <tr>
+          <td>O(n²)</td>
+          <td>平方时间</td>
+          <td>冒泡排序、暴力枚举对</td>
+          <td class="slow">1 万亿次 ❌</td>
+        </tr>
+        <tr>
+          <td>O(2ⁿ)</td>
+          <td>指数时间</td>
+          <td>枚举所有子集（n 很小时）</td>
+          <td class="slow">远超宇宙原子数 ❌</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ── A00.6 竞赛中的估算方法 ── -->
+    <div class="sub-title" id="s6">A00.6　竞赛中的估算方法</div>
+    <div class="section-body">
+      <p>竞赛中，题目通常会给出数据范围（如 <code>1 ≤ n ≤ 10⁵</code>）。拿到题目后，先看数据范围，就能大致判断需要哪个量级的算法：</p>
+    </div>
+
+    <div class="n-cards">
+      <div class="n-card ok">
+        <div class="n-card-range">n ≤ 12</div>
+        <div class="n-card-algo">O(n!) 或 O(2ⁿ)<br>全排列、枚举子集</div>
+      </div>
+      <div class="n-card ok">
+        <div class="n-card-range">n ≤ 10&sup3;</div>
+        <div class="n-card-algo">O(n²) 可接受<br>暴力枚举对、简单 DP</div>
+      </div>
+      <div class="n-card ok">
+        <div class="n-card-range">n ≤ 10<sup>5</sup></div>
+        <div class="n-card-algo">需要 O(n log n)<br>排序、前缀和、二分</div>
+      </div>
+      <div class="n-card ok">
+        <div class="n-card-range">n ≤ 10⁷</div>
+        <div class="n-card-algo">需要 O(n) 或更优<br>线性筛、双指针</div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>竞赛粗估规则：</b>1 秒大约能执行 <strong>10⁸（一亿）次</strong>基本操作（实际因机器和操作类型有差异）。拿到 n 的范围后，把你想到的算法复杂度代入计算，如果超过 10⁸ 就需要换更快的思路。
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 640 120" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:600px; width:100%;">
+
+        <!-- 估算流程 -->
+        <rect x="20"  y="30" width="110" height="52" rx="8" fill="#16141F" stroke="#F9E2AF" stroke-width="1.5"/>
+        <text x="75" y="52" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#F9E2AF" font-weight="700">读题</text>
+        <text x="75" y="70" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6ADC8">找数据范围 n</text>
+
+        <text x="148" y="60" text-anchor="middle" font-family="system-ui" font-size="18" fill="#6C7086">→</text>
+
+        <rect x="165" y="30" width="140" height="52" rx="8" fill="#16141F" stroke="#89B4FA" stroke-width="1.5"/>
+        <text x="235" y="52" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#89B4FA" font-weight="700">估算复杂度</text>
+        <text x="235" y="70" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6ADC8">O(n²) 代入 n=10⁵ → 10¹⁰</text>
+
+        <text x="323" y="60" text-anchor="middle" font-family="system-ui" font-size="18" fill="#6C7086">→</text>
+
+        <rect x="340" y="30" width="120" height="52" rx="8" fill="#16141F" stroke="#F38BA8" stroke-width="1.5"/>
+        <text x="400" y="52" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#F38BA8" font-weight="700">超过 10⁸？</text>
+        <text x="400" y="70" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6ADC8">10¹⁰ >> 10⁸，超时</text>
+
+        <text x="478" y="60" text-anchor="middle" font-family="system-ui" font-size="18" fill="#6C7086">→</text>
+
+        <rect x="495" y="30" width="130" height="52" rx="8" fill="#16141F" stroke="#A6E3A1" stroke-width="1.5"/>
+        <text x="560" y="52" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#A6E3A1" font-weight="700">换更快的算法</text>
+        <text x="560" y="70" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6ADC8">O(n log n) → 约 1.7×10⁶ ✅</text>
+
+        <text x="320" y="108" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="12" font-weight="500" fill="#CDD6F4">
+          拿到题目先看 n，再估算你想用的算法是否在时限内
+        </text>
+      </svg>
+      <figcaption>
+        竞赛解题流程：<strong>看数据范围 → 估算操作次数 → 判断是否超时 → 调整算法</strong>。<br>
+        这个估算过程比写代码更重要——先想清楚再动手，避免白写一个必然超时的解法。
+      </figcaption>
+    </div>
+
+    <!-- ── A00.7 从这里开始学什么 ── -->
+    <div class="sub-title" id="s7">A00.7　从这里开始学什么</div>
+    <div class="section-body">
+      <p>本算法文档共 18 个模块，按难度和依赖关系由浅入深排列。建议按顺序学习，每个模块都配有原理讲解、代码实现和执行过程图示。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🗺️</span>
+      <div>
+        <b>推荐学习路径</b><br>
+        ・先打好基础：<strong>01 数学基础 → 02 基础算法思想 → 03 排序</strong>，这是后续所有内容的地基。<br>
+        ・核心竞赛技巧：<strong>05 区间处理 → 07 双指针与二分 → 12 动态规划基础</strong>，CSP-J 高频考点。<br>
+        ・进阶方向：<strong>11 搜索 → 14 图论 → 15 树状数组/线段树</strong>，NOIP 及以上的必备内容。<br>
+        ・每读完一个模块，找 2~3 道对应题目练手，比单纯看文档有效得多。
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🎯</span>
+      <div>
+        <b>学算法最重要的事：</b>理解"为什么这样做"，而不是背代码模板。每个算法背后都有一个核心观察——找到它，其余的细节自然就记住了。
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 算法文档 · A00 什么是算法</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="index.html">← 返回目录</a>
+      <a class="nav-btn" href="A01_01_数位拆分.html">A01 · 数学基础 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

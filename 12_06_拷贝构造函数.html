@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.6 拷贝构造函数 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "12.6"; }
+
+  /* ── 子导航（ch12 通用） ── */
+  .ch12-subnav { margin-bottom: 28px; }
+  .ch12-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch12-group { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); overflow: hidden; transition: border-color .15s, background .15s; flex: 0 0 auto; display: flex; flex-direction: column; }
+  .ch12-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch12-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch12-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch12-group-name { color: var(--text-secondary); }
+  .ch12-group.current .ch12-group-name { color: var(--grp-color); }
+  .ch12-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .ch12-group:not(.current) .ch12-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch12-group:not(.current):hover .ch12-group-head { background: var(--grp-color-light); }
+  .ch12-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch12-group:not(.current):hover .ch12-group-name { color: var(--grp-color); }
+  .ch12-expand-badge { margin-left: auto; flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); font-size: 11px; line-height: 1; color: var(--text-muted); transition: all .15s; }
+  .ch12-group:not(.current):hover .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch12-group.current .ch12-expand-badge { display: none; }
+  .ch12-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch12-group:not(.current) .ch12-items { display: none; }
+  .ch12-group.expanded .ch12-items { display: flex; }
+  .ch12-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch12-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch12-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch12-group.c-intro { --grp-color: var(--accent);   --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch12-group.c-csp   { --grp-color: var(--teal-mid); --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch12-group.c-ext   { --grp-color: var(--blue-mid); --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+
+  /* ── 本页专属 ── */
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+
+  /* 浅/深拷贝对比双栏 */
+  .copy-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; }
+  @media (max-width: 620px) { .copy-compare { grid-template-columns: 1fr; } }
+  .copy-col { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); }
+  .copy-col-head { padding: 10px 14px; font-size: 12.5px; font-weight: 700; }
+  .copy-col.shallow .copy-col-head { background: var(--coral-light); color: var(--coral); border-bottom: 1px solid var(--coral-mid); }
+  .copy-col.deep    .copy-col-head { background: var(--teal-light);  color: var(--teal);  border-bottom: 1px solid var(--teal-mid); }
+  .copy-col-body { padding: 12px 14px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.7; background: var(--surface); }
+
+  /* 触发场景列表 */
+  .trigger-list { list-style: none; padding: 0; margin: 14px 0; }
+  .trigger-list li { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+  .trigger-list li:last-child { border-bottom: none; }
+  .trig-num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--blue-light); border: 1px solid var(--blue-mid); color: var(--blue-mid); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="12.6">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十二章 · 类与面向对象</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.6 拷贝构造函数</span>
+    </div>
+    <h1 class="chapter-title">12.6　拷贝构造函数</h1>
+    <p class="chapter-desc">"复制一个对象"听起来很简单，但当对象内部有指针时就会踩坑——两个对象共用同一块内存，一个析构了，另一个就崩掉了。本节彻底讲清楚浅拷贝与深拷贝的区别。</p>
+  </header>
+
+  <!-- ═══ 子导航 ═══ -->
+  <nav class="ch12-subnav">
+    <div class="ch12-subnav-groups">
+
+      <div class="ch12-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">先导课</span>
+          <span class="ch12-group-count">1</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-csp" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">基础语法</span>
+          <span class="ch12-group-count">5</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
+          <a class="ch12-item" href="12_02_类的定义与对象.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
+          <a class="ch12-item" href="12_04_构造与析构函数.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_05_运算符重载.html">运算符重载</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-ext current expanded">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">进阶特性</span>
+          <span class="ch12-group-count">5</span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item active" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
+          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">12.6.1</span><a href="#s1">什么时候会"复制对象"</a></li>
+      <li><span class="toc-num">12.6.2</span><a href="#s2">拷贝构造函数的语法</a></li>
+      <li><span class="toc-num">12.6.3</span><a href="#s3">浅拷贝的陷阱</a></li>
+      <li><span class="toc-num">12.6.4</span><a href="#s4">深拷贝：自己写拷贝构造函数</a></li>
+      <li><span class="toc-num">12.6.5</span><a href="#s5">三五法则</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <!-- ── 12.6.1 什么时候会"复制对象" ── -->
+    <div class="sub-title" id="s1">12.6.1　什么时候会"复制对象"</div>
+    <div class="section-body">
+      <p>在 C++ 里，以下三种情况都会触发对象的<strong>复制</strong>，此时拷贝构造函数会被自动调用：</p>
+    </div>
+
+    <ul class="trigger-list">
+      <li>
+        <span class="trig-num">1</span>
+        <span><strong>用已有对象初始化新对象</strong>——<code>Student b = a;</code> 或 <code>Student b(a);</code>，创建 b 时以 a 为蓝本复制一份。</span>
+      </li>
+      <li>
+        <span class="trig-num">2</span>
+        <span><strong>对象作为函数参数（值传递）</strong>——<code>void Foo(Student s)</code> 调用时，实参会被复制一份传给形参 s。</span>
+      </li>
+      <li>
+        <span class="trig-num">3</span>
+        <span><strong>函数返回对象（值返回）</strong>——<code>return s;</code> 时，s 会被复制一份作为返回值（现代编译器通常会优化掉这次复制）。</span>
+      </li>
+    </ul>
+
+    <!-- ── 12.6.2 拷贝构造函数的语法 ── -->
+    <div class="sub-title" id="s2">12.6.2　拷贝构造函数的语法</div>
+    <div class="section-body">
+      <p>拷贝构造函数是一种特殊的构造函数，它接受<strong>同类型对象的常量引用</strong>作为参数。如果你不写，C++ 会自动生成一个——逐字段复制所有成员变量，这就是"浅拷贝"。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 拷贝构造函数的写法</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span>    score;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="cmt">// 普通构造函数</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="typ">Student</span>(<span class="typ">string</span> n, <span class="typ">int</span> s) : name(n), score(s) {}</td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">    <span class="cmt">// 拷贝构造函数：参数是 const 同类型引用</span></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">    <span class="typ">Student</span>(<span class="kw">const</span> <span class="typ">Student</span>&amp; other) : name(other.name), score(other.score) {</td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">        cout &lt;&lt; <span class="str">"拷贝了 "</span> &lt;&lt; other.name &lt;&lt; endl;</td></tr>
+          <tr class="hl-ref"><td class="ln">12</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">13</td><td class="cd">};</td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="typ">Student</span> a(<span class="str">"Alice"</span>, <span class="num">95</span>);</td></tr>
+          <tr class="hl-ref"><td class="ln">17</td><td class="cd">    <span class="typ">Student</span> b = a;          <span class="cmt">// 触发拷贝构造 → 输出：拷贝了 Alice</span></td></tr>
+          <tr class="hl-ref"><td class="ln">18</td><td class="cd">    <span class="typ">Student</span> c(a);           <span class="cmt">// 同上，两种写法等价</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>参数<strong>必须是引用</strong>（<code>const Student&amp;</code>），不能写成值传递（<code>Student other</code>）。如果写成值传递，调用拷贝构造时又需要复制参数，又会调用拷贝构造……无限递归，直接崩溃。</div>
+    </div>
+
+    <!-- ── 12.6.3 浅拷贝的陷阱 ── -->
+    <div class="sub-title" id="s3">12.6.3　浅拷贝的陷阱</div>
+    <div class="section-body">
+      <p>对于只有普通成员变量（<code>int</code>、<code>string</code> 等）的类，C++ 自动生成的浅拷贝完全够用。问题出在类里有<strong>指针成员</strong>的时候。</p>
+      <p>浅拷贝只复制指针的值（地址），不复制指针指向的内容——两个对象的指针最终指向<strong>同一块内存</strong>。</p>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 660 230" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:620px; width:100%;">
+        <defs>
+          <marker id="ap" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#E8556D"/>
+          </marker>
+          <marker id="at" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#1D9E75"/>
+          </marker>
+          <marker id="ag" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#6C7086"/>
+          </marker>
+        </defs>
+
+        <!-- 标题行 -->
+        <text x="165" y="18" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="12" fill="#E8556D" font-weight="700">浅拷贝（危险）</text>
+        <text x="495" y="18" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="12" fill="#1D9E75" font-weight="700">深拷贝（安全）</text>
+        <line x1="330" y1="10" x2="330" y2="220" stroke="#313244" stroke-width="1" stroke-dasharray="4,3"/>
+
+        <!-- ── 浅拷贝左侧 ── -->
+        <!-- 对象 a -->
+        <rect x="20" y="30" width="110" height="52" rx="6" fill="#1E1C2F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="75" y="48" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#CBA6F7" font-weight="700">对象 a</text>
+        <text x="75" y="66" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#A6ADC8">data → 0x1A2B</text>
+
+        <!-- 对象 b（浅拷贝）-->
+        <rect x="20" y="104" width="110" height="52" rx="6" fill="#1E1C2F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="75" y="122" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#CBA6F7" font-weight="700">对象 b</text>
+        <text x="75" y="140" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#A6ADC8">data → 0x1A2B</text>
+
+        <!-- 堆内存（共享）-->
+        <rect x="188" y="66" width="100" height="36" rx="6" fill="rgba(232,85,109,.12)" stroke="#E8556D" stroke-width="1.5"/>
+        <text x="238" y="80" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#E8556D" font-weight="700">堆内存 0x1A2B</text>
+        <text x="238" y="95" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">"Hello"</text>
+
+        <!-- 箭头：a.data → 堆 -->
+        <line x1="130" y1="60" x2="186" y2="78" stroke="#E8556D" stroke-width="1.5" marker-end="url(#ap)"/>
+        <!-- 箭头：b.data → 同一堆 -->
+        <line x1="130" y1="130" x2="186" y2="90" stroke="#E8556D" stroke-width="1.5" marker-end="url(#ap)"/>
+
+        <!-- 危险提示 -->
+        <rect x="148" y="116" width="152" height="34" rx="5" fill="rgba(232,85,109,.08)" stroke="#E8556D" stroke-width="1"/>
+        <text x="224" y="130" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#E8556D">b 析构时 delete 这块内存</text>
+        <text x="224" y="144" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#E8556D">a 析构时再次 delete → 崩溃 💥</text>
+
+        <!-- ── 深拷贝右侧 ── -->
+        <!-- 对象 a -->
+        <rect x="350" y="30" width="110" height="52" rx="6" fill="#1E1C2F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="405" y="48" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#CBA6F7" font-weight="700">对象 a</text>
+        <text x="405" y="66" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#A6ADC8">data → 0x1A2B</text>
+
+        <!-- 对象 b（深拷贝）-->
+        <rect x="350" y="104" width="110" height="52" rx="6" fill="#1E1C2F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="405" y="122" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#CBA6F7" font-weight="700">对象 b</text>
+        <text x="405" y="140" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#A6ADC8">data → 0x3C4D</text>
+
+        <!-- 堆内存 a -->
+        <rect x="490" y="30" width="110" height="36" rx="6" fill="rgba(29,158,117,.1)" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="545" y="46" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#1D9E75">堆内存 0x1A2B</text>
+        <text x="545" y="60" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">"Hello"</text>
+
+        <!-- 堆内存 b（独立副本）-->
+        <rect x="490" y="104" width="110" height="36" rx="6" fill="rgba(29,158,117,.1)" stroke="#1D9E75" stroke-width="1.2"/>
+        <text x="545" y="120" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#1D9E75">堆内存 0x3C4D</text>
+        <text x="545" y="134" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">"Hello"</text>
+
+        <!-- 箭头：a.data → 堆a -->
+        <line x1="460" y1="52" x2="488" y2="50" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#at)"/>
+        <!-- 箭头：b.data → 堆b（独立）-->
+        <line x1="460" y1="126" x2="488" y2="124" stroke="#1D9E75" stroke-width="1.5" marker-end="url(#at)"/>
+
+        <!-- 安全提示 -->
+        <text x="545" y="162" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#1D9E75">各自独立，互不干扰 ✅</text>
+
+        <!-- 底部说明 -->
+        <text x="330" y="210" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#45475A">
+          浅拷贝复制指针地址，深拷贝在堆上新建一份独立的内容
+        </text>
+      </svg>
+      <figcaption>
+        <strong>浅拷贝</strong>：<code>b.data</code> 和 <code>a.data</code> 指向同一块堆内存。<code>b</code> 析构时 <code>delete</code> 了这块内存，<code>a</code> 析构时再次 <code>delete</code> 同一地址，程序崩溃。<br>
+        <strong>深拷贝</strong>：在堆上为 <code>b</code> 单独分配一块新内存，复制内容。两者互相独立，各自析构互不影响。
+      </figcaption>
+    </div>
+
+    <div class="section-body">
+      <p>看一个完整的会崩溃的例子，理解浅拷贝的危险：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 浅拷贝导致的 double-free 崩溃</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Buffer</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span>* data;    <span class="cmt">// 指针成员，指向堆上的数组</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span>  size;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">Buffer</span>(<span class="typ">int</span> n) : size(n) {</td></tr>
+          <tr><td class="ln">7</td><td class="cd">        data = <span class="kw">new</span> <span class="typ">int</span>[n];   <span class="cmt">// 在堆上分配内存</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">9</td><td class="cd">    ~<span class="typ">Buffer</span>() { <span class="kw">delete</span>[] data; } <span class="cmt">// 析构时释放</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="cmt">// ⚠️ 没有自定义拷贝构造函数，使用编译器默认的浅拷贝</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">};</td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="typ">Buffer</span> a(<span class="num">10</span>);</td></tr>
+          <tr class="hl-warn"><td class="ln">15</td><td class="cd">    <span class="typ">Buffer</span> b = a;        <span class="cmt">// 浅拷贝：b.data 和 a.data 指向同一块内存</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">}   <span class="cmt">// b 先析构：delete[] data（0x1A2B）</span></td></tr>
+          <tr class="hl-warn"><td class="ln">17</td><td class="cd">    <span class="cmt">// a 再析构：delete[] data（0x1A2B）← 💥 double-free，程序崩溃！</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 12.6.4 深拷贝 ── -->
+    <div class="sub-title" id="s4">12.6.4　深拷贝：自己写拷贝构造函数</div>
+    <div class="section-body">
+      <p>解决办法是自己写拷贝构造函数，在里面为新对象<strong>单独申请一块内存</strong>，再把内容复制过去，而不是直接复制指针地址。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 自定义深拷贝构造函数</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Buffer</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span>* data;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span>  size;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">Buffer</span>(<span class="typ">int</span> n) : size(n) {</td></tr>
+          <tr><td class="ln">7</td><td class="cd">        data = <span class="kw">new</span> <span class="typ">int</span>[n]();</td></tr>
+          <tr><td class="ln">8</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">    <span class="cmt">// 深拷贝：重新申请内存，复制内容</span></td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">    <span class="typ">Buffer</span>(<span class="kw">const</span> <span class="typ">Buffer</span>&amp; other) : size(other.size) {</td></tr>
+          <tr class="hl-ref"><td class="ln">12</td><td class="cd">        data = <span class="kw">new</span> <span class="typ">int</span>[size];           <span class="cmt">// ① 新开一块内存</span></td></tr>
+          <tr class="hl-ref"><td class="ln">13</td><td class="cd">        <span class="fn">copy</span>(other.data, other.data + size, data); <span class="cmt">// ② 复制内容</span></td></tr>
+          <tr class="hl-ref"><td class="ln">14</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">15</td><td class="cd"></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    ~<span class="typ">Buffer</span>() { <span class="kw">delete</span>[] data; }</td></tr>
+          <tr><td class="ln">17</td><td class="cd">};</td></tr>
+          <tr><td class="ln">18</td><td class="cd"></td></tr>
+          <tr><td class="ln">19</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="typ">Buffer</span> a(<span class="num">10</span>);</td></tr>
+          <tr><td class="ln">21</td><td class="cd">    a.data[<span class="num">0</span>] = <span class="num">42</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">22</td><td class="cd">    <span class="typ">Buffer</span> b = a;             <span class="cmt">// 深拷贝：b 有独立的内存</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    b.data[<span class="num">0</span>] = <span class="num">99</span>;            <span class="cmt">// 修改 b 不影响 a</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    cout &lt;&lt; a.data[<span class="num">0</span>];        <span class="cmt">// 输出：42（a 不受影响）</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">}   <span class="cmt">// 析构时两者各自释放自己的内存，安全 ✅</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="copy-compare">
+      <div class="copy-col shallow">
+        <div class="copy-col-head">❌ 浅拷贝（默认行为）</div>
+        <div class="copy-col-body">
+          直接复制指针的值，两个对象共用同一块堆内存。<br>
+          ・修改 b 的数据会影响 a<br>
+          ・其中一个析构后，另一个指向已释放的内存<br>
+          ・第二次析构触发 <strong>double-free</strong>，程序崩溃
+        </div>
+      </div>
+      <div class="copy-col deep">
+        <div class="copy-col-head">✅ 深拷贝（自定义）</div>
+        <div class="copy-col-body">
+          为新对象单独申请内存，复制内容。<br>
+          ・两个对象完全独立<br>
+          ・修改任意一个不影响另一个<br>
+          ・各自析构各自的内存，安全
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 12.6.5 三五法则 ── -->
+    <div class="sub-title" id="s5">12.6.5　三五法则</div>
+    <div class="section-body">
+      <p>C++ 有一条经验法则叫<strong>"三法则（Rule of Three）"</strong>：</p>
+      <p>如果你的类需要手动管理资源（比如内部有 <code>new</code> 出来的指针），那么以下三个函数<strong>必须同时自定义</strong>，缺一不可：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 三法则：三个函数必须配套</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Buffer</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span>* data;  <span class="typ">int</span> size;</td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">    ~<span class="typ">Buffer</span>() { <span class="kw">delete</span>[] data; }       <span class="cmt">// ① 析构函数：释放内存</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">    <span class="typ">Buffer</span>(<span class="kw">const</span> <span class="typ">Buffer</span>&amp; other) {        <span class="cmt">// ② 拷贝构造函数</span></td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">        size = other.size;</td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">        data = <span class="kw">new</span> <span class="typ">int</span>[size];              <span class="cmt">// 新开内存，深拷贝</span></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">        <span class="fn">copy</span>(other.data, other.data+size, data);</td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">13</td><td class="cd">    <span class="typ">Buffer</span>&amp; <span class="kw">operator</span>=(<span class="kw">const</span> <span class="typ">Buffer</span>&amp; other) { <span class="cmt">// ③ 拷贝赋值运算符</span></td></tr>
+          <tr class="hl-ref"><td class="ln">14</td><td class="cd">        <span class="kw">if</span> (<span class="kw">this</span> == &amp;other) <span class="kw">return</span> *<span class="kw">this</span>; <span class="cmt">// 防止自赋值 a = a</span></td></tr>
+          <tr class="hl-ref"><td class="ln">15</td><td class="cd">        <span class="kw">delete</span>[] data;                    <span class="cmt">// 先释放旧内存</span></td></tr>
+          <tr class="hl-ref"><td class="ln">16</td><td class="cd">        size = other.size;</td></tr>
+          <tr class="hl-ref"><td class="ln">17</td><td class="cd">        data = <span class="kw">new</span> <span class="typ">int</span>[size];              <span class="cmt">// 新开内存，深拷贝</span></td></tr>
+          <tr class="hl-ref"><td class="ln">18</td><td class="cd">        <span class="fn">copy</span>(other.data, other.data+size, data);</td></tr>
+          <tr class="hl-ref"><td class="ln">19</td><td class="cd">        <span class="kw">return</span> *<span class="kw">this</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">20</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">21</td><td class="cd">};</td></tr>
+          <tr><td class="ln">22</td><td class="cd"></td></tr>
+          <tr><td class="ln">23</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="typ">Buffer</span> a(<span class="num">10</span>), b(<span class="num">5</span>);</td></tr>
+          <tr><td class="ln">25</td><td class="cd">    <span class="typ">Buffer</span> c = a;   <span class="cmt">// 触发 ② 拷贝构造</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">    b = a;           <span class="cmt">// 触发 ③ 拷贝赋值（b 已存在，不是初始化）</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>拷贝构造 vs 拷贝赋值，傻傻分不清？</b><br>
+        区别只在于对象是否<strong>已经存在</strong>：<br>
+        ・<code>Buffer c = a;</code> — c 是新建的，调用<strong>拷贝构造函数</strong>（对象从无到有）<br>
+        ・<code>b = a;</code> — b 已经存在，调用<strong>拷贝赋值运算符</strong>（对象已有，覆盖掉旧值）<br>
+        拷贝赋值要多做一步：先 <code>delete</code> 掉旧内存，再深拷贝新内容。
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>道理很简单：写了析构函数说明类里有手动管理的资源，拷贝时和赋值时同样需要深度处理——三件事是配套的，缺任何一个都会埋下隐患。</p>
+      <p>C++11 之后还引入了移动语义，扩展为<strong>"五法则（Rule of Five）"</strong>，在三法则基础上再加上移动构造函数和移动赋值运算符。竞赛阶段了解三法则即可，五法则属于更高阶的工程实践。</p>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>竞赛中的实用建议：</b>在 CSP-J / NOIP 中，<strong>尽量避免在类里直接管理裸指针</strong>。用 <code>vector</code>、<code>string</code> 等 STL 容器替代手动 <code>new</code>，它们自己实现了深拷贝，完全不需要你操心三法则，代码更简洁也更安全。
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>
+        <b>本节小结</b><br>
+        ・拷贝构造函数在"用对象初始化对象"、"值传递"、"值返回"三种情况下自动触发。<br>
+        ・默认浅拷贝只复制指针地址，类含指针成员时会导致 double-free 崩溃。<br>
+        ・深拷贝：在拷贝构造函数里为新对象重新分配内存并复制内容。<br>
+        ・遵循三法则：写了析构函数，就同时写拷贝构造和拷贝赋值运算符。<br>
+        ・竞赛中优先用 STL 容器，避免手动管理内存。
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.6 拷贝构造函数</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="12_05_运算符重载.html">← 12.5 运算符重载</a>
+      <a class="nav-btn" href="12_07_静态成员.html">12.7 静态成员 static →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

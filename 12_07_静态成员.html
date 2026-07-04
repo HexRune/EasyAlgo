@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.7 静态成员 static — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "12.7"; }
+
+  /* ── 子导航（ch12 通用） ── */
+  .ch12-subnav { margin-bottom: 28px; }
+  .ch12-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch12-group { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); overflow: hidden; transition: border-color .15s, background .15s; flex: 0 0 auto; display: flex; flex-direction: column; }
+  .ch12-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch12-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch12-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch12-group-name { color: var(--text-secondary); }
+  .ch12-group.current .ch12-group-name { color: var(--grp-color); }
+  .ch12-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .ch12-group:not(.current) .ch12-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch12-group:not(.current):hover .ch12-group-head { background: var(--grp-color-light); }
+  .ch12-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch12-group:not(.current):hover .ch12-group-name { color: var(--grp-color); }
+  .ch12-expand-badge { margin-left: auto; flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); font-size: 11px; line-height: 1; color: var(--text-muted); transition: all .15s; }
+  .ch12-group:not(.current):hover .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch12-group.current .ch12-expand-badge { display: none; }
+  .ch12-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch12-group:not(.current) .ch12-items { display: none; }
+  .ch12-group.expanded .ch12-items { display: flex; }
+  .ch12-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch12-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch12-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch12-group.c-intro { --grp-color: var(--accent);   --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch12-group.c-csp   { --grp-color: var(--teal-mid); --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch12-group.c-ext   { --grp-color: var(--blue-mid); --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+
+  /* ── 本页专属 ── */
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+
+  /* 静态 vs 普通对比表 */
+  .cmp-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .cmp-table thead tr { background: var(--blue-light); }
+  .cmp-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blue-mid); border-bottom: 1px solid #93c5fd; }
+  .cmp-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .cmp-table tr:last-child td { border-bottom: none; }
+  .cmp-table tr:nth-child(even) td { background: #f0f5ff; }
+  .cmp-table td:first-child { font-weight: 700; color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="12.7">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十二章 · 类与面向对象</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.7 静态成员 static</span>
+    </div>
+    <h1 class="chapter-title">12.7　静态成员 static</h1>
+    <p class="chapter-desc">普通成员变量每个对象都有一份，而静态成员变量<strong>所有对象共享同一份</strong>——它不属于任何一个对象，而是属于整个类。</p>
+  </header>
+
+  <!-- ═══ 子导航 ═══ -->
+  <nav class="ch12-subnav">
+    <div class="ch12-subnav-groups">
+
+      <div class="ch12-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">先导课</span>
+          <span class="ch12-group-count">1</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-csp" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">基础语法</span>
+          <span class="ch12-group-count">5</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
+          <a class="ch12-item" href="12_02_类的定义与对象.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
+          <a class="ch12-item" href="12_04_构造与析构函数.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_05_运算符重载.html">运算符重载</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-ext current expanded">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">进阶特性</span>
+          <span class="ch12-group-count">5</span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
+          <a class="ch12-item active" href="12_07_静态成员.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
+          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">12.7.1</span><a href="#s1">用班级公告栏理解 static</a></li>
+      <li><span class="toc-num">12.7.2</span><a href="#s2">静态成员变量</a></li>
+      <li><span class="toc-num">12.7.3</span><a href="#s3">静态成员函数</a></li>
+      <li><span class="toc-num">12.7.4</span><a href="#s4">静态 vs 普通成员对比</a></li>
+      <li><span class="toc-num">12.7.5</span><a href="#s5">实用场景</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <!-- ── 12.7.1 用班级公告栏理解 static ── -->
+    <div class="sub-title" id="s1">12.7.1　用班级公告栏理解 static</div>
+    <div class="section-body">
+      <p>班里每个同学都有自己的<strong>笔记本</strong>——这是普通成员变量，每人一份，互不干扰。</p>
+      <p>但班级的<strong>公告栏</strong>只有一块，全班共用，任何一个人写上去，所有人都能看到——这就是静态成员变量。它属于整个班级（类），而不属于某一个同学（对象）。</p>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 660 210" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:620px; width:100%;">
+
+        <!-- 三个学生对象 -->
+        <rect x="20"  y="30" width="120" height="90" rx="8" fill="#1E1C2F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="80"  y="52" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#CBA6F7" font-weight="700">对象 s1</text>
+        <text x="80"  y="72" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">name = "Alice"</text>
+        <text x="80"  y="89" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">score = 95</text>
+        <rect x="28" y="100" width="104" height="14" rx="3" fill="rgba(249,226,175,.1)" stroke="#F9E2AF" stroke-width=".8"/>
+        <text x="80" y="111" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#F9E2AF">count → 共享</text>
+
+        <rect x="160" y="30" width="120" height="90" rx="8" fill="#1E1C2F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="220" y="52" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#CBA6F7" font-weight="700">对象 s2</text>
+        <text x="220" y="72" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">name = "Bob"</text>
+        <text x="220" y="89" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">score = 82</text>
+        <rect x="168" y="100" width="104" height="14" rx="3" fill="rgba(249,226,175,.1)" stroke="#F9E2AF" stroke-width=".8"/>
+        <text x="220" y="111" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#F9E2AF">count → 共享</text>
+
+        <rect x="300" y="30" width="120" height="90" rx="8" fill="#1E1C2F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="360" y="52" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#CBA6F7" font-weight="700">对象 s3</text>
+        <text x="360" y="72" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">name = "Carol"</text>
+        <text x="360" y="89" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#CDD6F4">score = 77</text>
+        <rect x="308" y="100" width="104" height="14" rx="3" fill="rgba(249,226,175,.1)" stroke="#F9E2AF" stroke-width=".8"/>
+        <text x="360" y="111" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#F9E2AF">count → 共享</text>
+
+        <!-- 共享的静态变量 -->
+        <rect x="490" y="50" width="150" height="50" rx="8"
+              fill="rgba(249,226,175,.1)" stroke="#F9E2AF" stroke-width="1.8"/>
+        <text x="565" y="70" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#F9E2AF" font-weight="700">static int count</text>
+        <text x="565" y="88" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="13" fill="#CDD6F4" font-weight="700">3</text>
+
+        <!-- 箭头：三个对象的 count 指向同一块 -->
+        <line x1="132" y1="107" x2="488" y2="72" stroke="#F9E2AF" stroke-width="1.2" stroke-dasharray="4,2"/>
+        <line x1="272" y1="107" x2="488" y2="75" stroke="#F9E2AF" stroke-width="1.2" stroke-dasharray="4,2"/>
+        <line x1="412" y1="107" x2="488" y2="78" stroke="#F9E2AF" stroke-width="1.2" stroke-dasharray="4,2"/>
+
+        <!-- 标注 -->
+        <text x="330" y="162" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">每个对象各有独立的 name 和 score</text>
+        <text x="330" y="178" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#F9E2AF">count 只有一份，所有对象共用，记录创建了多少个对象</text>
+      </svg>
+      <figcaption>
+        普通成员变量（<code>name</code>、<code>score</code>）每个对象各有一份，存在对象自己的内存里。<br>
+        静态成员变量（<code>count</code>）只有一份，存在类的公共区域，所有对象读写的都是同一个值。
+      </figcaption>
+    </div>
+
+    <!-- ── 12.7.2 静态成员变量 ── -->
+    <div class="sub-title" id="s2">12.7.2　静态成员变量</div>
+    <div class="section-body">
+      <p>在成员变量前加 <code>static</code> 关键字即可。但有一个特别的规定：静态成员变量必须在<strong>类外单独定义</strong>（初始化），不能只在类内声明就了事。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 静态成员变量：用来统计对象数量</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">    <span class="kw">static</span> <span class="typ">int</span> count;   <span class="cmt">// 类内声明，注意只是声明</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">Student</span>(<span class="typ">string</span> n) : name(n) {</td></tr>
+          <tr><td class="ln">7</td><td class="cd">        count++;           <span class="cmt">// 每创建一个对象就 +1</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">9</td><td class="cd">    ~<span class="typ">Student</span>() { count--; } <span class="cmt">// 每销毁一个对象就 -1</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">};</td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr class="hl-warn"><td class="ln">12</td><td class="cd"><span class="typ">int</span> <span class="typ">Student</span>::count = <span class="num">0</span>;  <span class="cmt">// ← 类外定义并初始化，不能省略！</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="typ">Student</span> s1(<span class="str">"Alice"</span>);</td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="typ">Student</span> s2(<span class="str">"Bob"</span>);</td></tr>
+          <tr class="hl-ref"><td class="ln">17</td><td class="cd">    cout &lt;&lt; <span class="typ">Student</span>::count;  <span class="cmt">// 输出：2（用 类名:: 访问）</span></td></tr>
+          <tr class="hl-ref"><td class="ln">18</td><td class="cd">    cout &lt;&lt; s1.count;        <span class="cmt">// 也可以用对象访问，但不推荐（容易误以为是独立的）</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>类外定义不能忘：</b>静态成员变量在类内只是<strong>声明</strong>，告诉编译器"有这个东西"。真正分配内存、指定初始值，必须在类外写 <code>int Student::count = 0;</code>。忘了写，链接时会报"未定义的引用"错误。
+      </div>
+    </div>
+
+    <!-- ── 12.7.3 静态成员函数 ── -->
+    <div class="sub-title" id="s3">12.7.3　静态成员函数</div>
+    <div class="section-body">
+      <p>成员函数也可以用 <code>static</code> 修饰。静态成员函数和静态变量一样，<strong>不依赖任何具体的对象</strong>，可以直接通过类名调用，无需创建对象。</p>
+      <p>正因为如此，静态成员函数里<strong>没有 <code>this</code> 指针</strong>——它不知道也不关心是哪个对象在调用它，因此它只能访问静态成员，不能访问普通成员变量。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 静态成员函数</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Student</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">private</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">static</span> <span class="typ">int</span> count;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">Student</span>(<span class="typ">string</span> n) : name(n) { count++; }</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    ~<span class="typ">Student</span>() { count--; }</td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">    <span class="kw">static</span> <span class="typ">int</span> <span class="fn">GetCount</span>() {   <span class="cmt">// 静态成员函数</span></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">        <span class="kw">return</span> count;          <span class="cmt">// ✅ 可以访问静态成员</span></td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">        <span class="cmt">// return name;  ❌ 不能访问普通成员（没有 this）</span></td></tr>
+          <tr class="hl-ref"><td class="ln">12</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">13</td><td class="cd">};</td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">int</span> <span class="typ">Student</span>::count = <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">15</td><td class="cd"></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr class="hl-ref"><td class="ln">17</td><td class="cd">    cout &lt;&lt; <span class="typ">Student</span>::<span class="fn">GetCount</span>(); <span class="cmt">// 输出：0（不需要创建对象就能调用）</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="typ">Student</span> s1(<span class="str">"Alice"</span>), s2(<span class="str">"Bob"</span>);</td></tr>
+          <tr class="hl-ref"><td class="ln">19</td><td class="cd">    cout &lt;&lt; <span class="typ">Student</span>::<span class="fn">GetCount</span>(); <span class="cmt">// 输出：2</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>什么时候用静态成员函数？</b>当这个函数的逻辑<strong>与具体对象无关</strong>，只和整个类有关时，就适合用 <code>static</code>。最典型的例子：获取对象计数、工厂方法（创建对象的辅助函数）、工具类里的纯计算函数。
+      </div>
+    </div>
+
+    <!-- ── 12.7.4 静态 vs 普通成员对比 ── -->
+    <div class="sub-title" id="s4">12.7.4　静态 vs 普通成员对比</div>
+
+    <table class="cmp-table">
+      <thead>
+        <tr><th>对比项</th><th>普通成员</th><th>静态成员</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>属于谁</td>
+          <td>每个对象各有一份</td>
+          <td>整个类共享一份</td>
+        </tr>
+        <tr>
+          <td>内存位置</td>
+          <td>对象内部（栈或堆）</td>
+          <td>程序的静态存储区</td>
+        </tr>
+        <tr>
+          <td>生命周期</td>
+          <td>随对象创建/销毁</td>
+          <td>程序启动到结束，始终存在</td>
+        </tr>
+        <tr>
+          <td>访问方式</td>
+          <td><code>对象.成员</code></td>
+          <td><code>类名::成员</code>（推荐）或 <code>对象.成员</code></td>
+        </tr>
+        <tr>
+          <td>能否访问 this</td>
+          <td>✅ 有 this 指针</td>
+          <td>❌ 没有 this 指针</td>
+        </tr>
+        <tr>
+          <td>初始化位置</td>
+          <td>构造函数 / 初始化列表</td>
+          <td>类外单独定义（必须）</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ── 12.7.5 实用场景 ── -->
+    <div class="sub-title" id="s5">12.7.5　实用场景</div>
+    <div class="section-body">
+      <p>静态成员在以下几个场景非常好用：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 场景一：全局配置常量</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Game</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr class="hl-ref"><td class="ln">3</td><td class="cd">    <span class="kw">static</span> <span class="kw">const</span> <span class="typ">int</span> MAX_PLAYERS = <span class="num">4</span>;  <span class="cmt">// const static 可以直接在类内初始化</span></td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">    <span class="kw">static</span> <span class="kw">const</span> <span class="typ">int</span> MAP_SIZE    = <span class="num">100</span>;</td></tr>
+          <tr><td class="ln">5</td><td class="cd">};</td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 用类名直接访问，清晰地表达"这是 Game 的配置"</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="typ">int</span> arr[<span class="typ">Game</span>::MAP_SIZE];</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 场景二：单例模式（全局唯一实例）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Config</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">private</span>:</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">Config</span>() {}                        <span class="cmt">// 构造函数私有，外部无法直接创建</span></td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">    <span class="kw">static</span> <span class="typ">Config</span>* instance;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    <span class="kw">static</span> <span class="typ">Config</span>* <span class="fn">GetInstance</span>() {</td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">        <span class="kw">if</span> (!instance)</td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">            instance = <span class="kw">new</span> <span class="typ">Config</span>(); <span class="cmt">// 第一次调用才创建</span></td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">        <span class="kw">return</span> instance;           <span class="cmt">// 之后返回同一个实例</span></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">11</td><td class="cd">};</td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="typ">Config</span>* <span class="typ">Config</span>::instance = <span class="kw">nullptr</span>;</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>
+        <b>本节小结</b><br>
+        ・<code>static</code> 成员变量：整个类共享一份，生命周期贯穿程序始终，必须在类外定义。<br>
+        ・<code>static</code> 成员函数：无 <code>this</code> 指针，只能访问静态成员，用 <code>类名::</code> 直接调用。<br>
+        ・常见用途：对象计数器、全局配置常量、单例模式。
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.7 静态成员 static</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="12_06_拷贝构造函数.html">← 12.6 拷贝构造函数</a>
+      <a class="nav-btn" href="12_08_继承基础.html">12.8 继承基础 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

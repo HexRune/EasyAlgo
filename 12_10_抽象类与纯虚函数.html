@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.10 抽象类与纯虚函数 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "12.10"; }
+
+  /* ── 子导航（ch12 通用） ── */
+  .ch12-subnav { margin-bottom: 28px; }
+  .ch12-subnav-groups { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+  .ch12-group { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); overflow: hidden; transition: border-color .15s, background .15s; flex: 0 0 auto; display: flex; flex-direction: column; }
+  .ch12-group.current { border-color: var(--grp-color-mid); background: var(--grp-color-light); border-width: 1.5px; }
+  .ch12-group-head { display: flex; align-items: center; gap: 7px; padding: 12px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; flex: 1; }
+  .ch12-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--grp-color); }
+  .ch12-group-name { color: var(--text-secondary); }
+  .ch12-group.current .ch12-group-name { color: var(--grp-color); }
+  .ch12-group-count { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .ch12-group:not(.current) .ch12-group-head { cursor: pointer; background: #FAFAF7; }
+  .ch12-group:not(.current):hover .ch12-group-head { background: var(--grp-color-light); }
+  .ch12-group:not(.current):hover { border-color: var(--grp-color-mid); }
+  .ch12-group:not(.current):hover .ch12-group-name { color: var(--grp-color); }
+  .ch12-expand-badge { margin-left: auto; flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); font-size: 11px; line-height: 1; color: var(--text-muted); transition: all .15s; }
+  .ch12-group:not(.current):hover .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge { background: var(--grp-color); border-color: var(--grp-color); color: #fff; }
+  .ch12-group.expanded .ch12-expand-badge .eb-icon { transform: rotate(45deg); }
+  .eb-icon { display: inline-block; transition: transform .15s; }
+  .ch12-group.current .ch12-expand-badge { display: none; }
+  .ch12-items { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+  .ch12-group:not(.current) .ch12-items { display: none; }
+  .ch12-group.expanded .ch12-items { display: flex; }
+  .ch12-item { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); transition: all .12s; white-space: nowrap; }
+  .ch12-item:hover { border-color: var(--grp-color-mid); color: var(--grp-color); }
+  .ch12-item.active { background: var(--grp-color); color: #fff; border-color: var(--grp-color); font-weight: 700; }
+  .ch12-group.c-intro { --grp-color: var(--accent);   --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light); }
+  .ch12-group.c-csp   { --grp-color: var(--teal-mid); --grp-color-mid: var(--teal-mid);   --grp-color-light: var(--teal-light); }
+  .ch12-group.c-ext   { --grp-color: var(--blue-mid); --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
+
+  /* ── 本页专属 ── */
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+
+  /* 抽象 vs 具体类对比 */
+  .abs-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; }
+  @media (max-width: 600px) { .abs-compare { grid-template-columns: 1fr; } }
+  .abs-col { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); }
+  .abs-col-head { padding: 10px 14px; font-size: 12.5px; font-weight: 700; }
+  .abs-col.abstract  .abs-col-head { background: rgba(203,166,247,.12); color: #CBA6F7; border-bottom: 1px solid rgba(203,166,247,.25); }
+  .abs-col.concrete  .abs-col-head { background: var(--teal-light); color: var(--teal); border-bottom: 1px solid var(--teal-mid); }
+  .abs-col-body { padding: 12px 14px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.7; background: var(--surface); }
+
+  /* 章节完成徽章 */
+  .chapter-complete {
+    background: linear-gradient(135deg, rgba(166,227,161,.08), rgba(137,180,250,.08));
+    border: 1px solid rgba(166,227,161,.25);
+    border-radius: var(--r-lg);
+    padding: 20px 24px;
+    margin: 28px 0 0;
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .cc-icon { font-size: 28px; flex-shrink: 0; }
+  .cc-text { font-size: 13.5px; color: var(--text-secondary); line-height: 1.75; }
+  .cc-text strong { color: var(--text-primary); }
+  .cc-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .cc-link { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; text-decoration: none; border: 1px solid var(--border); color: var(--text-secondary); background: var(--surface); transition: all .12s; }
+  .cc-link:hover { border-color: var(--teal-mid); color: var(--teal); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="12.10">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第十二章 · 类与面向对象</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.10 抽象类与纯虚函数</span>
+    </div>
+    <h1 class="chapter-title">12.10　抽象类与纯虚函数</h1>
+    <p class="chapter-desc">有时候父类只想定义一份"规范"，强制所有子类必须实现某个功能，自己却不提供具体实现——这就是抽象类的用途。</p>
+  </header>
+
+  <!-- ═══ 子导航 ═══ -->
+  <nav class="ch12-subnav">
+    <div class="ch12-subnav-groups">
+
+      <div class="ch12-group c-intro" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">先导课</span>
+          <span class="ch12-group-count">1</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-csp" onclick="this.classList.toggle('expanded')">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">基础语法</span>
+          <span class="ch12-group-count">5</span>
+          <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
+          <a class="ch12-item" href="12_02_类的定义与对象.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
+          <a class="ch12-item" href="12_04_构造与析构函数.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_05_运算符重载.html">运算符重载</a>
+        </div>
+      </div>
+
+      <div class="ch12-group c-ext current expanded">
+        <div class="ch12-group-head">
+          <span class="ch12-group-dot"></span>
+          <span class="ch12-group-name">进阶特性</span>
+          <span class="ch12-group-count">5</span>
+        </div>
+        <div class="ch12-items">
+          <a class="ch12-item" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
+          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
+          <a class="ch12-item active" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">12.10.1</span><a href="#s1">用插座类比理解抽象类</a></li>
+      <li><span class="toc-num">12.10.2</span><a href="#s2">纯虚函数的语法</a></li>
+      <li><span class="toc-num">12.10.3</span><a href="#s3">抽象类不能实例化</a></li>
+      <li><span class="toc-num">12.10.4</span><a href="#s4">完整示例：图形面积计算</a></li>
+      <li><span class="toc-num">12.10.5</span><a href="#s5">抽象类 vs 普通基类</a></li>
+      <li><span class="toc-num">12.10.6</span><a href="#s6">第十二章总结</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <!-- ── 12.10.1 用插座理解抽象类 ── -->
+    <div class="sub-title" id="s1">12.10.1　用插座类比理解抽象类</div>
+    <div class="section-body">
+      <p>想象国家电气标准委员会制定了一份"插座规范"：所有插座必须能供电，必须有接地保护，必须能承受额定电压……但这份规范本身不是一个具体的插座，你不能直接把它买回家用。</p>
+      <p>各大厂商根据这份规范，各自制造出五孔插座、USB 插座、防水插座……这些才是真正可以用的具体产品。</p>
+      <p>C++ 的<strong>抽象类</strong>正是这个"规范"的角色：它定义了子类必须实现哪些功能（接口），但自己不提供实现，也不能被直接实例化。</p>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 620 200" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:580px; width:100%;">
+        <defs>
+          <marker id="ai" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto">
+            <path d="M8,0 L8,8 L0,4 Z" fill="none" stroke="#CBA6F7" stroke-width="1.2"/>
+          </marker>
+        </defs>
+
+        <!-- 抽象类 Shape -->
+        <rect x="185" y="14" width="250" height="76" rx="8"
+              fill="#1A1525" stroke="#CBA6F7" stroke-width="2" stroke-dasharray="7,3"/>
+        <text x="310" y="36" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="13" fill="#CBA6F7" font-weight="700">Shape（抽象类）</text>
+        <text x="310" y="55" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">虚线边框表示"无法实例化"</text>
+        <text x="310" y="72" text-anchor="middle"
+              font-family="'JetBrains Mono',monospace" font-size="11" fill="#A6ADC8">virtual Area() = 0   ← 纯虚函数</text>
+
+        <!-- 禁止实例化 -->
+        <text x="310" y="100" text-anchor="middle"
+              font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#E8556D">❌ Shape s;  不能直接创建</text>
+
+        <!-- 继承箭头 -->
+        <line x1="248" y1="90" x2="130" y2="138" stroke="#CBA6F7" stroke-width="1.5" marker-end="url(#ai)"/>
+        <line x1="310" y1="90" x2="310" y2="138" stroke="#CBA6F7" stroke-width="1.5" marker-end="url(#ai)"/>
+        <line x1="372" y1="90" x2="490" y2="138" stroke="#CBA6F7" stroke-width="1.5" marker-end="url(#ai)"/>
+
+        <!-- 子类 Circle -->
+        <rect x="30"  y="140" width="160" height="48" rx="7" fill="#16141F" stroke="#A6E3A1" stroke-width="1.5"/>
+        <text x="110" y="160" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#A6E3A1" font-weight="700">Circle</text>
+        <text x="110" y="178" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#A6ADC8">Area() { π×r² }</text>
+
+        <!-- 子类 Rectangle -->
+        <rect x="230" y="140" width="160" height="48" rx="7" fill="#16141F" stroke="#89B4FA" stroke-width="1.5"/>
+        <text x="310" y="160" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#89B4FA" font-weight="700">Rectangle</text>
+        <text x="310" y="178" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#A6ADC8">Area() { w×h }</text>
+
+        <!-- 子类 Triangle -->
+        <rect x="430" y="140" width="160" height="48" rx="7" fill="#16141F" stroke="#F9E2AF" stroke-width="1.5"/>
+        <text x="510" y="160" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#F9E2AF" font-weight="700">Triangle</text>
+        <text x="510" y="178" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#A6ADC8">Area() { ½×b×h }</text>
+      </svg>
+      <figcaption>
+        <code>Shape</code> 是抽象类（虚线边框），声明了"所有图形都要能算面积"，但它自己不知道面积怎么算。<br>
+        <code>Circle</code>、<code>Rectangle</code>、<code>Triangle</code> 各自继承并实现 <code>Area()</code>，才是可以使用的具体类。
+      </figcaption>
+    </div>
+
+    <!-- ── 12.10.2 纯虚函数的语法 ── -->
+    <div class="sub-title" id="s2">12.10.2　纯虚函数的语法</div>
+    <div class="section-body">
+      <p>在虚函数的末尾加 <code>= 0</code>，它就变成了<strong>纯虚函数</strong>。含有至少一个纯虚函数的类，自动成为<strong>抽象类</strong>。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 纯虚函数的写法</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">class</span> <span class="typ">Shape</span> {</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr class="hl-ref"><td class="ln">3</td><td class="cd">    <span class="kw">virtual</span> <span class="typ">double</span> <span class="fn">Area</span>() <span class="kw">const</span> = <span class="num">0</span>;   <span class="cmt">// 纯虚函数：= 0 表示"只声明，不实现"</span></td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">    <span class="kw">virtual</span> <span class="typ">void</span>   <span class="fn">Draw</span>()       = <span class="num">0</span>;   <span class="cmt">// 可以有多个纯虚函数</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">virtual</span> ~<span class="typ">Shape</span>() {}              <span class="cmt">// 析构函数仍然要实现（可以为空）</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">};</td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// 子类必须实现所有纯虚函数，否则子类也变成抽象类</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="kw">class</span> <span class="typ">Circle</span> : <span class="kw">public</span> <span class="typ">Shape</span> {</td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="typ">double</span> r;</td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="typ">Circle</span>(<span class="typ">double</span> r) : r(r) {}</td></tr>
+          <tr class="hl-ref"><td class="ln">13</td><td class="cd">    <span class="typ">double</span> <span class="fn">Area</span>() <span class="kw">const override</span> { <span class="kw">return</span> <span class="num">3.14159</span> * r * r; }</td></tr>
+          <tr class="hl-ref"><td class="ln">14</td><td class="cd">    <span class="typ">void</span>   <span class="fn">Draw</span>()       <span class="kw">override</span> { cout &lt;&lt; <span class="str">"画一个圆"</span> &lt;&lt; endl; }</td></tr>
+          <tr><td class="ln">15</td><td class="cd">};</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 12.10.3 抽象类不能实例化 ── -->
+    <div class="sub-title" id="s3">12.10.3　抽象类不能实例化</div>
+    <div class="section-body">
+      <p>含有纯虚函数的类不能直接创建对象——这是编译器强制的。但可以用抽象类的<strong>指针或引用</strong>来统一管理子类对象，这正是它最大的用途。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 抽象类只能用指针/引用，不能直接实例化</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl-warn"><td class="ln">1</td><td class="cd"><span class="cmt">// Shape s;          ❌ 编译错误！抽象类不能实例化</span></td></tr>
+          <tr class="hl-warn"><td class="ln">2</td><td class="cd"><span class="cmt">// Shape s = Circle; ❌ 同样不行</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd"><span class="typ">Shape</span>* p = <span class="kw">new</span> <span class="typ">Circle</span>(<span class="num">5.0</span>);  <span class="cmt">// ✅ 指针可以，指向子类对象</span></td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">cout &lt;&lt; p-&gt;<span class="fn">Area</span>();          <span class="cmt">// 多态调用，输出圆的面积</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="kw">delete</span> p;</td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// 用 vector 统一管理多种图形</span></td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">vector&lt;<span class="typ">Shape</span>*&gt; shapes;</td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">shapes.<span class="fn">push_back</span>(<span class="kw">new</span> <span class="typ">Circle</span>(<span class="num">3.0</span>));</td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">shapes.<span class="fn">push_back</span>(<span class="kw">new</span> <span class="typ">Rectangle</span>(<span class="num">4.0</span>, <span class="num">5.0</span>));</td></tr>
+          <tr class="hl-ref"><td class="ln">12</td><td class="cd">shapes.<span class="fn">push_back</span>(<span class="kw">new</span> <span class="typ">Triangle</span>(<span class="num">6.0</span>, <span class="num">3.0</span>));</td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="kw">for</span> (<span class="typ">Shape</span>* s : shapes)</td></tr>
+          <tr class="hl-ref"><td class="ln">15</td><td class="cd">    cout &lt;&lt; s-&gt;<span class="fn">Area</span>() &lt;&lt; endl;  <span class="cmt">// 多态：各自调用自己的实现</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="cmt">// 输出：28.27...  20.0  9.0</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>这正是抽象类最强大的地方：</b>用一个 <code>vector&lt;Shape*&gt;</code> 就能装下所有种类的图形，循环里一行代码对所有图形调用 <code>Area()</code>——每种图形各自执行自己的计算逻辑，完全不需要写 if-else 判断类型。这种设计让添加新图形类型变得极其容易，不需要修改任何已有代码。
+      </div>
+    </div>
+
+    <!-- ── 12.10.4 完整示例 ── -->
+    <div class="sub-title" id="s4">12.10.4　完整示例：图形面积计算</div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 完整的抽象类示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd">#include &lt;iostream&gt;</td></tr>
+          <tr><td class="ln">2</td><td class="cd">#include &lt;vector&gt;</td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using namespace</span> std;</td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// ── 抽象基类 ──</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="kw">class</span> <span class="typ">Shape</span> {</td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="typ">string</span> name;</td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="typ">Shape</span>(<span class="typ">string</span> n) : name(n) {}</td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">    <span class="kw">virtual</span> <span class="typ">double</span> <span class="fn">Area</span>()  <span class="kw">const</span> = <span class="num">0</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">    <span class="kw">virtual</span> <span class="typ">double</span> <span class="fn">Perimeter</span>() <span class="kw">const</span> = <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="typ">void</span> <span class="fn">Print</span>() <span class="kw">const</span> {           <span class="cmt">// 普通函数，可以有实现</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">        cout &lt;&lt; name &lt;&lt; <span class="str">": 面积="</span> &lt;&lt; <span class="fn">Area</span>()</td></tr>
+          <tr><td class="ln">14</td><td class="cd">             &lt;&lt; <span class="str">" 周长="</span> &lt;&lt; <span class="fn">Perimeter</span>() &lt;&lt; endl;</td></tr>
+          <tr><td class="ln">15</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="kw">virtual</span> ~<span class="typ">Shape</span>() {}</td></tr>
+          <tr><td class="ln">17</td><td class="cd">};</td></tr>
+          <tr><td class="ln">18</td><td class="cd"></td></tr>
+          <tr><td class="ln">19</td><td class="cd"><span class="cmt">// ── 具体子类 ──</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="kw">class</span> <span class="typ">Circle</span> : <span class="kw">public</span> <span class="typ">Shape</span> {</td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="typ">double</span> r;</td></tr>
+          <tr><td class="ln">22</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="typ">Circle</span>(<span class="typ">double</span> r) : <span class="typ">Shape</span>(<span class="str">"圆形"</span>), r(r) {}</td></tr>
+          <tr class="hl-ref"><td class="ln">24</td><td class="cd">    <span class="typ">double</span> <span class="fn">Area</span>()      <span class="kw">const override</span> { <span class="kw">return</span> <span class="num">3.14159</span> * r * r; }</td></tr>
+          <tr class="hl-ref"><td class="ln">25</td><td class="cd">    <span class="typ">double</span> <span class="fn">Perimeter</span>() <span class="kw">const override</span> { <span class="kw">return</span> <span class="num">2</span> * <span class="num">3.14159</span> * r; }</td></tr>
+          <tr><td class="ln">26</td><td class="cd">};</td></tr>
+          <tr><td class="ln">27</td><td class="cd"></td></tr>
+          <tr><td class="ln">28</td><td class="cd"><span class="kw">class</span> <span class="typ">Rectangle</span> : <span class="kw">public</span> <span class="typ">Shape</span> {</td></tr>
+          <tr><td class="ln">29</td><td class="cd">    <span class="typ">double</span> w, h;</td></tr>
+          <tr><td class="ln">30</td><td class="cd"><span class="kw">public</span>:</td></tr>
+          <tr><td class="ln">31</td><td class="cd">    <span class="typ">Rectangle</span>(<span class="typ">double</span> w, <span class="typ">double</span> h) : <span class="typ">Shape</span>(<span class="str">"矩形"</span>), w(w), h(h) {}</td></tr>
+          <tr class="hl-ref"><td class="ln">32</td><td class="cd">    <span class="typ">double</span> <span class="fn">Area</span>()      <span class="kw">const override</span> { <span class="kw">return</span> w * h; }</td></tr>
+          <tr class="hl-ref"><td class="ln">33</td><td class="cd">    <span class="typ">double</span> <span class="fn">Perimeter</span>() <span class="kw">const override</span> { <span class="kw">return</span> <span class="num">2</span> * (w + h); }</td></tr>
+          <tr><td class="ln">34</td><td class="cd">};</td></tr>
+          <tr><td class="ln">35</td><td class="cd"></td></tr>
+          <tr><td class="ln">36</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr><td class="ln">37</td><td class="cd">    vector&lt;<span class="typ">Shape</span>*&gt; shapes = {</td></tr>
+          <tr><td class="ln">38</td><td class="cd">        <span class="kw">new</span> <span class="typ">Circle</span>(<span class="num">5</span>),</td></tr>
+          <tr><td class="ln">39</td><td class="cd">        <span class="kw">new</span> <span class="typ">Rectangle</span>(<span class="num">4</span>, <span class="num">6</span>),</td></tr>
+          <tr><td class="ln">40</td><td class="cd">    };</td></tr>
+          <tr><td class="ln">41</td><td class="cd">    <span class="kw">for</span> (<span class="typ">Shape</span>* s : shapes) {</td></tr>
+          <tr class="hl-ref"><td class="ln">42</td><td class="cd">        s-&gt;<span class="fn">Print</span>();   <span class="cmt">// 多态：各自调用正确的 Area 和 Perimeter</span></td></tr>
+          <tr><td class="ln">43</td><td class="cd">        <span class="kw">delete</span> s;</td></tr>
+          <tr><td class="ln">44</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">45</td><td class="cd">    <span class="cmt">// 输出：</span></td></tr>
+          <tr><td class="ln">46</td><td class="cd">    <span class="cmt">// 圆形: 面积=78.5397 周长=31.4159</span></td></tr>
+          <tr><td class="ln">47</td><td class="cd">    <span class="cmt">// 矩形: 面积=24 周长=20</span></td></tr>
+          <tr><td class="ln">48</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>
+        注意第 12~15 行：<code>Print()</code> 是抽象类里的<strong>普通函数</strong>（不是纯虚函数），它可以有实现，并且在实现里调用了纯虚函数 <code>Area()</code> 和 <code>Perimeter()</code>。这是一个经典的模板方法模式——父类定义流程，子类填充细节。
+      </div>
+    </div>
+
+    <!-- ── 12.10.5 抽象类 vs 普通基类 ── -->
+    <div class="sub-title" id="s5">12.10.5　抽象类 vs 普通基类</div>
+
+    <div class="abs-compare">
+      <div class="abs-col abstract">
+        <div class="abs-col-head">📋 抽象类（含纯虚函数）</div>
+        <div class="abs-col-body">
+          ・不能直接创建对象<br>
+          ・子类<strong>必须实现</strong>所有纯虚函数，否则子类也变抽象类<br>
+          ・定义接口规范，强制约束子类行为<br>
+          ・适合"所有子类都必须有这个功能，但实现方式各不同"的场景
+        </div>
+      </div>
+      <div class="abs-col concrete">
+        <div class="abs-col-head">🧱 普通基类（含 virtual 函数）</div>
+        <div class="abs-col-body">
+          ・可以直接创建对象<br>
+          ・子类可以选择覆盖，也可以不覆盖（用父类默认实现）<br>
+          ・提供默认行为，子类按需定制<br>
+          ・适合"大多数子类行为相同，少数需要特殊处理"的场景
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 12.10.6 第十二章总结 ── -->
+    <div class="sub-title" id="s6">12.10.6　第十二章总结</div>
+    <div class="section-body">
+      <p>恭喜你学完了第十二章的全部内容！我们从最基础的 <code>class</code> 定义出发，一步步走完了面向对象编程的完整体系。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>
+        <b>第十二章核心概念回顾</b><br>
+        ・<strong>12.1</strong> — <code>struct</code> vs <code>class</code>：唯一区别是默认访问权限，<code>class</code> 默认 private。<br>
+        ・<strong>12.2</strong> — 成员变量 + 成员函数 + <code>this</code> 指针：对象的基本结构。<br>
+        ・<strong>12.3</strong> — <code>public</code> / <code>private</code> / <code>protected</code>：封装的三把锁，getter/setter 提供受控的访问。<br>
+        ・<strong>12.4</strong> — 构造函数自动初始化，析构函数自动清理；初始化列表更高效。<br>
+        ・<strong>12.5</strong> — <code>operator&lt;</code> 配合 <code>sort</code> 是竞赛中最常用的运算符重载。<br>
+        ・<strong>12.6</strong> — 浅拷贝只复制指针地址，含指针成员时必须自定义深拷贝；遵循三法则。<br>
+        ・<strong>12.7</strong> — <code>static</code> 成员属于整个类，不依赖任何对象；必须在类外定义。<br>
+        ・<strong>12.8</strong> — 子类继承父类，构造先父后子，析构先子后父；<code>protected</code> 专为继承设计。<br>
+        ・<strong>12.9</strong> — <code>virtual</code> 实现动态绑定；父类析构函数必须是虚的；用 <code>override</code> 防手误。<br>
+        ・<strong>12.10</strong> — 纯虚函数 <code>= 0</code> 定义接口规范，抽象类不能实例化，只能用指针/引用统一管理子类。
+      </div>
+    </div>
+
+    <div class="chapter-complete">
+      <div class="cc-icon">🎉</div>
+      <div class="cc-text">
+        <strong>第十二章已完成</strong> · 类与面向对象<br>
+        你已经掌握了 C++ 面向对象编程的完整体系——从类的基本结构、封装、继承，到多态和抽象类设计。这些知识是理解大型工程代码和深入学习数据结构与设计模式的基础。
+        <div class="cc-links">
+          <a class="cc-link" href="12_00_类与面向对象.html">← 返回章节目录</a>
+          <a class="cc-link" href="index.html">← 返回总目录</a>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.10 抽象类与纯虚函数</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="12_09_虚函数与多态.html">← 12.9 虚函数与多态</a>
+      <a class="nav-btn" href="index.html">返回目录 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

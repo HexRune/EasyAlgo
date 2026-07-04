@@ -10,6 +10,9 @@
 <style>
    /* ── index.html 专属样式 ── */
 
+  /* 页面宽度比章节页稍宽 */
+  .page-wrap { max-width: 900px; margin: 0 auto; padding: 0 24px 80px; }
+
   /* Hero 头图 */
   .hero {
     background: var(--surface);
@@ -316,7 +319,7 @@
   .algo-mega-card.collapsed .algo-mega-head { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
   .stl-mega-card.collapsed, .algo-mega-card.collapsed { padding-bottom: 22px; }
 
-  /* ═══ 算法文档：18 个模块，平铺展示（风格与 STL 分组一致，统一教学绿主题） ═══ */
+  /* ═══ 算法文档：18 个模块，平铺展示（统一教学绿主题，子分组多色） ═══ */
 
   .algo-mega-card {
     background: var(--surface);
@@ -336,6 +339,21 @@
     border-bottom: 1px dashed var(--border);
   }
 
+  /* 算法先导课横条 */
+  .algo-intro-row { margin-bottom: 6px; padding-bottom: 12px; border-bottom: 1px dashed var(--border); }
+  .algo-intro-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: var(--radius-md);
+    background: var(--teal-light); border: 1px solid #9FE1CB;
+    text-decoration: none; transition: filter .12s;
+  }
+  .algo-intro-item:hover { filter: brightness(.96); }
+  .aii-icon { font-size: 18px; flex-shrink: 0; }
+  .aii-text { flex: 1; }
+  .aii-name { font-size: 13px; font-weight: 700; color: var(--teal); display: block; }
+  .aii-desc { font-size: 11.5px; color: var(--text-muted); }
+  .aii-arrow { font-size: 14px; color: var(--teal-mid); flex-shrink: 0; }
+
   .algo-groups {
     display: flex;
     flex-direction: column;
@@ -346,10 +364,30 @@
   .algo-group { padding-bottom: 12px; }
   .algo-group + .algo-group { border-top: 1px dashed var(--border); padding-top: 12px; }
 
+  /* 分组颜色 token（与 STL 同方案） */
+  .algo-group { --ag-color: var(--teal-mid); --ag-light: var(--teal-light); --ag-border: #9FE1CB; }
+  .algo-group.ag-math    { --ag-color: var(--teal-mid);   --ag-light: var(--teal-light);   --ag-border: #9FE1CB; }
+  .algo-group.ag-basic   { --ag-color: var(--accent-mid); --ag-light: var(--accent-light); --ag-border: #C4BFFA; }
+  .algo-group.ag-sort    { --ag-color: var(--blue-mid);   --ag-light: var(--blue-light);   --ag-border: #93c5fd; }
+  .algo-group.ag-greedy  { --ag-color: var(--amber-mid);  --ag-light: var(--amber-light);  --ag-border: #E8D5A0; }
+  .algo-group.ag-range   { --ag-color: var(--teal-mid);   --ag-light: var(--teal-light);   --ag-border: #9FE1CB; }
+  .algo-group.ag-mono    { --ag-color: var(--blue-mid);   --ag-light: var(--blue-light);   --ag-border: #93c5fd; }
+  .algo-group.ag-binary  { --ag-color: var(--accent-mid); --ag-light: var(--accent-light); --ag-border: #C4BFFA; }
+  .algo-group.ag-recur   { --ag-color: var(--coral-mid);  --ag-light: var(--coral-light);  --ag-border: #FAA0A0; }
+  .algo-group.ag-divide  { --ag-color: var(--amber-mid);  --ag-light: var(--amber-light);  --ag-border: #E8D5A0; }
+  .algo-group.ag-ds      { --ag-color: var(--teal-mid);   --ag-light: var(--teal-light);   --ag-border: #9FE1CB; }
+  .algo-group.ag-search  { --ag-color: var(--blue-mid);   --ag-light: var(--blue-light);   --ag-border: #93c5fd; }
+  .algo-group.ag-dp      { --ag-color: var(--accent-mid); --ag-light: var(--accent-light); --ag-border: #C4BFFA; }
+  .algo-group.ag-graph   { --ag-color: var(--coral-mid);  --ag-light: var(--coral-light);  --ag-border: #FAA0A0; }
+  .algo-group.ag-adv     { --ag-color: var(--amber-mid);  --ag-light: var(--amber-light);  --ag-border: #E8D5A0; }
+  .algo-group.ag-str     { --ag-color: var(--blue-mid);   --ag-light: var(--blue-light);   --ag-border: #93c5fd; }
+  .algo-group.ag-dp2     { --ag-color: var(--accent-mid); --ag-light: var(--accent-light); --ag-border: #C4BFFA; }
+  .algo-group.ag-ext     { --ag-color: var(--coral-mid);  --ag-light: var(--coral-light);  --ag-border: #FAA0A0; }
+
   .algo-group-label { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
   .algo-group-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--text-muted); }
-  .algo-group-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-mid); flex-shrink: 0; }
-  .algo-group-name { font-size: 13.5px; font-weight: 700; color: var(--teal); }
+  .algo-group-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ag-color); flex-shrink: 0; }
+  .algo-group-name { font-size: 13.5px; font-weight: 700; color: var(--ag-color); }
   .algo-group-hint { font-size: 11.5px; color: var(--text-muted); }
 
   .algo-group-items { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -364,12 +402,12 @@
     text-decoration: none;
     transition: border-color .12s, background .12s, transform .12s;
   }
-  .algo-item:hover { border-color: var(--teal-mid); background: var(--teal-light); transform: translateY(-1px); }
+  .algo-item:hover { border-color: var(--ag-color); background: var(--ag-light); transform: translateY(-1px); }
   .algo-item.wide { grid-column: span 4; }
   @media (max-width: 700px) { .algo-item.wide { grid-column: span 2; } }
 
   .ai-name { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--text-primary); }
-  .algo-item:hover .ai-name { color: var(--teal); }
+  .algo-item:hover .ai-name { color: var(--ag-color); }
   .ai-desc { font-size: 10.5px; color: var(--text-muted); }
 </style>
 </head>
@@ -514,7 +552,6 @@
   <div class="book-label">
     <span class="book-label-text">进阶语法</span>
     <div class="book-label-line"></div>
-    <span class="book-label-badge coming">🚧 进行中</span>
   </div>
 
   <!-- 第十一章：整块大卡片，本身不可点击，内部 18 个专题页才可点击跳转 -->
@@ -623,7 +660,7 @@
   <div class="stl-mega-card collapsed">
 
     <div class="stl-mega-head" onclick="this.parentElement.classList.toggle('collapsed')">
-      <div class="card-num">12</div>
+      <div class="card-num amber">12</div>
       <div class="card-body">
         <div class="card-chapter">第十二章</div>
         <div class="card-title">类与面向对象</div>
@@ -727,7 +764,7 @@
     <div class="algo-mega-head" onclick="this.parentElement.classList.toggle('collapsed')">
       <div class="card-num teal">A</div>
       <div class="card-body">
-        <div class="card-chapter">算法专题 <span class="coming-chip">持续更新中</span></div>
+        <div class="card-chapter">算法专题</div>
         <div class="card-title">算法文档</div>
         <div class="card-desc">18 个模块，从数学基础到动态规划、图论进阶 · 点击下方任意专题卡片直达对应页面</div>
       </div>
@@ -736,8 +773,20 @@
 
     <div class="algo-groups">
 
+      <!-- 先导课 -->
+      <div class="algo-intro-row">
+        <a class="algo-intro-item" href="A00_什么是算法.html">
+          <span class="aii-icon">🧭</span>
+          <span class="aii-text">
+            <span class="aii-name">什么是算法？怎么判断算法好坏？</span>
+            <span class="aii-desc">先导课 · 时间复杂度 · 空间复杂度 · O(n) 记号 · 竞赛估算方法</span>
+          </span>
+          <span class="aii-arrow">→</span>
+        </a>
+      </div>
+
       <!-- 模块一 -->
-      <div class="algo-group">
+      <div class="algo-group ag-math">
         <div class="algo-group-label">
           <span class="algo-group-num">01</span>
           <span class="algo-group-dot"></span>
@@ -757,7 +806,7 @@
       </div>
 
       <!-- 模块二 -->
-      <div class="algo-group">
+      <div class="algo-group ag-basic">
         <div class="algo-group-label">
           <span class="algo-group-num">02</span>
           <span class="algo-group-dot"></span>
@@ -772,7 +821,7 @@
       </div>
 
       <!-- 模块三 -->
-      <div class="algo-group">
+      <div class="algo-group ag-sort">
         <div class="algo-group-label">
           <span class="algo-group-num">03</span>
           <span class="algo-group-dot"></span>
@@ -788,7 +837,7 @@
       </div>
 
       <!-- 模块四 -->
-      <div class="algo-group">
+      <div class="algo-group ag-greedy">
         <div class="algo-group-label">
           <span class="algo-group-num">04</span>
           <span class="algo-group-dot"></span>
@@ -801,7 +850,7 @@
       </div>
 
       <!-- 模块五 -->
-      <div class="algo-group">
+      <div class="algo-group ag-range">
         <div class="algo-group-label">
           <span class="algo-group-num">05</span>
           <span class="algo-group-dot"></span>
@@ -816,7 +865,7 @@
       </div>
 
       <!-- 模块六 -->
-      <div class="algo-group">
+      <div class="algo-group ag-mono">
         <div class="algo-group-label">
           <span class="algo-group-num">06</span>
           <span class="algo-group-dot"></span>
@@ -830,7 +879,7 @@
       </div>
 
       <!-- 模块七 -->
-      <div class="algo-group">
+      <div class="algo-group ag-binary">
         <div class="algo-group-label">
           <span class="algo-group-num">07</span>
           <span class="algo-group-dot"></span>
@@ -844,7 +893,7 @@
       </div>
 
       <!-- 模块八 -->
-      <div class="algo-group">
+      <div class="algo-group ag-recur">
         <div class="algo-group-label">
           <span class="algo-group-num">08</span>
           <span class="algo-group-dot"></span>
@@ -858,7 +907,7 @@
       </div>
 
       <!-- 模块九 -->
-      <div class="algo-group">
+      <div class="algo-group ag-divide">
         <div class="algo-group-label">
           <span class="algo-group-num">09</span>
           <span class="algo-group-dot"></span>
@@ -872,7 +921,7 @@
       </div>
 
       <!-- 模块十 -->
-      <div class="algo-group">
+      <div class="algo-group ag-ds">
         <div class="algo-group-label">
           <span class="algo-group-num">10</span>
           <span class="algo-group-dot"></span>
@@ -885,7 +934,7 @@
       </div>
 
       <!-- 模块十一 -->
-      <div class="algo-group">
+      <div class="algo-group ag-search">
         <div class="algo-group-label">
           <span class="algo-group-num">11</span>
           <span class="algo-group-dot"></span>
@@ -901,7 +950,7 @@
       </div>
 
       <!-- 模块十二 -->
-      <div class="algo-group">
+      <div class="algo-group ag-dp">
         <div class="algo-group-label">
           <span class="algo-group-num">12</span>
           <span class="algo-group-dot"></span>
@@ -915,7 +964,7 @@
       </div>
 
       <!-- 模块十三 -->
-      <div class="algo-group">
+      <div class="algo-group ag-graph">
         <div class="algo-group-label">
           <span class="algo-group-num">13</span>
           <span class="algo-group-dot"></span>
@@ -932,7 +981,7 @@
       </div>
 
       <!-- 模块十四 -->
-      <div class="algo-group">
+      <div class="algo-group ag-adv">
         <div class="algo-group-label">
           <span class="algo-group-num">14</span>
           <span class="algo-group-dot"></span>
@@ -950,7 +999,7 @@
       </div>
 
       <!-- 模块十五 -->
-      <div class="algo-group">
+      <div class="algo-group ag-ds">
         <div class="algo-group-label">
           <span class="algo-group-num">15</span>
           <span class="algo-group-dot"></span>
@@ -965,7 +1014,7 @@
       </div>
 
       <!-- 模块十六 -->
-      <div class="algo-group">
+      <div class="algo-group ag-str">
         <div class="algo-group-label">
           <span class="algo-group-num">16</span>
           <span class="algo-group-dot"></span>
@@ -980,7 +1029,7 @@
       </div>
 
       <!-- 模块十七 -->
-      <div class="algo-group">
+      <div class="algo-group ag-dp2">
         <div class="algo-group-label">
           <span class="algo-group-num">17</span>
           <span class="algo-group-dot"></span>
@@ -996,7 +1045,7 @@
       </div>
 
       <!-- 模块十八 -->
-      <div class="algo-group">
+      <div class="algo-group ag-ext">
         <div class="algo-group-label">
           <span class="algo-group-num">18</span>
           <span class="algo-group-dot"></span>
