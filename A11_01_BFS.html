@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.1 BFS 广度优先搜索 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "11.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--blue-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--blue-mid); }
+
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--blue-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blue-mid); border-bottom: 1px solid #93c5fd; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #f0f5ff; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--blue-mid); background: var(--blue-light); white-space: nowrap; }
+
+  /* 队列可视化 */
+  .queue-row { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .q-cell { min-width: 44px; height: 38px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .q-cell.inq  { background: rgba(137,180,250,.2); color: #89B4FA; border: 1px solid rgba(137,180,250,.4); }
+  .q-cell.done { background: rgba(166,227,161,.15); color: #A6E3A1; border: 1px solid rgba(166,227,161,.35); }
+  .q-cell.cur  { background: rgba(203,166,247,.2);  color: #CBA6F7; border: 1px solid rgba(203,166,247,.45); }
+  .q-cell.skip { background: rgba(243,139,168,.1);  color: #F38BA8; border: 1px solid rgba(243,139,168,.3); font-size: 11px; }
+  .q-label { font-size: 11px; color: #6C7086; width: 80px; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; line-height: 1.4; }
+  .q-row-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #2A2840; }
+  .q-row-wrap:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .q-note { font-size: 11.5px; color: #A6ADC8; font-family: 'Noto Sans SC', sans-serif; margin-left: 4px; flex: 1; line-height: 1.5; }
+  .q-arrow { color: #45475A; font-size: 13px; margin: 0 2px; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="11.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十一 搜索基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.1 BFS 广度优先搜索</span>
+    </div>
+    <h1 class="chapter-title">11.1　BFS 广度优先搜索</h1>
+    <p class="chapter-desc">层层向外扩展，像水波一样——BFS 能在无权图中找到最短路径。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#s1">BFS 是什么</a></li>
+      <li><span class="toc-num">②</span><a href="#s2">模板代码</a></li>
+      <li><span class="toc-num">③</span><a href="#s3">代码逐行解析</a></li>
+      <li><span class="toc-num">④</span><a href="#s4">迷宫图解：BFS 如何找到最短路</a></li>
+      <li><span class="toc-num">⑤</span><a href="#s5">队列的变化过程</a></li>
+      <li><span class="toc-num">⑥</span><a href="#s6">在图上的 BFS</a></li>
+      <li><span class="toc-num">⑦</span><a href="#s7">BFS vs DFS</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <!-- ① BFS 是什么 -->
+    <div class="sub-title" id="s1">① BFS 是什么</div>
+    <div class="section-body">
+      <p>BFS（Breadth-First Search，广度优先搜索）解决的是这类问题：<strong>从一个起点出发，走到终点最少需要几步？</strong></p>
+      <p>它的策略很直接——<strong>先把离起点近的地方全部走到，再去走远一点的</strong>。就像往平静的湖面扔一块石头，水波总是一圈一圈地向外扩散，不会跳过近处直接去远处。</p>
+      <p>BFS 用<strong>队列</strong>来实现这个"按距离顺序访问"的过程。队列的特点是先进先出，保证了距离近的节点总是先被处理。</p>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>为什么 BFS 能保证找到最短路？</b><br>
+        BFS 第一次到达某个格子时，走的步数一定是最少的。因为 BFS 按距离从小到大的顺序访问——如果存在一条更短的路，那个格子早就已经被更少步数访问过了，不会等到现在才第一次到达。
+      </div>
+    </div>
+
+    <!-- ② 模板代码 -->
+    <div class="sub-title" id="s2">② 模板代码</div>
+    <div class="section-body">
+      <p>下面是 BFS 解迷宫最短路的完整代码。先整体看一遍，后面再逐行解释每一部分的作用。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · BFS 迷宫最短路完整模板</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd">#include &lt;bits/stdc++.h&gt;</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> std;</td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="kw">const</span> <span class="typ">int</span> MAXN = <span class="num">105</span>;</td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span>  n, m;</td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">char</span> grid[MAXN][MAXN];         <span class="cmt">// '.' 可走，'#' 障碍</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="typ">int</span>  dist[MAXN][MAXN];         <span class="cmt">// -1 表示未访问</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="typ">int</span>  dx[] = {<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">-1</span>};    <span class="cmt">// 四个方向：右、左、下、上</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="typ">int</span>  dy[] = {<span class="num">1</span>, <span class="num">-1</span>, <span class="num">0</span>, <span class="num">0</span>};</td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">int</span> <span class="fn">BFS</span>(<span class="typ">int</span> sr, <span class="typ">int</span> sc, <span class="typ">int</span> er, <span class="typ">int</span> ec)</td></tr>
+          <tr><td class="ln">12</td><td class="cd">{</td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="fn">memset</span>(dist, <span class="num">-1</span>, <span class="kw">sizeof</span>(dist));</td></tr>
+          <tr><td class="ln">14</td><td class="cd">    queue&lt;pair&lt;<span class="typ">int</span>, <span class="typ">int</span>&gt;&gt; q;</td></tr>
+          <tr class="hl-ref"><td class="ln">15</td><td class="cd">    dist[sr][sc] = <span class="num">0</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">16</td><td class="cd">    q.<span class="fn">push</span>({sr, sc});</td></tr>
+          <tr><td class="ln">17</td><td class="cd"></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="kw">while</span> (!q.<span class="fn">empty</span>())</td></tr>
+          <tr><td class="ln">19</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="kw">auto</span> [r, c] = q.<span class="fn">front</span>();</td></tr>
+          <tr><td class="ln">21</td><td class="cd">        q.<span class="fn">pop</span>();</td></tr>
+          <tr><td class="ln">22</td><td class="cd"></td></tr>
+          <tr class="hl-warn"><td class="ln">23</td><td class="cd">        <span class="kw">if</span> (r == er &amp;&amp; c == ec) <span class="kw">return</span> dist[er][ec];</td></tr>
+          <tr><td class="ln">24</td><td class="cd"></td></tr>
+          <tr><td class="ln">25</td><td class="cd">        <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">0</span>; i &lt; <span class="num">4</span>; i++)</td></tr>
+          <tr><td class="ln">26</td><td class="cd">        {</td></tr>
+          <tr><td class="ln">27</td><td class="cd">            <span class="typ">int</span> nr = r + dx[i];</td></tr>
+          <tr><td class="ln">28</td><td class="cd">            <span class="typ">int</span> nc = c + dy[i];</td></tr>
+          <tr class="hl-ref"><td class="ln">29</td><td class="cd">            <span class="kw">if</span> (nr &lt; <span class="num">0</span> || nr &gt;= n || nc &lt; <span class="num">0</span> || nc &gt;= m) <span class="kw">continue</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">30</td><td class="cd">            <span class="kw">if</span> (grid[nr][nc] == <span class="str">'#'</span> || dist[nr][nc] != <span class="num">-1</span>) <span class="kw">continue</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">31</td><td class="cd">            dist[nr][nc] = dist[r][c] + <span class="num">1</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">32</td><td class="cd">            q.<span class="fn">push</span>({nr, nc});</td></tr>
+          <tr><td class="ln">33</td><td class="cd">        }</td></tr>
+          <tr><td class="ln">34</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">35</td><td class="cd">    <span class="kw">return</span> <span class="num">-1</span>;   <span class="cmt">// 走不到终点</span></td></tr>
+          <tr><td class="ln">36</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ③ 代码逐行解析 -->
+    <div class="sub-title" id="s3">③ 代码逐行解析</div>
+    <div class="section-body">
+      <p>代码分成三个部分，分别对应 BFS 的三个核心步骤：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">三个核心步骤</div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+
+        <div style="background:#1A1E2F; border-radius:8px; padding:12px 16px; border-left:3px solid #89B4FA;">
+          <div style="font-size:11px; color:#89B4FA; font-weight:700; margin-bottom:6px; font-family:'Noto Sans SC',sans-serif;">第一步：初始化（对应代码第 13–16 行）</div>
+          <div style="font-size:13px; color:#A6ADC8; line-height:1.7; font-family:'Noto Sans SC',sans-serif;">
+            把所有格子的 <code style="font-family:'JetBrains Mono',monospace;color:#CBA6F7;">dist</code> 设为 <code style="font-family:'JetBrains Mono',monospace;color:#FAB387;">-1</code>，表示"还没去过"。然后把起点的距离设为 0 并放进队列。这是 BFS 的出发点。
+          </div>
+        </div>
+
+        <div style="background:#1A1E2F; border-radius:8px; padding:12px 16px; border-left:3px solid #CBA6F7;">
+          <div style="font-size:11px; color:#CBA6F7; font-weight:700; margin-bottom:6px; font-family:'Noto Sans SC',sans-serif;">第二步：循环取出队头（对应代码第 18–24 行）</div>
+          <div style="font-size:13px; color:#A6ADC8; line-height:1.7; font-family:'Noto Sans SC',sans-serif;">
+            只要队列不空，就取出最前面的格子。如果它就是终点，直接返回答案——因为 BFS 第一次到达某个格子时，步数一定是最少的。
+          </div>
+        </div>
+
+        <div style="background:#1A1E2F; border-radius:8px; padding:12px 16px; border-left:3px solid #A6E3A1;">
+          <div style="font-size:11px; color:#A6E3A1; font-weight:700; margin-bottom:6px; font-family:'Noto Sans SC',sans-serif;">第三步：扩展四个方向的邻居（对应代码第 25–33 行）</div>
+          <div style="font-size:13px; color:#A6ADC8; line-height:1.7; font-family:'Noto Sans SC',sans-serif;">
+            对当前格子的上下左右四个方向，跳过越界的、跳过障碍的、跳过已经去过的（<code style="font-family:'JetBrains Mono',monospace;color:#CBA6F7;">dist != -1</code>）。剩下的邻居：记录步数为当前步数 +1，放进队列。
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>最容易写错的地方：</b>标记"已访问"必须在<strong>入队时</strong>就做（第 31 行），而不是出队时。如果等到出队时才标记，同一个格子可能被放进队列很多次，程序变得非常慢。
+      </div>
+    </div>
+
+    <!-- ④ 迷宫图解 -->
+    <div class="sub-title" id="s4">④ 迷宫图解：BFS 如何找到最短路</div>
+    <div class="section-body">
+      <p>下面用一个 5×5 的迷宫来直观地看 BFS 的扩展过程。格子里的数字是 BFS 算出的"从起点 S 到这个格子最少需要几步"，颜色越深表示距离越近。</p>
+      <p>迷宫里有两条路能从 S 走到 E：蓝色虚线是最短路（8步），橙色虚线是另一条更长的路（10步）。BFS 因为按步数从小到大扩展，会自动找到蓝色那条。</p>
+    </div>
+
+    <div class="diagram-block">
+      <!--
+        距离矩阵（障碍=-1）：
+          0  1  2  3  4
+          1 -1  3 -1  5
+         -1  5  4 -1  6
+          7  6 -1 -1  7
+          8  7  8  9  8
+        障碍：(1,1)(1,3)(2,0)(2,3)(3,2)(3,3)
+        最短路 8 步（蓝色虚线）：(0,0)→(0,1)→(0,2)→(0,3)→(0,4)→(1,4)→(2,4)→(3,4)→(4,4)
+        备选路 10 步（橙色虚线）：(0,0)→(0,1)→(0,2)→(1,2)→(2,2)→(2,1)→(3,1)→(4,1)→(4,2)→(4,3)→(4,4)
+      -->
+      <svg viewBox="0 0 460 260" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:440px; width:100%;">
+
+        <!-- 行0：0,1,2,3,4 -->
+        <rect x="8"   y="8"  width="44" height="44" rx="5" fill="rgba(137,180,250,.72)" stroke="#1E1C2F" stroke-width="1.5"/>
+        <rect x="52"  y="8"  width="44" height="44" rx="5" fill="rgba(137,180,250,.52)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="96"  y="8"  width="44" height="44" rx="5" fill="rgba(137,180,250,.38)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="140" y="8"  width="44" height="44" rx="5" fill="rgba(137,180,250,.27)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="184" y="8"  width="44" height="44" rx="5" fill="rgba(137,180,250,.19)" stroke="#1E1C2F" stroke-width="1"/>
+        <!-- 行1：1,#,3,#,5 -->
+        <rect x="8"   y="52" width="44" height="44" rx="5" fill="rgba(137,180,250,.52)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="52"  y="52" width="44" height="44" rx="5" fill="#23213A" stroke="#313244" stroke-width="1"/>
+        <rect x="96"  y="52" width="44" height="44" rx="5" fill="rgba(137,180,250,.38)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="140" y="52" width="44" height="44" rx="5" fill="#23213A" stroke="#313244" stroke-width="1"/>
+        <rect x="184" y="52" width="44" height="44" rx="5" fill="rgba(137,180,250,.13)" stroke="#1E1C2F" stroke-width="1"/>
+        <!-- 行2：#,5,4,#,6 -->
+        <rect x="8"   y="96" width="44" height="44" rx="5" fill="#23213A" stroke="#313244" stroke-width="1"/>
+        <rect x="52"  y="96" width="44" height="44" rx="5" fill="rgba(137,180,250,.13)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="96"  y="96" width="44" height="44" rx="5" fill="rgba(137,180,250,.19)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="140" y="96" width="44" height="44" rx="5" fill="#23213A" stroke="#313244" stroke-width="1"/>
+        <rect x="184" y="96" width="44" height="44" rx="5" fill="rgba(137,180,250,.09)" stroke="#1E1C2F" stroke-width="1"/>
+        <!-- 行3：7,6,#,#,7 -->
+        <rect x="8"   y="140" width="44" height="44" rx="5" fill="rgba(137,180,250,.06)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="52"  y="140" width="44" height="44" rx="5" fill="rgba(137,180,250,.09)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="96"  y="140" width="44" height="44" rx="5" fill="#23213A" stroke="#313244" stroke-width="1"/>
+        <rect x="140" y="140" width="44" height="44" rx="5" fill="#23213A" stroke="#313244" stroke-width="1"/>
+        <rect x="184" y="140" width="44" height="44" rx="5" fill="rgba(137,180,250,.06)" stroke="#1E1C2F" stroke-width="1"/>
+        <!-- 行4：8,7,8,9,E -->
+        <rect x="8"   y="184" width="44" height="44" rx="5" fill="rgba(137,180,250,.04)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="52"  y="184" width="44" height="44" rx="5" fill="rgba(137,180,250,.06)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="96"  y="184" width="44" height="44" rx="5" fill="rgba(137,180,250,.04)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="140" y="184" width="44" height="44" rx="5" fill="rgba(137,180,250,.02)" stroke="#1E1C2F" stroke-width="1"/>
+        <rect x="184" y="184" width="44" height="44" rx="5" fill="rgba(166,227,161,.40)" stroke="#A6E3A1" stroke-width="2"/>
+
+        <!-- 格内步数 -->
+        <text x="74"  y="34" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.65)">1</text>
+        <text x="118" y="34" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.58)">2</text>
+        <text x="162" y="34" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.50)">3</text>
+        <text x="206" y="34" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.43)">4</text>
+        <text x="30"  y="78" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.65)">1</text>
+        <text x="118" y="78" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.58)">3</text>
+        <text x="206" y="78" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.37)">5</text>
+        <text x="74"  y="122" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.37)">5</text>
+        <text x="118" y="122" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.43)">4</text>
+        <text x="206" y="122" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.31)">6</text>
+        <text x="30"  y="166" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.26)">7</text>
+        <text x="74"  y="166" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.31)">6</text>
+        <text x="206" y="166" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.26)">7</text>
+        <text x="30"  y="210" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.22)">8</text>
+        <text x="74"  y="210" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.26)">7</text>
+        <text x="118" y="210" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.22)">8</text>
+        <text x="162" y="210" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="rgba(255,255,255,.18)">9</text>
+
+        <!-- S / E -->
+        <text x="30"  y="38"  text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" fill="#fff" font-weight="700">S</text>
+        <text x="206" y="214" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" fill="#A6E3A1" font-weight="700">E</text>
+
+        <!-- 障碍 -->
+        <text x="74"  y="80"  text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" fill="#45475A">×</text>
+        <text x="162" y="80"  text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" fill="#45475A">×</text>
+        <text x="30"  y="124" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" fill="#45475A">×</text>
+        <text x="162" y="124" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" fill="#45475A">×</text>
+        <text x="118" y="168" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" fill="#45475A">×</text>
+        <text x="162" y="168" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" fill="#45475A">×</text>
+
+        <!-- 最短路（8步，蓝色虚线），走格子外边缘 -->
+        <polyline points="30,6  206,6  230,8  230,206"
+          fill="none" stroke="#89B4FA" stroke-width="2.5"
+          stroke-dasharray="6,3" opacity=".85"
+          stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- 备选路（10步，橙色虚线），走格子中心稍偏 -->
+        <polyline points="30,32  74,32  118,32  118,74  118,118  74,118  74,162  74,206  118,206  162,206  206,206"
+          fill="none" stroke="#FAB387" stroke-width="2"
+          stroke-dasharray="4,3" opacity=".8"
+          stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- 图例 -->
+        <text x="254" y="22" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#7F849C" font-weight="700">图例</text>
+        <rect x="254" y="30" width="14" height="14" rx="3" fill="rgba(137,180,250,.72)"/>
+        <text x="274" y="41" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#A6ADC8">起点 S（步数 0）</text>
+        <rect x="254" y="52" width="14" height="14" rx="3" fill="rgba(137,180,250,.38)"/>
+        <text x="274" y="63" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#A6ADC8">步数 1–4</text>
+        <rect x="254" y="74" width="14" height="14" rx="3" fill="rgba(137,180,250,.10)"/>
+        <text x="274" y="85" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#A6ADC8">步数 5–7</text>
+        <rect x="254" y="96" width="14" height="14" rx="3" fill="rgba(137,180,250,.03)"/>
+        <text x="274" y="107" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#A6ADC8">步数 8–9</text>
+        <rect x="254" y="118" width="14" height="14" rx="3" fill="rgba(166,227,161,.40)" stroke="#A6E3A1" stroke-width="1"/>
+        <text x="274" y="129" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#A6ADC8">终点 E</text>
+        <rect x="254" y="140" width="14" height="14" rx="3" fill="#23213A" stroke="#313244" stroke-width="1"/>
+        <text x="274" y="151" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#A6ADC8">障碍（不可通行）</text>
+        <line x1="254" y1="168" x2="268" y2="168" stroke="#89B4FA" stroke-width="2.5" stroke-dasharray="6,3" opacity=".85"/>
+        <text x="274" y="172" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#89B4FA">最短路（8 步）</text>
+        <line x1="254" y1="188" x2="268" y2="188" stroke="#FAB387" stroke-width="2" stroke-dasharray="4,3" opacity=".8"/>
+        <text x="274" y="192" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#FAB387">备选路（10 步）</text>
+        <text x="254" y="214" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#6C7086">格内数字 = BFS 步数</text>
+        <text x="356" y="238" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="12" fill="#A6E3A1" font-weight="700">最短路径</text>
+        <text x="356" y="256" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="22" fill="#A6E3A1" font-weight="700">8 步</text>
+      </svg>
+      <figcaption>
+        格内数字是 BFS 计算出的到起点 S 的最短步数，颜色越深越近。<strong style="color:#89B4FA;">蓝色虚线</strong>是 BFS 找到的最短路（8 步）；<strong style="color:#FAB387;">橙色虚线</strong>是另一条绕行路（10 步）。BFS 按层扩展，第一次到达 E 时一定走的是最短路。
+      </figcaption>
+    </div>
+
+    <!-- ⑤ 队列变化过程 -->
+    <div class="sub-title" id="s5">⑤ 队列的变化过程</div>
+    <div class="section-body">
+      <p>用坐标 <code>(行, 列)</code> 表示格子，追踪队列里的内容，看看 BFS 是怎么一步一步扩展的。</p>
+      <p>颜色说明：<span style="color:#CBA6F7;font-weight:700;">紫色</span> = 当前从队列取出处理，<span style="color:#89B4FA;font-weight:700;">蓝色</span> = 等待在队列中，<span style="color:#A6E3A1;font-weight:700;">绿色</span> = 已处理完毕，<span style="color:#F38BA8;font-weight:700;">红色</span> = 被跳过（障碍或已访问）。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">BFS 队列状态变化（起点 S = (0,0)）</div>
+
+      <div class="q-row-wrap">
+        <div class="q-label">初始化</div>
+        <div class="queue-row">
+          <div class="q-cell cur">(0,0)</div>
+        </div>
+        <div class="q-note">起点入队，dist[0][0]=0</div>
+      </div>
+
+      <div class="q-row-wrap">
+        <div class="q-label">取出 (0,0)<br>步数=0</div>
+        <div class="queue-row">
+          <div class="q-cell skip">(−1,0)</div>
+          <div class="q-cell inq">(1,0)</div>
+          <div class="q-cell skip">(0,−1)</div>
+          <div class="q-cell inq">(0,1)</div>
+        </div>
+        <div class="q-note">上方和左方越界跳过；下方 (1,0) 和右方 (0,1) 入队，步数=1</div>
+      </div>
+
+      <div class="q-row-wrap">
+        <div class="q-label">取出 (1,0)<br>步数=1</div>
+        <div class="queue-row">
+          <div class="q-cell done">(0,1)</div>
+          <div class="q-cell skip">(2,0)×</div>
+          <div class="q-cell skip">(1,1)×</div>
+        </div>
+        <div class="q-note">(0,0) 已访问跳过；(2,0) 是障碍跳过；(1,1) 是障碍跳过。(0,1) 已在队中</div>
+      </div>
+
+      <div class="q-row-wrap">
+        <div class="q-label">取出 (0,1)<br>步数=1</div>
+        <div class="queue-row">
+          <div class="q-cell inq">(0,2)</div>
+        </div>
+        <div class="q-note">(0,0) 已访问；(1,1) 障碍；(0,2) 入队，步数=2</div>
+      </div>
+
+      <div class="q-row-wrap">
+        <div class="q-label">取出 (0,2)<br>步数=2</div>
+        <div class="queue-row">
+          <div class="q-cell inq">(1,2)</div>
+          <div class="q-cell inq">(0,3)</div>
+        </div>
+        <div class="q-note">(0,1) 已访问；(1,2) 和 (0,3) 入队，步数=3</div>
+      </div>
+
+      <div class="q-row-wrap">
+        <div class="q-label">继续扩展…</div>
+        <div class="queue-row">
+          <div class="q-cell done">(1,2)</div>
+          <div class="q-cell done">(0,3)</div>
+          <div class="q-cell inq">(2,2)</div>
+          <div class="q-cell inq">(0,4)</div>
+          <div class="q-cell inq">…</div>
+        </div>
+        <div class="q-note">层层向外，步数依次增加，直到第一次取出 (4,4) 时返回答案 8</div>
+      </div>
+
+    </div>
+
+    <!-- ⑥ 图上的 BFS -->
+    <div class="sub-title" id="s6">⑥ 在图上的 BFS</div>
+    <div class="section-body">
+      <p>迷宫其实是图的一种特殊形式（每个格子是节点，相邻格子之间有边）。对于一般的图，BFS 的代码结构完全相同，只需要把"四个方向的邻居"换成"邻接表里的相邻节点"就行了：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 一般图的 BFS（邻接表）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd">vector&lt;<span class="typ">int</span>&gt; adj[MAXN];   <span class="cmt">// adj[u] 存 u 的所有邻居</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> dist[MAXN];</td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">void</span> <span class="fn">BFS</span>(<span class="typ">int</span> start)</td></tr>
+          <tr><td class="ln">5</td><td class="cd">{</td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="fn">memset</span>(dist, <span class="num">-1</span>, <span class="kw">sizeof</span>(dist));</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    queue&lt;<span class="typ">int</span>&gt; q;</td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">    dist[start] = <span class="num">0</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">    q.<span class="fn">push</span>(start);</td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">while</span> (!q.<span class="fn">empty</span>())</td></tr>
+          <tr><td class="ln">11</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="typ">int</span> u = q.<span class="fn">front</span>(); q.<span class="fn">pop</span>();</td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="kw">for</span> (<span class="typ">int</span> v : adj[u])  <span class="cmt">// 遍历 u 的每个邻居 v</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        {</td></tr>
+          <tr class="hl-ref"><td class="ln">15</td><td class="cd">            <span class="kw">if</span> (dist[v] != <span class="num">-1</span>) <span class="kw">continue</span>; <span class="cmt">// 已访问，跳过</span></td></tr>
+          <tr class="hl-ref"><td class="ln">16</td><td class="cd">            dist[v] = dist[u] + <span class="num">1</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">17</td><td class="cd">            q.<span class="fn">push</span>(v);</td></tr>
+          <tr><td class="ln">18</td><td class="cd">        }</td></tr>
+          <tr><td class="ln">19</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">20</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        对比迷宫版本和图版本，会发现它们几乎一模一样：迷宫版本多了越界检查和障碍检查，这是因为迷宫的"边"是隐含的（相邻格子之间有路），需要在代码里手动判断是否合法。
+      </div>
+    </div>
+
+    <!-- ⑦ BFS vs DFS -->
+    <div class="sub-title" id="s7">⑦ BFS vs DFS</div>
+    <div class="section-body">
+      <p>BFS 和 DFS 都是搜索算法，选哪个取决于你要问的问题：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>对比项</th><th>BFS（广度优先）</th><th>DFS（深度优先）</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>形象比喻</td>
+          <td>水波扩散，一圈一圈向外</td>
+          <td>走迷宫，一条路走到底再回头</td>
+        </tr>
+        <tr>
+          <td>用的数据结构</td>
+          <td>队列（先进先出）</td>
+          <td>栈 / 递归调用栈（先进后出）</td>
+        </tr>
+        <tr>
+          <td>能找最短路吗</td>
+          <td>✅ 无权图中保证最短路</td>
+          <td>❌ 不保证，可能走了弯路</td>
+        </tr>
+        <tr>
+          <td>内存占用</td>
+          <td>队列可能很大，O(n)</td>
+          <td>栈深度，O(路径长度)</td>
+        </tr>
+        <tr>
+          <td>适合解决</td>
+          <td>最少步数、最短距离、层次遍历</td>
+          <td>判断连通性、列举所有方案、回溯</td>
+        </tr>
+        <tr>
+          <td>记忆口诀</td>
+          <td>问"最少几步" → 用 BFS</td>
+          <td>问"能不能到/所有走法" → 用 DFS</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>
+        <b>本节小结</b><br>
+        ・BFS 用<strong>队列</strong>保证"先近后远"的访问顺序，因此能找到无权图的最短路。<br>
+        ・关键点：<strong>入队时立刻标记已访问</strong>（设 dist），不能等到出队时再标记。<br>
+        ・迷宫 BFS：用 dx/dy 数组枚举四个方向，先判越界再判障碍。<br>
+        ・一般图 BFS：把"四个方向"换成"邻接表里的邻居"，其余结构完全相同。<br>
+        ・<strong>口诀：问最少几步用 BFS，问有没有路或所有方案用 DFS。</strong>
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十一 搜索基础 · 11.1 BFS 广度优先搜索</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A10_01_并查集.html">← 10.1 并查集</a>
+      <a class="nav-btn" href="A11_02_DFS.html">11.2 DFS →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

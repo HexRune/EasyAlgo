@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10.1 并查集 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "10.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 通用暗色面板 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* SVG 图示 */
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+
+  /* 对比表 */
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #9FE1CB; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #F7FEFC; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+
+  /* parent 数组格子 */
+  .arr-row { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .arr-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .arr-cell { min-width: 36px; height: 36px; padding: 0 5px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .arr-cell.base { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .arr-cell.root { background: rgba(166,227,161,.2); color: #A6E3A1; border: 1px solid rgba(166,227,161,.4); }
+  .arr-cell.a    { background: rgba(137,180,250,.2); color: #89B4FA; border: 1px solid rgba(137,180,250,.4); }
+  .arr-cell.b    { background: rgba(250,179,135,.2); color: #FAB387; border: 1px solid rgba(250,179,135,.4); }
+  .arr-cell.hi   { background: rgba(203,166,247,.2); color: #CBA6F7; border: 1px solid rgba(203,166,247,.4); }
+  .arr-idx { font-size: 10px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+  .arr-label { font-size: 11px; color: #6C7086; width: 80px; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .arr-row-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .arr-row-wrap:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="10.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十 数据结构基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>10.1 并查集</span>
+    </div>
+    <h1 class="chapter-title">10.1　并查集</h1>
+    <p class="chapter-desc">快速回答"这两个元素属于同一组吗"以及"把这两组合并成一组"——并查集用接近 O(1) 的时间支持这两种操作。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#s1">用宿舍分组理解并查集</a></li>
+      <li><span class="toc-num">②</span><a href="#s2">parent 数组：每人记住自己的"上级"</a></li>
+      <li><span class="toc-num">③</span><a href="#s3">查找（Find）：找到组长</a></li>
+      <li><span class="toc-num">④</span><a href="#s4">路径压缩：让查找更快</a></li>
+      <li><span class="toc-num">⑤</span><a href="#s5">合并（Union）：两组合并</a></li>
+      <li><span class="toc-num">⑥</span><a href="#s6">完整模板代码</a></li>
+      <li><span class="toc-num">⑦</span><a href="#s7">竞赛常见应用</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <!-- ① 类比 -->
+    <div class="sub-title" id="s1">① 用宿舍分组理解并查集</div>
+    <div class="section-body">
+      <p>假设班里 8 个同学要分成若干小组，我们需要快速回答两类问题：</p>
+      <p>① <strong>查：</strong>"1 号和 5 号是一组吗？"——<code>Find(1) == Find(5) ?</code></p>
+      <p>② <strong>并：</strong>"把 3 号所在的组和 7 号所在的组合并成一组。"——<code>Union(3, 7)</code></p>
+      <p>并查集的做法是：每个组推选一个<strong>代表（根节点）</strong>，每个人记住自己的上级是谁。要判断两人是否同组，只需看他们各自追溯到的代表是否相同。</p>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 620 210" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:580px; width:100%;">
+        <defs>
+          <marker id="ap" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#45475A"/>
+          </marker>
+        </defs>
+
+        <!-- 组 A：根 = 1 -->
+        <text x="130" y="18" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#89B4FA">组 A（代表：1）</text>
+        <circle cx="130" cy="50" r="20" fill="#1A1E2F" stroke="#89B4FA" stroke-width="2"/>
+        <text x="130" y="55" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="14" fill="#89B4FA" font-weight="700">1</text>
+        <text x="130" y="76" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#89B4FA">根（代表）</text>
+
+        <circle cx="70"  cy="120" r="18" fill="#16141F" stroke="#89B4FA" stroke-width="1.2"/>
+        <text x="70"  y="125" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#89B4FA" font-weight="700">2</text>
+        <circle cx="130" cy="120" r="18" fill="#16141F" stroke="#89B4FA" stroke-width="1.2"/>
+        <text x="130" y="125" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#89B4FA" font-weight="700">4</text>
+        <circle cx="190" cy="120" r="18" fill="#16141F" stroke="#89B4FA" stroke-width="1.2"/>
+        <text x="190" y="125" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#89B4FA" font-weight="700">5</text>
+
+        <circle cx="70"  cy="185" r="18" fill="#16141F" stroke="#89B4FA" stroke-width="1.2"/>
+        <text x="70"  y="190" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#89B4FA" font-weight="700">3</text>
+
+        <!-- 边 A -->
+        <line x1="112" y1="64" x2="83"  y2="104" stroke="#45475A" stroke-width="1.2" marker-end="url(#ap)"/>
+        <line x1="130" y1="70" x2="130" y2="104" stroke="#45475A" stroke-width="1.2" marker-end="url(#ap)"/>
+        <line x1="148" y1="64" x2="177" y2="104" stroke="#45475A" stroke-width="1.2" marker-end="url(#ap)"/>
+        <line x1="70"  y1="138" x2="70" y2="169" stroke="#45475A" stroke-width="1.2" marker-end="url(#ap)"/>
+
+        <!-- 组 B：根 = 6 -->
+        <text x="450" y="18" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#FAB387">组 B（代表：6）</text>
+        <circle cx="450" cy="50" r="20" fill="#1A2010" stroke="#FAB387" stroke-width="2"/>
+        <text x="450" y="55" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="14" fill="#FAB387" font-weight="700">6</text>
+        <text x="450" y="76" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#FAB387">根（代表）</text>
+
+        <circle cx="390" cy="120" r="18" fill="#16141F" stroke="#FAB387" stroke-width="1.2"/>
+        <text x="390" y="125" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#FAB387" font-weight="700">7</text>
+        <circle cx="510" cy="120" r="18" fill="#16141F" stroke="#FAB387" stroke-width="1.2"/>
+        <text x="510" y="125" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#FAB387" font-weight="700">8</text>
+
+        <line x1="432" y1="64" x2="403" y2="104" stroke="#45475A" stroke-width="1.2" marker-end="url(#ap)"/>
+        <line x1="468" y1="64" x2="497" y2="104" stroke="#45475A" stroke-width="1.2" marker-end="url(#ap)"/>
+
+        <!-- 说明 -->
+        <text x="310" y="160" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#6C7086">Find(3) = 1，Find(7) = 6</text>
+        <text x="310" y="178" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#6C7086">Find(2) == Find(5)？→ 1 == 1 ✅ 同组</text>
+        <text x="310" y="196" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#6C7086">Find(3) == Find(7)？→ 1 ≠ 6 ❌ 不同组</text>
+      </svg>
+      <figcaption>
+        每棵树是一个分组，树根就是这组的代表。判断两个元素是否同组，只需判断它们的根是否相同。
+      </figcaption>
+    </div>
+
+    <!-- ② parent 数组 -->
+    <div class="sub-title" id="s2">② parent 数组：每人记住自己的"上级"</div>
+    <div class="section-body">
+      <p>并查集只需要一个数组 <code>parent[]</code>，<code>parent[i]</code> 存储 i 的上级是谁。根节点的上级是自己：<code>parent[root] == root</code>。</p>
+      <p>初始时每个人都是独立的一组，上级指向自己：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">初始化：8 个人，各自一组</div>
+      <div class="arr-row-wrap">
+        <div class="arr-label">下标 i</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-cell base">1</div><div class="arr-idx">1</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">2</div><div class="arr-idx">2</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">3</div><div class="arr-idx">3</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">4</div><div class="arr-idx">4</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">5</div><div class="arr-idx">5</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">6</div><div class="arr-idx">6</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">7</div><div class="arr-idx">7</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">8</div><div class="arr-idx">8</div></div>
+        </div>
+      </div>
+      <div class="arr-row-wrap">
+        <div class="arr-label">parent[i]</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-cell root">1</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell root">2</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell root">3</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell root">4</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell root">5</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell root">6</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell root">7</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell root">8</div></div>
+        </div>
+      </div>
+      <div class="num-visual-caption">
+        绿色格子表示根节点（parent[i] == i）。初始时所有人都是自己的根，8 个独立的集合。
+      </div>
+    </div>
+
+    <!-- ③ Find -->
+    <div class="sub-title" id="s3">③ 查找（Find）：找到组长</div>
+    <div class="section-body">
+      <p>从 x 出发，沿着 parent 指针一路往上，直到找到根（parent[x] == x 的节点），这就是 x 所在组的代表。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 朴素 Find（不带路径压缩）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Find</span>(<span class="typ">int</span> x) {</td></tr>
+          <tr class="hl-ref"><td class="ln">2</td><td class="cd">    <span class="kw">while</span> (parent[x] != x)  <span class="cmt">// 还没到根，继续往上</span></td></tr>
+          <tr class="hl-ref"><td class="ln">3</td><td class="cd">        x = parent[x];</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">return</span> x;</td></tr>
+          <tr><td class="ln">5</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>问题是：如果树退化成一条链（每次都把新元素挂在最深处），Find 需要 O(n) 时间。下面的路径压缩解决这个问题。</p>
+    </div>
+
+    <!-- ④ 路径压缩 -->
+    <div class="sub-title" id="s4">④ 路径压缩：让查找更快</div>
+    <div class="section-body">
+      <p>查找根的过程中，顺手把沿途所有节点的 parent <strong>直接指向根</strong>。下次再查这条路上的任何节点，一步就到根了。</p>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 580 180" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:540px; width:100%;">
+        <defs>
+          <marker id="ab" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#45475A"/>
+          </marker>
+          <marker id="ag" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#A6E3A1"/>
+          </marker>
+        </defs>
+
+        <!-- 压缩前（左侧链式树） -->
+        <text x="100" y="16" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#7F849C">压缩前（链式，慢）</text>
+        <circle cx="100" cy="38" r="18" fill="#1A2820" stroke="#A6E3A1" stroke-width="2"/>
+        <text x="100" y="43" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#A6E3A1" font-weight="700">1</text>
+        <line x1="100" y1="56" x2="100" y2="80" stroke="#45475A" stroke-width="1.2" marker-end="url(#ab)"/>
+        <circle cx="100" cy="97" r="18" fill="#16141F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="100" y="102" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#CBA6F7" font-weight="700">2</text>
+        <line x1="100" y1="115" x2="100" y2="139" stroke="#45475A" stroke-width="1.2" marker-end="url(#ab)"/>
+        <circle cx="100" cy="155" r="18" fill="#16141F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="100" y="160" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#CBA6F7" font-weight="700">3</text>
+
+        <text x="100" y="178" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#6C7086">Find(3) 需要走 2 步</text>
+
+        <!-- 箭头：压缩 -->
+        <text x="290" y="95" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="12" fill="#A6ADC8">路径压缩</text>
+        <line x1="210" y1="100" x2="360" y2="100" stroke="#A6ADC8" stroke-width="1.5" marker-end="url(#ag)"/>
+
+        <!-- 压缩后（右侧扁平树） -->
+        <text x="460" y="16" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="11" fill="#A6E3A1">压缩后（扁平，快）</text>
+        <circle cx="460" cy="55" r="18" fill="#1A2820" stroke="#A6E3A1" stroke-width="2"/>
+        <text x="460" y="60" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#A6E3A1" font-weight="700">1</text>
+
+        <circle cx="400" cy="130" r="18" fill="#16141F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="400" y="135" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#CBA6F7" font-weight="700">2</text>
+        <circle cx="460" cy="130" r="18" fill="#16141F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="460" y="135" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#CBA6F7" font-weight="700">3</text>
+        <circle cx="520" cy="130" r="18" fill="#16141F" stroke="#CBA6F7" stroke-width="1.2"/>
+        <text x="520" y="135" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="13" fill="#CBA6F7" font-weight="700">4</text>
+
+        <line x1="445" y1="70" x2="413" y2="114" stroke="#A6E3A1" stroke-width="1.2" marker-end="url(#ag)"/>
+        <line x1="460" y1="73" x2="460" y2="114" stroke="#A6E3A1" stroke-width="1.2" marker-end="url(#ag)"/>
+        <line x1="475" y1="70" x2="507" y2="114" stroke="#A6E3A1" stroke-width="1.2" marker-end="url(#ag)"/>
+
+        <text x="460" y="165" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="9" fill="#A6E3A1">所有节点直接挂根，Find 只需 1 步</text>
+      </svg>
+      <figcaption>
+        路径压缩后，树变得非常"扁"，之后对这些节点的任何查询都只需一次跳转。加上路径压缩后，<code>Find</code> 的均摊时间复杂度接近 O(1)（严格来说是 O(α(n))，α 是反阿克曼函数，实际上不超过 5）。
+      </figcaption>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 带路径压缩的 Find（递归写法，一行搞定）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Find</span>(<span class="typ">int</span> x) {</td></tr>
+          <tr class="hl-ref"><td class="ln">2</td><td class="cd">    <span class="kw">if</span> (parent[x] != x)</td></tr>
+          <tr class="hl-ref"><td class="ln">3</td><td class="cd">        parent[x] = <span class="fn">Find</span>(parent[x]);  <span class="cmt">// 递归找根，顺手把 parent[x] 直接指向根</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">return</span> parent[x];</td></tr>
+          <tr><td class="ln">5</td><td class="cd">}</td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 更简洁的一行版本（等价）</span></td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd"><span class="typ">int</span> <span class="fn">Find</span>(<span class="typ">int</span> x) { <span class="kw">return</span> parent[x] == x ? x : parent[x] = <span class="fn">Find</span>(parent[x]); }</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ⑤ Union -->
+    <div class="sub-title" id="s5">⑤ 合并（Union）：两组合并</div>
+    <div class="section-body">
+      <p>合并两个集合，只需找到各自的根，然后让其中一个根的 parent 指向另一个根——两棵树就合并成了一棵。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · Union 操作</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">void</span> <span class="fn">Union</span>(<span class="typ">int</span> x, <span class="typ">int</span> y) {</td></tr>
+          <tr><td class="ln">2</td><td class="cd">    <span class="typ">int</span> rx = <span class="fn">Find</span>(x), ry = <span class="fn">Find</span>(y);  <span class="cmt">// 找到各自的根</span></td></tr>
+          <tr class="hl-ref"><td class="ln">3</td><td class="cd">    <span class="kw">if</span> (rx != ry)                       <span class="cmt">// 不同组才需要合并</span></td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">        parent[rx] = ry;                <span class="cmt">// 把 rx 的根挂到 ry 下面</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">}</td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 判断是否同组</span></td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd"><span class="typ">bool</span> <span class="fn">Same</span>(<span class="typ">int</span> x, <span class="typ">int</span> y) { <span class="kw">return</span> <span class="fn">Find</span>(x) == <span class="fn">Find</span>(y); }</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>按秩合并（可选优化）：</b>每次把<strong>小树</strong>挂到<strong>大树</strong>的根下，避免树高度增长过快。用 <code>size[]</code> 记录每棵树的节点数，合并时把小的挂到大的上。实际竞赛中，只加路径压缩通常就够用了——两者同时使用可以达到理论最优。
+      </div>
+    </div>
+
+    <!-- ⑥ 完整模板 -->
+    <div class="sub-title" id="s6">⑥ 完整模板代码</div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 并查集完整模板（带路径压缩 + 按大小合并）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">const</span> <span class="typ">int</span> MAXN = <span class="num">100005</span>;</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> parent[MAXN], sz[MAXN];</td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">void</span> <span class="fn">init</span>(<span class="typ">int</span> n) {</td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++)</td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">        parent[i] = i, sz[i] = <span class="num">1</span>;  <span class="cmt">// 每人自成一组，大小为 1</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">}</td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="typ">int</span> <span class="fn">Find</span>(<span class="typ">int</span> x) {</td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">    <span class="kw">return</span> parent[x] == x ? x : parent[x] = <span class="fn">Find</span>(parent[x]);</td></tr>
+          <tr><td class="ln">11</td><td class="cd">}</td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="typ">void</span> <span class="fn">Union</span>(<span class="typ">int</span> x, <span class="typ">int</span> y) {</td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="typ">int</span> rx = <span class="fn">Find</span>(x), ry = <span class="fn">Find</span>(y);</td></tr>
+          <tr class="hl-warn"><td class="ln">15</td><td class="cd">    <span class="kw">if</span> (rx == ry) <span class="kw">return</span>;          <span class="cmt">// 已经同组，不用合并</span></td></tr>
+          <tr class="hl-ref"><td class="ln">16</td><td class="cd">    <span class="kw">if</span> (sz[rx] &lt; sz[ry]) <span class="fn">swap</span>(rx, ry); <span class="cmt">// 小树挂到大树</span></td></tr>
+          <tr class="hl-ref"><td class="ln">17</td><td class="cd">    parent[ry] = rx;</td></tr>
+          <tr class="hl-ref"><td class="ln">18</td><td class="cd">    sz[rx] += sz[ry];</td></tr>
+          <tr><td class="ln">19</td><td class="cd">}</td></tr>
+          <tr><td class="ln">20</td><td class="cd"></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="typ">bool</span> <span class="fn">Same</span>(<span class="typ">int</span> x, <span class="typ">int</span> y) { <span class="kw">return</span> <span class="fn">Find</span>(x) == <span class="fn">Find</span>(y); }</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ⑦ 应用 -->
+    <div class="sub-title" id="s7">⑦ 竞赛常见应用</div>
+
+    <table class="api-table">
+      <thead><tr><th>题型</th><th>并查集的用法</th><th>关键操作</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>判断连通性</td>
+          <td>把图的每条边两端 Union，最后查询两点是否 Same</td>
+          <td>Union + Same</td>
+        </tr>
+        <tr>
+          <td>统计连通分量数</td>
+          <td>初始分量数 = n，每次成功 Union 就 −1</td>
+          <td>Union + 计数</td>
+        </tr>
+        <tr>
+          <td>Kruskal 最小生成树</td>
+          <td>按边权从小到大枚举，若两端不同组则加入 MST 并 Union</td>
+          <td>Sort + Union + Same</td>
+        </tr>
+        <tr>
+          <td>朋友圈 / 社交分组</td>
+          <td>"A 认识 B，B 认识 C"则三人同组，查询任意两人是否认识</td>
+          <td>Union + Same</td>
+        </tr>
+        <tr>
+          <td>判断图是否有环</td>
+          <td>加边前若两端已 Same，则加这条边会形成环</td>
+          <td>Same（加边前检查）</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>
+        <b>本节小结</b><br>
+        ・并查集维护一个 <code>parent[]</code> 数组，支持<strong>合并集合</strong>和<strong>查询是否同集合</strong>两种操作。<br>
+        ・<code>Find</code> 沿 parent 链找根；加上<strong>路径压缩</strong>后均摊接近 O(1)。<br>
+        ・<code>Union</code> 把两个根连起来；加上<strong>按大小合并</strong>防止树过高。<br>
+        ・竞赛中的连通性问题、MST（Kruskal）、判环都离不开并查集，模板务必背熟。
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十 数据结构基础 · 10.1 并查集</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A09_01_分治.html">← 9.1 分治</a>
+      <a class="nav-btn" href="A11_01_BFS.html">11.1 BFS →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

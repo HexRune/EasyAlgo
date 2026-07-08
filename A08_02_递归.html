@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8.2 递归 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "8.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--coral-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--coral); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 调用栈可视化 */
+  .call-stack { display: flex; flex-direction: column; gap: 4px; }
+  .stack-frame {
+    border-radius: 7px; padding: 9px 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+    display: flex; align-items: center; gap: 12px;
+    border: 1px solid;
+  }
+  .stack-frame.call   { background: rgba(137,180,250,.1);  border-color: rgba(137,180,250,.35); color: #89B4FA; }
+  .stack-frame.base   { background: rgba(166,227,161,.12); border-color: rgba(166,227,161,.4);  color: #A6E3A1; }
+  .stack-frame.ret    { background: rgba(250,179,135,.1);  border-color: rgba(250,179,135,.35); color: #FAB387; }
+  .stack-label { font-size: 10px; color: #6C7086; font-family: 'Noto Sans SC', sans-serif; width: 52px; flex-shrink: 0; }
+  .stack-expr  { flex: 1; }
+  .stack-result { font-weight: 700; }
+  .stack-indent { display: inline-block; }
+
+  /* 调用树 SVG 容器 */
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+
+  /* 对比表 */
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #FAA0A0; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="8.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块八 递推与递归</span>
+      <span class="eyebrow-sep">/</span>
+      <span>8.2 递归</span>
+    </div>
+    <h1 class="chapter-title">8.2　递归</h1>
+    <p class="chapter-desc">函数调用自己——把一个大问题拆成同结构的小问题，直到小到可以直接回答为止。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#s1">递归是什么</a></li>
+      <li><span class="toc-num">②</span><a href="#s2">递归的两个必要条件</a></li>
+      <li><span class="toc-num">③</span><a href="#s3">调用栈图解：f(4) 的执行过程</a></li>
+      <li><span class="toc-num">④</span><a href="#s4">调用树：看清所有分支</a></li>
+      <li><span class="toc-num">⑤</span><a href="#s5">记忆化：消除重复计算</a></li>
+      <li><span class="toc-num">⑥</span><a href="#s6">竞赛常见递归场景</a></li>
+      <li><span class="toc-num">⑦</span><a href="#s7">递归的注意事项</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <!-- ① 递归是什么 -->
+    <div class="sub-title" id="s1">① 递归是什么</div>
+    <div class="section-body">
+      <p>递归是函数直接或间接地<strong>调用自身</strong>来解决问题的技术。它把一个大问题分解成若干个结构完全相同、但规模更小的子问题，当子问题小到可以直接回答时（触底），再把答案一层层往上返回。</p>
+      <p>一个经典的生活类比：要知道自己是第几代人，只需要问父亲"你是第几代"，然后加一就行了。父亲用同样方法问爷爷，爷爷再问曾爷爷……直到找到有族谱记载的那一位（边界）——答案再一路往回传。</p>
+      <p>用斐波那契数列来看，递归写法和数学定义几乎一模一样：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 斐波那契：递归写法</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">long long</span> <span class="fn">fib</span>(<span class="typ">int</span> n) {</td></tr>
+          <tr class="hl-warn"><td class="ln">2</td><td class="cd">    <span class="kw">if</span> (n &lt;= <span class="num">2</span>) <span class="kw">return</span> <span class="num">1</span>;          <span class="cmt">// 边界：直接回答</span></td></tr>
+          <tr class="hl-ref"><td class="ln">3</td><td class="cd">    <span class="kw">return</span> <span class="fn">fib</span>(n-<span class="num">1</span>) + <span class="fn">fib</span>(n-<span class="num">2</span>);   <span class="cmt">// 拆成子问题</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">}</td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="cmt">// fib(5) → fib(4)+fib(3) → (fib(3)+fib(2))+(fib(2)+fib(1))</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// → ((fib(2)+fib(1))+1)+(1+1) → ((1+1)+1)+(1+1) → 5</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ② 两个必要条件 -->
+    <div class="sub-title" id="s2">② 递归的两个必要条件</div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">缺少任何一个，递归都无法正确运行</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div style="background:#1E1C2F; border-radius:8px; padding:16px; border-left:3px solid #A6E3A1;">
+          <div style="font-size:12px; color:#A6E3A1; font-weight:700; margin-bottom:8px; font-family:'Noto Sans SC',sans-serif;">✅ 条件一：边界条件（Base Case）</div>
+          <div style="font-size:12.5px; color:#A6ADC8; line-height:1.7; font-family:'Noto Sans SC',sans-serif;">
+            必须有至少一个"小到可以直接回答"的情况，不再继续调用自身。<br>
+            <span style="font-family:'JetBrains Mono',monospace; color:#CBA6F7; font-size:11.5px;">if (n &lt;= 2) return 1;</span><br>
+            缺少边界 → 无限递归 → 栈溢出崩溃。
+          </div>
+        </div>
+        <div style="background:#1E1C2F; border-radius:8px; padding:16px; border-left:3px solid #89B4FA;">
+          <div style="font-size:12px; color:#89B4FA; font-weight:700; margin-bottom:8px; font-family:'Noto Sans SC',sans-serif;">✅ 条件二：规模收敛（递进条件）</div>
+          <div style="font-size:12.5px; color:#A6ADC8; line-height:1.7; font-family:'Noto Sans SC',sans-serif;">
+            每次递归调用，问题规模必须<strong style="color:#CDD6F4;">严格缩小</strong>，最终一定能触底到边界。<br>
+            <span style="font-family:'JetBrains Mono',monospace; color:#CBA6F7; font-size:11.5px;">fib(n-1) + fib(n-2)</span>  n 在减小。<br>
+            若规模不收敛 → 同样无限递归。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ 调用栈图解 -->
+    <div class="sub-title" id="s3">③ 调用栈图解：fib(4) 的执行过程</div>
+    <div class="section-body">
+      <p>每次函数调用都会在栈上压入一个"帧"，记录当前的参数和返回地址。下图展示 fib(4) 从下探到回升的完整过程：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">调用栈：下探阶段（蓝色）→ 触底（绿色）→ 回升阶段（橙色）</div>
+      <div class="call-stack">
+        <div class="stack-frame call">
+          <div class="stack-label">调用</div>
+          <div class="stack-expr"><span class="stack-indent"></span>fib(4)  →  fib(3) + fib(2)</div>
+        </div>
+        <div class="stack-frame call">
+          <div class="stack-label">调用</div>
+          <div class="stack-expr"><span class="stack-indent" style="display:inline-block;width:18px"></span>fib(3)  →  fib(2) + fib(1)</div>
+        </div>
+        <div class="stack-frame call">
+          <div class="stack-label">调用</div>
+          <div class="stack-expr"><span class="stack-indent" style="display:inline-block;width:36px"></span>fib(2)  →  ?</div>
+        </div>
+        <div class="stack-frame base">
+          <div class="stack-label">触底 ✅</div>
+          <div class="stack-expr"><span class="stack-indent" style="display:inline-block;width:36px"></span>fib(2)  →  <span class="stack-result">return 1</span>　（n≤2，直接返回）</div>
+        </div>
+        <div class="stack-frame base">
+          <div class="stack-label">触底 ✅</div>
+          <div class="stack-expr"><span class="stack-indent" style="display:inline-block;width:36px"></span>fib(1)  →  <span class="stack-result">return 1</span>　（n≤2，直接返回）</div>
+        </div>
+        <div class="stack-frame ret">
+          <div class="stack-label">返回</div>
+          <div class="stack-expr"><span class="stack-indent" style="display:inline-block;width:18px"></span>fib(3)  =  1 + 1  =  <span class="stack-result">2</span></div>
+        </div>
+        <div class="stack-frame base">
+          <div class="stack-label">触底 ✅</div>
+          <div class="stack-expr"><span class="stack-indent" style="display:inline-block;width:18px"></span>fib(2)  →  <span class="stack-result">return 1</span>　（另一支）</div>
+        </div>
+        <div class="stack-frame ret">
+          <div class="stack-label">返回</div>
+          <div class="stack-expr"><span class="stack-indent"></span>fib(4)  =  2 + 1  =  <span class="stack-result">3</span></div>
+        </div>
+      </div>
+      <div class="num-visual-caption">
+        <strong>蓝色</strong>是向下调用（问题规模缩小），<strong style="color:#A6E3A1;">绿色</strong>是触底（边界直接返回），<strong style="color:#FAB387;">橙色</strong>是向上回传结果。<br>
+        整个过程像一个 V 形：先向下探到最深处，再携带答案一路往上返回。
+      </div>
+    </div>
+
+    <!-- ④ 调用树 -->
+    <div class="sub-title" id="s4">④ 调用树：看清所有分支</div>
+    <div class="section-body">
+      <p>fib(4) 展开成一棵树，可以清楚地看到哪些子问题被重复计算了：</p>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 580 220" xmlns="http://www.w3.org/2000/svg"
+           style="max-width:540px; width:100%;">
+        <defs>
+          <marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#45475A"/>
+          </marker>
+        </defs>
+
+        <!-- 节点：fib(4) -->
+        <rect x="225" y="10" width="72" height="30" rx="6" fill="#16141F" stroke="#89B4FA" stroke-width="1.5"/>
+        <text x="261" y="30" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#89B4FA" font-weight="700">fib(4)</text>
+
+        <!-- 连线 L2 -->
+        <line x1="245" y1="40" x2="161" y2="70" stroke="#45475A" stroke-width="1.2" marker-end="url(#ar)"/>
+        <line x1="277" y1="40" x2="381" y2="70" stroke="#45475A" stroke-width="1.2" marker-end="url(#ar)"/>
+
+        <!-- fib(3) -->
+        <rect x="115" y="72" width="72" height="30" rx="6" fill="#16141F" stroke="#89B4FA" stroke-width="1.5"/>
+        <text x="151" y="92" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#89B4FA" font-weight="700">fib(3)</text>
+        <!-- fib(2) right of fib(4) -->
+        <rect x="345" y="72" width="72" height="30" rx="6" fill="#1A2820" stroke="#A6E3A1" stroke-width="1.5"/>
+        <text x="381" y="92" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#A6E3A1" font-weight="700">fib(2)</text>
+        <text x="381" y="115" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6E3A1">→ 1</text>
+
+        <!-- 连线 L3 -->
+        <line x1="135" y1="102" x2="75" y2="132" stroke="#45475A" stroke-width="1.2" marker-end="url(#ar)"/>
+        <line x1="167" y1="102" x2="221" y2="132" stroke="#45475A" stroke-width="1.2" marker-end="url(#ar)"/>
+
+        <!-- fib(2) left -->
+        <rect x="35" y="134" width="72" height="30" rx="6" fill="#1A2820" stroke="#A6E3A1" stroke-width="1.5"/>
+        <text x="71" y="154" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#A6E3A1" font-weight="700">fib(2)</text>
+        <text x="71" y="177" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6E3A1">→ 1</text>
+
+        <!-- fib(1) -->
+        <rect x="185" y="134" width="72" height="30" rx="6" fill="#1A2820" stroke="#A6E3A1" stroke-width="1.5"/>
+        <text x="221" y="154" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#A6E3A1" font-weight="700">fib(1)</text>
+        <text x="221" y="177" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6E3A1">→ 1</text>
+
+        <!-- 重复计算高亮：fib(2) 被算了两次 -->
+        <rect x="33" y="132" width="76" height="34" rx="7" fill="none" stroke="#F38BA8" stroke-width="1.5" stroke-dasharray="4,2"/>
+        <rect x="343" y="70" width="76" height="34" rx="7" fill="none" stroke="#F38BA8" stroke-width="1.5" stroke-dasharray="4,2"/>
+
+        <!-- 标注 -->
+        <text x="71" y="200" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#F38BA8">重复！</text>
+        <text x="381" y="136" text-anchor="middle" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#F38BA8">重复！</text>
+
+        <!-- 图例 -->
+        <rect x="420" y="150" width="12" height="12" rx="2" fill="#1A2820" stroke="#A6E3A1" stroke-width="1"/>
+        <text x="436" y="161" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6ADC8">触底（边界）</text>
+        <rect x="420" y="168" width="12" height="12" rx="2" fill="#16141F" stroke="#89B4FA" stroke-width="1"/>
+        <text x="436" y="179" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6ADC8">递归节点</text>
+        <line x1="420" y1="191" x2="432" y2="191" stroke="#F38BA8" stroke-width="1.5" stroke-dasharray="4,2"/>
+        <text x="436" y="195" font-family="'Noto Sans SC',sans-serif" font-size="10" fill="#A6ADC8">重复计算</text>
+      </svg>
+      <figcaption>
+        <code>fib(2)</code> 在这棵树里被计算了<strong style="color:#F38BA8;">两次</strong>。当 n 更大时，重复计算会呈指数级增长。<br>
+        <code>fib(40)</code> 的调用次数超过 3 亿次——这就是朴素递归慢的原因，下一节用记忆化解决它。
+      </figcaption>
+    </div>
+
+    <!-- ⑤ 记忆化 -->
+    <div class="sub-title" id="s5">⑤ 记忆化：消除重复计算</div>
+    <div class="section-body">
+      <p>解决方案很简单：<strong>算过的子问题结果存起来，下次直接查表，不重复算</strong>。这叫<strong>记忆化（Memoization）</strong>，也叫"带缓存的递归"。</p>
+      <p>加上记忆化之后，每个子问题只会被真正计算一次，时间复杂度从 O(2ⁿ) 直降到 O(n)。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 记忆化递归（斐波那契）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">long long</span> memo[<span class="num">100</span>];    <span class="cmt">// 记忆表，全局初始化为 0</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">long long</span> <span class="fn">fib</span>(<span class="typ">int</span> n) {</td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">if</span> (n &lt;= <span class="num">2</span>) <span class="kw">return</span> <span class="num">1</span>;           <span class="cmt">// 边界</span></td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">    <span class="kw">if</span> (memo[n]) <span class="kw">return</span> memo[n];    <span class="cmt">// ✅ 查表：算过就直接返回</span></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    memo[n] = <span class="fn">fib</span>(n-<span class="num">1</span>) + <span class="fn">fib</span>(n-<span class="num">2</span>); <span class="cmt">// 算完存入表中</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">return</span> memo[n];</td></tr>
+          <tr><td class="ln">8</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>记忆化 = 递归 + 哈希表（或数组）</b>。从效果上看，记忆化递归和递推（自底向上）几乎等价，只是方向相反。实际上，记忆化递归就是"自顶向下的动态规划"——这也是动态规划的另一种实现方式。
+      </div>
+    </div>
+
+    <!-- ⑥ 竞赛常见递归场景 -->
+    <div class="sub-title" id="s6">⑥ 竞赛常见递归场景</div>
+    <div class="section-body">
+      <p>递归在竞赛中不只用于数列计算，以下是最常见的几类：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 场景一：全排列（枚举所有排列方案）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> a[<span class="num">8</span>], n;</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">bool</span> used[<span class="num">8</span>];</td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">void</span> <span class="fn">perm</span>(<span class="typ">int</span> depth) {          <span class="cmt">// depth：当前填到第几位</span></td></tr>
+          <tr class="hl-warn"><td class="ln">5</td><td class="cd">    <span class="kw">if</span> (depth == n + <span class="num">1</span>) {         <span class="cmt">// 边界：n 位都填完了</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="kw">for</span> (<span class="typ">int</span> i=<span class="num">1</span>;i&lt;=n;i++) cout&lt;&lt;a[i]&lt;&lt;<span class="str">" "</span>;</td></tr>
+          <tr><td class="ln">7</td><td class="cd">        cout &lt;&lt; endl; <span class="kw">return</span>;</td></tr>
+          <tr><td class="ln">8</td><td class="cd">    }</td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++) {  <span class="cmt">// 枚举这一位填什么</span></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">        <span class="kw">if</span> (used[i]) <span class="kw">continue</span>;         <span class="cmt">// 已用过就跳过</span></td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">        a[depth] = i;  used[i] = <span class="kw">true</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">12</td><td class="cd">        <span class="fn">perm</span>(depth + <span class="num">1</span>);             <span class="cmt">// 递归填下一位</span></td></tr>
+          <tr class="hl-ref"><td class="ln">13</td><td class="cd">        used[i] = <span class="kw">false</span>;              <span class="cmt">// 回溯：撤销选择</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">15</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 场景二：二分递归（快速幂）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 计算 a^n mod p，O(log n)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">long long</span> <span class="fn">qpow</span>(<span class="typ">long long</span> a, <span class="typ">long long</span> n, <span class="typ">long long</span> p) {</td></tr>
+          <tr class="hl-warn"><td class="ln">3</td><td class="cd">    <span class="kw">if</span> (n == <span class="num">0</span>) <span class="kw">return</span> <span class="num">1</span>;           <span class="cmt">// 边界：a^0 = 1</span></td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">    <span class="kw">if</span> (n % <span class="num">2</span> == <span class="num">0</span>)                  <span class="cmt">// 偶数次幂：(a²)^(n/2)</span></td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">        <span class="kw">return</span> <span class="fn">qpow</span>(a*a%p, n/<span class="num">2</span>, p);</td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    <span class="kw">return</span> a * <span class="fn">qpow</span>(a, n-<span class="num">1</span>, p) % p;  <span class="cmt">// 奇数次幂：a × a^(n-1)</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 场景三：树的遍历</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 先序遍历（根 → 左子树 → 右子树）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">void</span> <span class="fn">preorder</span>(<span class="typ">int</span> u) {</td></tr>
+          <tr class="hl-warn"><td class="ln">3</td><td class="cd">    <span class="kw">if</span> (u == <span class="num">0</span>) <span class="kw">return</span>;             <span class="cmt">// 边界：空节点</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    cout &lt;&lt; u &lt;&lt; <span class="str">" "</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">    <span class="fn">preorder</span>(left[u]);              <span class="cmt">// 递归左子树</span></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    <span class="fn">preorder</span>(right[u]);             <span class="cmt">// 递归右子树</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ⑦ 注意事项 -->
+    <div class="sub-title" id="s7">⑦ 递归的注意事项</div>
+
+    <table class="api-table">
+      <thead><tr><th>问题</th><th>原因</th><th>解决方法</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>栈溢出（Stack Overflow）</td>
+          <td>递归层数太深，系统调用栈空间耗尽</td>
+          <td>改用递推（迭代），或增大栈空间</td>
+        </tr>
+        <tr>
+          <td>重复计算（TLE）</td>
+          <td>同一子问题被反复求解</td>
+          <td>加记忆化数组（memo[]）缓存结果</td>
+        </tr>
+        <tr>
+          <td>死递归（无限循环）</td>
+          <td>边界条件写错，或规模没有收敛</td>
+          <td>检查边界是否覆盖所有终止情况</td>
+        </tr>
+        <tr>
+          <td>整数溢出</td>
+          <td>递归层数深时中间结果超过 int 范围</td>
+          <td>改用 long long，注意取模时机</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>
+        <b>本节小结</b><br>
+        ・递归 = <strong>边界条件 + 规模收敛的自我调用</strong>，缺一不可。<br>
+        ・执行过程是 V 形：先向下探到边界，再携带结果一路向上返回。<br>
+        ・朴素递归可能有大量重复计算，加上<strong>记忆化</strong>（memo 数组）后等价于动态规划。<br>
+        ・竞赛常见场景：全排列/回溯、快速幂、树的遍历、分治。<br>
+        ・递归层数太深会栈溢出，此时改用<strong>递推（迭代）</strong>是更稳妥的选择。
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块八 递推与递归 · 8.2 递归</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A08_01_递推.html">← 8.1 递推</a>
+      <a class="nav-btn" href="A09_01_分治.html">9.1 分治 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

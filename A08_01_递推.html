@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8.1 递推 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "8.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--coral-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--coral); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 数组格子 */
+  .arr-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .arr-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .arr-cell { min-width: 36px; height: 36px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .arr-cell.base  { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .arr-cell.known { background: rgba(166,227,161,.2); color: var(--code-str); border: 1px solid rgba(166,227,161,.4); }
+  .arr-cell.cur   { background: rgba(243,139,168,.22); color: #F38BA8; border: 1px solid rgba(243,139,168,.45); }
+  .arr-cell.dep   { background: rgba(250,179,135,.22); color: var(--code-num); border: 1px solid rgba(250,179,135,.42); }
+  .arr-idx { font-size: 10px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+  .arr-label { font-size: 11px; color: #6C7086; width: 80px; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .arr-row-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .arr-row-wrap:last-child { margin-bottom: 0; }
+
+  /* 推导步骤列表 */
+  .step-rows { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
+  .step-row { display: flex; align-items: center; gap: 12px; background: #1E1C2F; border-radius: 7px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .step-row.done { opacity: .55; }
+  .step-i { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .step-i.k { background: rgba(166,227,161,.2); color: #A6E3A1; border: 1px solid rgba(166,227,161,.35); }
+  .step-i.c { background: rgba(243,139,168,.2); color: #F38BA8; border: 1px solid rgba(243,139,168,.35); }
+  .step-expr { color: #CDD6F4; flex: 1; }
+  .step-expr .kw { color: #CBA6F7; }
+  .step-expr .num { color: #FAB387; }
+  .step-result { color: #A6E3A1; font-weight: 700; }
+  .step-arrow { color: #45475A; }
+
+  /* 对比表 */
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #FAA0A0; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="8.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块八 递推与递归</span>
+      <span class="eyebrow-sep">/</span>
+      <span>8.1 递推</span>
+    </div>
+    <h1 class="chapter-title">8.1　递推</h1>
+    <p class="chapter-desc">用"已知的结果"推出"下一个结果"，一步一步向前——这就是递推。它是动态规划的前身，也是理解递归的基础。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#s1">什么是递推</a></li>
+      <li><span class="toc-num">②</span><a href="#s2">斐波那契数列：最经典的递推</a></li>
+      <li><span class="toc-num">③</span><a href="#s3">执行过程图解</a></li>
+      <li><span class="toc-num">④</span><a href="#s4">更多递推模型</a></li>
+      <li><span class="toc-num">⑤</span><a href="#s5">递推的通用写法</a></li>
+      <li><span class="toc-num">⑥</span><a href="#s6">递推 vs 递归</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <!-- ① 什么是递推 -->
+    <div class="sub-title" id="s1">① 什么是递推</div>
+    <div class="section-body">
+      <p>递推的核心思想只有一句话：<strong>当前状态 = f（之前的状态）</strong>。</p>
+      <p>想象爬楼梯。你站在第 5 级台阶上，是因为你从第 4 级（或第 3 级）迈过来的。第 4 级是怎么到的？从第 3 级（或第 2 级）来的……每一级的答案，都建立在它之前的答案上。只要知道了最开始几级的情况，就能一路推算到任意一级。</p>
+      <p>递推的三个要素：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">递推三要素</div>
+      <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:12px;">
+        <div style="background:#1E1C2F; border-radius:8px; padding:14px; border-left:3px solid #F38BA8;">
+          <div style="font-size:11px; color:#F38BA8; font-weight:700; margin-bottom:6px; font-family:'Noto Sans SC',sans-serif;">① 初始状态</div>
+          <div style="font-size:12.5px; color:#A6ADC8; line-height:1.6; font-family:'Noto Sans SC',sans-serif;">最开始的已知值，递推的起点。没有它，推导链就没有出发点。</div>
+        </div>
+        <div style="background:#1E1C2F; border-radius:8px; padding:14px; border-left:3px solid #FAB387;">
+          <div style="font-size:11px; color:#FAB387; font-weight:700; margin-bottom:6px; font-family:'Noto Sans SC',sans-serif;">② 递推关系式</div>
+          <div style="font-size:12.5px; color:#A6ADC8; line-height:1.6; font-family:'Noto Sans SC',sans-serif;">描述"第 n 项"和"之前几项"之间规律的公式。这是解题的核心。</div>
+        </div>
+        <div style="background:#1E1C2F; border-radius:8px; padding:14px; border-left:3px solid #A6E3A1;">
+          <div style="font-size:11px; color:#A6E3A1; font-weight:700; margin-bottom:6px; font-family:'Noto Sans SC',sans-serif;">③ 循环求解</div>
+          <div style="font-size:12.5px; color:#A6ADC8; line-height:1.6; font-family:'Noto Sans SC',sans-serif;">从初始状态出发，按关系式一步步算到目标，用数组存下每一步的结果。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② 斐波那契数列 -->
+    <div class="sub-title" id="s2">② 斐波那契数列：最经典的递推</div>
+    <div class="section-body">
+      <p>斐波那契数列：1, 1, 2, 3, 5, 8, 13, 21, 34 ……</p>
+      <p>规律：<strong>从第 3 项开始，每一项等于前两项之和</strong>。用数学式子写就是：</p>
+      <p style="text-align:center; font-family:'JetBrains Mono',monospace; font-size:15px; color:#CDD6F4; background:var(--code-bg); padding:12px; border-radius:8px; margin:12px 0;">
+        f(1) = 1，f(2) = 1，f(n) = f(n−1) + f(n−2)　　（n ≥ 3）
+      </p>
+      <p>初始状态：f(1)=1，f(2)=1。递推关系：f(n) = f(n-1) + f(n-2)。三要素全齐，直接写代码：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 斐波那契数列</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">const</span> <span class="typ">int</span> MAXN = <span class="num">50</span>;</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">long long</span> f[MAXN];</td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">    f[<span class="num">1</span>] = <span class="num">1</span>;  f[<span class="num">2</span>] = <span class="num">1</span>;       <span class="cmt">// ① 初始状态</span></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">3</span>; i &lt;= <span class="num">10</span>; i++)  <span class="cmt">// ③ 循环求解</span></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">        f[i] = f[i-<span class="num">1</span>] + f[i-<span class="num">2</span>];   <span class="cmt">// ② 递推关系式</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= <span class="num">10</span>; i++)</td></tr>
+          <tr><td class="ln">9</td><td class="cd">        cout &lt;&lt; f[i] &lt;&lt; <span class="str">" "</span>;       <span class="cmt">// 1 1 2 3 5 8 13 21 34 55</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ③ 执行过程图解 -->
+    <div class="sub-title" id="s3">③ 执行过程图解</div>
+    <div class="section-body">
+      <p>循环从 i=3 开始，每次用已知的两个值推出新的一个，绿色格子是已知值，红色是当前正在求的值：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">f 数组的填充过程（求前 8 项）</div>
+
+      <!-- 步骤 i=3 -->
+      <div class="arr-row-wrap">
+        <div class="arr-label">i = 3</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-cell known">1</div><div class="arr-idx">f[1]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell dep">1</div><div class="arr-idx">f[2]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell cur">2</div><div class="arr-idx">f[3]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[4]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[5]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[6]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[7]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[8]</div></div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6C7086;margin-left:4px;">f[2]+f[1]=2</div>
+      </div>
+
+      <!-- 步骤 i=4 -->
+      <div class="arr-row-wrap">
+        <div class="arr-label">i = 4</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-cell known">1</div><div class="arr-idx">f[1]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell known">1</div><div class="arr-idx">f[2]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell dep">2</div><div class="arr-idx">f[3]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell cur">3</div><div class="arr-idx">f[4]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[5]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[6]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[7]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[8]</div></div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6C7086;margin-left:4px;">f[3]+f[2]=3</div>
+      </div>
+
+      <!-- 步骤 i=5 -->
+      <div class="arr-row-wrap">
+        <div class="arr-label">i = 5</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-cell known">1</div><div class="arr-idx">f[1]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell known">1</div><div class="arr-idx">f[2]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell known">2</div><div class="arr-idx">f[3]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell dep">3</div><div class="arr-idx">f[4]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell cur">5</div><div class="arr-idx">f[5]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[6]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[7]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">?</div><div class="arr-idx">f[8]</div></div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6C7086;margin-left:4px;">f[4]+f[3]=5</div>
+      </div>
+
+      <!-- 完成 -->
+      <div class="arr-row-wrap">
+        <div class="arr-label">完成</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-cell known">1</div><div class="arr-idx">f[1]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell known">1</div><div class="arr-idx">f[2]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell known">2</div><div class="arr-idx">f[3]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell known">3</div><div class="arr-idx">f[4]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell known">5</div><div class="arr-idx">f[5]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell known">8</div><div class="arr-idx">f[6]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell known">13</div><div class="arr-idx">f[7]</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell known">21</div><div class="arr-idx">f[8]</div></div>
+        </div>
+      </div>
+
+      <div class="num-visual-caption">
+        <strong>绿色</strong>格子是已知（已推出）的值，<strong style="color:#F38BA8;">红色</strong>是当前正在计算的目标，<strong style="color:#FAB387;">橙色</strong>是它依赖的前两项。<br>
+        每一步只需要"往左看两格"，循环结束后整个数组就填满了。
+      </div>
+    </div>
+
+    <!-- ④ 更多递推模型 -->
+    <div class="sub-title" id="s4">④ 更多递推模型</div>
+    <div class="section-body">
+      <p>递推不止一种形式，下面是竞赛中常见的几类：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 爬楼梯（每次可走 1 或 2 步，到第 n 级有多少种走法）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 到第 i 级 = 从第 i-1 级走一步 + 从第 i-2 级走两步</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="cmt">// 本质和斐波那契完全一样，换了个描述</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">long long</span> dp[MAXN];</td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">dp[<span class="num">1</span>] = <span class="num">1</span>;  dp[<span class="num">2</span>] = <span class="num">2</span>;            <span class="cmt">// 初始：到第1级1种，到第2级2种</span></td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd"><span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">3</span>; i &lt;= n; i++)</td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    dp[i] = dp[i-<span class="num">1</span>] + dp[i-<span class="num">2</span>];</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 数字三角形：每格的最大路径和</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 三角形第 i 行第 j 列：可从上一行第 j-1 或第 j 列走来</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">2</span>; i &lt;= n; i++)</td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> j = <span class="num">1</span>; j &lt;= i; j++)</td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">        dp[i][j] = <span class="fn">max</span>(dp[i-<span class="num">1</span>][j-<span class="num">1</span>], dp[i-<span class="num">1</span>][j]) + a[i][j];</td></tr>
+          <tr><td class="ln">5</td><td class="cd">        <span class="cmt">// 当前格 = max(左上格, 右上格) + 当前格的值</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 最长不下降子序列长度（LIS 的 O(n²) 递推版）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// dp[i]：以 a[i] 结尾的最长不下降子序列长度</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++) {</td></tr>
+          <tr class="hl-ref"><td class="ln">3</td><td class="cd">    dp[i] = <span class="num">1</span>;                      <span class="cmt">// 初始：至少只有自己这一个</span></td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> j = <span class="num">1</span>; j &lt; i; j++)</td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">        <span class="kw">if</span> (a[j] &lt;= a[i])             <span class="cmt">// j 可以接在 i 前面</span></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">            dp[i] = <span class="fn">max</span>(dp[i], dp[j] + <span class="num">1</span>);</td></tr>
+          <tr><td class="ln">7</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>这三个例子虽然题目不同，但结构一模一样：<strong>确定 dp 数组的含义 → 写出递推关系式 → 处理边界（初始状态）→ 循环填表</strong>。这四步就是递推（也是动态规划）的通用解题框架。</div>
+    </div>
+
+    <!-- ⑤ 递推的通用写法 -->
+    <div class="sub-title" id="s5">⑤ 递推的通用写法</div>
+    <div class="section-body">
+      <p>无论哪种递推题，代码骨架几乎都是这样：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 递推通用模板</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 一维递推</span></td></tr>
+          <tr class="hl-ref"><td class="ln">2</td><td class="cd">dp[<span class="num">0</span>] = 初始值;  dp[<span class="num">1</span>] = 初始值;   <span class="cmt">// ① 边界</span></td></tr>
+          <tr class="hl-ref"><td class="ln">3</td><td class="cd"><span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">2</span>; i &lt;= n; i++)             <span class="cmt">// ③ 循环</span></td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">    dp[i] = f(dp[i-<span class="num">1</span>], dp[i-<span class="num">2</span>], ...);   <span class="cmt">// ② 关系式</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="cmt">// 二维递推（如网格/矩阵）</span></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd"><span class="cmt">// 初始化第 0 行和第 0 列</span></td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd"><span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++)</td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> j = <span class="num">1</span>; j &lt;= m; j++)</td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">        dp[i][j] = f(dp[i-<span class="num">1</span>][j], dp[i][j-<span class="num">1</span>], ...);</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>三个常见错误：</b><br>
+        ① <strong>忘记初始化边界</strong>——dp 数组默认是 0，如果初始值不是 0，必须手动设置。<br>
+        ② <strong>循环起点写错</strong>——如果 dp[i] 依赖 dp[i-1] 和 dp[i-2]，循环必须从 i=2（或 i=3）开始，从 i=1 开始会越界。<br>
+        ③ <strong>数组越界</strong>——dp 数组的大小要比 n 至少大 1，下标通常从 1 开始而不是 0。
+      </div>
+    </div>
+
+    <!-- ⑥ 递推 vs 递归 -->
+    <div class="sub-title" id="s6">⑥ 递推 vs 递归</div>
+    <div class="section-body">
+      <p>递推和递归都能解决"用之前的结果推出当前结果"的问题，但方向相反：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>对比项</th><th>递推（本节）</th><th>递归（下一节）</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>方向</td>
+          <td>从小到大，自底向上</td>
+          <td>从大到小，自顶向下</td>
+        </tr>
+        <tr>
+          <td>实现方式</td>
+          <td>for 循环 + 数组</td>
+          <td>函数调用自身</td>
+        </tr>
+        <tr>
+          <td>优点</td>
+          <td>效率高，无函数调用开销，不会栈溢出</td>
+          <td>思路直接，代码与数学定义接近</td>
+        </tr>
+        <tr>
+          <td>缺点</td>
+          <td>需要想清楚填表顺序，二维时容易搞错方向</td>
+          <td>重复计算多（需加记忆化优化），深度大时栈溢出</td>
+        </tr>
+        <tr>
+          <td>适用场景</td>
+          <td>能明确推导顺序的问题，竞赛中首选</td>
+          <td>推导方向不固定、子问题结构复杂的问题</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>
+        <b>本节小结</b><br>
+        ・递推 = <strong>初始状态 + 递推关系式 + 循环</strong>，三要素缺一不可。<br>
+        ・dp 数组存下每一步的结果，避免重复计算，时间复杂度通常是 O(n) 或 O(n²)。<br>
+        ・竞赛中递推几乎就是动态规划的雏形——把 dp[i] 的含义想清楚，关系式就自然出来了。<br>
+        ・下一节学递归，理解两者的关系之后，动态规划就水到渠成了。
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块八 递推与递归 · 8.1 递推</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A07_02_二分查找.html">← 7.2 二分查找</a>
+      <a class="nav-btn" href="A08_02_递归.html">8.2 递归 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
