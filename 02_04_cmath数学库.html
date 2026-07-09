@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2.4 cmath 数学库 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "2.4"; }
+
+  /* ── 子导航组件（ch02 风格，单卡片） ── */
+  .ch02-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch02-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch02-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch02-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch02-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch02-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch02-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch02-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* ── 本页专属样式：函数参考表（浅色风格，呼应 2.1/2.2 节表格） ── */
+  .func-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .func-table thead tr { background: var(--accent-light); }
+  .func-table th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: var(--accent-dark); border-bottom: 1px solid var(--border); }
+  .func-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .func-table tr:last-child td { border-bottom: none; }
+  .func-table tr:nth-child(even) td { background: #FAFAF7; }
+  .func-name { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent-dark); white-space: nowrap; }
+  .func-ex {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-secondary);
+    background: #F1EFE8; padding: 2px 8px; border-radius: 5px; white-space: nowrap;
+  }
+  .func-out {
+    display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+    padding: 2px 10px; border-radius: 999px; background: var(--teal-light); color: var(--teal);
+  }
+
+  /* ── 数轴对比条（用于 floor/ceil/round 方向说明） ── */
+  .dir-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px; margin: 10px 0;
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .dir-fn {
+    flex-shrink: 0; width: 76px; font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; font-size: 13px; color: var(--accent-dark);
+  }
+  .dir-arrow { flex-shrink: 0; font-size: 16px; color: var(--text-muted); }
+  .dir-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  .dir-desc b { color: var(--text-primary); }
+
+  /* ── 易错点列表（呼应 2.1/2.2 节风格） ── */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="2.4">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第二章 · 变量与数据类型</span>
+      <span class="eyebrow-sep">/</span>
+      <span>2.4 cmath 数学库</span>
+    </div>
+    <h1 class="chapter-title">2.4　cmath 数学库</h1>
+    <p class="chapter-desc"><code>&lt;cmath&gt;</code> 内置了许多常用的数学计算函数，覆盖取整、绝对值、幂运算和三角函数等竞赛常用场景。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch02-nav">
+    <div class="ch02-nav-label">第二章 · 变量与数据类型</div>
+    <div class="ch02-nav-items">
+      <a class="ch02-nav-item" href="02_00_变量与数据类型.html"><span class="cni-num">2.0</span><span class="cni-name">变量基础</span></a>
+      <a class="ch02-nav-item" href="02_01_数据类型转换.html"><span class="cni-num">2.1</span><span class="cni-name">数据类型转换</span></a>
+      <a class="ch02-nav-item" href="02_02_ASCII编码.html"><span class="cni-num">2.2</span><span class="cni-name">ASCII 编码</span></a>
+      <a class="ch02-nav-item" href="02_03_原码反码补码.html"><span class="cni-num">2.3</span><span class="cni-name">原码、反码与补码</span></a>
+      <a class="ch02-nav-item active" href="02_04_cmath数学库.html"><span class="cni-num">2.4</span><span class="cni-name">cmath 数学库</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#sub1"><span class="toc-num">2.4.1</span>为什么需要数学函数库</a></li>
+      <li><a href="#sub2"><span class="toc-num">2.4.2</span>取整函数：floor · ceil · round</a></li>
+      <li><a href="#sub3"><span class="toc-num">2.4.3</span>绝对值与幂运算：abs · pow · sqrt</a></li>
+      <li><a href="#sub4"><span class="toc-num">2.4.4</span>三角函数：sin · cos · tan</a></li>
+      <li><a href="#sub5"><span class="toc-num">2.4.5</span>综合示例</a></li>
+      <li><a href="#sub6"><span class="toc-num">2.4.6</span>常见陷阱与易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">2.4</p>
+    <h2 class="section-title">cmath 数学库</h2>
+    <div class="section-body">
+      <p><code>&lt;cmath&gt;</code> 内置了许多常用的数学计算函数，覆盖取整、绝对值、幂运算和三角函数等竞赛常用场景，使用前需要先引入头文件 <code>#include &lt;cmath&gt;</code>。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub1">2.4.1 为什么需要数学函数库</h3>
+    <div class="section-body">
+      <p>像"求平方根"这样的运算，如果没有现成的函数，自己写代码实现并不简单——你可能需要用二分查找或者牛顿迭代法一步步逼近答案，还要处理各种边界情况。<code>&lt;cmath&gt;</code> 把这些数学上成熟、经过反复优化的算法都封装成了现成的函数，你只需要"调用"，不需要"重新发明"。</p>
+      <p>这就像箱子里已经有一把量角器和一把尺子，你不需要自己动手做——拿来用就好。养成"先想想标准库里有没有现成函数"的习惯，能省下大量调试时间。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📐</span>
+      <div><b>使用前提：</b>所有函数使用前都要在文件开头写上 <code>#include &lt;cmath&gt;</code>。绝大多数函数接收 <code>double</code> 类型的参数、返回 <code>double</code> 类型的结果，即使你传入的是整数，也会被隐式转换成 <code>double</code> 参与计算（见 2.1 节）。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">2.4.2 取整函数：floor · ceil · round</h3>
+    <div class="section-body">
+      <p>这三个函数都是把小数变成整数，但"往哪个方向靠"完全不同，是初学者最容易混淆的一组函数。可以把它们想象成三种不同性格的"取整方式"：</p>
+    </div>
+
+    <div class="dir-row">
+      <span class="dir-fn">floor(x)</span>
+      <span class="dir-arrow">↓</span>
+      <span class="dir-desc"><b>向下取整</b>——永远朝"更小"（数轴上更靠左）的方向靠，即"不大于 x 的最大整数"。</span>
+    </div>
+    <div class="dir-row">
+      <span class="dir-fn">ceil(x)</span>
+      <span class="dir-arrow">↑</span>
+      <span class="dir-desc"><b>向上取整</b>——永远朝"更大"（数轴上更靠右）的方向靠，即"不小于 x 的最小整数"。</span>
+    </div>
+    <div class="dir-row">
+      <span class="dir-fn">round(x)</span>
+      <span class="dir-arrow">↕</span>
+      <span class="dir-desc"><b>四舍五入</b>——就近取整，小数部分正好是 0.5 时，朝"远离 0"的方向取整。</span>
+    </div>
+
+    <table class="func-table">
+      <thead>
+        <tr><th>函数</th><th>功能说明</th><th>示例</th><th>结果</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="func-name">floor(x)</td>
+          <td>向下取整（不大于 x 的最大整数）</td>
+          <td><span class="func-ex">floor(1.91)</span></td>
+          <td><span class="func-out">1</span></td>
+        </tr>
+        <tr>
+          <td class="func-name">floor(x)</td>
+          <td>负数同理，继续朝更小的方向靠</td>
+          <td><span class="func-ex">floor(-1.5)</span></td>
+          <td><span class="func-out">-2</span></td>
+        </tr>
+        <tr>
+          <td class="func-name">ceil(x)</td>
+          <td>向上取整（不小于 x 的最小整数）</td>
+          <td><span class="func-ex">ceil(1.123)</span></td>
+          <td><span class="func-out">2</span></td>
+        </tr>
+        <tr>
+          <td class="func-name">ceil(x)</td>
+          <td>负数同理，继续朝更大的方向靠</td>
+          <td><span class="func-ex">ceil(-1.5)</span></td>
+          <td><span class="func-out">-1</span></td>
+        </tr>
+        <tr>
+          <td class="func-name">round(x)</td>
+          <td>四舍五入为最近整数（C++11）</td>
+          <td><span class="func-ex">round(1.5)</span></td>
+          <td><span class="func-out">2</span></td>
+        </tr>
+        <tr>
+          <td class="func-name">round(x)</td>
+          <td>负数的 0.5 也是"远离 0"取整，不是"向下"</td>
+          <td><span class="func-ex">round(-1.5)</span></td>
+          <td><span class="func-out">-2</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>负数容易搞反：</b><code>floor(-1.5)</code> 得到 <code>-2</code> 而不是 <code>-1</code>，因为 <code>-2</code> 才是"更小"的那个数；<code>ceil(-1.5)</code> 得到 <code>-1</code> 而不是 <code>-2</code>，因为 <code>-1</code> 才是"更大"的那个数。记住口诀——<b>floor 永远变小，ceil 永远变大</b>，和正负号无关。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub3">2.4.3 绝对值与幂运算：abs · pow · sqrt</h3>
+
+    <table class="func-table">
+      <thead>
+        <tr><th>函数</th><th>功能说明</th><th>示例</th><th>结果</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="func-name">abs(x)</td>
+          <td>返回 x 的绝对值（C++11 起同时支持整数和浮点数）</td>
+          <td><span class="func-ex">abs(-5)</span></td>
+          <td><span class="func-out">5</span></td>
+        </tr>
+        <tr>
+          <td class="func-name">fabs(x)</td>
+          <td>浮点数 x 的绝对值（C 语言遗留，C++11 后可直接用 abs）</td>
+          <td><span class="func-ex">fabs(-3.14)</span></td>
+          <td><span class="func-out">3.14</span></td>
+        </tr>
+        <tr>
+          <td class="func-name">pow(x, y)</td>
+          <td>返回 x 的 y 次幂（返回 double）</td>
+          <td><span class="func-ex">pow(2, 3)</span></td>
+          <td><span class="func-out">8</span></td>
+        </tr>
+        <tr>
+          <td class="func-name">sqrt(x)</td>
+          <td>返回 x 的算术平方根（返回 double）</td>
+          <td><span class="func-ex">sqrt(9)</span></td>
+          <td><span class="func-out">3</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section-body">
+      <p><code>pow</code> 和 <code>sqrt</code> 有一个共同点：无论传入的是整数还是浮点数，<b>返回值永远是 <code>double</code></b>。这是因为幂运算和开方的结果很可能不是整数（比如 <code>sqrt(2)</code> 是无限不循环小数），函数没办法提前知道结果会不会"恰好整除"，所以统一按 <code>double</code> 处理，交给你自己决定要不要转换回整数。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>C++11 中 abs 的改进：</b>C++11 起，<code>&lt;cmath&gt;</code> 中的 <code>abs</code> 已针对 <code>double</code>、<code>float</code>、<code>long double</code> 做了重载，可以直接对浮点数使用 <code>abs()</code>，不再需要单独用 <code>fabs()</code>。绝大多数现代 OJ 平台支持 C++11，直接用 <code>abs</code> 即可。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub4">2.4.4 三角函数：sin · cos · tan</h3>
+    <div class="section-body">
+      <p>C++ 的三角函数使用<b>弧度制</b>，不是我们日常习惯的<b>角度制</b>——这是初学者最容易踩的坑。弧度和角度的换算关系是：</p>
+    </div>
+
+    <div class="dir-row">
+      <span class="dir-fn" style="width:auto;">180°</span>
+      <span class="dir-arrow">=</span>
+      <span class="dir-desc">π 弧度（约 3.14159 弧度），也就是说角度要先乘以 <code>π / 180</code> 才能变成弧度，才能交给 <code>sin</code>、<code>cos</code>、<code>tan</code> 使用。</span>
+    </div>
+
+    <table class="func-table">
+      <thead>
+        <tr><th>函数</th><th>功能说明</th><th>示例</th><th>结果</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="func-name">sin(x)</td>
+          <td>计算 x（弧度制）的正弦值</td>
+          <td><span class="func-ex">sin(0)</span></td>
+          <td><span class="func-out">0</span></td>
+        </tr>
+        <tr>
+          <td class="func-name">cos(x)</td>
+          <td>计算 x（弧度制）的余弦值</td>
+          <td><span class="func-ex">cos(0)</span></td>
+          <td><span class="func-out">1</span></td>
+        </tr>
+        <tr>
+          <td class="func-name">tan(x)</td>
+          <td>计算 x（弧度制）的正切值</td>
+          <td><span class="func-ex">tan(0)</span></td>
+          <td><span class="func-out">0</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>竞赛小技巧：</b>C++ 标准并不保证一定提供 <code>M_PI</code> 这个 π 常量（它属于编译器扩展，不同平台表现不一致）。竞赛中更稳妥的做法是自己算一次：<code>const double PI = acos(-1.0);</code>——因为 <code>cos(π) = -1</code>，反过来 <code>acos(-1)</code> 就精确等于 π，不需要手写一长串小数。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub5">2.4.5 综合示例</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · cmath 综合示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;cmath&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">abs</span><span class="punc">(</span><span class="op">-</span><span class="num">42</span><span class="punc">)</span>   <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 42</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">floor</span><span class="punc">(</span><span class="num">4.9</span><span class="punc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 4</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">ceil</span><span class="punc">(</span><span class="num">4.1</span><span class="punc">)</span>  <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 5</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">round</span><span class="punc">(</span><span class="num">4.5</span><span class="punc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 5</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">pow</span><span class="punc">(</span><span class="num">2</span><span class="punc">,</span> <span class="num">8</span><span class="punc">)</span>  <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 256</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">sqrt</span><span class="punc">(</span><span class="num">16</span><span class="punc">)</span>  <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 4</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="cmt">// 角度转弧度，再求正弦值</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="type">const</span> <span class="type">double</span> <span class="fn">PI</span> <span class="op">=</span> <span class="fn">acos</span><span class="punc">(</span><span class="op">-</span><span class="num">1.0</span><span class="punc">);</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="type">double</span> <span class="fn">deg</span> <span class="op">=</span> <span class="num">90</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="type">double</span> <span class="fn">rad</span> <span class="op">=</span> <span class="fn">deg</span> <span class="op">*</span> <span class="fn">PI</span> <span class="op">/</span> <span class="num">180</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">sin</span><span class="punc">(</span><span class="fn">rad</span><span class="punc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// sin(90°) = 1</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub6">2.4.6 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>浮点精度陷阱：</b><code>pow</code> 和 <code>sqrt</code> 返回 <code>double</code> 类型，赋值给整数时可能因浮点误差出错。例如 <code>int x = sqrt(25)</code> 理论上得 <code>5</code>，但浮点精度问题可能让底层实际算出 <code>4.999999...</code>，转换成 <code>int</code> 时直接截断，变成 <code>4</code>。<b>安全做法：</b><code>int x = (int)round(sqrt(25));</code>，先四舍五入抹平误差，再转换成整数。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>round 对负数是"远离 0"，不是"向下"：</b><code>round(-1.5)</code> 的结果是 <code>-2</code>，很多初学者会误以为四舍五入永远是"往下取"，其实规则是"往数值更大的那一侧的相反方向"——准确说是往远离 0 的方向凑整。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>忘记把角度转成弧度：</b>直接把角度值（比如 <code>90</code>）传给 <code>sin</code>、<code>cos</code>、<code>tan</code> 是最常见的错误之一，函数不会报错，但会安安静静地返回一个完全错误的结果。使用前一定要先乘以 <code>π / 180</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>大数场景下 pow 可能不精确：</b><code>pow</code> 内部是按浮点数计算的，当指数很大、结果超出 <code>double</code> 能精确表示的整数范围（约 2⁵³）时，返回的结果可能有偏差。如果需要计算大整数的精确幂（尤其是配合取模的场景），应该自己手写"快速幂"，而不是依赖 <code>pow</code>。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.4 cmath 数学库</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="02_03_原码反码补码.html">← 2.3 原码、反码与补码</a>
+      <a class="nav-btn" href="03_输入与输出.html">第三章：输入与输出 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

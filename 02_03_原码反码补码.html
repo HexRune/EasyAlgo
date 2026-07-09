@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2.3 原码、反码与补码 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "2.3"; }
+
+  /* ── 子导航组件（ch02 风格，单卡片） ── */
+  .ch02-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch02-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch02-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch02-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch02-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch02-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch02-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch02-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* ── 本页专属样式：补码表 & 编码步骤卡片 ── */
+  .comp-orig { color: var(--text-muted); }
+  .comp-invert { color: #EF9F27; }
+  .comp-plus  { color: #A6E3A1; font-weight: 700; }
+  .comp-na    { color: var(--border-md); }
+  .comp-highlight td { background: var(--accent-light) !important; }
+  .comp-highlight td:first-child { color: var(--accent-dark); font-weight: 700; }
+  .comp-highlight .comp-plus { color: var(--accent); font-weight: 700; }
+
+  .encode-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .encode-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .encode-card-head {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .encode-card-head.bad  { background: var(--coral-light); }
+  .encode-card-head.mid  { background: var(--amber-light); }
+  .encode-card-head.good { background: var(--teal-light); }
+  .encode-step-num {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .bad  .encode-step-num { background: var(--coral-mid);  color: #fff; }
+  .mid  .encode-step-num { background: var(--amber-mid);  color: #fff; }
+  .good .encode-step-num { background: var(--teal-mid);   color: #fff; }
+  .encode-step-title { font-size: 14px; font-weight: 700; }
+  .bad  .encode-step-title { color: var(--coral); }
+  .mid  .encode-step-title { color: var(--amber); }
+  .good .encode-step-title { color: var(--teal); }
+  .encode-card-body {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    border-top: 1px solid var(--border);
+  }
+  .encode-card-body b { color: var(--text-primary); }
+  .encode-rule {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    line-height: 1.6;
+  }
+  .bad  .encode-rule { background: #FFF0EC; color: var(--coral); }
+  .mid  .encode-rule { background: #FFF5E6; color: var(--amber); }
+  .good .encode-rule { background: #EAF8F2; color: var(--teal); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="2.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第二章 · 变量与数据类型</span>
+      <span class="eyebrow-sep">/</span>
+      <span>2.3 原码、反码与补码</span>
+    </div>
+    <h1 class="chapter-title">2.3　原码、反码与补码</h1>
+    <p class="chapter-desc">计算机只认识 0 和 1，那它是如何表示负数的？科学家们为此设计了三种编码方案，依次改进，最终解决了这个问题。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch02-nav">
+    <div class="ch02-nav-label">第二章 · 变量与数据类型</div>
+    <div class="ch02-nav-items">
+      <a class="ch02-nav-item" href="02_00_变量与数据类型.html"><span class="cni-num">2.0</span><span class="cni-name">变量基础</span></a>
+      <a class="ch02-nav-item" href="02_01_数据类型转换.html"><span class="cni-num">2.1</span><span class="cni-name">数据类型转换</span></a>
+      <a class="ch02-nav-item" href="02_02_ASCII编码.html"><span class="cni-num">2.2</span><span class="cni-name">ASCII 编码</span></a>
+      <a class="ch02-nav-item active" href="02_03_原码反码补码.html"><span class="cni-num">2.3</span><span class="cni-name">原码、反码与补码</span></a>
+      <a class="ch02-nav-item" href="02_04_cmath数学库.html"><span class="cni-num">2.4</span><span class="cni-name">cmath 数学库</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#sub1"><span class="toc-num">2.3.1</span>三种编码方案</a></li>
+      <li><a href="#sub2"><span class="toc-num">2.3.2</span>验证：5 + (−5)</a></li>
+      <li><a href="#sub3"><span class="toc-num">2.3.3</span>三种编码对照表</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">2.3</p>
+    <h2 class="section-title">原码、反码与补码</h2>
+    <div class="section-body">
+      <p>计算机只认识 0 和 1，那它是如何表示负数的？科学家们为此设计了三种编码方案，依次改进，最终解决了这个问题。</p>
+      <p><strong>符号位约定：</strong>最高位（最左边）表示正负，<code>0</code> 代表正数，<code>1</code> 代表负数，其余位存储数值。以 8 位（1 字节）为例：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">符号位示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="num">0</span> <span class="fn">0000101</span>  <span class="cmt">→ +5（符号位为 0，表示正数）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="type">1</span> <span class="fn">0000101</span>  <span class="cmt">→ -5（符号位为 1，表示负数）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub1">2.3.1 三种编码方案</h3>
+
+    <!-- Three encoding cards -->
+    <div class="encode-steps">
+      <div class="encode-card">
+        <div class="encode-card-head bad">
+          <div class="encode-step-num">1</div>
+          <div class="encode-step-title">原码</div>
+        </div>
+        <div class="encode-card-body">
+          <b>最直觉的写法：</b>符号位表示正负，其余位直接写数字的二进制。
+          <div class="encode-rule">+5 → 0 0000101<br>-5 → 1 0000101</div>
+          <div style="margin-top:10px; font-size:12.5px; color:#993C1D;">✗ 问题：加减法需要专门区分正负处理，电路复杂。</div>
+        </div>
+      </div>
+      <div class="encode-card">
+        <div class="encode-card-head mid">
+          <div class="encode-step-num">2</div>
+          <div class="encode-step-title">反码</div>
+        </div>
+        <div class="encode-card-body">
+          <b>规则：</b>正数不变；负数符号位不变，其余位全部取反。
+          <div class="encode-rule">-5 原码：1 0000101<br>-5 反码：1 1111010</div>
+          <div style="margin-top:10px; font-size:12.5px; color:#854F0B;">△ 问题：0 有两种表示（+0 和 -0），需额外处理。</div>
+        </div>
+      </div>
+      <div class="encode-card">
+        <div class="encode-card-head good">
+          <div class="encode-step-num">3</div>
+          <div class="encode-step-title">补码 ✓</div>
+        </div>
+        <div class="encode-card-body">
+          <b>规则：</b>正数不变；负数 = 反码 + 1。现代计算机真正使用的方案。
+          <div class="encode-rule">-5 反码：1 1111010<br>-5 补码：1 1111011</div>
+          <div style="margin-top:10px; font-size:12.5px; color:#0F6E56;">✓ -0 被消灭，多出的编码用来表示 -128！</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">2.3.2 验证：5 + (−5) 在三种编码下的结果</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">二进制加法演示</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln"></td><td class="cd" style="color:#6C7086; padding-bottom:0; font-size:11px; letter-spacing:.08em;">── 原码（错误）──────────────────</td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="num">0 0000101</span>  <span class="cmt">（+5）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd"><span class="op">+</span> <span class="type">1 0000101</span>  <span class="cmt">（-5）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="cmt">──────────</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="type">1 0001010</span>  <span class="cmt">= -10，完全不对！✗</span></td></tr>
+          <tr><td class="ln"></td><td class="cd"></td></tr>
+          <tr><td class="ln"></td><td class="cd" style="color:#6C7086; padding-bottom:0; font-size:11px; letter-spacing:.08em;">── 反码（接近但有瑕疵）───────────</td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="num">0 0000101</span>  <span class="cmt">（+5 的反码）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd"><span class="op">+</span> <span class="num">1 1111010</span>  <span class="cmt">（-5 的反码）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="cmt">──────────</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="type">1 1111111</span>  <span class="cmt">= -0，还是不对 △</span></td></tr>
+          <tr><td class="ln"></td><td class="cd"></td></tr>
+          <tr><td class="ln"></td><td class="cd" style="color:#6C7086; padding-bottom:0; font-size:11px; letter-spacing:.08em;">── 补码（正确！）────────────────</td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="num">0 0000101</span>  <span class="cmt">（+5 的补码）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd"><span class="op">+</span> <span class="num">1 1111011</span>  <span class="cmt">（-5 的补码）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="cmt">──────────</span></td></tr>
+          <tr><td class="ln"></td><td class="cd"> <span class="str">1 0 0000000</span>  <span class="cmt">最高位进位溢出，自动丢弃</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="str">0 0000000</span>  <span class="cmt">= 0  完全正确！✓</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub3">2.3.3 三种编码对照表（8 位）</h3>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>十进制</th>
+          <th>原码</th>
+          <th>反码</th>
+          <th>补码</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>+5</td>
+          <td class="comp-orig">0000 0101</td>
+          <td class="comp-orig">0000 0101</td>
+          <td class="comp-plus">0000 0101</td>
+        </tr>
+        <tr>
+          <td>-5</td>
+          <td class="comp-orig">1000 0101</td>
+          <td class="comp-invert">1111 1010</td>
+          <td class="comp-plus">1111 1011</td>
+        </tr>
+        <tr>
+          <td>+0</td>
+          <td class="comp-orig">0000 0000</td>
+          <td class="comp-orig">0000 0000</td>
+          <td class="comp-plus">0000 0000</td>
+        </tr>
+        <tr>
+          <td>-0</td>
+          <td class="comp-orig">1000 0000</td>
+          <td class="comp-invert">1111 1111</td>
+          <td style="color:#6C7086; font-style:italic;">（不存在！）</td>
+        </tr>
+        <tr class="comp-highlight">
+          <td>-128</td>
+          <td style="color:#8C8A82; font-style:italic;">无法表示</td>
+          <td style="color:#8C8A82; font-style:italic;">无法表示</td>
+          <td class="comp-plus">1000 0000</td>
+        </tr>
+        <tr>
+          <td>-1</td>
+          <td class="comp-orig">1000 0001</td>
+          <td class="comp-invert">1111 1110</td>
+          <td class="comp-plus">1111 1111</td>
+        </tr>
+        <tr>
+          <td>+127</td>
+          <td class="comp-orig">0111 1111</td>
+          <td class="comp-orig">0111 1111</td>
+          <td class="comp-plus">0111 1111</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>为什么 signed char 是 −128 到 127？</b>补码消灭了 −0，空出来的编码 <code>1000 0000</code> 被用来表示 −128。8 位补码能表示 256 个数：−128~−1（128 个）加上 0~127（128 个），比原码多表示一个数。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">📚</span>
+      <div><b>扩展阅读：</b>C++20 标准正式强制要求有符号整数使用补码表示（此前是实现定义的）。补码不再是"可选方案"，而是所有 C++ 平台的统一标准。理解三种编码的演进历史，有助于真正体会补码设计的精妙之处。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.3 原码、反码与补码</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="02_02_ASCII编码.html">← 2.2 ASCII 编码</a>
+      <a class="nav-btn" href="02_04_cmath数学库.html">2.4 cmath 数学库 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

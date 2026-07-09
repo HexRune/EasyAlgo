@@ -81,7 +81,7 @@
   .book-label-badge.coming { background: var(--amber-light); color: var(--amber) }
 
   /* 章节卡片网格 */
-  .chapter-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 48px }
+  .chapter-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 48px }
   @media (max-width: 600px) {
     .chapter-grid { grid-template-columns: 1fr }
     .hero { padding: 40px 28px 36px }
@@ -192,6 +192,14 @@
   .stl-group.g-assoc { --grp-color: var(--blue-mid);  --grp-color-mid: var(--blue-mid);   --grp-color-light: var(--blue-light); }
   .stl-group.g-util  { --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid);  --grp-color-light: var(--amber-light); }
   .stl-group.g-algo  { --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid);  --grp-color-light: var(--coral-light); }
+
+  /* 第二章：5 个等大小卡片，不分组 */
+  .ch2-flat-items {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+    margin-bottom: 18px;
+    --grp-color: var(--accent); --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light);
+  }
+  @media (max-width: 900px) { .ch2-flat-items { grid-template-columns: repeat(2, 1fr); } }
   .card-num {
     flex-shrink: 0;
     width: 40px; height: 40px;
@@ -450,16 +458,34 @@
       <div class="card-arrow">→</div>
     </a>
 
-    <!-- 第二章 -->
-    <a class="chapter-card" href="02_变量与数据类型.html">
-      <div class="card-num">02</div>
-      <div class="card-body">
-        <div class="card-chapter">第二章</div>
-        <div class="card-title">变量与数据类型</div>
-        <div class="card-desc">数据类型 · 算术运算符 · 类型转换 · 数据编码</div>
+    <!-- 第二章：整块大卡片，内部 5 个小节等大小展示，均可点击跳转 -->
+    <div class="stl-mega-card collapsed">
+
+      <div class="stl-mega-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <div class="card-num">02</div>
+        <div class="card-body">
+          <div class="card-chapter">第二章</div>
+          <div class="card-title">变量与数据类型</div>
+          <div class="card-desc">数据类型 · 算术运算符 · 类型转换 · 数据编码 —— 点击下方任意小节直达对应页面</div>
+        </div>
+        <span class="mega-collapse-badge"><span class="mcb-icon">⌄</span></span>
       </div>
-      <div class="card-arrow">→</div>
-    </a>
+
+      <div class="stl-groups">
+
+        <div class="ch2-flat-items">
+          <a class="stl-item" href="02_00_变量与数据类型.html"><span class="si-name">2.0 变量基础</span><span class="si-desc">变量 · 类型 · 命名 · 赋值 · 运算</span></a>
+          <a class="stl-item" href="02_01_数据类型转换.html"><span class="si-name">2.1 数据类型转换</span><span class="si-desc">隐式 · 强制转换</span></a>
+          <a class="stl-item" href="02_02_ASCII编码.html"><span class="si-name">2.2 ASCII 编码</span><span class="si-desc">字符与整数映射</span></a>
+          <a class="stl-item" href="02_03_原码反码补码.html"><span class="si-name">2.3 原码反码补码</span><span class="si-desc">负数的二进制表示</span></a>
+          <a class="stl-item" href="02_04_cmath数学库.html"><span class="si-name">2.4 cmath 数学库</span><span class="si-desc">abs · pow · sqrt</span></a>
+        </div>
+
+      </div>
+      <!-- /.stl-groups -->
+
+    </div>
+    <!-- /.stl-mega-card (ch2) -->
 
     <!-- 第三章 -->
     <a class="chapter-card" href="03_输入与输出.html">

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2.2 ASCII 编码 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "2.2"; }
+
+  /* ── 子导航组件（ch02 风格，单卡片） ── */
+  .ch02-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch02-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch02-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch02-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch02-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch02-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch02-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch02-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* ── 本页专属样式：ASCII 卡片网格 ── */
+  .ascii-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 18px 0;
+  }
+  .ascii-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+  }
+  .ascii-char {
+    width: 40px; height: 40px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .ascii-space { background: #F1EFE8; color: #5F5E5A; font-size: 13px; }
+  .ascii-digit { background: var(--amber-light); color: var(--amber); }
+  .ascii-upper { background: var(--accent-light); color: var(--accent-dark); }
+  .ascii-lower { background: var(--teal-light); color: var(--teal); }
+  .ascii-info { flex: 1; min-width: 0; }
+  .ascii-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .ascii-note { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+
+  /* ── ASCII 范围结构表 ── */
+  .ascii-range-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .ascii-range-table thead tr { background: var(--accent-light); }
+  .ascii-range-table th { padding: 9px 13px; text-align: left; font-size: 12px; font-weight: 700; color: var(--accent-dark); border-bottom: 1px solid var(--border); }
+  .ascii-range-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+  .ascii-range-table tr:last-child td { border-bottom: none; }
+  .ascii-range-table tr:nth-child(even) td { background: #FAFAF7; }
+  .ascii-range-table td:first-child { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+  .arange-tag {
+    display: inline-block; padding: 2px 9px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 700;
+  }
+  .arange-tag.ctrl  { background: #F1EFE8; color: #5F5E5A; }
+  .arange-tag.punct { background: var(--border); color: var(--text-secondary); }
+  .arange-tag.digit { background: var(--amber-light); color: var(--amber); }
+  .arange-tag.upper { background: var(--accent-light); color: var(--accent-dark); }
+  .arange-tag.lower { background: var(--teal-light); color: var(--teal); }
+
+  /* ── 执行链条（呼应 2.1 节的 conv-chain 风格） ── */
+  .ascii-chain {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 18px 0;
+    padding: 16px 20px;
+    background: var(--code-bg);
+    border-radius: var(--radius-md);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .ac-box {
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 700;
+    background: #2A2840;
+    color: var(--code-str);
+  }
+  .ac-arrow { color: #45475A; font-size: 18px; padding: 0 4px; }
+  .ac-label { font-size: 11px; color: #6C7086; padding: 2px 8px; margin-left: 8px; font-style: italic; }
+
+  /* ── 易错点列表（呼应 2.1 节风格） ── */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="2.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第二章 · 变量与数据类型</span>
+      <span class="eyebrow-sep">/</span>
+      <span>2.2 ASCII 编码</span>
+    </div>
+    <h1 class="chapter-title">2.2　ASCII 编码</h1>
+    <p class="chapter-desc">计算机底层只存储数字，字符本质上也是用整数来表示的——ASCII 就是这套字符与数字之间的映射规则。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch02-nav">
+    <div class="ch02-nav-label">第二章 · 变量与数据类型</div>
+    <div class="ch02-nav-items">
+      <a class="ch02-nav-item" href="02_00_变量与数据类型.html"><span class="cni-num">2.0</span><span class="cni-name">变量基础</span></a>
+      <a class="ch02-nav-item" href="02_01_数据类型转换.html"><span class="cni-num">2.1</span><span class="cni-name">数据类型转换</span></a>
+      <a class="ch02-nav-item active" href="02_02_ASCII编码.html"><span class="cni-num">2.2</span><span class="cni-name">ASCII 编码</span></a>
+      <a class="ch02-nav-item" href="02_03_原码反码补码.html"><span class="cni-num">2.3</span><span class="cni-name">原码、反码与补码</span></a>
+      <a class="ch02-nav-item" href="02_04_cmath数学库.html"><span class="cni-num">2.4</span><span class="cni-name">cmath 数学库</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#sub1"><span class="toc-num">2.2.1</span>为什么字符也是数字</a></li>
+      <li><a href="#sub2"><span class="toc-num">2.2.2</span>ASCII 表结构总览</a></li>
+      <li><a href="#sub3"><span class="toc-num">2.2.3</span>常用 ASCII 值速查</a></li>
+      <li><a href="#sub4"><span class="toc-num">2.2.4</span>实用技巧与代码示例</a></li>
+      <li><a href="#sub5"><span class="toc-num">2.2.5</span>更专业的写法：cctype 函数库</a></li>
+      <li><a href="#sub6"><span class="toc-num">2.2.6</span>常见陷阱与易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">2.2</p>
+    <h2 class="section-title">ASCII 编码</h2>
+    <div class="section-body">
+      <p>ASCII（美国信息交换标准代码）是一种将字符映射为数字的编码系统，最初于 1963 年发布。标准 ASCII 定义了 128 个字符（0~127），包括控制字符和可显示字符。计算机底层只存储数字，字符本质上也是用整数来表示的。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub1">2.2.1 为什么字符也是数字</h3>
+    <div class="section-body">
+      <p>计算机的存储单元里只有 0 和 1，它<b>只会存数字，不认识"字符"这种东西</b>。那我们平时打的字母、标点、汉字是怎么显示出来的呢？答案是：人和计算机之间需要一份"翻译词典"——大家提前约定好，数字 <code>65</code> 就代表字母 <code>'A'</code>，数字 <code>97</code> 就代表 <code>'a'</code>。计算机内部只存这个数字，显示的时候再按词典"翻译"成人能看懂的字符。</p>
+      <p>这份词典就是 <b>ASCII 编码表</b>。它把 128 个常用字符（英文字母、数字符号、标点、常见控制符）分别对应到 <code>0~127</code> 这 128 个整数上，成为几乎所有编程语言和计算机系统的共同基础。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🔑</span>
+      <div><b>关键概念：</b>在 C++ 里，<code>char</code> 类型本质上<b>就是一个 1 字节的整数</b>。写 <code>char c = 'A';</code> 时，编译器实际存进去的是数字 <code>65</code>，只不过 <code>char</code> 在输出（如 <code>cout</code>）时会自动按 ASCII 表"翻译"成对应的字符显示出来。这也是为什么 <code>char</code> 可以像整数一样参与加减运算——它<b>本来就是整数</b>。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">2.2.2 ASCII 表结构总览</h3>
+    <div class="section-body">
+      <p>与其死记硬背 128 个数字，不如先记住 ASCII 表被分成了几大块，各块内部又是<b>连续排列</b>的——这比记住某个字符具体是第几号更有用：</p>
+    </div>
+
+    <table class="ascii-range-table">
+      <thead>
+        <tr><th>范围</th><th>类别</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0 ~ 31</td>
+          <td><span class="arange-tag ctrl">控制字符</span></td>
+          <td>不可打印，用来控制设备行为，如换行 <code>'\n'</code>(10)、制表符 <code>'\t'</code>(9)、回车 <code>'\r'</code>(13)</td>
+        </tr>
+        <tr>
+          <td>32</td>
+          <td><span class="arange-tag ctrl">空格</span></td>
+          <td>唯一"看不见但占位置"的可打印字符，ASCII 表里最小的可打印字符</td>
+        </tr>
+        <tr>
+          <td>33 ~ 47</td>
+          <td><span class="arange-tag punct">标点符号</span></td>
+          <td><code>! " # $ % & ' ( ) * + , - . /</code></td>
+        </tr>
+        <tr>
+          <td>48 ~ 57</td>
+          <td><span class="arange-tag digit">数字字符</span></td>
+          <td><code>'0'</code> ~ <code>'9'</code>，注意这是"字符 0"，不是数值 0，两者相差 48</td>
+        </tr>
+        <tr>
+          <td>58 ~ 64</td>
+          <td><span class="arange-tag punct">标点符号</span></td>
+          <td><code>: ; &lt; = &gt; ? @</code></td>
+        </tr>
+        <tr>
+          <td>65 ~ 90</td>
+          <td><span class="arange-tag upper">大写字母</span></td>
+          <td><code>'A'</code> ~ <code>'Z'</code>，连续排列，'A' 最小、'Z' 最大</td>
+        </tr>
+        <tr>
+          <td>91 ~ 96</td>
+          <td><span class="arange-tag punct">标点符号</span></td>
+          <td><code>[ \ ] ^ _ `</code></td>
+        </tr>
+        <tr>
+          <td>97 ~ 122</td>
+          <td><span class="arange-tag lower">小写字母</span></td>
+          <td><code>'a'</code> ~ <code>'z'</code>，与对应大写字母恰好相差 32</td>
+        </tr>
+        <tr>
+          <td>123 ~ 126</td>
+          <td><span class="arange-tag punct">标点符号</span></td>
+          <td><code>{ | } ~</code></td>
+        </tr>
+        <tr>
+          <td>127</td>
+          <td><span class="arange-tag ctrl">DEL</span></td>
+          <td>删除控制符，不可打印</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>记忆诀窍：</b>只要记住三个"锚点"—— <code>'0'</code> = 48，<code>'A'</code> = 65，<code>'a'</code> = 97——剩下的字符都可以通过"连续排列"和"相差 32"这两条规律直接推算出来，完全不需要死记整张表。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub3">2.2.3 常用 ASCII 值速查</h3>
+    <div class="ascii-grid">
+      <div class="ascii-card">
+        <div class="ascii-char ascii-space">SP</div>
+        <div class="ascii-info">
+          <div class="ascii-val">32</div>
+          <div class="ascii-note">' ' 空格，最小可显示字符</div>
+        </div>
+      </div>
+      <div class="ascii-card">
+        <div class="ascii-char ascii-digit">0</div>
+        <div class="ascii-info">
+          <div class="ascii-val">48</div>
+          <div class="ascii-note">'0'~'9' 对应 48~57</div>
+        </div>
+      </div>
+      <div class="ascii-card">
+        <div class="ascii-char ascii-upper">A</div>
+        <div class="ascii-info">
+          <div class="ascii-val">65</div>
+          <div class="ascii-note">'A'~'Z' 对应 65~90</div>
+        </div>
+      </div>
+      <div class="ascii-card">
+        <div class="ascii-char ascii-lower">a</div>
+        <div class="ascii-info">
+          <div class="ascii-val">97</div>
+          <div class="ascii-note">'a'~'z' 对应 97~122</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub4">2.2.4 实用技巧与代码示例</h3>
+    <div class="section-body">
+      <p>正因为大写字母和小写字母在 ASCII 表里各自连续排列，且首字母恰好相差 32，数字字符 '0'~'9' 也连续排列，我们可以用简单的加减法在字符和数值之间转换，而不需要查表：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">C++ · ASCII 技巧</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 技巧 1：大小写互转（差值为 32）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="type">char</span> <span class="fn">lower</span> <span class="op">=</span> <span class="type">char</span><span class="punc">(</span><span class="str">'A'</span> <span class="op">+</span> <span class="num">32</span><span class="punc">);</span>  <span class="cmt">// 'a'（大写转小写）</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="type">char</span> <span class="fn">upper</span> <span class="op">=</span> <span class="type">char</span><span class="punc">(</span><span class="str">'a'</span> <span class="op">-</span> <span class="num">32</span><span class="punc">);</span>  <span class="cmt">// 'A'（小写转大写）</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// 技巧 2：数字字符 → 整数</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="type">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="str">'5'</span> <span class="op">-</span> <span class="str">'0'</span><span class="punc">;</span>  <span class="cmt">// n = 5（字符减 '0' 得数值）</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// 技巧 3：整数 → 数字字符</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="type">char</span> <span class="fn">ch</span> <span class="op">=</span> <span class="type">char</span><span class="punc">(</span><span class="num">5</span> <span class="op">+</span> <span class="str">'0'</span><span class="punc">);</span>  <span class="cmt">// ch = '5'（数值加 '0' 得字符）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>以技巧 1 的大写转小写为例，把 <code>'A' + 32</code> 这一步拆开来看，实际发生的是"字符 → 数字 → 数字 → 字符"的过程：</p>
+    </div>
+
+    <div class="ascii-chain">
+      <span class="ac-box">'A'</span>
+      <span class="ac-arrow">→</span>
+      <span class="ac-box">65</span>
+      <span class="ac-label">① 字符 'A' 本质就是数字 65</span>
+    </div>
+    <div class="ascii-chain">
+      <span class="ac-box">65 + 32</span>
+      <span class="ac-arrow">→</span>
+      <span class="ac-box">97</span>
+      <span class="ac-label">② 做普通的整数加法</span>
+    </div>
+    <div class="ascii-chain">
+      <span class="ac-box">97</span>
+      <span class="ac-arrow">→</span>
+      <span class="ac-box">'a'</span>
+      <span class="ac-label">③ 按 ASCII 表翻译回字符，正好是小写 'a'</span>
+    </div>
+
+    <div class="section-body">
+      <p>技巧 2、3 的道理完全一样：字符 <code>'5'</code> 本质是数字 <code>53</code>，减去字符 <code>'0'</code>（数字 <code>48</code>），得到 <code>53 - 48 = 5</code>，这才是我们真正想要的数值 <code>5</code>——而不是字符 <code>'5'</code> 本身的编码值。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub5">2.2.5 更专业的写法：cctype 函数库</h3>
+    <div class="section-body">
+      <p>手动加减 32 或 48 虽然直观，但每次使用前都要先确认"这确实是个字母/数字"，否则会算出无意义的结果。C++ 标准库 <code>&lt;cctype&gt;</code> 提供了一整套现成的字符判断和转换函数，更安全、更不容易出错，正式写代码时更推荐使用：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">C++ · cctype 常用函数</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;cctype&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">isalpha</span><span class="punc">(</span><span class="fn">ch</span><span class="punc">)</span>   <span class="cmt">// 是否为字母（大写或小写）</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">isdigit</span><span class="punc">(</span><span class="fn">ch</span><span class="punc">)</span>   <span class="cmt">// 是否为数字字符 '0'~'9'</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">isupper</span><span class="punc">(</span><span class="fn">ch</span><span class="punc">)</span>   <span class="cmt">// 是否为大写字母</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">islower</span><span class="punc">(</span><span class="fn">ch</span><span class="punc">)</span>   <span class="cmt">// 是否为小写字母</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">isspace</span><span class="punc">(</span><span class="fn">ch</span><span class="punc">)</span>   <span class="cmt">// 是否为空白字符（空格/换行/制表符等）</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">toupper</span><span class="punc">(</span><span class="fn">ch</span><span class="punc">)</span>   <span class="cmt">// 返回转换成大写后的字符</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="fn">tolower</span><span class="punc">(</span><span class="fn">ch</span><span class="punc">)</span>   <span class="cmt">// 返回转换成小写后的字符</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>用库函数改写技巧 1 的大小写转换，不需要再关心背后的数字 32，也不用担心传入的字符本来就不是字母：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">C++ · 用 cctype 改写大小写转换</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="type">char</span> <span class="fn">c</span> <span class="op">=</span> <span class="str">'A'</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">if</span> <span class="punc">(</span><span class="fn">isalpha</span><span class="punc">(</span><span class="fn">c</span><span class="punc">))</span> <span class="punc">{</span>          <span class="cmt">// 先判断确实是字母，再转换</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="type">char</span> <span class="fn">lower</span> <span class="op">=</span> <span class="type">char</span><span class="punc">(</span><span class="fn">tolower</span><span class="punc">(</span><span class="fn">c</span><span class="punc">));</span>  <span class="cmt">// 'a'</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>竞赛建议：</b>手动加减 32/48 的技巧运算速度略快、代码更短，竞赛中很常见；但如果不确定输入是否一定是字母/数字（比如需要处理混合了符号的字符串），优先用 <code>&lt;cctype&gt;</code> 的判断函数打底，更不容易因为边界情况写出 bug。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub6">2.2.6 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>字符 '0' 不是数值 0：</b><code>'0'</code> 的 ASCII 值是 <code>48</code>，不是 <code>0</code>。如果直接把字符当数值用（比如 <code>int n = '5';</code>），得到的是 <code>53</code> 而不是 <code>5</code>，一定要记得减去 <code>'0'</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>加减 32/48 前要先确认类别：</b>如果对一个本来就不是字母的字符（比如标点符号）执行"+32"操作，只会得到另一个无意义的字符，程序不会报错但结果毫无意义。用 <code>isalpha</code>、<code>isdigit</code> 先判断更保险。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>char 可能是有符号的：</b>在大多数平台上 <code>char</code> 默认是有符号类型，取值范围是 <code>-128~127</code>。如果用它存储超出 127 的原始字节数据（比如图像像素值 0~255），可能会变成负数，导致比较或输出结果出乎意料。这种情况建议改用 <code>unsigned char</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>ASCII 只覆盖英文，不包含中文：</b>ASCII 表只有 128 个字符，只能表示英文字母、数字和常见符号。中文、日文等字符需要用 Unicode/UTF-8 等更大的编码系统表示，一个中文字符在 UTF-8 里通常占 3 个字节，不能简单套用本节的加减法技巧。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.2 ASCII 编码</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="02_01_数据类型转换.html">← 2.1 数据类型转换</a>
+      <a class="nav-btn" href="02_03_原码反码补码.html">2.3 原码、反码与补码 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
