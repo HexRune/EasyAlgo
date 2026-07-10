@@ -200,6 +200,22 @@
     --grp-color: var(--accent); --grp-color-mid: var(--accent-mid); --grp-color-light: var(--accent-light);
   }
   @media (max-width: 900px) { .ch2-flat-items { grid-template-columns: repeat(2, 1fr); } }
+
+  /* 第三章：3 个等大小卡片，不分组 */
+  .ch3-flat-items {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin-bottom: 18px;
+    --grp-color: var(--teal-mid); --grp-color-mid: var(--teal-mid); --grp-color-light: var(--teal-light);
+  }
+  @media (max-width: 700px) { .ch3-flat-items { grid-template-columns: repeat(1, 1fr); } }
+
+  /* 第四章：4 个等大小卡片，不分组 */
+  .ch4-flat-items {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    margin-bottom: 18px;
+    --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid); --grp-color-light: var(--amber-light);
+  }
+  @media (max-width: 900px) { .ch4-flat-items { grid-template-columns: repeat(2, 1fr); } }
   .card-num {
     flex-shrink: 0;
     width: 40px; height: 40px;
@@ -487,27 +503,60 @@
     </div>
     <!-- /.stl-mega-card (ch2) -->
 
-    <!-- 第三章 -->
-    <a class="chapter-card" href="03_输入与输出.html">
-      <div class="card-num">03</div>
-      <div class="card-body">
-        <div class="card-chapter">第三章</div>
-        <div class="card-title">输入与输出</div>
-        <div class="card-desc">cin / cout · 格式化输出 · 文件 I/O</div>
-      </div>
-      <div class="card-arrow">→</div>
-    </a>
+    <!-- 第三章：整块大卡片，内部 3 个小节等大小展示，均可点击跳转 -->
+    <div class="stl-mega-card collapsed">
 
-    <!-- 第四章 -->
-    <a class="chapter-card" href="04_分支结构.html">
-      <div class="card-num">04</div>
-      <div class="card-body">
-        <div class="card-chapter">第四章</div>
-        <div class="card-title">分支结构</div>
-        <div class="card-desc">if / else · switch · 三元运算符</div>
+      <div class="stl-mega-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <div class="card-num">03</div>
+        <div class="card-body">
+          <div class="card-chapter">第三章</div>
+          <div class="card-title">输入与输出</div>
+          <div class="card-desc">cin / cout · scanf / printf · 文件读写 —— 点击下方任意小节直达对应页面</div>
+        </div>
+        <span class="mega-collapse-badge"><span class="mcb-icon">⌄</span></span>
       </div>
-      <div class="card-arrow">→</div>
-    </a>
+
+      <div class="stl-groups">
+
+        <div class="ch3-flat-items">
+          <a class="stl-item" href="03_01_cin与cout.html"><span class="si-name">3.1 cin 与 cout</span><span class="si-desc">C++ 风格输入输出 · iomanip 格式控制</span></a>
+          <a class="stl-item" href="03_02_scanf与printf.html"><span class="si-name">3.2 scanf 与 printf</span><span class="si-desc">C 风格格式化输入输出 · 效率对比</span></a>
+          <a class="stl-item" href="03_03_文件读写.html"><span class="si-name">3.3 文件读写</span><span class="si-desc">freopen 重定向 · ifstream / ofstream</span></a>
+        </div>
+
+      </div>
+      <!-- /.stl-groups -->
+
+    </div>
+    <!-- /.stl-mega-card (ch3) -->
+
+    <!-- 第四章：整块大卡片，内部 4 个小节等大小展示，均可点击跳转 -->
+    <div class="stl-mega-card collapsed">
+
+      <div class="stl-mega-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <div class="card-num">04</div>
+        <div class="card-body">
+          <div class="card-chapter">第四章</div>
+          <div class="card-title">分支结构</div>
+          <div class="card-desc">运算符 · if / else · 三元运算符 · switch —— 点击下方任意小节直达对应页面</div>
+        </div>
+        <span class="mega-collapse-badge"><span class="mcb-icon">⌄</span></span>
+      </div>
+
+      <div class="stl-groups">
+
+        <div class="ch4-flat-items">
+          <a class="stl-item" href="04_01_运算符.html"><span class="si-name">4.1 运算符</span><span class="si-desc">比较运算符 · 逻辑运算符</span></a>
+          <a class="stl-item" href="04_02_if语句.html"><span class="si-name">4.2 if 语句</span><span class="si-desc">if · if-else · 多分支</span></a>
+          <a class="stl-item" href="04_03_三元运算符.html"><span class="si-name">4.3 三元运算符</span><span class="si-desc">条件表达式</span></a>
+          <a class="stl-item" href="04_04_switch语句.html"><span class="si-name">4.4 switch 语句</span><span class="si-desc">多分支选择 · 穿透</span></a>
+        </div>
+
+      </div>
+      <!-- /.stl-groups -->
+
+    </div>
+    <!-- /.stl-mega-card (ch4) -->
 
     <!-- 第五章 -->
     <a class="chapter-card" href="05_循环结构.html">

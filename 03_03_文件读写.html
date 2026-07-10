@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.3 文件读写 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "3.3"; }
+
+  /* ── 子导航组件（ch03 风格，单卡片） ── */
+  .ch03-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch03-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch03-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch03-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch03-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch03-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch03-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch03-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* 重定向可视化 */
+  .redir-visual {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    flex-wrap: wrap;
+  }
+  .redir-box {
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13.5px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .redir-box.code    { background: var(--accent-light); color: var(--accent-dark); border: 1.5px solid #AFA9EC; }
+  .redir-box.stdio    { background: #F1EFE8; color: #444; border: 1.5px solid var(--border-md); }
+  .redir-box.file-in  { background: var(--teal-light); color: var(--teal); border: 1.5px solid #9FE1CB; }
+  .redir-box.file-out { background: var(--amber-light); color: var(--amber); border: 1.5px solid #FAC775; }
+  .redir-arrow { font-size: 18px; color: var(--border-md); }
+
+  /* 方式对比卡 */
+  .way-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .way-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .way-card-head {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent-light);
+  }
+  .way-card-icon { font-size: 18px; }
+  .way-card-title { font-weight: 700; font-size: 14px; color: var(--accent-dark); }
+  .way-card-body { padding: 12px 14px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.65; border-top: 1px solid var(--border); }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="3.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第三章 · 输入与输出</span>
+      <span class="eyebrow-sep">/</span>
+      <span>3.3 文件读写</span>
+    </div>
+    <h1 class="chapter-title">3.3　文件读写</h1>
+    <p class="chapter-desc">除了和键盘、屏幕打交道，程序也可以直接读写磁盘上的文件。竞赛评测系统大多要求把输入输出重定向到文件，这是信息学竞赛的标配技能。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch03-nav">
+    <div class="ch03-nav-label">第三章 · 输入与输出</div>
+    <div class="ch03-nav-items">
+      <a class="ch03-nav-item" href="03_01_cin与cout.html"><span class="cni-num">3.1</span><span class="cni-name">cin 与 cout</span></a>
+      <a class="ch03-nav-item" href="03_02_scanf与printf.html"><span class="cni-num">3.2</span><span class="cni-name">scanf 与 printf</span></a>
+      <a class="ch03-nav-item active" href="03_03_文件读写.html"><span class="cni-num">3.3</span><span class="cni-name">文件读写</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#sub1"><span class="toc-num">3.3.1</span>为什么需要文件读写</a></li>
+      <li><a href="#sub2"><span class="toc-num">3.3.2</span>freopen：竞赛标配的输入输出重定向</a></li>
+      <li><a href="#sub3"><span class="toc-num">3.3.3</span>ifstream / ofstream：更通用的文件流</a></li>
+      <li><a href="#sub4"><span class="toc-num">3.3.4</span>判断文件是否成功打开</a></li>
+      <li><a href="#sub5"><span class="toc-num">3.3.5</span>判断文件读取是否结束</a></li>
+      <li><a href="#sub6"><span class="toc-num">3.3.6</span>综合示例：从文件读取并写入结果</a></li>
+      <li><a href="#sub7"><span class="toc-num">3.3.7</span>常见陷阱与易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">3.3</p>
+    <h2 class="section-title">文件读写</h2>
+    <div class="section-body">
+      <p>前面两节的输入输出都是和"人"打交道——从键盘读、往屏幕写。但很多时候，程序需要直接和"文件"打交道：从磁盘上的一个文件里读数据，或者把结果写进另一个文件保存下来。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub1">3.3.1 为什么需要文件读写</h3>
+    <div class="section-body">
+      <p>在信息学竞赛中，几乎所有正式比赛（NOIP、CSP-J 等）都不是让你手动在键盘上敲输入、盯着屏幕看输出的——评测系统会把预先准备好的输入数据放进一个文件，要求你的程序从这个文件里读取数据，再把结果写进另一个指定的文件，由评测系统自动比对。这种"以文件作为输入输出"的模式，就是本节要学的内容。</p>
+      <p>C++ 提供了两种实现方式，各有各的适用场景：</p>
+    </div>
+
+    <div class="way-compare">
+      <div class="way-card">
+        <div class="way-card-head">
+          <span class="way-card-icon">🔀</span>
+          <span class="way-card-title">freopen 重定向</span>
+        </div>
+        <div class="way-card-body">让 <code>cin/cout</code>、<code>scanf/printf</code> 这些"熟悉的老朋友"直接对着文件读写，代码逻辑完全不用改。<b>竞赛中最常用</b>，几乎是标配写法。</div>
+      </div>
+      <div class="way-card">
+        <div class="way-card-head">
+          <span class="way-card-icon">📂</span>
+          <span class="way-card-title">ifstream / ofstream</span>
+        </div>
+        <div class="way-card-body">专门用来读写文件的流对象，语法和 <code>cin/cout</code> 几乎一样，但可以同时打开多个文件、更灵活地控制文件操作。<b>更通用</b>，适合需要精细控制的场景。</div>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">3.3.2 freopen：竞赛标配的输入输出重定向</h3>
+    <div class="section-body">
+      <p><code>freopen</code> 的思路很巧妙：它不改变你写 <code>cin</code>、<code>cout</code>、<code>scanf</code>、<code>printf</code> 的方式，而是在程序一开始，把"标准输入"和"标准输出"这两个默认通道，偷偷地"接上"两个文件。之后代码里所有的输入输出语句，实际读写的都是文件，而不是键盘和屏幕：</p>
+    </div>
+
+    <div class="redir-visual">
+      <div class="redir-box code">cin / scanf</div>
+      <span class="redir-arrow">⇢</span>
+      <div class="redir-box stdio">标准输入 stdin</div>
+      <span class="redir-arrow">⇢</span>
+      <div class="redir-box file-in">📄 data.in</div>
+    </div>
+    <div class="redir-visual">
+      <div class="redir-box code">cout / printf</div>
+      <span class="redir-arrow">⇢</span>
+      <div class="redir-box stdio">标准输出 stdout</div>
+      <span class="redir-arrow">⇢</span>
+      <div class="redir-box file-out">📄 data.out</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · freopen 重定向模板</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;cstdio&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr class="hl-row"><td class="ln">6</td><td class="cd">    <span class="fn">freopen</span><span class="punc">(</span><span class="str">"data.in"</span><span class="punc">,</span> <span class="str">"r"</span><span class="punc">,</span> <span class="fn">stdin</span><span class="punc">);</span>   <span class="cmt">// 把标准输入接到 data.in</span></td></tr>
+          <tr class="hl-row"><td class="ln">7</td><td class="cd">    <span class="fn">freopen</span><span class="punc">(</span><span class="str">"data.out"</span><span class="punc">,</span> <span class="str">"w"</span><span class="punc">,</span> <span class="fn">stdout</span><span class="punc">);</span> <span class="cmt">// 把标准输出接到 data.out</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="type">int</span> <span class="fn">a</span><span class="punc">,</span> <span class="fn">b</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">a</span> <span class="op">&gt;&gt;</span> <span class="fn">b</span><span class="punc">;</span>       <span class="cmt">// 实际是从 data.in 里读，不是键盘</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 实际是写进 data.out，不是屏幕</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p><code>freopen</code> 的三个参数含义是：<code>freopen(文件名, 打开模式, 要重定向的流)</code>。打开模式最常用的是 <code>"r"</code>（只读，用于输入文件）和 <code>"w"</code>（只写，用于输出文件，如果文件已存在会被清空重写）。</p>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>竞赛习惯：</b>正式比赛通常会明确要求输入输出文件名，比如"从 <code>sort.in</code> 读入，输出到 <code>sort.out</code>"。这时只需要在 <code>main()</code> 开头加上两行 <code>freopen</code>，后面的代码可以和平时用键盘调试时完全一样，不需要做任何改动——这也是为什么 <code>freopen</code> 是竞赛中最常用的文件读写方式。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub3">3.3.3 ifstream / ofstream：更通用的文件流</h3>
+    <div class="section-body">
+      <p>如果需要同时操作多个文件（比如同时读两个输入文件），或者只是想在程序中间临时读写一个文件而不影响标准输入输出，就需要用到 <code>&lt;fstream&gt;</code> 头文件提供的 <code>ifstream</code>（输入文件流）和 <code>ofstream</code>（输出文件流）。它们的用法和 <code>cin/cout</code> 几乎一模一样，只是对象换成了你自己起的名字：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · ifstream / ofstream 基本用法</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;fstream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="type">ifstream</span> <span class="fn">fin</span><span class="punc">(</span><span class="str">"data.in"</span><span class="punc">);</span>    <span class="cmt">// 打开输入文件，命名为 fin</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="type">ofstream</span> <span class="fn">fout</span><span class="punc">(</span><span class="str">"data.out"</span><span class="punc">);</span>  <span class="cmt">// 打开输出文件，命名为 fout</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="type">int</span> <span class="fn">a</span><span class="punc">,</span> <span class="fn">b</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">fin</span> <span class="op">&gt;&gt;</span> <span class="fn">a</span> <span class="op">&gt;&gt;</span> <span class="fn">b</span><span class="punc">;</span>       <span class="cmt">// 像 cin 一样读，只是对象换成了 fin</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">fout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 像 cout 一样写，对象换成了 fout</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="fn">fin</span><span class="punc">.</span><span class="fn">close</span><span class="punc">();</span>   <span class="cmt">// 用完关闭文件（好习惯）</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="fn">fout</span><span class="punc">.</span><span class="fn">close</span><span class="punc">();</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>fin / fout 只是变量名：</b>和 <code>cin</code>、<code>cout</code> 不同，<code>ifstream</code>、<code>ofstream</code> 是"类型"，<code>fin</code>、<code>fout</code> 只是你自己起的变量名（换成别的名字也完全可以）。这意味着你可以同时打开好几个输入文件、好几个输出文件，分别用不同的名字操作，这是 <code>freopen</code> 做不到的。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub4">3.3.4 判断文件是否成功打开</h3>
+    <div class="section-body">
+      <p>如果指定的文件不存在，或者因为权限等原因打不开，<code>ifstream</code>/<code>ofstream</code> 并不会报错崩溃，而是静静地进入一种"打开失败"的状态，之后所有的读写操作都不会有任何效果。养成检查是否打开成功的习惯，能省下很多"明明代码没错，为什么什么都读不出来"的排查时间：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 检查文件是否打开成功</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="type">ifstream</span> <span class="fn">fin</span><span class="punc">(</span><span class="str">"data.in"</span><span class="punc">);</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">if</span> <span class="punc">(</span><span class="op">!</span><span class="fn">fin</span><span class="punc">)</span>  <span class="cmt">// fin 可以直接当作布尔值使用，! 表示"没打开成功"</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"文件打开失败！"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">return</span> <span class="num">1</span><span class="punc">;</span>  <span class="cmt">// 提前结束程序</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub5">3.3.5 判断文件读取是否结束</h3>
+    <div class="section-body">
+      <p>从文件里读取不定量的数据时（比如不知道文件里到底有多少个数字），需要判断什么时候读到了文件末尾。最简洁、最不容易出错的写法，是直接把"读取"这个动作放进 <code>while</code> 的条件里：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 循环读取直到文件结束</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="type">ifstream</span> <span class="fn">fin</span><span class="punc">(</span><span class="str">"data.in"</span><span class="punc">);</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="type">int</span> <span class="fn">x</span><span class="punc">,</span> <span class="fn">sum</span> <span class="op">=</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr class="hl-row"><td class="ln">3</td><td class="cd"><span class="kw">while</span> <span class="punc">(</span><span class="fn">fin</span> <span class="op">&gt;&gt;</span> <span class="fn">x</span><span class="punc">)</span>  <span class="cmt">// 推荐写法：读取成功才继续循环</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">sum</span> <span class="op">+=</span> <span class="fn">x</span><span class="punc">;</span>  <span class="cmt">// 把文件里所有数字累加起来</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🚫</span>
+      <div><b>不要用 <code>while (!fin.eof())</code>：</b>这是最常见的错误写法。<code>eof()</code> 只有在"尝试读取之后发现已经没有数据了"才会变成 true，也就是说它的状态总是<b>慢一拍</b>——用 <code>eof()</code> 判断会导致最后多循环一次，把上一次的旧数据重复处理一遍。正确做法是像上面代码那样，直接把 <code>fin &gt;&gt; x</code> 这个读取动作本身放进 <code>while</code> 的条件里：读取成功时结果为真，读取失败（包括到达文件末尾）时结果为假，一步到位，不会多算。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub6">3.3.6 综合示例：从文件读取并写入结果</h3>
+    <div class="section-body">
+      <p>从 <code>scores.in</code> 中读取若干个整数（数量不定），计算它们的总和与平均值，将结果写入 <code>scores.out</code>：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 文件读写综合示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;fstream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;iomanip&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="type">ifstream</span> <span class="fn">fin</span><span class="punc">(</span><span class="str">"scores.in"</span><span class="punc">);</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">if</span> <span class="punc">(</span><span class="op">!</span><span class="fn">fin</span><span class="punc">)</span> <span class="kw">return</span> <span class="num">1</span><span class="punc">;</span>  <span class="cmt">// 打开失败就直接结束</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="type">int</span> <span class="fn">x</span><span class="punc">,</span> <span class="fn">sum</span> <span class="op">=</span> <span class="num">0</span><span class="punc">,</span> <span class="fn">count</span> <span class="op">=</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="kw">while</span> <span class="punc">(</span><span class="fn">fin</span> <span class="op">&gt;&gt;</span> <span class="fn">x</span><span class="punc">)</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="punc">{</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="fn">sum</span> <span class="op">+=</span> <span class="fn">x</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="fn">count</span><span class="op">++</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="punc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="fn">fin</span><span class="punc">.</span><span class="fn">close</span><span class="punc">();</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="type">ofstream</span> <span class="fn">fout</span><span class="punc">(</span><span class="str">"scores.out"</span><span class="punc">);</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="fn">fout</span> <span class="op">&lt;&lt;</span> <span class="str">"总和："</span> <span class="op">&lt;&lt;</span> <span class="fn">sum</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span></td></tr>
+          <tr class="hl-row"><td class="ln">20</td><td class="cd">    <span class="fn">fout</span> <span class="op">&lt;&lt;</span> <span class="str">"平均值："</span> <span class="op">&lt;&lt;</span> <span class="fn">fixed</span> <span class="op">&lt;&lt;</span> <span class="fn">setprecision</span><span class="punc">(</span><span class="num">2</span><span class="punc">)</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">         <span class="op">&lt;&lt;</span> <span class="punc">(</span><span class="type">double</span><span class="punc">)</span><span class="fn">sum</span> <span class="op">/</span> <span class="fn">count</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 见 2.1 节：先转 double 再除</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="fn">fout</span><span class="punc">.</span><span class="fn">close</span><span class="punc">();</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub7">3.3.7 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>不要用 while(!fin.eof()) 判断结束：</b>会导致最后一组数据被重复处理一次。始终使用"把读取动作放进 while 条件"的写法，即 <code>while (fin &gt;&gt; x)</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>文件路径问题：</b><code>freopen("data.in", "r", stdin)</code> 里的文件名默认是相对路径，指的是程序运行时所在的当前目录，而不一定是代码文件所在的目录。如果提示"文件打开失败"，先检查文件是否真的放在了程序运行的目录下。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>忘记检查是否打开成功：</b>文件不存在时 <code>ifstream</code>/<code>ofstream</code> 不会报错，只会默默地"什么都读不到"或"什么都写不出"，容易让人误以为是逻辑错误，白白花时间排查。养成 <code>if (!fin)</code> 检查的习惯。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>用 freopen 调试时忘记切回键盘输入：</b>本地测试时如果用了 <code>freopen</code> 重定向到文件，提交到评测系统前，如果评测系统本身就是走标准输入输出（不需要 <code>freopen</code>），记得把这两行去掉或者根据比赛要求调整文件名，否则程序会因为找不到指定文件而运行失败。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第三章 · 输入与输出 · 3.3 文件读写</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="03_02_scanf与printf.html">← 3.2 scanf 与 printf</a>
+      <a class="nav-btn" href="04_01_运算符.html">第四章：分支结构 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

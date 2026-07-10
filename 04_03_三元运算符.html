@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4.3 三元运算符 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "4.3"; }
+
+  /* ── 子导航组件（ch04 风格，单卡片） ── */
+  .ch04-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch04-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch04-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch04-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch04-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch04-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch04-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch04-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* 三元运算符可视化 */
+  .ternary-box {
+    background: #16141F;
+    border-radius: var(--radius-md);
+    padding: 18px 24px;
+    margin: 18px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    text-align: center;
+    color: var(--code-text);
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+  .ternary-cond  { color: var(--code-fn); }
+  .ternary-q     { color: var(--code-op); font-size: 18px; margin: 0 6px; }
+  .ternary-v1    { color: var(--code-str); }
+  .ternary-colon { color: var(--code-op); font-size: 18px; margin: 0 6px; }
+  .ternary-v2    { color: var(--code-num); }
+  .ternary-note  { margin-top: 10px; display: flex; justify-content: center; gap: 24px; font-size: 12px; color: #6C7086; }
+  .ternary-note span { display: flex; align-items: center; gap: 5px; }
+  .dot-t { width: 8px; height: 8px; border-radius: 50%; background: var(--code-str); display: inline-block; }
+  .dot-f { width: 8px; height: 8px; border-radius: 50%; background: var(--code-num); display: inline-block; }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="4.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第四章 · 分支结构</span>
+      <span class="eyebrow-sep">/</span>
+      <span>4.3 三元运算符</span>
+    </div>
+    <h1 class="chapter-title">4.3　条件表达式（三元运算符）</h1>
+    <p class="chapter-desc">三元运算符是 if-else 的简洁写法，适合简单的二选一赋值场景，一行搞定。它是 C++ 里唯一一个需要三个操作数的运算符，因此得名"三元"。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch04-nav">
+    <div class="ch04-nav-label">第四章 · 分支结构</div>
+    <div class="ch04-nav-items">
+      <a class="ch04-nav-item" href="04_01_运算符.html"><span class="cni-num">4.1</span><span class="cni-name">运算符</span></a>
+      <a class="ch04-nav-item" href="04_02_if语句.html"><span class="cni-num">4.2</span><span class="cni-name">if 语句</span></a>
+      <a class="ch04-nav-item active" href="04_03_三元运算符.html"><span class="cni-num">4.3</span><span class="cni-name">三元运算符</span></a>
+      <a class="ch04-nav-item" href="04_04_switch语句.html"><span class="cni-num">4.4</span><span class="cni-name">switch 语句</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#sub1"><span class="toc-num">4.3.1</span>基本用法</a></li>
+      <li><a href="#sub2"><span class="toc-num">4.3.2</span>嵌套三元运算符</a></li>
+      <li><a href="#sub3"><span class="toc-num">4.3.3</span>常见陷阱与易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">4.3</p>
+    <h2 class="section-title">条件表达式（三元运算符）</h2>
+    <div class="section-body">
+      <p>三元运算符是 <code>if-else</code> 的简洁写法，适合简单的二选一赋值场景，一行搞定。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub1">4.3.1 基本用法</h3>
+
+    <!-- Ternary visual -->
+    <div class="ternary-box">
+      <span class="ternary-cond">条件</span>
+      <span class="ternary-q">?</span>
+      <span class="ternary-v1">值1（true时返回）</span>
+      <span class="ternary-colon">:</span>
+      <span class="ternary-v2">值2（false时返回）</span>
+      <div class="ternary-note">
+        <span><span class="dot-t"></span>条件为 true → 返回值1</span>
+        <span><span class="dot-f"></span>条件为 false → 返回值2</span>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>关键要理解的一点是：<code>条件 ? 值1 : 值2</code> 这一整坨<b>本身就是一个表达式</b>，它会计算出一个值（值1或值2），这个值可以直接赋给变量、直接输出，或者作为另一个表达式的一部分——这和 <code>if-else</code> 是"语句"（只能执行动作，不能作为值使用）有本质区别。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 三元运算符示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">10</span><span class="pnc">,</span> <span class="fn">b</span> <span class="op">=</span> <span class="num">20</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr class="hl-row"><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">maxVal</span> <span class="op">=</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">&gt;</span> <span class="fn">b</span><span class="pnc">)</span> <span class="op">?</span> <span class="fn">a</span> <span class="op">:</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// maxVal = 20</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"较大值是："</span> <span class="op">&lt;&lt;</span> <span class="fn">maxVal</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="cmt">// 等价的 if-else 写法（更长）</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="typ">int</span> <span class="fn">maxVal2</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">&gt;</span> <span class="fn">b</span><span class="pnc">)</span> <span class="fn">maxVal2</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="kw">else</span> <span class="fn">maxVal2</span> <span class="op">=</span> <span class="fn">b</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>正因为三元运算符是一个"表达式"而不是"语句"，它还可以直接嵌在 <code>cout</code> 里，不需要先存进一个变量：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 直接用在 cout 里</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">score</span> <span class="op">=</span> <span class="num">78</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-row"><td class="ln">2</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">score</span> <span class="op">&gt;=</span> <span class="num">60</span> <span class="op">?</span> <span class="str">"及格"</span> <span class="op">:</span> <span class="str">"不及格"</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">4.3.2 嵌套三元运算符</h3>
+    <div class="section-body">
+      <p>三元运算符的"值"部分本身还可以再嵌一层三元运算符，用来表达多重条件——但这已经开始牺牲可读性了，仅作了解：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 嵌套三元运算符（多重判断）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">score</span> <span class="op">=</span> <span class="num">78</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-row"><td class="ln">2</td><td class="cd"><span class="typ">string</span> <span class="fn">grade</span> <span class="op">=</span> <span class="fn">score</span> <span class="op">&gt;=</span> <span class="num">90</span> <span class="op">?</span> <span class="str">"优秀"</span> <span class="op">:</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">               <span class="fn">score</span> <span class="op">&gt;=</span> <span class="num">75</span> <span class="op">?</span> <span class="str">"良好"</span> <span class="op">:</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">               <span class="fn">score</span> <span class="op">&gt;=</span> <span class="num">60</span> <span class="op">?</span> <span class="str">"及格"</span> <span class="op">:</span> <span class="str">"不及格"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// 等价于 4.2 节的 if-else if-else 链，但可读性明显更差</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>能读懂不代表该这么写：</b>这段嵌套三元表达式和 4.2 节的多分支 <code>if-else if-else</code> 逻辑完全等价，但阅读起来明显吃力得多——每多嵌一层，理解难度都会显著上升。这就是为什么三元运算符只推荐用于<b>简单的二选一</b>场景，一旦涉及三个以上的分支，<code>if-else if-else</code> 或 <code>switch</code> 才是更合适的选择。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub3">4.3.3 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>滥用嵌套导致可读性差：</b>嵌套三元运算符能实现的逻辑，用 <code>if-else if-else</code> 几乎总能写得更清楚。三元运算符的价值在于"简洁"，一旦开始嵌套，这个优势就荡然无存了。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>忘记给整个三元表达式加括号：</b>三元运算符的优先级比大多数运算符都低，混在复杂表达式里如果不加括号，容易和其他运算符结合出乎意料的结果。养成给整个 <code>(条件 ? 值1 : 值2)</code> 加括号的习惯，尤其是像 <code>cout &lt;&lt; (...)</code> 这样嵌入更大表达式的场景。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>两个分支的类型不一致：</b>三元运算符要求"值1"和"值2"的类型能统一成同一种类型，比如一个是 <code>int</code> 一个是 <code>double</code>，编译器会把结果统一转换成 <code>double</code>（见 2.1 节隐式转换），这有时会产生不易察觉的精度变化。如果两个分支类型差异较大（比如一个是数字一个是字符串），可能直接编译报错。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第四章 · 分支结构 · 4.3 三元运算符</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="04_02_if语句.html">← 4.2 if 语句</a>
+      <a class="nav-btn" href="04_04_switch语句.html">4.4 switch 语句 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

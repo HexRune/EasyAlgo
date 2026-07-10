@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4.1 比较运算符与逻辑运算符 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "4.1"; }
+
+  /* ── 子导航组件（ch04 风格，单卡片） ── */
+  .ch04-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch04-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch04-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch04-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch04-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch04-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch04-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch04-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* 运算符表 */
+  .op-table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    margin: 16px 0; font-size: 13px;
+    border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden;
+  }
+  .op-table thead tr { background: var(--accent-light); }
+  .op-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-dark); border-bottom: 1px solid #D3CFFA; }
+  .op-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+  .op-table tr:last-child td { border-bottom: none; }
+  .op-table tr:nth-child(even) td { background: #FAFAF7; }
+  .op-sym { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--accent); display: inline-block; min-width: 36px; text-align: center; }
+  .op-ex  { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); }
+  .badge-t { display: inline-block; background: #EAF8F2; color: var(--teal); font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+  .badge-f { display: inline-block; background: var(--coral-light); color: var(--coral); font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+
+  /* 优先级阶梯 */
+  .priority-ladder {
+    display: flex; flex-direction: column; gap: 6px;
+    margin: 18px 0;
+  }
+  .priority-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border-radius: var(--radius-md);
+    border: 1px solid var(--border); background: var(--surface);
+  }
+  .priority-rank {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-light); color: var(--accent-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+  }
+  .priority-name { font-weight: 700; font-size: 13.5px; color: var(--text-primary); min-width: 140px; }
+  .priority-desc { font-size: 13px; color: var(--text-secondary); }
+
+  /* 短路求值可视化 */
+  .short-circuit-row {
+    display: flex; align-items: center; gap: 10px;
+    margin: 14px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .sc-box {
+    padding: 8px 14px; border-radius: var(--radius-md); font-weight: 600;
+  }
+  .sc-box.checked { background: var(--teal-light); color: var(--teal); }
+  .sc-box.skipped { background: #F1EFE8; color: var(--text-muted); text-decoration: line-through; }
+  .sc-arrow { color: var(--border-md); font-size: 16px; }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="4.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第四章 · 分支结构</span>
+      <span class="eyebrow-sep">/</span>
+      <span>4.1 运算符</span>
+    </div>
+    <h1 class="chapter-title">4.1　比较运算符与逻辑运算符</h1>
+    <p class="chapter-desc">分支结构依赖条件判断，条件判断又依赖两类运算符：比较运算符负责比大小，逻辑运算符负责组合多个条件，是学好 if 和 switch 之前必须掌握的基础。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch04-nav">
+    <div class="ch04-nav-label">第四章 · 分支结构</div>
+    <div class="ch04-nav-items">
+      <a class="ch04-nav-item active" href="04_01_运算符.html"><span class="cni-num">4.1</span><span class="cni-name">运算符</span></a>
+      <a class="ch04-nav-item" href="04_02_if语句.html"><span class="cni-num">4.2</span><span class="cni-name">if 语句</span></a>
+      <a class="ch04-nav-item" href="04_03_三元运算符.html"><span class="cni-num">4.3</span><span class="cni-name">三元运算符</span></a>
+      <a class="ch04-nav-item" href="04_04_switch语句.html"><span class="cni-num">4.4</span><span class="cni-name">switch 语句</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#sub1"><span class="toc-num">4.1.1</span>比较运算符</a></li>
+      <li><a href="#sub2"><span class="toc-num">4.1.2</span>逻辑运算符</a></li>
+      <li><a href="#sub3"><span class="toc-num">4.1.3</span>运算符优先级</a></li>
+      <li><a href="#sub4"><span class="toc-num">4.1.4</span>短路求值</a></li>
+      <li><a href="#sub5"><span class="toc-num">4.1.5</span>常见陷阱与易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">4.1</p>
+    <h2 class="section-title">比较运算符与逻辑运算符</h2>
+    <div class="section-body">
+      <p>分支结构依赖条件判断，条件判断又依赖两类运算符：<strong>比较运算符</strong>用来比较两个值，结果是 <code>true</code> 或 <code>false</code>；<strong>逻辑运算符</strong>用来把多个简单条件组合成一个更复杂的条件。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub1">4.1.1 比较运算符</h3>
+    <table class="op-table">
+      <thead><tr><th>运算符</th><th>含义</th><th>示例</th><th>结果</th><th>优先级</th></tr></thead>
+      <tbody>
+        <tr><td><span class="op-sym">&gt;</span></td><td>大于</td><td class="op-ex">5 &gt; 3</td><td><span class="badge-t">true</span></td><td><span class="op-pri">6</span></td></tr>
+        <tr><td><span class="op-sym">&lt;</span></td><td>小于</td><td class="op-ex">5 &lt; 3</td><td><span class="badge-f">false</span></td><td><span class="op-pri">6</span></td></tr>
+        <tr><td><span class="op-sym">&gt;=</span></td><td>大于等于</td><td class="op-ex">5 &gt;= 5</td><td><span class="badge-t">true</span></td><td><span class="op-pri">6</span></td></tr>
+        <tr><td><span class="op-sym">&lt;=</span></td><td>小于等于</td><td class="op-ex">3 &lt;= 5</td><td><span class="badge-t">true</span></td><td><span class="op-pri">6</span></td></tr>
+        <tr><td><span class="op-sym">==</span></td><td>等于（两个等号！）</td><td class="op-ex">5 == 5</td><td><span class="badge-t">true</span></td><td><span class="op-pri">7</span></td></tr>
+        <tr><td><span class="op-sym">!=</span></td><td>不等于</td><td class="op-ex">5 != 3</td><td><span class="badge-t">true</span></td><td><span class="op-pri">7</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-body">
+      <p>比较运算符的结果本质上是一个 <code>bool</code> 类型的值（<code>true</code> 或 <code>false</code>），可以直接存进 <code>bool</code> 变量，也可以直接放进 <code>if</code> 的括号里：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 比较运算符结果是 bool</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">bool</span> <span class="fn">isPass</span> <span class="op">=</span> <span class="pnc">(</span><span class="num">85</span> <span class="op">&gt;=</span> <span class="num">60</span><span class="pnc">);</span>  <span class="cmt">// isPass 存的就是 true</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">isPass</span><span class="pnc">;</span>  <span class="cmt">// 输出 1（C++ 里 true 打印出来是 1，false 是 0）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">4.1.2 逻辑运算符</h3>
+    <table class="op-table">
+      <thead><tr><th>运算符</th><th>含义</th><th>说明</th><th>示例</th><th>优先级</th></tr></thead>
+      <tbody>
+        <tr><td><span class="op-sym">&&</span></td><td>且（AND）</td><td>两个条件都为 <code>true</code> 才为 <code>true</code></td><td class="op-ex">age&gt;=6 &amp;&amp; age&lt;=12</td><td><span class="op-pri">11</span></td></tr>
+        <tr><td><span class="op-sym">||</span></td><td>或（OR）</td><td>至少一个为 <code>true</code> 就为 <code>true</code></td><td class="op-ex">x==1 || x==2</td><td><span class="op-pri">12</span></td></tr>
+        <tr><td><span class="op-sym">!</span></td><td>非（NOT）</td><td><code>true</code> 变 <code>false</code>，<code>false</code> 变 <code>true</code></td><td class="op-ex">!(x &gt; 0)</td><td><span class="op-pri">2</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout danger">
+      <span class="callout-icon">🚨</span>
+      <div><b>高频错误：</b><code>==</code> 是比较（两个等号），<code>=</code> 是赋值（一个等号）。写成 <code>if (a = 5)</code> 是赋值不是比较，不会报错但逻辑完全错误，是最难发现的 bug 之一！</div>
+    </div>
+
+    <h3 class="sub-title" id="sub3">4.1.3 运算符优先级</h3>
+    <div class="section-body">
+      <p>上面两张表格最后一列的"优先级"数字，代表运算符结合的先后顺序——<b>数字越小，越先被计算</b>。把常用运算符从高到低排一排，能看出一个清晰的规律：</p>
+    </div>
+
+    <div class="priority-ladder">
+      <div class="priority-row">
+        <span class="priority-rank">2</span>
+        <span class="priority-name">! （非）</span>
+        <span class="priority-desc">优先级很高，几乎总是第一个被计算</span>
+      </div>
+      <div class="priority-row">
+        <span class="priority-rank">6</span>
+        <span class="priority-name">&gt; &lt; &gt;= &lt;=</span>
+        <span class="priority-desc">比较大小，比逻辑运算符先算</span>
+      </div>
+      <div class="priority-row">
+        <span class="priority-rank">7</span>
+        <span class="priority-name">== !=</span>
+        <span class="priority-desc">判断相等/不等，比 &gt; &lt; 稍低一点</span>
+      </div>
+      <div class="priority-row">
+        <span class="priority-rank">11</span>
+        <span class="priority-name">&& （且）</span>
+        <span class="priority-desc">先把多个"且"的条件组合起来</span>
+      </div>
+      <div class="priority-row">
+        <span class="priority-rank">12</span>
+        <span class="priority-name">|| （或）</span>
+        <span class="priority-desc">最后处理"或"，优先级在这几个里最低</span>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>规律是：<b>比较运算符永远比逻辑运算符先算</b>。所以 <code>age &gt;= 6 &amp;&amp; age &lt;= 12</code> 不需要额外加括号，编译器会自动先算出两个 <code>&gt;=</code>/<code>&lt;=</code> 的 <code>true</code>/<code>false</code>，再用 <code>&amp;&amp;</code> 把结果组合起来。而 <code>&amp;&amp;</code> 比 <code>||</code> 优先级更高，意味着 <code>a &amp;&amp; b || c &amp;&amp; d</code> 会先算两个 <code>&amp;&amp;</code>，再用 <code>||</code> 连接，等价于 <code>(a &amp;&amp; b) || (c &amp;&amp; d)</code>。</p>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>记不住优先级？加括号就对了：</b>与其死记硬背这些数字，不如在条件复杂时主动加括号，比如写成 <code>(a &amp;&amp; b) || (c &amp;&amp; d)</code>。多余的括号不会有任何负面影响，却能让代码意图一目了然，也不用担心自己记错优先级。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub4">4.1.4 短路求值</h3>
+    <div class="section-body">
+      <p><code>&&</code> 和 <code>||</code> 有一个非常重要的特性——<b>短路求值</b>：一旦左边的结果已经能确定整个表达式的值，右边就<b>不会再被计算</b>。</p>
+    </div>
+
+    <div class="short-circuit-row">
+      <span class="sc-box checked">a == 0</span>
+      <span class="sc-arrow">&&</span>
+      <span class="sc-box skipped">10 / a &gt; 1</span>
+      <span style="font-size:12px; color:var(--text-muted);">← a==0 已经是 false，&& 直接判定整体为 false，右边不会被计算</span>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 短路求值避免除零错误</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">,</span> <span class="fn">b</span> <span class="op">=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr class="hl-row"><td class="ln">3</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">!=</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> <span class="fn">b</span> <span class="op">/</span> <span class="fn">a</span> <span class="op">&gt;</span> <span class="num">1</span><span class="pnc">)</span>  <span class="cmt">// 安全：a!=0 为 false，右边不会执行，不会除零</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"b 是 a 的两倍以上"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>|| 的短路规则正好相反：</b><code>&&</code> 是"左边为 false 就短路"，<code>||</code> 是"左边为 true 就短路"——只要 <code>||</code> 左边已经是 <code>true</code>，整个表达式必然是 <code>true</code>，右边同样不会被计算。这个特性常用来把"检查条件是否安全"的判断写在前面，防止后面访问越界、除零等错误。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub5">4.1.5 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>= 和 == 搞混：</b><code>if (a = 5)</code> 是把 5 赋值给 a，赋值表达式的结果是 5（非零即真），条件永远成立，编译器通常只给警告不报错，是极难发现的逻辑 bug。写条件判断时养成"字面量写在左边"的习惯（<code>if (5 == a)</code>）可以让这类笔误变成编译错误。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>依赖记忆中的优先级导致逻辑出错：</b>条件复杂时最容易在心算优先级上出错，尤其是混用 <code>&&</code> 和 <code>||</code> 的情况。宁可多写几个括号，也不要让别人（包括未来的自己）猜测运算顺序。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>依赖短路求值的副作用，却忘了检查顺序：</b>像 <code>a != 0 &amp;&amp; b / a &gt; 1</code> 这种写法，"检查条件"必须写在前面，"依赖这个条件才安全的操作"写在后面。如果顺序写反成 <code>b / a &gt; 1 &amp;&amp; a != 0</code>，除零错误在检查之前就已经发生了。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>浮点数不要直接用 == 比较：</b>由于浮点数存储存在精度误差（后续章节会详细介绍），<code>0.1 + 0.2 == 0.3</code> 的结果很可能是 <code>false</code>。判断两个浮点数是否"相等"，通常要判断它们的差值是否小于一个很小的阈值，而不是直接用 <code>==</code>。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第四章 · 分支结构 · 4.1 运算符</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="03_03_文件读写.html">← 第三章：输入与输出</a>
+      <a class="nav-btn" href="04_02_if语句.html">4.2 if 语句 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

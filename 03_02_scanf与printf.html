@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.2 scanf 与 printf — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "3.2"; }
+
+  /* ── 子导航组件（ch03 风格，单卡片） ── */
+  .ch03-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch03-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch03-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch03-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch03-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch03-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch03-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch03-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* scanf/printf 格式表（浅色风格，呼应 2.1/2.2/2.4 节表格） */
+  .sf-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .sf-table thead tr { background: var(--accent-light); }
+  .sf-table th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: var(--accent-dark); border-bottom: 1px solid var(--border); }
+  .sf-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .sf-table tr:last-child td { border-bottom: none; }
+  .sf-table tr:nth-child(even) td { background: #FAFAF7; }
+  .sf-table td:first-child { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent-dark); white-space: nowrap; }
+  .sf-ex {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-secondary);
+    background: #F1EFE8; padding: 2px 8px; border-radius: 5px; white-space: nowrap;
+  }
+  .sf-out {
+    display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+    padding: 2px 10px; border-radius: 999px; background: var(--teal-light); color: var(--teal);
+  }
+  .sf-row-warn td { background: #FFF5E6 !important; }
+
+  /* 性能对比卡 */
+  .perf-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .perf-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .perf-card-head {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .perf-card-head.slow { background: var(--coral-light); }
+  .perf-card-head.fast { background: var(--teal-light); }
+  .perf-card-icon { font-size: 18px; }
+  .perf-card-title { font-weight: 700; font-size: 14px; }
+  .slow .perf-card-title { color: var(--coral); }
+  .fast .perf-card-title { color: var(--teal); }
+  .perf-card-body { padding: 12px 14px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.65; border-top: 1px solid var(--border); }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="3.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第三章 · 输入与输出</span>
+      <span class="eyebrow-sep">/</span>
+      <span>3.2 scanf 与 printf</span>
+    </div>
+    <h1 class="chapter-title">3.2　scanf 与 printf</h1>
+    <p class="chapter-desc">C 语言风格的输入输出函数，格式控制更简洁直观，在大量数据读写时效率也更高，是竞赛中另一种主流的 I/O 方式。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch03-nav">
+    <div class="ch03-nav-label">第三章 · 输入与输出</div>
+    <div class="ch03-nav-items">
+      <a class="ch03-nav-item" href="03_01_cin与cout.html"><span class="cni-num">3.1</span><span class="cni-name">cin 与 cout</span></a>
+      <a class="ch03-nav-item active" href="03_02_scanf与printf.html"><span class="cni-num">3.2</span><span class="cni-name">scanf 与 printf</span></a>
+      <a class="ch03-nav-item" href="03_03_文件读写.html"><span class="cni-num">3.3</span><span class="cni-name">文件读写</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#sub1"><span class="toc-num">3.2.1</span>scanf 的工作原理与基础用法</a></li>
+      <li><a href="#sub2"><span class="toc-num">3.2.2</span>常见类型格式符</a></li>
+      <li><a href="#sub3"><span class="toc-num">3.2.3</span>printf 的工作原理与基础用法</a></li>
+      <li><a href="#sub4"><span class="toc-num">3.2.4</span>数字位数与精度控制</a></li>
+      <li><a href="#sub5"><span class="toc-num">3.2.5</span>与 cin/cout 的效率对比与优化</a></li>
+      <li><a href="#sub6"><span class="toc-num">3.2.6</span>综合示例：时间格式化输出</a></li>
+      <li><a href="#sub7"><span class="toc-num">3.2.7</span>常见陷阱与易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">3.2</p>
+    <h2 class="section-title">scanf 与 printf</h2>
+    <div class="section-body">
+      <p><code>scanf()</code> 和 <code>printf()</code> 是 C 语言的格式化输入输出函数，头文件是 <code>&lt;cstdio&gt;</code>，在 C++ 中同样可以直接使用。和 <code>cin</code>/<code>cout</code> 不同，它们靠"格式字符串"里的占位符来告诉编译器每个数据该按什么类型读写。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub1">3.2.1 scanf 的工作原理与基础用法</h3>
+    <div class="section-body">
+      <p>语法：<code>scanf("格式字符串", &amp;变量);</code>。格式字符串里每个 <code>%</code> 开头的占位符，对应一个要读入的变量，占位符的个数必须和后面变量的个数一一对应。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · scanf 示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="type">int</span> <span class="fn">year</span><span class="punc">,</span> <span class="fn">month</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">scanf</span><span class="punc">(</span><span class="str">"%d %d"</span><span class="punc">,</span> <span class="op">&amp;</span><span class="fn">year</span><span class="punc">,</span> <span class="op">&amp;</span><span class="fn">month</span><span class="punc">);</span>  <span class="cmt">// 注意：变量前必须加 &amp;</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>别忘了 <code>&amp;</code>：</b><code>cin &gt;&gt; x</code> 不需要 <code>&amp;</code>，但 <code>scanf</code> 要求变量前必须加取址符 <code>&amp;</code>，因为 <code>scanf</code> 需要知道变量在内存中的<b>地址</b>才能把值写进去。忘记加 <code>&amp;</code> 是初学者最常见的编译/运行错误之一（有的编译器只是警告，程序会在运行时崩溃或写入垃圾数据）。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">3.2.2 常见类型格式符</h3>
+
+    <table class="sf-table">
+      <thead>
+        <tr>
+          <th>格式符</th>
+          <th>数据类型</th>
+          <th>示例</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>%c</td>
+          <td>char</td>
+          <td><span class="sf-ex">scanf("%c", &amp;ch)</span></td>
+          <td>读取单个字符</td>
+        </tr>
+        <tr>
+          <td>%d</td>
+          <td>int</td>
+          <td><span class="sf-ex">scanf("%d", &amp;n)</span></td>
+          <td>读取整数</td>
+        </tr>
+        <tr>
+          <td>%lld</td>
+          <td>long long</td>
+          <td><span class="sf-ex">scanf("%lld", &amp;n)</span></td>
+          <td>读取长整型</td>
+        </tr>
+        <tr class="sf-row-warn">
+          <td>%f</td>
+          <td>float</td>
+          <td><span class="sf-ex">scanf("%f", &amp;x)</span></td>
+          <td>只能用于 float，不能用于 double</td>
+        </tr>
+        <tr class="sf-row-warn">
+          <td>%lf</td>
+          <td>double</td>
+          <td><span class="sf-ex">scanf("%lf", &amp;x)</span></td>
+          <td>必须用 %lf，写成 %f 会读错数据</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout danger">
+      <span class="callout-icon">🚫</span>
+      <div><b>%f 和 %lf 不能混用：</b>这是 <code>scanf</code> 里最经典的坑——读取 <code>double</code> 变量<b>必须</b>用 <code>%lf</code>，如果写成 <code>%f</code>，由于 <code>scanf</code> 是按照格式符去内存里"按字节写入"的，%f 和 %lf 写入的字节数不一样，会导致数据错乱，得到完全无意义的结果，但编译器往往不会报错。这一点和 <code>printf</code> 不同——<code>printf</code> 里 <code>float</code> 和 <code>double</code> 都用 <code>%f</code> 就行（见 3.2.4 节），千万别把两边的规则记反。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>scanf 的返回值：</b><code>scanf</code> 返回成功读取的变量个数。例如 <code>while(scanf("%d", &amp;n) == 1)</code> 可以持续读入直到输入结束（EOF），这在竞赛中处理不定量输入时非常实用。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub3">3.2.3 printf 的工作原理与基础用法</h3>
+    <div class="section-body">
+      <p>语法：<code>printf("格式化字符串", 变量1, 变量2, ...);</code> 其中 <code>%</code> 开头的占位符会被对应变量的值替换，变量数量必须与占位符个数一致。和 <code>scanf</code> 不同，<code>printf</code> 输出时不需要加 <code>&amp;</code>（因为只是读值输出，不需要往内存里写东西）。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · printf 基本用法</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="type">int</span>   <span class="fn">age</span>   <span class="op">=</span> <span class="num">15</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"我今年%d岁\n"</span><span class="punc">,</span> <span class="fn">age</span><span class="punc">);</span>    <span class="cmt">// %d 对应整数</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="type">float</span> <span class="fn">score</span> <span class="op">=</span> <span class="num">98.5</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"成绩是%f分\n"</span><span class="punc">,</span> <span class="fn">score</span><span class="punc">);</span>  <span class="cmt">// %f 对应 float</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub4">3.2.4 数字位数与精度控制</h3>
+
+    <table class="sf-table">
+      <thead>
+        <tr><th>格式符</th><th>含义</th><th>示例</th><th>输出</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>%nd</td>
+          <td>整数占 n 位宽，右对齐，不足补空格</td>
+          <td><span class="sf-ex">printf("%5d", 123)</span></td>
+          <td><span class="sf-out">&nbsp;&nbsp;123</span></td>
+        </tr>
+        <tr>
+          <td>%0nd</td>
+          <td>整数占 n 位宽，右对齐，不足补 0</td>
+          <td><span class="sf-ex">printf("%05d", 1)</span></td>
+          <td><span class="sf-out">00001</span></td>
+        </tr>
+        <tr>
+          <td>%.nf</td>
+          <td>float 保留 n 位小数（四舍五入）</td>
+          <td><span class="sf-ex">printf("%.3f", 3.14159f)</span></td>
+          <td><span class="sf-out">3.142</span></td>
+        </tr>
+        <tr class="sf-row-warn">
+          <td>%.nf</td>
+          <td><b>double 也用 %f</b>（不是 %lf！），保留 n 位小数</td>
+          <td><span class="sf-ex">printf("%.5f", 3.14)</span></td>
+          <td><span class="sf-out">3.14000</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · printf 格式控制示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"int指定宽度：%5d\n"</span><span class="punc">,</span> <span class="num">123</span><span class="punc">);</span>                <span class="cmt">// "  123"</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"int用零填充：%05d\n"</span><span class="punc">,</span> <span class="num">123</span><span class="punc">);</span>               <span class="cmt">// "00123"</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"float保留3位小数：%.3f\n"</span><span class="punc">,</span> <span class="num">1.23456f</span><span class="punc">);</span>     <span class="cmt">// "1.235"</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"double保留3位小数：%.3f\n"</span><span class="punc">,</span> <span class="num">1.23456</span><span class="punc">);</span>     <span class="cmt">// "1.235"（double 用 %f，不是 %lf）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">📌</span>
+      <div><b>默认精度：</b><code>printf</code> 输出浮点数默认保留 6 位小数，不足 6 位以 0 补齐，超出 6 位的四舍五入。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub5">3.2.5 与 cin/cout 的效率对比与优化</h3>
+    <div class="section-body">
+      <p>现在 <code>cin/cout</code> 和 <code>scanf/printf</code> 都学过了，可以真正比较一下：这是竞赛中<strong>极其重要</strong>的知识点，大量 I/O 时选错方式可能直接超时！</p>
+    </div>
+
+    <div class="perf-compare">
+      <div class="perf-card">
+        <div class="perf-card-head slow">
+          <span class="perf-card-icon">🐢</span>
+          <span class="perf-card-title">默认 cin / cout</span>
+        </div>
+        <div class="perf-card-body">比 <code>scanf / printf</code> 慢很多，因为 C++ 为了兼容 C 的 I/O，默认让 <code>cin / cout</code> 与 <code>scanf / printf</code> 的缓冲区<b>同步</b>，同步本身有开销。</div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-card-head fast">
+          <span class="perf-card-icon">⚡</span>
+          <span class="perf-card-title">加速后 cin / cout</span>
+        </div>
+        <div class="perf-card-body">关闭同步后，<code>cin / cout</code> 速度通常可以<b>反超</b> <code>scanf / printf</code>，且代码更简洁易读。</div>
+      </div>
+    </div>
+
+    <h3 class="sub-title" style="margin-top:20px;">优化方法：在 main() 开头加两行</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · I/O 加速模板</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr class="hl-row"><td class="ln">3</td><td class="cd">    <span class="fn">ios</span><span class="punc">::</span><span class="fn">sync_with_stdio</span><span class="punc">(</span><span class="kw">false</span><span class="punc">);</span>  <span class="cmt">// 关闭 C/C++ I/O 同步</span></td></tr>
+          <tr class="hl-row"><td class="ln">4</td><td class="cd">    <span class="fn">cin</span><span class="punc">.</span><span class="fn">tie</span><span class="punc">(</span><span class="num">0</span><span class="punc">);</span>                     <span class="cmt">// 解除 cin 与 cout 的绑定</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="cmt">// ... 你的代码 ...</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🚫</span>
+      <div><b>警告：</b>关闭同步后，<b>不要混用</b> <code>cin / cout</code> 与 <code>scanf / printf</code>，否则可能导致输出顺序混乱。选择一种 I/O 方式并坚持使用。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>竞赛习惯：</b>输入输出量不大时用 <code>cin / cout</code>（代码简洁）；大输入量时用 <code>scanf / printf</code>，或在加上两行加速代码后用 <code>cin / cout</code>。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub6">3.2.6 综合示例：时间格式化输出</h3>
+    <div class="section-body">
+      <p>读取小时和分钟，格式化输出为 <code>HH:MM</code> 的形式（不足两位时补零）。这是竞赛中常见的输入输出格式化需求。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 时间格式化输出</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;cstdio&gt;</span>  <span class="cmt">// printf / scanf</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="type">int</span> <span class="fn">h</span><span class="punc">,</span> <span class="fn">m</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">scanf</span><span class="punc">(</span><span class="str">"%d%d"</span><span class="punc">,</span> <span class="op">&amp;</span><span class="fn">h</span><span class="punc">,</span> <span class="op">&amp;</span><span class="fn">m</span><span class="punc">);</span>              <span class="cmt">// 输入：9 5</span></td></tr>
+          <tr class="hl-row"><td class="ln">8</td><td class="cd">    <span class="fn">printf</span><span class="punc">(</span><span class="str">"%02d:%02d\n"</span><span class="punc">,</span> <span class="fn">h</span><span class="punc">,</span> <span class="fn">m</span><span class="punc">);</span>  <span class="cmt">// 输出：09:05（不足两位补 0）</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub7">3.2.7 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>忘记加 &amp;：</b><code>scanf</code> 读取变量时必须加取址符 <code>&amp;</code>（字符数组/字符串除外，因为数组名本身就是地址），漏写是最常见的运行时错误来源。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>scanf 读 double 要用 %lf，printf 输出 double 却用 %f：</b>这是两个函数里唯一"不对称"的地方，非常容易记混。可以这样记：<b>scanf 认真区分类型（分大小写字长），printf 一律用 %f 不区分 float/double</b>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>关闭同步后混用两种 I/O：</b>调用了 <code>ios::sync_with_stdio(false)</code> 之后，如果代码里又同时出现了 <code>cin/cout</code> 和 <code>scanf/printf</code>，两者的缓冲区各自独立，输出顺序可能会乱掉。一旦加速，就要在整个程序里只用一种 I/O 方式。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>格式符与变量类型不匹配：</b>比如用 <code>%d</code> 读一个 <code>long long</code> 变量，只会读进变量的一部分字节，结果完全不可预测。编译器通常不会报错，运行时却给出诡异的数字，一定要让格式符和变量类型严格对应。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第三章 · 输入与输出 · 3.2 scanf 与 printf</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="03_01_cin与cout.html">← 3.1 cin 与 cout</a>
+      <a class="nav-btn" href="03_03_文件读写.html">3.3 文件读写 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
