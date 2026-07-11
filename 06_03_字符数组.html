@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6.3 字符数组 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "6.3"; }
+
+  /* ── 子导航组件（ch06 风格，单卡片） ── */
+  .ch06-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch06-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch06-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch06-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch06-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch06-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch06-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch06-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* 数组内存可视化 */
+  .arr-visual {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 20px 24px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    overflow-x: auto;
+  }
+  .arr-row { display: flex; align-items: center; gap: 0; margin-bottom: 4px; flex-wrap: nowrap }
+  .arr-label { font-size: 11.5px; color: #6C7086; min-width: 72px; text-align: right; padding-right: 12px; flex-shrink: 0 }
+  .arr-cells { display: flex; gap: 3px }
+  .arr-cell {
+    width: 44px; height: 44px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; flex-shrink: 0;
+  }
+  .arr-cell.val { background: #2A2840; color: var(--code-num) }
+  .arr-cell.idx { background: transparent; color: #6C7086; font-size: 12px; font-weight: 400 }
+
+  /* 转义字符表（浅色风格，呼应 2.1/2.2/2.4/3.2 节表格） */
+  .esc-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .esc-table thead tr { background: var(--accent-light) }
+  .esc-table th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: var(--accent-dark); border-bottom: 1px solid var(--border) }
+  .esc-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle }
+  .esc-table tr:last-child td { border-bottom: none }
+  .esc-table tr:nth-child(even) td { background: #FAFAF7 }
+  .esc-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--accent-dark); text-align: center; white-space: nowrap }
+  .esc-ascii {
+    display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    padding: 1px 8px; border-radius: 999px; background: var(--teal-light); color: var(--teal);
+  }
+  .esc-ex {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-secondary);
+    background: #F1EFE8; padding: 2px 8px; border-radius: 5px; white-space: nowrap;
+  }
+
+  /* 字符串函数表（浅色风格） */
+  .ref-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
+  .ref-table.dark thead tr { background: var(--accent-light) }
+  .ref-table.dark th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: var(--accent-dark); border-bottom: 1px solid var(--border) }
+  .ref-table.dark td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; line-height: 1.6 }
+  .ref-table.dark tr:last-child td { border-bottom: none }
+  .ref-table.dark tr:nth-child(even) td { background: #FAFAF7 }
+  .ref-table.dark td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-dark); white-space: nowrap }
+  .ref-ex {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-secondary);
+    background: #F1EFE8; padding: 2px 8px; border-radius: 5px; white-space: nowrap;
+  }
+  .ref-group td { background: var(--teal-light) !important; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--teal); padding: 5px 14px; border-bottom: 1px solid #9FE1CB }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="6.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第六章 · 数组</span>
+      <span class="eyebrow-sep">/</span>
+      <span>6.3 字符数组</span>
+    </div>
+    <h1 class="chapter-title">6.3　字符数组（C 风格字符串）</h1>
+    <p class="chapter-desc">字符数组是 C 语言处理字符串的方式，本质是 char 类型的一维数组，但有一个特殊规定——末尾必须有结束标记。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch06-nav">
+    <div class="ch06-nav-label">第六章 · 数组</div>
+    <div class="ch06-nav-items">
+      <a class="ch06-nav-item" href="06_01_一维数组.html"><span class="cni-num">6.1</span><span class="cni-name">一维数组</span></a>
+      <a class="ch06-nav-item" href="06_02_二维数组.html"><span class="cni-num">6.2</span><span class="cni-name">二维数组</span></a>
+      <a class="ch06-nav-item active" href="06_03_字符数组.html"><span class="cni-num">6.3</span><span class="cni-name">字符数组</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">6.3.1</span>结束符 \0 与输入方式</a></li>
+      <li><a href="#s2"><span class="toc-num">6.3.2</span>常用转义字符</a></li>
+      <li><a href="#s3"><span class="toc-num">6.3.3</span>常用字符串函数</a></li>
+      <li><a href="#s4"><span class="toc-num">6.3.4</span>常见陷阱与易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">6.3</p>
+    <h2 class="section-title">字符数组（C 风格字符串）</h2>
+    <div class="section-body">
+      <p>字符数组是 C 语言处理字符串的方式，本质是 <code>char</code> 类型的一维数组，但有一个特殊规定：末尾必须有 <code>'\0'</code>（空字符，ASCII = 0）作为终止符，告诉程序"字符串到这里结束了"。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub1">6.3.1 结束符 \0 与输入方式</h3>
+
+    <!-- null terminator visual -->
+    <div class="arr-visual">
+      <div style="font-size:11px;color:#6C7086;font-family:'JetBrains Mono',monospace;margin-bottom:10px;">char name[8] = "abcdefg";  // 7个字符 + 1个 \0</div>
+      <div class="arr-row">
+        <span class="arr-label">字符</span>
+        <div class="arr-cells">
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">a</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">b</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">c</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">d</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">e</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">f</div>
+          <div class="arr-cell val" style="background:rgba(137,180,250,.15);color:var(--code-fn)">g</div>
+          <div class="arr-cell val" style="background:rgba(203,166,247,.2);color:var(--code-kw);font-size:12px">\0</div>
+        </div>
+      </div>
+      <div class="arr-row">
+        <span class="arr-label">索引</span>
+        <div class="arr-cells">
+          <div class="arr-cell idx">0</div><div class="arr-cell idx">1</div><div class="arr-cell idx">2</div>
+          <div class="arr-cell idx">3</div><div class="arr-cell idx">4</div><div class="arr-cell idx">5</div>
+          <div class="arr-cell idx">6</div>
+          <div class="arr-cell idx" style="color:var(--code-kw)">7</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🏁</span>
+      <div><b>为什么需要 \0？</b>普通数组只要知道首地址和元素个数，就能确定数据范围。但字符数组常常"预留的空间"比"实际用到的字符数"更大（比如上面的例子里定义了 8 个字符的空间，刚好用满）。<code>\0</code> 就是用来标记"有效内容到这里为止"的哨兵，几乎所有处理字符串的函数（包括 <code>cout</code>）都是靠遇到 <code>\0</code> 才知道该在哪里停下来。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 字符数组 &amp; 输入</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">char</span> <span class="fn">name</span><span class="pnc">[</span><span class="num">8</span><span class="pnc">] = </span><span class="str">"abcdefg"</span><span class="pnc">;</span>   <span class="cmt">// 7 字符 + \0，长度必须 ≥ 8</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">char</span> <span class="fn">str</span><span class="pnc">[] = </span><span class="str">"Hello"</span><span class="pnc">;</span>       <span class="cmt">// 自动推断长度为 6（5 + \0）</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// 读取单词（遇空格停止）</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="typ">char</span> <span class="fn">word</span><span class="pnc">[</span><span class="num">20</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">word</span><span class="pnc">;</span>                 <span class="cmt">// 遇空格停止</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// 读取含空格的整行</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd"><span class="typ">char</span> <span class="fn">sentence</span><span class="pnc">[</span><span class="num">100</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd"><span class="fn">cin</span><span class="pnc">.</span><span class="fn">getline</span><span class="pnc">(</span><span class="fn">sentence</span><span class="pnc">,</span> <span class="num">100</span><span class="pnc">);</span>  <span class="cmt">// 读取整行，包括空格</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="cmt">// 混用 cin 和 getline 时需先清空缓冲区</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">;</span> <span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">a</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd"><span class="fn">cin</span><span class="pnc">.</span><span class="fn">sync</span><span class="pnc">();</span>                 <span class="cmt">// 清空缓冲区残留的换行符</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="fn">cin</span><span class="pnc">.</span><span class="fn">getline</span><span class="pnc">(</span><span class="fn">sentence</span><span class="pnc">,</span> <span class="num">100</span><span class="pnc">);</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">📌</span>
+      <div><b>getline 注意事项：</b>长度参数不能超过数组长度；只能读取字符类型；默认以换行符作为结束符。使用 <code>cin</code> 读取整数后调用 <code>cin.sync()</code> 清空缓冲区，否则 <code>getline</code> 会直接读到残留的换行符。</div>
+    </div>
+
+    <h3 class="sub-title" id="s2">6.3.2 常用转义字符</h3>
+    <div class="section-body">
+      <p>字符串里有些符号没办法直接打出来（比如换行、Tab键），还有些符号本身就是字符串语法的一部分（比如引号），直接写会和字符串的边界搞混。C++ 用<b>反斜杠 <code>\</code></b> 开头的组合来表示这些特殊字符，称为<b>转义字符</b>——"转义"的意思是让紧跟在 <code>\</code> 后面的字符不再表示它本来的含义，而是代表一个特殊符号。</p>
+    </div>
+
+    <table class="esc-table">
+      <thead><tr><th>转义字符</th><th>含义</th><th>ASCII</th><th>使用示例</th></tr></thead>
+      <tbody>
+        <tr><td colspan="4" style="background:var(--teal-light);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);padding:5px 14px;border-bottom:1px solid #9FE1CB;">排版控制</td></tr>
+        <tr><td>\n</td><td>换行</td><td><span class="esc-ascii">10</span></td><td><span class="esc-ex">cout &lt;&lt; "Hello\nWorld";</span></td></tr>
+        <tr><td>\t</td><td>水平制表符（Tab）</td><td><span class="esc-ascii">9</span></td><td><span class="esc-ex">cout &lt;&lt; "A\tB\tC";</span></td></tr>
+        <tr><td colspan="4" style="background:var(--teal-light);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);padding:5px 14px;border-bottom:1px solid #9FE1CB;">符号本身</td></tr>
+        <tr><td>\\</td><td>一个反斜杠 \</td><td><span class="esc-ascii">92</span></td><td><span class="esc-ex">cout &lt;&lt; "C:\\Users";</span></td></tr>
+        <tr><td>\"</td><td>一个双引号 "</td><td><span class="esc-ascii">34</span></td><td><span class="esc-ex">cout &lt;&lt; "\"Hello\"";</span></td></tr>
+        <tr><td>\'</td><td>一个单引号 '</td><td><span class="esc-ascii">39</span></td><td><span class="esc-ex">char c = '\'';</span></td></tr>
+        <tr><td colspan="4" style="background:var(--teal-light);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);padding:5px 14px;border-bottom:1px solid #9FE1CB;">字符串结束</td></tr>
+        <tr><td>\0</td><td>字符串终止符（空字符）</td><td><span class="esc-ascii">0</span></td><td><span class="esc-ex">char s[] = {'H','i','\0'};</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>为什么 \" 和 \\ 需要转义？</b>双引号 <code>"</code> 本身是字符串的边界符号，如果字符串内容里直接出现一个 <code>"</code>，编译器会误以为字符串在这里就结束了。反斜杠 <code>\</code> 同理——它是转义序列的开头，直接写一个 <code>\</code> 会被当成某个转义字符的开始，必须写两个 <code>\\</code> 才能表示"就是一个普通反斜杠"。</div>
+    </div>
+
+    <h3 class="sub-title" id="s3">6.3.3 常用字符串函数（<code>#include &lt;cstring&gt;</code>）</h3>
+    <div class="section-body">
+      <p>字符数组本质上只是普通数组，并不会自带"求长度""拼接""比较"这些能力——毕竟编译器只把它当成一串字符，不知道你把它当"字符串"在用。<code>&lt;cstring&gt;</code> 头文件提供了一整套配套函数，专门用来完成这些字符串操作，使用前记得先 <code>#include &lt;cstring&gt;</code>。</p>
+    </div>
+
+    <table class="ref-table dark">
+      <thead><tr><th>函数</th><th>功能</th><th>示例</th></tr></thead>
+      <tbody>
+        <tr class="ref-group"><td colspan="3">查询类</td></tr>
+        <tr><td>strlen(s)</td><td>返回字符串有效长度（不含 \0）</td><td><span class="ref-ex">strlen("Hello") → 5</span></td></tr>
+        <tr><td>strcmp(s1, s2)</td><td>比较字符串大小（按 ASCII），相等返回 0</td><td><span class="ref-ex">strcmp("abc","abc") → 0</span></td></tr>
+        <tr class="ref-group"><td colspan="3">修改类</td></tr>
+        <tr><td>strcpy(dest, src)</td><td>将 src 复制到 dest</td><td><span class="ref-ex">strcpy(b, a)</span></td></tr>
+        <tr><td>strcat(s1, s2)</td><td>将 s2 拼接到 s1 末尾</td><td><span class="ref-ex">strcat(s, " World")</span></td></tr>
+        <tr><td>strlwr(s)</td><td>将字符串转为全小写</td><td><span class="ref-ex">strlwr("HELLO") → "hello"</span></td></tr>
+        <tr><td>strupr(s)</td><td>将字符串转为全大写</td><td><span class="ref-ex">strupr("hello") → "HELLO"</span></td></tr>
+        <tr class="ref-group"><td colspan="3">转换类</td></tr>
+        <tr><td>atoi(s)</td><td>字符串转整数（非数字返回 0）</td><td><span class="ref-ex">atoi("123") → 123</span></td></tr>
+        <tr><td>atof(s)</td><td>字符串转 double（非数字返回 0.0）</td><td><span class="ref-ex">atof("3.14") → 3.14</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>这些函数都不检查目标空间够不够：</b><code>strcpy</code>、<code>strcat</code> 在写入时完全不会检查目标数组是否装得下，多出来的内容会直接溢出到相邻内存（详见 6.3.4 节的陷阱说明）。使用前先确认目标数组留够了空间。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🔤</span>
+      <div><b>字符分类与大小写转换：</b>判断一个字符是不是字母/数字，或者做大小写转换，用 <code>&lt;cctype&gt;</code> 提供的 <code>isalpha</code>、<code>isdigit</code>、<code>toupper</code>、<code>tolower</code> 等函数即可，已在 2.2 节详细介绍过，这里不再重复。</div>
+    </div>
+
+    <h3 class="sub-title" id="s4">6.3.4 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>忘记为 \0 预留空间：</b>定义字符数组时，大小必须至少是"字符个数 + 1"，多出来的这一个位置留给 <code>\0</code>。<code>char s[5] = "hello"</code> 会因为 5 个字符正好占满数组、没有位置放 <code>\0</code> 而出错，正确写法是 <code>char s[6]</code> 或直接省略大小让编译器自动推断。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>strcpy 目标数组太小导致溢出：</b><code>strcpy</code> 不会检查目标数组够不够大，如果 <code>dest</code> 的空间比 <code>src</code> 小，多出来的内容会溢出到相邻内存，是非常危险的隐藏 bug。使用前一定确认目标数组的大小足够容纳源字符串（含 <code>\0</code>）。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>用 == 比较字符数组内容：</b>字符数组本质是数组，<code>s1 == s2</code> 比较的是两个数组的<b>地址</b>，而不是字符串的内容，即使两个数组内容完全一样，结果通常也是 <code>false</code>。判断内容是否相同必须用 <code>strcmp(s1, s2) == 0</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>手动逐字符构造字符串却忘了补 \0：</b>如果不是用字符串字面量赋值，而是像 <code>s[0]='H'; s[1]='i';</code> 这样一个个字符手动填充，最后必须手动加上 <code>s[2]='\0';</code>，否则数组内容"看起来对"，但用 <code>strlen</code>、<code>cout</code> 等函数处理时会因为找不到结束标记而读到后面无关的垃圾数据。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第六章 · 数组 · 6.3 字符数组</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="06_02_二维数组.html">← 6.2 二维数组</a>
+      <a class="nav-btn" href="07_位运算.html">第七章：位运算 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

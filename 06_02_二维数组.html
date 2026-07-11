@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6.2 二维数组 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "6.2"; }
+  .hl-err td { background: rgba(153,60,29,.07) !important; }
+
+  /* ── 子导航组件（ch06 风格，单卡片） ── */
+  .ch06-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch06-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch06-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch06-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch06-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch06-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch06-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch06-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* 数组内存可视化 */
+  .arr-visual {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 20px 24px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    overflow-x: auto;
+  }
+  .arr-row { display: flex; align-items: center; gap: 0; margin-bottom: 4px; flex-wrap: nowrap }
+  .arr-label { font-size: 11.5px; color: #6C7086; min-width: 72px; text-align: right; padding-right: 12px; flex-shrink: 0 }
+  .arr-cells { display: flex; gap: 3px }
+  .arr-cell {
+    width: 44px; height: 44px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; flex-shrink: 0;
+  }
+  .arr-cell.val { background: #2A2840; color: var(--code-num) }
+  .arr-cell.idx { background: transparent; color: #6C7086; font-size: 12px; font-weight: 400 }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="6.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第六章 · 数组</span>
+      <span class="eyebrow-sep">/</span>
+      <span>6.2 二维数组</span>
+    </div>
+    <h1 class="chapter-title">6.2　二维数组</h1>
+    <p class="chapter-desc">二维数组像一张表格，有行和列两个维度，适合存储矩阵、棋盘、地图等具有"行列结构"的数据。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch06-nav">
+    <div class="ch06-nav-label">第六章 · 数组</div>
+    <div class="ch06-nav-items">
+      <a class="ch06-nav-item" href="06_01_一维数组.html"><span class="cni-num">6.1</span><span class="cni-name">一维数组</span></a>
+      <a class="ch06-nav-item active" href="06_02_二维数组.html"><span class="cni-num">6.2</span><span class="cni-name">二维数组</span></a>
+      <a class="ch06-nav-item" href="06_03_字符数组.html"><span class="cni-num">6.3</span><span class="cni-name">字符数组</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#sub1"><span class="toc-num">6.2.1</span>定义与访问</a></li>
+      <li><a href="#sub2"><span class="toc-num">6.2.2</span>初始化方式</a></li>
+      <li><a href="#sub3"><span class="toc-num">6.2.3</span>常见应用：矩阵求和与转置</a></li>
+      <li><a href="#sub4"><span class="toc-num">6.2.4</span>常见陷阱与易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">6.2</p>
+    <h2 class="section-title">二维数组</h2>
+    <div class="section-body">
+      <p>二维数组像一张表格，有行和列两个维度，适合存储矩阵、棋盘等数据。语法是 <code>类型 数组名[行数][列数];</code>。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub1">6.2.1 定义与访问</h3>
+
+    <!-- 2D array visual -->
+    <div class="arr-visual" style="padding:18px 24px 14px;">
+      <div style="font-size:11px;color:#6C7086;font-family:'JetBrains Mono',monospace;margin-bottom:12px;">int matrix[2][3] = { {1,2,3}, {4,5,6} }</div>
+      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+        <div>
+          <div class="arr-row" style="margin-bottom:3px;">
+            <span class="arr-label" style="min-width:44px;">行0</span>
+            <div class="arr-cells">
+              <div class="arr-cell val" style="width:50px">1</div>
+              <div class="arr-cell val" style="width:50px;background:rgba(166,227,161,.2);color:var(--code-str)">2</div>
+              <div class="arr-cell val" style="width:50px">3</div>
+            </div>
+          </div>
+          <div class="arr-row">
+            <span class="arr-label" style="min-width:44px;">行1</span>
+            <div class="arr-cells">
+              <div class="arr-cell val" style="width:50px">4</div>
+              <div class="arr-cell val" style="width:50px">5</div>
+              <div class="arr-cell val" style="width:50px;background:rgba(250,179,135,.2);color:var(--code-num)">6</div>
+            </div>
+          </div>
+          <div class="arr-row" style="margin-top:4px;">
+            <span class="arr-label" style="min-width:44px;"></span>
+            <div class="arr-cells">
+              <div class="arr-cell idx" style="width:50px">列0</div>
+              <div class="arr-cell idx" style="width:50px;color:var(--code-str)">列1</div>
+              <div class="arr-cell idx" style="width:50px">列2</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#6C7086;padding-top:4px;line-height:2;">
+          <div style="color:var(--code-str)">matrix[0][1] = 2 ← 第0行第1列</div>
+          <div style="color:var(--code-num)">matrix[1][2] = 6 ← 第1行第2列</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>本质仍是连续内存：</b>二维数组在内存里并不是真的按"表格"排列，而是按行依次首尾相接存放的一维序列——<code>matrix[0][0], matrix[0][1], matrix[0][2], matrix[1][0], ...</code> 依次排开。"行列"只是我们理解数据的方式，底层存储和一维数组一样是连续的。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 二维数组定义、访问与遍历</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">matrix</span><span class="pnc">[</span><span class="num">2</span><span class="pnc">][</span><span class="num">3</span><span class="pnc">] =</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">},</span>  <span class="cmt">// 第0行</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span><span class="num">4</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">6</span><span class="pnc">}</span>   <span class="cmt">// 第1行</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">matrix</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">][</span><span class="num">1</span><span class="pnc">];</span>  <span class="cmt">// 输出：2</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">matrix</span><span class="pnc">[</span><span class="num">1</span><span class="pnc">][</span><span class="num">2</span><span class="pnc">];</span>  <span class="cmt">// 输出：6</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="cmt">// 嵌套循环遍历（见 5.3 节）</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">2</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>            <span class="cmt">// 遍历行</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="num">3</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span>       <span class="cmt">// 遍历列</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">matrix</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">6.2.2 初始化方式</h3>
+    <div class="section-body">
+      <p>二维数组的初始化和一维数组类似，但有一条容易被忽视的规则：<b>第一维（行数）可以省略，第二维（列数）不能省略</b>。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 二维数组的初始化方式</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 完整初始化</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">[</span><span class="num">2</span><span class="pnc">][</span><span class="num">3</span><span class="pnc">] = {{</span><span class="num">1</span><span class="pnc">,</span><span class="num">2</span><span class="pnc">,</span><span class="num">3</span><span class="pnc">},{</span><span class="num">4</span><span class="pnc">,</span><span class="num">5</span><span class="pnc">,</span><span class="num">6</span><span class="pnc">}};</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="cmt">// 省略第一维（行数），编译器会自动数一共有几行</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">b</span><span class="pnc">[][</span><span class="num">3</span><span class="pnc">] = {{</span><span class="num">1</span><span class="pnc">,</span><span class="num">2</span><span class="pnc">,</span><span class="num">3</span><span class="pnc">},{</span><span class="num">4</span><span class="pnc">,</span><span class="num">5</span><span class="pnc">,</span><span class="num">6</span><span class="pnc">}};</span>  <span class="cmt">// 自动推断为 2 行</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl-err"><td class="ln">7</td><td class="cd"><span class="typ">int</span> <span class="fn">c</span><span class="pnc">[</span><span class="num">2</span><span class="pnc">][] = {{</span><span class="num">1</span><span class="pnc">,</span><span class="num">2</span><span class="pnc">,</span><span class="num">3</span><span class="pnc">},{</span><span class="num">4</span><span class="pnc">,</span><span class="num">5</span><span class="pnc">,</span><span class="num">6</span><span class="pnc">}};</span>  <span class="cmt">// ❌ 错误！列数不能省略</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 部分初始化，缺省的位置自动补 0</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">int</span> <span class="fn">d</span><span class="pnc">[</span><span class="num">2</span><span class="pnc">][</span><span class="num">3</span><span class="pnc">] = {{</span><span class="num">1</span><span class="pnc">,</span><span class="num">2</span><span class="pnc">}};</span>  <span class="cmt">// → {{1,2,0},{0,0,0}}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">📐</span>
+      <div><b>为什么第二维不能省略？</b>回忆 6.1 节的地址计算公式——数组访问依赖"每一行占多少个元素"这个信息来定位。行数只影响"总共分配多大空间"，而列数决定了"从第几行开始数"，编译器必须知道列数才能正确计算 <code>matrix[i][j]</code> 对应的内存位置，所以列数是不可或缺的。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub3">6.2.3 常见应用：矩阵求和与转置</h3>
+    <div class="section-body">
+      <p>二维数组最常见的两个基础操作：把所有元素累加求和，以及把矩阵"转置"（行列互换，<code>matrix[i][j]</code> 变成 <code>matrix[j][i]</code>）。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 矩阵求和与转置</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">[</span><span class="num">2</span><span class="pnc">][</span><span class="num">3</span><span class="pnc">] = {{</span><span class="num">1</span><span class="pnc">,</span><span class="num">2</span><span class="pnc">,</span><span class="num">3</span><span class="pnc">},{</span><span class="num">4</span><span class="pnc">,</span><span class="num">5</span><span class="pnc">,</span><span class="num">6</span><span class="pnc">}};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="cmt">// ── 求所有元素之和 ──</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">sum</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">2</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="num">3</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="fn">sum</span> <span class="op">+=</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">];</span>  <span class="cmt">// 21</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// ── 矩阵转置：行列互换 ──</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd"><span class="typ">int</span> <span class="fn">b</span><span class="pnc">[</span><span class="num">3</span><span class="pnc">][</span><span class="num">2</span><span class="pnc">];</span>  <span class="cmt">// 转置后行列大小互换</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">2</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="num">3</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">        <span class="fn">b</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">][</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">];</span>  <span class="cmt">// 行列下标互换写入</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub4">6.2.4 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>行下标和列下标搞反：</b><code>matrix[i][j]</code> 中 <code>i</code> 是行、<code>j</code> 是列，遍历时如果两层循环的边界写反（比如外层该跑行数却写成列数），要么越界访问，要么漏掉部分数据。养成"外层管行，内层管列"的固定习惯。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>第二维大小不能省略：</b>只有第一维（行数）可以在初始化时省略让编译器自动推断，第二维（列数）必须显式写明，这是与一维数组初始化最大的区别。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>大二维数组更容易栈溢出：</b>二维数组的总元素个数是行数乘列数，比如 <code>int a[1000][1000]</code> 就有 100 万个 <code>int</code>，占用约 4 MB，远超局部数组允许的栈空间。这类数组几乎总是需要定义成全局变量。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>转置时直接在原数组上操作导致数据错乱：</b>如果不使用额外的数组、试图"原地"交换 <code>a[i][j]</code> 和 <code>a[j][i]</code>，需要非常小心避免同一对元素被交换两次（抵消效果）或者行列数不相等时下标越界。初学阶段建议像上面的例子一样用一个新数组存放转置结果，逻辑更简单可靠。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第六章 · 数组 · 6.2 二维数组</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="06_01_一维数组.html">← 6.1 一维数组</a>
+      <a class="nav-btn" href="06_03_字符数组.html">6.3 字符数组 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

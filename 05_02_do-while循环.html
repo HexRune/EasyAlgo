@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5.2 do-while 循环 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "5.2"; }
+
+  /* ── 子导航组件（ch05 风格，单卡片） ── */
+  .ch05-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch05-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch05-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch05-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch05-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch05-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch05-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch05-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* 流程图布局 */
+  .flow-wrap {
+    display: grid;
+    gap: 20px;
+    margin: 20px 0;
+    align-items: start;
+  }
+  .flow-wrap.sidebar { grid-template-columns: 200px 1fr; }
+  .flow-card {
+    background: #F4F2FF;
+    border: 1px solid #D3CFFA;
+    border-radius: var(--radius-md);
+    padding: 14px 10px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .flow-card-label { font-size: 11px; font-weight: 700; color: var(--accent-mid); text-transform: uppercase; letter-spacing: .07em; }
+
+  /* while vs do-while 对比 */
+  .way-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .way-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .way-card-head {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent-light);
+  }
+  .way-card-icon { font-size: 18px; }
+  .way-card-title { font-weight: 700; font-size: 14px; color: var(--accent-dark); }
+  .way-card-body { padding: 12px 14px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.65; border-top: 1px solid var(--border); }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="5.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第五章 · 循环结构</span>
+      <span class="eyebrow-sep">/</span>
+      <span>5.2 do-while 循环</span>
+    </div>
+    <h1 class="chapter-title">5.2　do-while 循环</h1>
+    <p class="chapter-desc">do-while 循环与 while 恰好相反：先执行一次循环体，再判断条件，因此循环体<strong>至少会执行一次</strong>。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch05-nav">
+    <div class="ch05-nav-label">第五章 · 循环结构</div>
+    <div class="ch05-nav-items">
+      <a class="ch05-nav-item" href="05_01_while循环.html"><span class="cni-num">5.1</span><span class="cni-name">while 循环</span></a>
+      <a class="ch05-nav-item active" href="05_02_do-while循环.html"><span class="cni-num">5.2</span><span class="cni-name">do-while 循环</span></a>
+      <a class="ch05-nav-item" href="05_03_for循环.html"><span class="cni-num">5.3</span><span class="cni-name">for 循环</span></a>
+      <a class="ch05-nav-item" href="05_04_break与continue.html"><span class="cni-num">5.4</span><span class="cni-name">break 与 continue</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#sub1"><span class="toc-num">5.2.1</span>do-while 循环的基本结构</a></li>
+      <li><a href="#sub2"><span class="toc-num">5.2.2</span>do-while 与 while 的选择</a></li>
+      <li><a href="#sub3"><span class="toc-num">5.2.3</span>常见陷阱与易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">5.2</p>
+    <h2 class="section-title">do-while 循环</h2>
+    <div class="section-body">
+      <p><code>do-while</code> 循环与 <code>while</code> 恰好相反：<strong>先执行一次循环体，再判断条件</strong>，因此循环体<strong>至少会执行一次</strong>，哪怕条件一开始就是假的。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub1">5.2.1 do-while 循环的基本结构</h3>
+
+    <div class="flow-wrap sidebar">
+      <div class="flow-card">
+        <span class="flow-card-label">do-while 流程图</span>
+        <svg width="160" height="250" viewBox="0 0 160 250" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="ad" markerWidth="7" markerHeight="7" refX="3.5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#7F77DD"/>
+            </marker>
+          </defs>
+          <rect x="45" y="8" width="70" height="28" rx="14" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="1.5"/>
+          <text x="80" y="27" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="12" fill="#3C3489">开始</text>
+          <line x1="80" y1="36" x2="80" y2="58" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ad)"/>
+          <!-- body FIRST -->
+          <rect x="28" y="58" width="104" height="30" rx="6" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1.5"/>
+          <text x="80" y="78" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="12" fill="#854F0B">循环体</text>
+          <text x="80" y="52" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="10" fill="#EF9F27">先执行一次 ↓</text>
+          <line x1="80" y1="88" x2="80" y2="108" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ad)"/>
+          <!-- diamond -->
+          <polygon points="80,110 130,138 80,166 30,138" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/>
+          <text x="80" y="135" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="11" fill="#0F6E56">循环条件</text>
+          <!-- true loop back -->
+          <line x1="130" y1="138" x2="148" y2="138" stroke="#7F77DD" stroke-width="1.5"/>
+          <line x1="148" y1="138" x2="148" y2="73" stroke="#7F77DD" stroke-width="1.5"/>
+          <line x1="148" y1="73" x2="132" y2="73" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ad)"/>
+          <text x="140" y="132" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="10" fill="#1D9E75">真</text>
+          <!-- false down -->
+          <line x1="80" y1="166" x2="80" y2="200" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#ad)"/>
+          <text x="66" y="184" font-family="Noto Sans SC,sans-serif" font-size="10" fill="#D85A30">假</text>
+          <!-- end -->
+          <rect x="45" y="200" width="70" height="28" rx="14" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="1.5"/>
+          <text x="80" y="219" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="12" fill="#3C3489">结束</text>
+        </svg>
+      </div>
+      <div>
+        <div class="code-block"style="align-self: start;margin-top: 0;">
+          <div class="code-header">
+            <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+            <span class="code-lang">C++ · do-while 语法 &amp; 示例</span>
+          </div>
+          <div class="code-body">
+            <table class="code-table">
+              <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 语法（注意结尾的分号！）</span></td></tr>
+              <tr><td class="ln">2</td><td class="cd"><span class="kw">do</span></td></tr>
+              <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+              <tr><td class="ln">4</td><td class="cd">    <span class="cmt">// 循环体：至少执行一次</span></td></tr>
+              <tr class="hl-row"><td class="ln">5</td><td class="cd"><span class="pnc">}</span> <span class="kw">while</span> <span class="pnc">(</span> 条件 <span class="pnc">);</span>  <span class="cmt">// ⚠️ 别忘了这个分号</span></td></tr>
+              <tr><td class="ln">6</td><td class="cd"></td></tr>
+              <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 示例：即使条件一开始为假，也会执行一次</span></td></tr>
+              <tr><td class="ln">8</td><td class="cd"><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+              <tr><td class="ln">9</td><td class="cd"><span class="kw">do</span></td></tr>
+              <tr><td class="ln">10</td><td class="cd"><span class="pnc">{</span></td></tr>
+              <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"至少执行一次"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+              <tr class="hl-row"><td class="ln">12</td><td class="cd"><span class="pnc">}</span> <span class="kw">while</span> <span class="pnc">(</span><span class="fn">i</span> <span class="op">&lt;</span> <span class="num">5</span><span class="pnc">);</span>  <span class="cmt">// i=10，条件一开始就是 false</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">5.2.2 do-while 与 while 的选择</h3>
+    <div class="section-body">
+      <p>这两种循环唯一的区别，就是"第一次要不要先判断条件"。这个细节决定了它们各自的适用场景：</p>
+    </div>
+
+    <div class="way-compare">
+      <div class="way-card">
+        <div class="way-card-head">
+          <span class="way-card-icon">🔁</span>
+          <span class="way-card-title">while — 可能一次都不执行</span>
+        </div>
+        <div class="way-card-body">适合"不确定要不要执行"的场景，比如"如果列表不为空，就处理列表"——列表本来就为空时，一次都不应该执行。</div>
+      </div>
+      <div class="way-card">
+        <div class="way-card-head">
+          <span class="way-card-icon">🔂</span>
+          <span class="way-card-title">do-while — 保证至少执行一次</span>
+        </div>
+        <div class="way-card-body">适合"无论如何都要先做一次，再看要不要重复"的场景，最典型的是<b>输入验证</b>——总要先让用户输入一次，才能判断这次输入合不合法。</div>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>一个经典的 <code>do-while</code> 应用场景是"重复要求用户输入，直到输入合法为止"：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 输入验证（do-while 的典型场景）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">age</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-row"><td class="ln">2</td><td class="cd"><span class="kw">do</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"请输入年龄（0~150）："</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">age</span><span class="pnc">;</span>  <span class="cmt">// 不管输入是否合法，先读一次</span></td></tr>
+          <tr class="hl-row"><td class="ln">6</td><td class="cd"><span class="pnc">}</span> <span class="kw">while</span> <span class="pnc">(</span><span class="fn">age</span> <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> <span class="fn">age</span> <span class="op">&gt;</span> <span class="num">150</span><span class="pnc">);</span>  <span class="cmt">// 不合法就重新循环</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"年龄输入成功：" </span> <span class="op">&lt;&lt;</span> <span class="fn">age</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>换个角度想：</b>如果这段逻辑用 <code>while</code> 写，得先在循环外单独写一次"提示输入"的代码（保证条件判断时变量已经有值），循环体内再重复一遍相同的代码——同样的提示语句要写两遍。<code>do-while</code> 恰好省掉了这次重复。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub3">5.2.3 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>忘记结尾的分号：</b><code>do { ... } while (条件);</code> 结尾必须有分号，这是 <code>do-while</code> 独有的语法要求（普通 <code>while</code> 循环结尾不需要分号），漏写会导致编译错误。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>没意识到"至少执行一次"可能不符合需求：</b>如果循环体在某些情况下根本不应该执行（比如列表本来就是空的），却用了 <code>do-while</code>，会导致代码在这些边界情况下多跑一次，产生不该有的副作用。使用前先确认"至少一次"是不是真的符合业务逻辑。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>滥用 do-while 当普通 while 用：</b>如果并不需要"至少执行一次"这个特性，滥用 <code>do-while</code> 只会让代码在需要"先判断再执行"的直觉上显得别扭。没有特殊需求时，<code>while</code> 仍然是更常见、更符合直觉的默认选择。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第五章 · 循环结构 · 5.2 do-while 循环</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="05_01_while循环.html">← 5.1 while 循环</a>
+      <a class="nav-btn" href="05_03_for循环.html">5.3 for 循环 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

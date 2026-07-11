@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5.4 break 与 continue — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "5.4"; }
+  .hl-break td { background: rgba(153,60,29,.07) !important; }
+  .hl-cont td  { background: rgba(15,110,86,.07) !important; }
+
+  /* ── 子导航组件（ch05 风格，单卡片） ── */
+  .ch05-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch05-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch05-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch05-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch05-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch05-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch05-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch05-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* break/continue 对比卡 */
+  .bc-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .bc-card {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .bc-head {
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .bc-head.brk { background: var(--coral-light); }
+  .bc-head.cnt { background: var(--teal-light); }
+  .bc-head-kw {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px; font-weight: 700;
+    padding: 2px 10px; border-radius: 5px;
+  }
+  .brk .bc-head-kw { background: var(--coral-mid); color: #fff; }
+  .cnt .bc-head-kw { background: var(--teal-mid); color: #fff; }
+  .bc-head-desc { font-size: 13px; font-weight: 700; }
+  .brk .bc-head-desc { color: var(--coral); }
+  .cnt .bc-head-desc { color: var(--teal); }
+  .bc-body { padding: 12px 16px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; border-top: 1px solid var(--border); }
+
+  /* 嵌套作用范围可视化 */
+  .scope-visual {
+    background: #F4F2FF;
+    border: 1px solid #D3CFFA;
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  .sv-outer {
+    border: 2px solid var(--accent-mid);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    position: relative;
+  }
+  .sv-outer-label {
+    position: absolute; top: -10px; left: 12px;
+    background: var(--accent-light); color: var(--accent-dark);
+    font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 4px;
+    border: 1px solid #AFA9EC;
+  }
+  .sv-inner {
+    border: 2px dashed var(--coral);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin-top: 10px;
+    position: relative;
+    background: var(--coral-light);
+  }
+  .sv-inner-label {
+    position: absolute; top: -10px; left: 12px;
+    background: var(--coral-light); color: var(--coral);
+    font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 4px;
+    border: 1px solid #F3B7A3;
+  }
+  .sv-row { color: var(--accent-dark); font-size: 13px; margin-bottom: 4px; }
+  .sv-inner-row { color: var(--coral); font-size: 12.5px; }
+  .sv-break-note { color: var(--coral); font-weight: 700; font-size: 12px; margin-top: 6px; }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="5.4">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第五章 · 循环结构</span>
+      <span class="eyebrow-sep">/</span>
+      <span>5.4 break 与 continue</span>
+    </div>
+    <h1 class="chapter-title">5.4　break 与 continue</h1>
+    <p class="chapter-desc">循环运行过程中，有时需要提前结束循环，或者跳过某一次不做处理。break 和 continue 就是控制循环流程的两个关键字。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch05-nav">
+    <div class="ch05-nav-label">第五章 · 循环结构</div>
+    <div class="ch05-nav-items">
+      <a class="ch05-nav-item" href="05_01_while循环.html"><span class="cni-num">5.1</span><span class="cni-name">while 循环</span></a>
+      <a class="ch05-nav-item" href="05_02_do-while循环.html"><span class="cni-num">5.2</span><span class="cni-name">do-while 循环</span></a>
+      <a class="ch05-nav-item" href="05_03_for循环.html"><span class="cni-num">5.3</span><span class="cni-name">for 循环</span></a>
+      <a class="ch05-nav-item active" href="05_04_break与continue.html"><span class="cni-num">5.4</span><span class="cni-name">break 与 continue</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#sub1"><span class="toc-num">5.4.1</span>break 语句</a></li>
+      <li><a href="#sub2"><span class="toc-num">5.4.2</span>continue 语句</a></li>
+      <li><a href="#sub3"><span class="toc-num">5.4.3</span>在嵌套循环中的作用范围</a></li>
+      <li><a href="#sub4"><span class="toc-num">5.4.4</span>常见陷阱与易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">5.4</p>
+    <h2 class="section-title">break 与 continue</h2>
+    <div class="section-body">
+      <p>循环运行过程中，有时需要提前结束循环，或者跳过某一次不做处理。<code>break</code> 和 <code>continue</code> 就是控制循环流程的两个关键字。</p>
+    </div>
+
+    <div class="bc-compare">
+      <div class="bc-card">
+        <div class="bc-head brk">
+          <span class="bc-head-kw">break</span>
+          <span class="bc-head-desc">跳出整个循环</span>
+        </div>
+        <div class="bc-body">遇到 <code>break</code> 后，立即<strong>终止当前循环</strong>，继续执行循环后面的代码。也可用于跳出 <code>switch</code>。</div>
+      </div>
+      <div class="bc-card">
+        <div class="bc-head cnt">
+          <span class="bc-head-kw">continue</span>
+          <span class="bc-head-desc">跳过本次迭代</span>
+        </div>
+        <div class="bc-body">遇到 <code>continue</code> 后，跳过本次循环体中剩余的代码，直接进入<strong>下一次迭代</strong>，循环不会终止。</div>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub1">5.4.1 break 语句</h3>
+    <div class="section-body">
+      <p><code>break</code> 关键字用于跳出当前所在的循环（或 <code>switch</code>），继续执行循环后面的代码。常用于"找到了就没必要继续找下去"的场景：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · break 示例（找第一个被 7 整除的数）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="num">100</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">i</span> <span class="op">%</span> <span class="num">7</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"第一个被7整除的数是："</span> <span class="op">&lt;&lt;</span> <span class="fn">i</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-break"><td class="ln">6</td><td class="cd">        <span class="kw">break</span><span class="pnc">;</span>  <span class="cmt">// 找到了就立刻跳出，不再继续</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 输出：第一个被7整除的数是：7</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">5.4.2 continue 语句</h3>
+    <div class="section-body">
+      <p><code>continue</code> 关键字用于跳过当前循环的剩余部分，直接进入下一次迭代。它<strong>不会终止循环</strong>，只是跳过本次迭代中剩余的代码：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · continue 示例（输出奇数）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="num">10</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">i</span> <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl-cont"><td class="ln">5</td><td class="cd">        <span class="kw">continue</span><span class="pnc">;</span>  <span class="cmt">// 偶数：跳过本次，不执行 cout</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">i</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span>  <span class="cmt">// 只有奇数才到这里</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 输出：1 3 5 7 9</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>一句话总结：</b><code>break</code> 是"我不想玩了，退出循环"；<code>continue</code> 是"这次跳过，下一轮继续玩"。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub3">5.4.3 在嵌套循环中的作用范围</h3>
+    <div class="section-body">
+      <p><code>break</code> 和 <code>continue</code> 都只作用于它们所在的<strong>最内层</strong>循环，不会影响外层循环：</p>
+    </div>
+
+    <div class="scope-visual">
+      <div class="sv-outer">
+        <span class="sv-outer-label">外层循环 — 不受影响，继续正常执行</span>
+        <div class="sv-row">for (int i = 1; i &lt;= 3; i++)</div>
+        <div class="sv-inner">
+          <span class="sv-inner-label">内层循环 — break 只在这里生效</span>
+          <div class="sv-inner-row">for (int j = 1; j &lt;= 3; j++)</div>
+          <div class="sv-inner-row" style="margin-top:6px;">if (j == 2) break;  // 只跳出内层这一层</div>
+          <div class="sv-break-note">↓ 跳到这里（内层循环结束），外层 i 继续下一轮</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · break 在嵌套循环中只跳一层</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="num">3</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>       <span class="cmt">// 外层</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;=</span> <span class="num">3</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span>   <span class="cmt">// 内层</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl-break"><td class="ln">5</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">j</span> <span class="op">==</span> <span class="num">2</span><span class="pnc">)</span> <span class="kw">break</span><span class="pnc">;</span>  <span class="cmt">// 只跳出内层 for(j...)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">i</span> <span class="op">&lt;&lt;</span> <span class="str">","</span> <span class="op">&lt;&lt;</span> <span class="fn">j</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 输出：1,1 2,1 3,1 —— 外层照常跑满 3 轮，每轮内层只打印 j=1 就 break</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>如果确实需要"一次性跳出所有层"，常见做法是用一个<strong>标志变量</strong>记录"是否需要终止"，外层循环每轮开始时检查这个标志：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 用标志变量跳出多层循环</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">bool</span> <span class="fn">found</span> <span class="op">=</span> <span class="kw">false</span><span class="pnc">;</span>  <span class="cmt">// 标志变量：是否已经找到目标</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="num">3</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="fn">found</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 外层：加上 !found 条件</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;=</span> <span class="num">3</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">i</span> <span class="op">==</span> <span class="num">2</span> <span class="op">&amp;&amp;</span> <span class="fn">j</span> <span class="op">==</span> <span class="num">2</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl-break"><td class="ln">8</td><td class="cd">            <span class="fn">found</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span>  <span class="cmt">// 标记找到，外层下一轮会因为 !found 而停止</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">            <span class="kw">break</span><span class="pnc">;</span>          <span class="cmt">// 先跳出内层</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub4">5.4.4 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>误以为 break 能跳出所有层：</b>嵌套循环中 <code>break</code> 只能跳出<strong>最内层</strong>的循环，外层会继续正常运行。需要一次性终止所有层时，要用标志变量或把逻辑提取成函数用 <code>return</code> 退出。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>continue 跳过了更新语句，导致死循环：</b>这是 <code>while</code> 循环里非常隐蔽的坑——如果更新语句（比如 <code>i++</code>）写在 <code>continue</code>判断<b>之后</b>，一旦触发 <code>continue</code>，更新语句会被跳过，条件永远不变，循环永远不会结束。<code>for</code> 循环不会有这个问题，因为它的更新语句在结构上独立于循环体，即使触发 <code>continue</code> 也一定会执行。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>在 switch 里的 break 和循环里的 break 搞混：</b>如果 <code>switch</code> 语句嵌套在循环内部，<code>switch</code> 里的 <code>break</code> 只会跳出 <code>switch</code> 本身，并不会影响外层的循环，这一点容易和"break 跳出循环"的直觉混淆。</div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · continue 导致 while 死循环（反面例子，请勿模仿）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-cont"><td class="ln">2</td><td class="cd"><span class="kw">while</span> <span class="pnc">(</span><span class="fn">i</span> <span class="op">&lt;</span> <span class="num">10</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">i</span> <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl-cont"><td class="ln">6</td><td class="cd">        <span class="kw">continue</span><span class="pnc">;</span>  <span class="cmt">// ⚠️ 偶数时直接跳过下面的 i++</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">i</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-cont"><td class="ln">9</td><td class="cd">    <span class="fn">i</span><span class="op">++</span><span class="pnc">;</span>  <span class="cmt">// ⚠️ i=0 时 continue 会跳过这一行，i 永远是 0，死循环！</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🚫</span>
+      <div><b>修复方法：</b>在 <code>while</code>/<code>do-while</code> 循环中使用 <code>continue</code> 时，一定要确保更新语句在 <code>continue</code> 触发<b>之前</b>就已经执行，或者把更新语句挪到 <code>continue</code> 判断的前面。这也是为什么"循环次数已知"的场景更推荐用 <code>for</code>——更新语句在结构上独立出来，天然不会被 <code>continue</code> 波及。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第五章 · 循环结构 · 5.4 break 与 continue</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="05_03_for循环.html">← 5.3 for 循环</a>
+      <a class="nav-btn" href="06_01_一维数组.html">第六章：数组 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

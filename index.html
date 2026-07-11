@@ -216,6 +216,22 @@
     --grp-color: var(--amber-mid); --grp-color-mid: var(--amber-mid); --grp-color-light: var(--amber-light);
   }
   @media (max-width: 900px) { .ch4-flat-items { grid-template-columns: repeat(2, 1fr); } }
+
+  /* 第五章：4 个等大小卡片，不分组 */
+  .ch5-flat-items {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    margin-bottom: 18px;
+    --grp-color: var(--blue-mid); --grp-color-mid: var(--blue-mid); --grp-color-light: var(--blue-light);
+  }
+  @media (max-width: 900px) { .ch5-flat-items { grid-template-columns: repeat(2, 1fr); } }
+
+  /* 第六章：3 个等大小卡片，不分组 */
+  .ch6-flat-items {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin-bottom: 18px;
+    --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid); --grp-color-light: var(--coral-light);
+  }
+  @media (max-width: 700px) { .ch6-flat-items { grid-template-columns: repeat(1, 1fr); } }
   .card-num {
     flex-shrink: 0;
     width: 40px; height: 40px;
@@ -558,27 +574,60 @@
     </div>
     <!-- /.stl-mega-card (ch4) -->
 
-    <!-- 第五章 -->
-    <a class="chapter-card" href="05_循环结构.html">
-      <div class="card-num">05</div>
-      <div class="card-body">
-        <div class="card-chapter">第五章</div>
-        <div class="card-title">循环结构</div>
-        <div class="card-desc">for · while · do-while · break & continue</div>
-      </div>
-      <div class="card-arrow">→</div>
-    </a>
+    <!-- 第五章：整块大卡片，内部 4 个小节等大小展示，均可点击跳转 -->
+    <div class="stl-mega-card collapsed">
 
-    <!-- 第六章 -->
-    <a class="chapter-card" href="06_数组.html">
-      <div class="card-num">06</div>
-      <div class="card-body">
-        <div class="card-chapter">第六章</div>
-        <div class="card-title">数组</div>
-        <div class="card-desc">一维数组 · 二维数组 · 字符串数组</div>
+      <div class="stl-mega-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <div class="card-num">05</div>
+        <div class="card-body">
+          <div class="card-chapter">第五章</div>
+          <div class="card-title">循环结构</div>
+          <div class="card-desc">while · do-while · for · break & continue —— 点击下方任意小节直达对应页面</div>
+        </div>
+        <span class="mega-collapse-badge"><span class="mcb-icon">⌄</span></span>
       </div>
-      <div class="card-arrow">→</div>
-    </a>
+
+      <div class="stl-groups">
+
+        <div class="ch5-flat-items">
+          <a class="stl-item" href="05_01_while循环.html"><span class="si-name">5.1 while 循环</span><span class="si-desc">先判断再执行 · 三种循环一览</span></a>
+          <a class="stl-item" href="05_02_do-while循环.html"><span class="si-name">5.2 do-while 循环</span><span class="si-desc">先执行再判断 · 至少一次</span></a>
+          <a class="stl-item" href="05_03_for循环.html"><span class="si-name">5.3 for 循环</span><span class="si-desc">三段式结构 · 嵌套循环</span></a>
+          <a class="stl-item" href="05_04_break与continue.html"><span class="si-name">5.4 break 与 continue</span><span class="si-desc">跳出循环 · 跳过本次</span></a>
+        </div>
+
+      </div>
+      <!-- /.stl-groups -->
+
+    </div>
+    <!-- /.stl-mega-card (ch5) -->
+
+    <!-- 第六章：整块大卡片，内部 3 个小节等大小展示，均可点击跳转 -->
+    <div class="stl-mega-card collapsed">
+
+      <div class="stl-mega-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <div class="card-num">06</div>
+        <div class="card-body">
+          <div class="card-chapter">第六章</div>
+          <div class="card-title">数组</div>
+          <div class="card-desc">一维数组 · 二维数组 · 字符数组 —— 点击下方任意小节直达对应页面</div>
+        </div>
+        <span class="mega-collapse-badge"><span class="mcb-icon">⌄</span></span>
+      </div>
+
+      <div class="stl-groups">
+
+        <div class="ch6-flat-items">
+          <a class="stl-item" href="06_01_一维数组.html"><span class="si-name">6.1 一维数组</span><span class="si-desc">定义 · 访问 · 插入删除 · 排序</span></a>
+          <a class="stl-item" href="06_02_二维数组.html"><span class="si-name">6.2 二维数组</span><span class="si-desc">矩阵 · 求和与转置</span></a>
+          <a class="stl-item" href="06_03_字符数组.html"><span class="si-name">6.3 字符数组</span><span class="si-desc">C 风格字符串 · 常用函数</span></a>
+        </div>
+
+      </div>
+      <!-- /.stl-groups -->
+
+    </div>
+    <!-- /.stl-mega-card (ch6) -->
 
     <!-- 第七章 -->
     <a class="chapter-card" href="07_位运算.html">

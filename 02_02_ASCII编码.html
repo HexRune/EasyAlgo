@@ -395,9 +395,10 @@
         <table class="code-table">
           <tr><td class="ln">1</td><td class="cd"><span class="type">char</span> <span class="fn">c</span> <span class="op">=</span> <span class="str">'A'</span><span class="punc">;</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"></td></tr>
-          <tr><td class="ln">3</td><td class="cd"><span class="kw">if</span> <span class="punc">(</span><span class="fn">isalpha</span><span class="punc">(</span><span class="fn">c</span><span class="punc">))</span> <span class="punc">{</span>          <span class="cmt">// 先判断确实是字母，再转换</span></td></tr>
-          <tr><td class="ln">4</td><td class="cd">    <span class="type">char</span> <span class="fn">lower</span> <span class="op">=</span> <span class="type">char</span><span class="punc">(</span><span class="fn">tolower</span><span class="punc">(</span><span class="fn">c</span><span class="punc">));</span>  <span class="cmt">// 'a'</span></td></tr>
-          <tr><td class="ln">5</td><td class="cd"><span class="punc">}</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">if</span> <span class="punc">(</span><span class="fn">isalpha</span><span class="punc">(</span><span class="fn">c</span><span class="punc">))</span>     <span class="cmt">// 先判断确实是字母，再转换</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="type">char</span> <span class="fn">lower</span> <span class="op">=</span> <span class="type">char</span><span class="punc">(</span><span class="fn">tolower</span><span class="punc">(</span><span class="fn">c</span><span class="punc">));</span>  <span class="cmt">// 'a'</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="punc">}</span></td></tr>
         </table>
       </div>
     </div>

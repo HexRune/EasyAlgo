@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5.3 for 循环 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "5.3"; }
+
+  /* ── 子导航组件（ch05 风格，单卡片） ── */
+  .ch05-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch05-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch05-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch05-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch05-nav-item:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .ch05-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch05-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ch05-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* 流程图布局 */
+  .flow-wrap {
+    display: grid;
+    gap: 20px;
+    margin: 20px 0;
+    align-items: start;
+  }
+  .flow-wrap.sidebar { grid-template-columns: 200px 1fr; }
+  .flow-wrap.sidebar-wide { grid-template-columns: 220px 1fr; }
+  .flow-card {
+    background: #F4F2FF;
+    border: 1px solid #D3CFFA;
+    border-radius: var(--radius-md);
+    padding: 14px 10px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .flow-card-label { font-size: 11px; font-weight: 700; color: var(--accent-mid); text-transform: uppercase; letter-spacing: .07em; }
+
+  /* for 循环解剖 */
+  .for-anatomy {
+    background: var(--code-bg);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    overflow-x: auto;
+  }
+  .fa-line { display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
+  .fa-kw   { color: var(--code-kw); }
+  .fa-pnc  { color: var(--code-punc); }
+  .fa-part {
+    display: inline-flex; flex-direction: column; align-items: center;
+    position: relative; cursor: default;
+  }
+  .fa-text { padding: 2px 4px; border-radius: 4px; }
+  .fa-init { background: rgba(250,179,135,.15); color: var(--code-num); }
+  .fa-cond { background: rgba(166,227,161,.15); color: var(--code-str); }
+  .fa-upd  { background: rgba(137,180,250,.15); color: var(--code-fn); }
+  .fa-labels {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #2A2840;
+    font-size: 12px;
+  }
+  .fa-lbl { display: flex; align-items: center; gap: 6px; }
+  .fa-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .fa-dot.init { background: var(--code-num); }
+  .fa-dot.cond { background: var(--code-str); }
+  .fa-dot.upd  { background: var(--code-fn); }
+  .fa-lbl-text { color: #6C7086; font-size: 11.5px; }
+
+  /* 执行顺序条 */
+  .exec-order {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    flex-wrap: wrap;
+  }
+  .eo-step {
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+  }
+  .eo-num { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .eo-step.s1 { background: rgba(250,179,135,.18); color: var(--code-num); }
+  .eo-step.s1 .eo-num { background: var(--code-num); }
+  .eo-step.s2 { background: rgba(166,227,161,.18); color: var(--code-str); }
+  .eo-step.s2 .eo-num { background: #5aab57; }
+  .eo-step.s3 { background: rgba(203,166,247,.18); color: var(--code-kw); }
+  .eo-step.s3 .eo-num { background: var(--code-kw); }
+  .eo-step.s4 { background: rgba(137,180,250,.18); color: var(--code-fn); }
+  .eo-step.s4 .eo-num { background: var(--code-fn); }
+  .eo-arrow { color: var(--border-md); font-size: 16px; }
+  .eo-loop { font-size: 11px; color: var(--text-muted); font-style: italic; }
+
+  /* 嵌套循环可视化 */
+  .nested-visual {
+    background: #F4F2FF;
+    border: 1px solid #D3CFFA;
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  .nv-outer {
+    border: 2px solid var(--accent-mid);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    position: relative;
+  }
+  .nv-outer-label {
+    position: absolute; top: -10px; left: 12px;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    font-size: 11px; font-weight: 700;
+    padding: 1px 8px; border-radius: 4px;
+    border: 1px solid #AFA9EC;
+  }
+  .nv-inner {
+    border: 2px solid var(--teal-mid);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin-top: 10px;
+    position: relative;
+    background: var(--teal-light);
+  }
+  .nv-inner-label {
+    position: absolute; top: -10px; left: 12px;
+    background: var(--teal-light);
+    color: var(--teal);
+    font-size: 11px; font-weight: 700;
+    padding: 1px 8px; border-radius: 4px;
+    border: 1px solid #9FE1CB;
+  }
+  .nv-row { color: var(--accent-dark); margin-bottom: 4px; font-size: 13px; }
+  .nv-inner-row { color: var(--teal); font-size: 12.5px; }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ Chapter Header ═══ -->
+  <header class="chapter-header" data-ch="5.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第五章 · 循环结构</span>
+      <span class="eyebrow-sep">/</span>
+      <span>5.3 for 循环</span>
+    </div>
+    <h1 class="chapter-title">5.3　for 循环</h1>
+    <p class="chapter-desc">for 循环把初始化、条件判断、更新三步整合到一行，是循环次数已知时最简洁、最常用的写法，本节还将学习循环嵌套的用法。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch05-nav">
+    <div class="ch05-nav-label">第五章 · 循环结构</div>
+    <div class="ch05-nav-items">
+      <a class="ch05-nav-item" href="05_01_while循环.html"><span class="cni-num">5.1</span><span class="cni-name">while 循环</span></a>
+      <a class="ch05-nav-item" href="05_02_do-while循环.html"><span class="cni-num">5.2</span><span class="cni-name">do-while 循环</span></a>
+      <a class="ch05-nav-item active" href="05_03_for循环.html"><span class="cni-num">5.3</span><span class="cni-name">for 循环</span></a>
+      <a class="ch05-nav-item" href="05_04_break与continue.html"><span class="cni-num">5.4</span><span class="cni-name">break 与 continue</span></a>
+    </div>
+  </nav>
+
+  <!-- ═══ TOC ═══ -->
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#sub1"><span class="toc-num">5.3.1</span>for 循环的三段式结构</a></li>
+      <li><a href="#sub2"><span class="toc-num">5.3.2</span>执行顺序</a></li>
+      <li><a href="#sub3"><span class="toc-num">5.3.3</span>灵活的写法</a></li>
+      <li><a href="#sub4"><span class="toc-num">5.3.4</span>嵌套循环</a></li>
+      <li><a href="#sub5"><span class="toc-num">5.3.5</span>常见陷阱与易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">5.3</p>
+    <h2 class="section-title">for 循环</h2>
+    <div class="section-body">
+      <p><code>for</code> 循环把初始化、条件判断、更新三步整合到一行，是循环次数已知时最简洁、最常用的写法。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub1">5.3.1 for 循环的三段式结构</h3>
+
+    <!-- for anatomy -->
+    <div class="for-anatomy">
+      <div class="fa-line">
+        <span class="fa-kw">for</span>
+        <span class="fa-pnc">&nbsp;(</span>
+        <span class="fa-part"><span class="fa-text fa-init">int i = 1</span></span>
+        <span class="fa-pnc">;&nbsp;</span>
+        <span class="fa-part"><span class="fa-text fa-cond">i &lt;= 10</span></span>
+        <span class="fa-pnc">;&nbsp;</span>
+        <span class="fa-part"><span class="fa-text fa-upd">i++</span></span>
+        <span class="fa-pnc">)</span>
+      </div>
+      <div class="fa-labels">
+        <div class="fa-lbl"><span class="fa-dot init"></span><span class="fa-lbl-text">① 初始化（只执行一次）</span></div>
+        <div class="fa-lbl"><span class="fa-dot cond"></span><span class="fa-lbl-text">② 条件（每轮都判断）</span></div>
+        <div class="fa-lbl"><span class="fa-dot upd"></span><span class="fa-lbl-text">④ 更新（每轮执行完后）</span></div>
+      </div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">5.3.2 执行顺序</h3>
+
+    <!-- execution order -->
+    <div class="exec-order">
+      <div class="eo-step s1"><span class="eo-num">1</span>初始化</div>
+      <span class="eo-arrow">→</span>
+      <div class="eo-step s2"><span class="eo-num">2</span>判断条件</div>
+      <span class="eo-arrow">→</span>
+      <div class="eo-step s3"><span class="eo-num">3</span>执行循环体</div>
+      <span class="eo-arrow">→</span>
+      <div class="eo-step s4"><span class="eo-num">4</span>执行更新</div>
+      <span class="eo-arrow">↩</span>
+      <span class="eo-loop">回到 ②，直到条件为 false</span>
+    </div>
+
+    <div class="flow-wrap sidebar-wide">
+      <div class="flow-card">
+        <span class="flow-card-label">for 流程图</span>
+        <svg width="170" height="280" viewBox="0 0 170 280" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="af" markerWidth="7" markerHeight="7" refX="3.5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#7F77DD"/>
+            </marker>
+          </defs>
+          <rect x="45" y="8" width="70" height="26" rx="13" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="1.5"/>
+          <text x="80" y="25" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="11" fill="#3C3489">开始</text>
+          <line x1="80" y1="34" x2="80" y2="52" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#af)"/>
+          <!-- init box -->
+          <rect x="30" y="52" width="100" height="26" rx="6" fill="rgba(250,179,135,.2)" stroke="#FAB387" stroke-width="1.5"/>
+          <text x="80" y="69" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="11" fill="#854F0B">① 初始化</text>
+          <line x1="80" y1="78" x2="80" y2="96" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#af)"/>
+          <!-- cond diamond -->
+          <polygon points="80,98 132,122 80,146 28,122" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/>
+          <text x="80" y="118" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="10" fill="#0F6E56">② 判断条件</text>
+          <!-- true down -->
+          <line x1="80" y1="146" x2="80" y2="166" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#af)"/>
+          <text x="64" y="160" font-family="Noto Sans SC,sans-serif" font-size="10" fill="#1D9E75">真</text>
+          <!-- body -->
+          <rect x="28" y="166" width="104" height="26" rx="6" fill="rgba(203,166,247,.2)" stroke="#CBA6F7" stroke-width="1.5"/>
+          <text x="80" y="183" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="11" fill="#6C4FA0">③ 执行循环体</text>
+          <line x1="80" y1="192" x2="80" y2="210" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#af)"/>
+          <!-- update -->
+          <rect x="28" y="210" width="104" height="26" rx="6" fill="rgba(137,180,250,.2)" stroke="#89B4FA" stroke-width="1.5"/>
+          <text x="80" y="227" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="11" fill="#0C447C">④ 更新变量</text>
+          <!-- loop back -->
+          <line x1="28" y1="223" x2="10" y2="223" stroke="#7F77DD" stroke-width="1.5"/>
+          <line x1="10" y1="223" x2="10" y2="122" stroke="#7F77DD" stroke-width="1.5"/>
+          <line x1="10" y1="122" x2="26" y2="122" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#af)"/>
+          <!-- false exit -->
+          <line x1="132" y1="122" x2="152" y2="122" stroke="#7F77DD" stroke-width="1.5"/>
+          <line x1="152" y1="122" x2="152" y2="248" stroke="#7F77DD" stroke-width="1.5" stroke-dasharray="4,2"/>
+          <line x1="152" y1="248" x2="100" y2="248" stroke="#7F77DD" stroke-width="1.5" marker-end="url(#af)"/>
+          <text x="150" y="116" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="10" fill="#D85A30">假</text>
+          <!-- end -->
+          <rect x="45" y="242" width="70" height="26" rx="13" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="1.5"/>
+          <text x="80" y="259" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="11" fill="#3C3489">结束</text>
+        </svg>
+      </div>
+      <div>
+        <div class="code-block"style="align-self: start;margin-top: 0;">
+          <div class="code-header">
+            <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+            <span class="code-lang">C++ · for 示例</span>
+          </div>
+          <div class="code-body">
+            <table class="code-table">
+              <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 示例①：输出 1 到 10 的和</span></td></tr>
+              <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">sum</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+              <tr class="hl-row"><td class="ln">3</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="num">10</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+              <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+              <tr><td class="ln">5</td><td class="cd">    <span class="fn">sum</span> <span class="op">+=</span> <span class="fn">i</span><span class="pnc">;</span>  <span class="cmt">// 等同于 sum = sum + i</span></td></tr>
+              <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
+              <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"1到10的和："</span> <span class="op">&lt;&lt;</span> <span class="fn">sum</span><span class="pnc">;</span>  <span class="cmt">// 55</span></td></tr>
+              <tr><td class="ln">8</td><td class="cd"></td></tr>
+              <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 示例②：倒序输出 5 4 3 2 1</span></td></tr>
+              <tr class="hl-row"><td class="ln">10</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">5</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span></td></tr>
+              <tr><td class="ln">11</td><td class="cd"><span class="pnc">{</span></td></tr>
+              <tr><td class="ln">12</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">i</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span></td></tr>
+              <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span>  <span class="cmt">// 输出：5 4 3 2 1</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">📌</span>
+      <div><b>三部分均可省略：</b><code>for</code> 循环的初始化、条件、更新都可以省略。省略条件时，循环变成无限循环：<code>for (;;) { ... }</code>，与 <code>while (true)</code> 效果相同。需要搭配 <code>break</code> 才能退出。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub3">5.3.3 灵活的写法</h3>
+    <div class="section-body">
+      <p>三段式结构不代表每一段只能写一件事。<code>for</code> 循环支持用逗号同时初始化/更新多个变量，也可以完全省略某一段：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · for 循环的灵活写法</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 同时用两个变量，一个递增一个递减</span></td></tr>
+          <tr class="hl-row"><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">,</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">9</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">j</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">,</span> <span class="fn">j</span><span class="op">--</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">i</span> <span class="op">&lt;&lt;</span> <span class="str">"-"</span> <span class="op">&lt;&lt;</span> <span class="fn">j</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span>  <span class="cmt">// 0-9 1-8 2-7 3-6 4-5</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 初始化写在外面，循环里只留条件和更新</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-row"><td class="ln">9</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">5</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 初始化留空</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">i</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>逗号运算符：</b>初始化和更新部分用逗号 <code>,</code> 分隔多个语句时，用的是"逗号运算符"，语义是"依次执行"，和函数调用中用逗号分隔参数是两个完全不同的东西。这个写法仅限 <code>for</code> 的初始化和更新部分好用，条件部分用逗号则含义不同，不建议使用。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub4">5.3.4 嵌套循环</h3>
+    <div class="section-body">
+      <p>循环内部可以再嵌套循环，常用于处理二维数据（如矩阵、九九乘法表）。外层循环每执行一次，内层循环完整跑一遍。</p>
+    </div>
+
+    <!-- nested visual -->
+    <div class="nested-visual">
+      <div class="nv-outer">
+        <span class="nv-outer-label">外层循环 — 控制行 i: 1→9</span>
+        <div class="nv-row">for (int i = 1; i &lt;= 9; i++)</div>
+        <div class="nv-inner">
+          <span class="nv-inner-label">内层循环 — 控制列 j: 1→i</span>
+          <div class="nv-inner-row">for (int j = 1; j &lt;= i; j++)</div>
+          <div class="nv-inner-row" style="margin-top:6px; opacity:.8;">printf("%d×%d=%-3d", j, i, i*j);  // 输出每格</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 九九乘法表</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="num">9</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>           <span class="cmt">// 外层：控制行</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-row"><td class="ln">3</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;=</span> <span class="fn">i</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span>      <span class="cmt">// 内层：控制列</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">        <span class="fn">printf</span><span class="pnc">(</span><span class="str">"%d×%d=%-3d"</span><span class="pnc">,</span> <span class="fn">j</span><span class="pnc">,</span> <span class="fn">i</span><span class="pnc">,</span> <span class="fn">i</span><span class="op">*</span><span class="fn">j</span><span class="pnc">);</span>  <span class="cmt">// %-3d：左对齐占3位</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>  <span class="cmt">// 每行结束换行</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📊</span>
+      <div><b>时间复杂度提醒：</b>嵌套循环的执行次数是各层循环次数的乘积。例如两层各循环 n 次，总共执行约 n² 次。在竞赛中，如果 n = 10⁵，两层嵌套（10¹⁰ 次）会直接超时，需要更优算法。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>内外层变量名不要搞混：</b>嵌套循环最经典的笔误是内层循环也写成了 <code>i</code>（应该用 <code>j</code>），导致内层的 <code>i++</code> 意外修改了外层正在用的 <code>i</code>，扰乱外层循环的计数。养成"外层用 i，内层用 j，再内层用 k"的命名习惯，能大幅减少这类失误。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub5">5.3.5 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>边界条件写错（&lt; 和 &lt;= 混淆）：</b>想循环 n 次，写成 <code>i &lt; n</code>（从0开始）还是 <code>i &lt;= n</code>（从1开始），一定要想清楚起始值和终止条件是否匹配，这是最常见的"多循环一次"或"少循环一次"的错误来源。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>循环变量的作用域：</b>在 <code>for (int i = 0; ...)</code> 里声明的 <code>i</code>，只在这个 <code>for</code> 循环内部有效，循环结束后就不能再访问。如果需要在循环外使用最终的 <code>i</code> 值，要提前在循环外声明。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>内外层循环变量重名：</b>嵌套循环中，如果内层不小心也用了外层正在用的变量名，会覆盖外层的计数，导致外层循环提前结束或次数出错。务必确保每一层用的变量名互不相同。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>嵌套层数过多导致超时：</b>嵌套循环的总执行次数是各层次数相乘，数据规模稍大就可能远超时间限制（见上方时间复杂度提醒）。写代码前先估算一下总执行次数，如果数量级达到 10⁸ 以上就要考虑换算法了。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第五章 · 循环结构 · 5.3 for 循环</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="05_02_do-while循环.html">← 5.2 do-while 循环</a>
+      <a class="nav-btn" href="05_04_break与continue.html">5.4 break 与 continue →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
