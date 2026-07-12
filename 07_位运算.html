@@ -13,17 +13,18 @@
   /* 代码行高亮扩展（警告行） */
   .hl-warn td { background: rgba(153,60,29,.07) !important; }
 
-  /* 位运算符总览表 */
+  /* 位运算符总览表（浅色风格，呼应 2.1/2.2/2.4/3.2/6.x 节表格） */
   .op-overview { width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
-  .op-overview thead tr { background: #1E1C2E }
-  .op-overview th { padding: 10px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840 }
-  .op-overview th:first-child { color: var(--code-text) }
-  .op-overview td { padding: 10px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6 }
+  .op-overview thead tr { background: var(--accent-light) }
+  .op-overview th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: var(--accent-dark); border-bottom: 1px solid var(--border) }
+  .op-overview td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6 }
   .op-overview tr:last-child td { border-bottom: none }
-  .op-overview td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; color: var(--code-op); background: #16141F; text-align: center; width: 52px }
+  .op-overview tr:nth-child(even) td { background: #FAFAF7 }
+  .op-overview td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; color: var(--accent-dark); text-align: center; width: 52px }
   .op-name { font-weight: 700; color: var(--text-primary); font-size: 13.5px }
-  .op-rule { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #6C7086; margin-top: 3px }
-  .op-mnemonic { display: inline-block; background: var(--accent-light); color: var(--accent-dark); font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-top: 4px }
+  .op-rule { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-muted); margin-top: 3px }
+  .op-mnemonic { display: inline-block; background: var(--teal-light); color: var(--teal); font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-top: 4px }
+  .op-pri { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--amber-light); color: var(--amber) }
 
   /* 二进制运算可视化卡片 */
   .bin-op-card {
@@ -70,17 +71,6 @@
   .xor-prop-eq { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--code-kw) }
   .xor-prop-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px }
 
-  /* 位运算技巧卡片网格 */
-  .tricks-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 18px 0 }
-  .trick-card { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
-  .trick-head { padding: 8px 13px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px }
-  .trick-head.and-h { background: rgba(137,180,250,.1); color: var(--blue) }
-  .trick-head.or-h  { background: rgba(166,227,161,.1); color: var(--teal) }
-  .trick-head.xor-h { background: rgba(203,166,247,.1); color: var(--accent) }
-  .trick-head.shr-h { background: rgba(250,179,135,.1); color: var(--amber) }
-  .trick-body { padding: 10px 13px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--code-text); background: var(--code-bg); line-height: 1.7 }
-  .trick-body .c { color: var(--code-cmt); font-style: italic }
-
   /* 移位可视化 */
   .shift-visual {
     background: var(--code-bg); border-radius: var(--r-md);
@@ -100,18 +90,22 @@
   .sv-decimal { font-size: 12.5px; color: #6C7086; margin-left: 8px; white-space: nowrap }
   .sv-sep { height: 1px; background: #2A2840; margin: 6px 0 6px 86px }
 
-  /* GCC 内置函数表 */
+  /* GCC 内置函数表（浅色风格） */
   .gcc-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
-  .gcc-table thead tr { background: #1E1C2E }
-  .gcc-table th { padding: 9px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840 }
-  .gcc-table th:first-child { color: var(--code-text) }
-  .gcc-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle }
+  .gcc-table thead tr { background: var(--accent-light) }
+  .gcc-table th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: var(--accent-dark); border-bottom: 1px solid var(--border) }
+  .gcc-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle }
   .gcc-table tr:last-child td { border-bottom: none }
   .gcc-table tr:nth-child(even) td { background: #FAFAF7 }
-  .gcc-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--code-fn); white-space: nowrap; background: #16141F }
-  .gcc-table tr:nth-child(even) td:first-child { background: #16141F }
-  .gcc-ex  { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-muted) }
-  .gcc-res { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--code-num) }
+  .gcc-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-dark); white-space: nowrap }
+  .gcc-ex  {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-secondary);
+    background: #F1EFE8; padding: 2px 8px; border-radius: 5px; white-space: nowrap;
+  }
+  .gcc-res {
+    display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+    padding: 2px 10px; border-radius: 999px; background: var(--teal-light); color: var(--teal);
+  }
 
   /* 44 二进制位演示 */
   .bit44 { display: flex; gap: 2px; align-items: center; margin-top: 8px; flex-wrap: wrap }
@@ -122,7 +116,21 @@
   .b44.lo { background: rgba(250,179,135,.2); color: var(--code-num); border: 1px solid rgba(250,179,135,.3) }
   .b44-sep { width: 6px; height: 20px; display: flex; align-items: center; justify-content: center; color: #2A2840; font-size: 14px }
 
-  /* .trick-body code { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; padding: 1px 5px; border-radius: 3px; font-size: 12px; } */
+  /* 易错点列表（呼应 2-6 章风格） */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--coral-light); color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
 </style>
 </head>
 <body>
@@ -149,6 +157,7 @@
       <li><a href="#s-shl"><span class="toc-num">7.1.5</span>&lt;&lt; 左移</a></li>
       <li><a href="#s-shr"><span class="toc-num">7.1.6</span>&gt;&gt; 右移</a></li>
       <li><a href="#s2"><span class="toc-num">7.2</span>GCC 内置函数速查</a></li>
+      <li><a href="#s3"><span class="toc-num">7.3</span>常见陷阱与易错点</a></li>
     </ul>
   </nav>
 
@@ -157,7 +166,8 @@
     <p class="section-label">7.1</p>
     <h2 class="section-title">六大位运算符总览</h2>
     <div class="section-body">
-      <p>位运算直接操作整数的二进制位。C++ 提供六个位运算符，各有特定的运算规则与优先级：</p>
+      <p>之前所有的运算符（<code>+ - * / %</code> 等）都是把数字当成一个整体来计算，而位运算则完全不同——它直接拆开数字底层的<b>二进制表示</b>（见 2.3 节原码反码补码），一位一位地进行操作。</p>
+      <p>这样做有什么好处？两个原因：一是<b>速度极快</b>，位运算是 CPU 最底层支持的操作，比乘除法快得多；二是能实现一些用普通算术运算很难甚至无法做到的技巧，比如用一个整数同时表示"32 个开关的状态"（状态压缩）、不用额外变量交换两个数、快速判断一个数是不是 2 的幂等等。这些技巧在竞赛中出现频率很高，值得花时间掌握。</p>
     </div>
 
     <table class="op-overview">
@@ -207,7 +217,10 @@
   <section class="section" id="s-and">
     <p class="section-label">7.1.1</p>
     <h2 class="section-title">&amp; 按位与（AND）</h2>
-    <div class="section-body"><p>对应位都为 1 时结果才为 1，否则为 0。常用于：判断奇偶、检测某位、清零某些位。</p></div>
+    <div class="section-body">
+      <p>按位与是位运算里最常用的一个。规则很直观：把两个数按位对齐，<b>对应位只要都是 1，结果这一位才是 1</b>，只要有一个是 0，结果就是 0。可以把它理解成"两把锁都要打开，门才能打开"——两个条件必须同时满足。</p>
+      <p>常用于：判断奇偶、检测某一位是不是 1、把某些位强制清零，是接下来几种技巧的基础。</p>
+    </div>
 
     <div class="bin-op-card">
       <div class="bin-op-header">
@@ -244,31 +257,33 @@
       </div>
     </div>
 
-    <div class="tricks-grid">
-      <div class="trick-card">
-        <div class="trick-head and-h">🔍 判断奇偶</div>
-        <div class="trick-body"><span style="color:var(--code-kw)">if</span> (n <span style="color:var(--code-fn)">&amp;</span> <span style="color:var(--code-num)">1</span>)  <span class="c">// 最低位=1 → 奇数</span>
-  <br>&nbsp;&nbsp;&nbsp;&nbsp;cout &lt;&lt; <span style="color:var(--code-str)">"奇数"</span>;
-<br><span style="color:var(--code-kw)">else</span>
-  <br>&nbsp;&nbsp;&nbsp;&nbsp;cout &lt;&lt; <span style="color:var(--code-str)">"偶数"</span>;</div>
+    <div class="section-body">
+      <p>下面是按位与最常见的四个用法。前两个是"读取"——只是看某一位是什么，不修改数据；后两个是"写入"——真正去修改数据的某些位。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 按位与常见用途</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 用途① 判断奇偶：最低位是 1 就是奇数</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&amp;</span> <span class="num">1</span><span class="pnc">)</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"奇数"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">else</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"偶数"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// 用途② 判断第 k 位是否为 1（k 从 0 开始，0 是最低位）</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="kw">if</span> <span class="pnc">((</span><span class="fn">n</span> <span class="op">&gt;&gt;</span> <span class="fn">k</span><span class="pnc">)</span> <span class="op">&amp;</span> <span class="num">1</span><span class="pnc">)</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"第k位是1"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// 用途③ 保留低 k 位，其余全部清零</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd"><span class="typ">int</span> <span class="fn">lowK</span> <span class="op">=</span> <span class="fn">n</span> <span class="op">&amp;</span> <span class="pnc">((</span><span class="num">1</span> <span class="op">&lt;&lt;</span> <span class="fn">k</span><span class="pnc">)</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">);</span>  <span class="cmt">// (1<<k)-1 是低k位全为1的掩码</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="cmt">// 用途④ 将第 k 位清零，其余位保持不变</span></td></tr>
+          <tr class="hl"><td class="ln">12</td><td class="cd"><span class="fn">n</span> <span class="op">&amp;=</span> <span class="op">~</span><span class="pnc">(</span><span class="num">1</span> <span class="op">&lt;&lt;</span> <span class="fn">k</span><span class="pnc">);</span>  <span class="cmt">// ~(1<<k) 除第k位是0外，其余全是1</span></td></tr>
+        </table>
       </div>
-      <div class="trick-card">
-        <div class="trick-head and-h">🎯 判断第 k 位是否为 1</div>
-        <div class="trick-body"><span style="color:var(--code-kw)">if</span> ((n >> k) <span style="color:var(--code-fn)">&amp;</span> <span style="color:var(--code-num)">1</span>)
-  <br>&nbsp;&nbsp;&nbsp;&nbsp;cout &lt;&lt; <span style="color:var(--code-str)">"第k位是1"</span>;
-<span class="c"><br>// k 从 0 开始，0 是最低位</span><br>&nbsp;</div>
-      </div>
-      <div class="trick-card">
-        <div class="trick-head and-h">🧹 保留低 k 位</div>
-        <div class="trick-body"><span style="color:var(--code-type)">int</span> lowK = n <span style="color:var(--code-fn)">&amp;</span> ((<span style="color:var(--code-num)">1</span> &lt;&lt; k) - <span style="color:var(--code-num)">1</span>);
-<span class="c">// (1<<k)-1 低k位全为1的掩码</span></div>
-      </div>
-      <div class="trick-card">
-        <div class="trick-head and-h">🚿 将第 k 位清零</div>
-        <div class="trick-body">n <span style="color:var(--code-fn)">&amp;=</span> ~(<span style="color:var(--code-num)">1</span> &lt;&lt; k);
-<span class="c">// ~(1<<k): 除第k位是0外全是1
-// 与运算后第k位变0，其余不变</span></div>
-      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🔑</span>
+      <div><b>"掩码"（mask）这个概念：</b>上面用途③、④里的 <code>(1&lt;&lt;k)-1</code> 和 <code>~(1&lt;&lt;k)</code> 都属于"掩码"——一个专门构造出来、用来跟原数据做位运算的数字，作用就像一张"镂空的纸"：盖在原数据上，想保留的位置镂空露出来，不想要的位置盖住变成 0。之后处理"状态压缩"类问题时，构造合适的掩码是最核心的技巧。</div>
     </div>
   </section>
 
@@ -276,7 +291,10 @@
   <section class="section" id="s-or">
     <p class="section-label">7.1.2</p>
     <h2 class="section-title">| 按位或（OR）</h2>
-    <div class="section-body"><p>只要有一个位为 1 结果就为 1，全 0 才得 0。常用于：将某些位强制设为 1、合并标志位。</p></div>
+    <div class="section-body">
+      <p>按位或的规则和按位与刚好相反：<b>只要有一个位是 1，结果这一位就是 1</b>，只有两个都是 0 才得 0。可以理解成"两把开关，任意一把打开，灯就亮"——只要满足其中一个条件就够了。</p>
+      <p>最常见的用途是把某一位<b>强制设为 1</b>，或者把多个"独立的标志位"合并成一个数字（比如文件权限里的"可读、可写、可执行"经常就是用不同的位分别表示，再用按位或拼在一起）。</p>
+    </div>
 
     <div class="bin-op-card">
       <div class="bin-op-header">
@@ -317,10 +335,20 @@
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 按位或用途</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr class="hl"><td class="ln">1</td><td class="cd"><span class="cmt">// 将第 k 位设为 1</span></td></tr>
-          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="fn">n</span> <span class="op">|=</span> <span class="pnc">(</span><span class="num">1</span> <span class="op">&lt;&lt;</span> <span class="fn">k</span><span class="pnc">);</span>  <span class="cmt">// 1<<k 只有第k位为1，|后第k位必然为1</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 用途① 将第 k 位设为 1，其余位保持不变</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="fn">n</span> <span class="op">|=</span> <span class="pnc">(</span><span class="num">1</span> <span class="op">&lt;&lt;</span> <span class="fn">k</span><span class="pnc">);</span>  <span class="cmt">// 1<<k 只有第k位为1，或运算后第k位必然为1</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// 用途② 把多个独立的标志位合并成一个数</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">READ</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span>       <span class="cmt">// 二进制 001，第0位代表"可读"</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="typ">int</span> <span class="fn">WRITE</span> <span class="op">=</span> <span class="num">2</span><span class="pnc">;</span>      <span class="cmt">// 二进制 010，第1位代表"可写"</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd"><span class="typ">int</span> <span class="fn">perm</span> <span class="op">=</span> <span class="fn">READ</span> <span class="op">|</span> <span class="fn">WRITE</span><span class="pnc">;</span>  <span class="cmt">// 011，同时拥有"可读+可写"权限</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么要用按位或合并标志位？</b>如果每种权限都单独定义一个 <code>bool</code> 变量，权限一多就要维护一大堆变量；而用不同的<b>二进制位</b>分别代表一种权限，就能把好几个开关状态压缩进<b>一个整数</b>里存储和传递，既省空间又方便统一判断（配合按位与就能反过来查询"是否拥有某个权限"，见 7.1.1 节）。</div>
     </div>
   </section>
 
@@ -328,7 +356,10 @@
   <section class="section" id="s-not">
     <p class="section-label">7.1.3</p>
     <h2 class="section-title">~ 按位非（NOT）</h2>
-    <div class="section-body"><p>将每一个二进制位全部取反（0→1，1→0）。重要规律：<code>~n = -(n+1)</code>，例如 <code>~6 = -7</code>，<code>~0 = -1</code>，<code>~(-1) = 0</code>。</p></div>
+    <div class="section-body">
+      <p>按位非是六个位运算符里唯一一个<b>只需要一个操作数</b>的（其余都要两个数才能运算），规则也最简单粗暴：把每一个二进制位<b>全部取反</b>，0 变 1，1 变 0，没有例外。</p>
+      <p>取反之后会出现一个有趣的规律：<code>~n</code> 永远等于 <code>-(n+1)</code>，比如 <code>~6 = -7</code>、<code>~0 = -1</code>、<code>~(-1) = 0</code>。这个规律不是巧合，而是补码存储方式（见 2.3 节）决定的必然结果。</p>
+    </div>
 
     <div class="bin-op-card">
       <div class="bin-op-header">
@@ -358,8 +389,13 @@
     </div>
 
     <div class="callout info">
-      <span class="callout-icon">💡</span>
-      <div><b>配合 &amp; 清零某位：</b><code>n &amp;= ~(1 &lt;&lt; k)</code> — <code>~(1&lt;&lt;k)</code> 除第 k 位是 0 外其余全是 1，按位与后第 k 位清零，其余位保持不变。</div>
+      <span class="callout-icon">📖</span>
+      <div><b>为什么 ~n 等于 -(n+1)？</b>回忆 2.3 节的补码规则：一个数按位全部取反，恰好就是它"反码"的定义；反码再加 1，就变成了这个数<b>相反数</b>的补码。也就是说 <code>~n</code>（全部取反）到 <code>-n</code>（相反数的补码）正好差一个"+1"，反过来推，<code>~n</code> 自然就等于 <code>-n-1</code>，也就是 <code>-(n+1)</code>。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🔑</span>
+      <div><b>最重要的实际用途——配合 &amp; 清零某一位：</b><code>n &amp;= ~(1 &lt;&lt; k)</code>。<code>1 &lt;&lt; k</code> 只有第 k 位是 1，取反后 <code>~(1&lt;&lt;k)</code> 就变成"除第 k 位是 0，其余全是 1"，和 <code>n</code> 做按位与，效果就是把第 k 位强制清零，其余位原样保留。这是 <code>~</code> 在实际代码里出现频率最高的用法，7.1.1 节按位与部分已经演示过。</div>
     </div>
   </section>
 
@@ -367,7 +403,9 @@
   <section class="section" id="s-xor">
     <p class="section-label">7.1.4</p>
     <h2 class="section-title">^ 按位异或（XOR）</h2>
-    <div class="section-body"><p>两位相同结果为 0，两位不同结果为 1。异或有非常神奇的性质，是竞赛中最常用的位运算之一。</p></div>
+    <div class="section-body">
+      <p>异或的规则和前两个刚好相反："不一样"才是 1：<b>两位相同结果为 0，两位不同结果为 1</b>。单看规则可能觉得平平无奇，但异或有几个非常特殊的数学性质，让它成为竞赛中出现频率最高的位运算符之一，很多"看似需要额外空间"的问题都能靠异或的性质巧妙解决。</p>
+    </div>
 
     <div class="bin-op-card">
       <div class="bin-op-header">
@@ -405,6 +443,9 @@
     </div>
 
     <h3 class="sub-title">异或的三个神奇性质</h3>
+    <div class="section-body">
+      <p>下面这三条性质是异或所有巧妙用法的根基，建议记住并理解为什么成立——其实用"相同为0，不同为1"这条基本规则逐一代入就能推出来：</p>
+    </div>
     <div class="xor-props">
       <div class="xor-prop">
         <div class="xor-prop-eq">a ^ a == 0</div>
@@ -420,24 +461,36 @@
       </div>
     </div>
 
-    <div class="tricks-grid">
-      <div class="trick-card">
-        <div class="trick-head xor-h">🔄 不用临时变量交换两数</div>
-        <div class="trick-body">a <span style="color:var(--code-kw)">^=</span> b;
-b <span style="color:var(--code-kw)">^=</span> a;
-<br>a <span style="color:var(--code-kw)">^=</span> b;
-<span class="c">// 三步后 a、b 互换</span>
-<br>&nbsp;<br>&nbsp;
-</div>
+    <div class="section-body">
+      <p>第三条性质其实是前两条的自然推论：<code>a^b^a</code> 因为异或满足交换律，可以先算 <code>a^a</code>（等于 0），再和 <code>b</code> 异或，也就是 <code>0^b</code>（等于 b）。这个"自己异或自己会抵消、和 0 异或不变"的特性，正是接下来两个技巧的原理所在。</p>
+    </div>
 
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 按位异或常见用途</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 用途① 不用临时变量交换两个数</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="fn">a</span> <span class="op">^=</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// a 变成 a^b</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="fn">b</span> <span class="op">^=</span> <span class="fn">a</span><span class="pnc">;</span>  <span class="cmt">// b 变成 b^(a^b) = a（原来的 a）</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="fn">a</span> <span class="op">^=</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// a 变成 (a^b)^a = b（原来的 b），三行后两数互换</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="cmt">// 用途② 找出数组中唯一出现奇数次的数</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 前提：其余每个数都恰好出现偶数次</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd"><span class="typ">int</span> <span class="fn">res</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span> <span class="pnc">:</span> <span class="fn">arr</span><span class="pnc">)</span> <span class="fn">res</span> <span class="op">^=</span> <span class="fn">x</span><span class="pnc">;</span>  <span class="cmt">// 出现偶数次的数两两抵消为 0</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">res</span><span class="pnc">;</span>  <span class="cmt">// 剩下的就是那个出现奇数次的数</span></td></tr>
+        </table>
       </div>
-      <div class="trick-card">
-        <div class="trick-head xor-h">🔍 找出唯一出现奇数次的数</div>
-        <div class="trick-body"><span style="color:var(--code-type)">int</span> res = <span style="color:var(--code-num)">0</span>;
-<br><span style="color:var(--code-kw)">for</span> (<span style="color:var(--code-type)">int</span> x : arr)
-  <br>    res <span style="color:var(--code-kw)">^=</span> x; <span class="c">// 偶数次→0，奇数次留下</span>
-<br>cout &lt;&lt; res;</div>
-      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>用途① 是怎么推导出来的？</b>沿着"自己异或自己得 0、和 0 异或不变"这两条性质往下推：第 2 行 <code>b^=a</code> 实际算的是 <code>b^(a^b)</code>，异或满足交换律，可以重新排列成 <code>(b^b)^a</code>，也就是 <code>0^a = a</code>——所以第 2 行结束后 <code>b</code> 就已经变成了原来的 <code>a</code>。第 3 行同理可以推出 <code>a</code> 变成了原来的 <code>b</code>。虽然节省了一个临时变量，但可读性不如直接用临时变量交换，实际工程代码中很少这样用，了解原理即可。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>用途② 为什么只对"唯一奇数次"有效？</b>把数组所有元素依次异或起来，出现偶数次的数每两次异或就会因为 <code>a^a=0</code> 而抵消成 0，对最终结果毫无影响；只有那个出现奇数次的数，抵消到最后还剩一个落单，恰好通过 <code>a^0=a</code> 被保留了下来。这道题是异或性质在面试和竞赛中最经典的应用之一。</div>
     </div>
   </section>
 
@@ -445,7 +498,10 @@ b <span style="color:var(--code-kw)">^=</span> a;
   <section class="section" id="s-shl">
     <p class="section-label">7.1.5</p>
     <h2 class="section-title">&lt;&lt; 左移</h2>
-    <div class="section-body"><p>所有二进制位整体向左移动 n 位，高位丢弃，低位补 0。每左移 1 位相当于乘以 2，左移 n 位相当于乘以 2ⁿ。</p></div>
+    <div class="section-body">
+      <p>所有二进制位整体向左移动 n 位，高位丢弃，低位补 0。每左移 1 位相当于乘以 2，左移 n 位相当于乘以 2ⁿ。</p>
+      <p>可以把左移想象成"把所有数字牌一起往左推 n 格，右边空出来的位置补 0"——十进制里"在数字后面添一个 0"就是乘以 10，二进制同理，"在末尾添一个 0"就是乘以 2，这也是左移能替代乘法、并且比乘法运算更快的原因。</p>
+    </div>
 
     <div class="shift-visual">
       <div style="font-size:11px;color:#6C7086;margin-bottom:10px;">6 &lt;&lt; 2 = 24（6 × 2² = 6 × 4）</div>
@@ -489,7 +545,10 @@ b <span style="color:var(--code-kw)">^=</span> a;
   <section class="section" id="s-shr">
     <p class="section-label">7.1.6</p>
     <h2 class="section-title">&gt;&gt; 右移</h2>
-    <div class="section-body"><p>所有二进制位整体向右移动 n 位，低位丢弃，正数高位补 0，负数高位补 1（算术右移）。每右移 1 位相当于除以 2 并向下取整。</p></div>
+    <div class="section-body">
+      <p>所有二进制位整体向右移动 n 位，低位丢弃，正数高位补 0，负数高位补 1（算术右移，后面会详细解释）。每右移 1 位相当于除以 2 并向下取整。</p>
+      <p>右移和左移是一对镜像操作：左移是"往末尾添 0"（乘），右移则是"把末尾的位挤掉"（除）。因为整数除法本身就会自动舍弃小数部分，所以右移天然对应的是"除以 2 的幂，然后向下取整"，而不是四舍五入。</p>
+    </div>
 
     <div class="shift-visual">
       <div style="font-size:11px;color:#6C7086;margin-bottom:10px;">24 &gt;&gt; 2 = 6（24 ÷ 2² = 24 ÷ 4）</div>
@@ -524,6 +583,37 @@ b <span style="color:var(--code-kw)">^=</span> a;
           <tr class="hl"><td class="ln">6</td><td class="cd"><span class="typ">int</span> <span class="fn">bit</span> <span class="op">=</span> <span class="pnc">(</span><span class="fn">n</span> <span class="op">&gt;&gt;</span> <span class="fn">k</span><span class="pnc">)</span> <span class="op">&amp;</span> <span class="num">1</span><span class="pnc">;</span> <span class="cmt">// 取出第 k 位的值（0 或 1）</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <h3 class="sub-title">负数右移：算术右移会在高位补 1</h3>
+    <div class="section-body">
+      <p>正数右移时高位补 0，前面已经演示过。但<b>负数右移</b>时，C++ 采用"算术右移"（arithmetic shift）——高位补的不是 0，而是<b>符号位本身</b>（负数补 1），这样才能保证右移后数值仍然是负数，符合"右移等于除以 2 再向下取整"的直觉：</p>
+    </div>
+
+    <div class="shift-visual">
+      <div style="font-size:11px;color:#6C7086;margin-bottom:10px;">-8 &gt;&gt; 1 = -4（补码下的算术右移，高位补 1）</div>
+      <div class="sv-row">
+        <span class="sv-label">原始 (-8)</span>
+        <div class="sv-bits">
+          <div class="sv-bit o">1</div><div class="sv-bit o">1</div><div class="sv-bit o">1</div><div class="sv-bit o">1</div>
+          <div class="sv-bit moved">1</div><div class="sv-bit moved">0</div><div class="sv-bit moved">0</div><div class="sv-bit lost">0</div>
+        </div>
+      </div>
+      <div style="padding-left:86px;font-size:13px;color:#45475A;margin:4px 0;">↘ 右移 1 位，末位丢弃，<span style="color:var(--code-op)">左侧补 1（不是 0！）</span></div>
+      <div class="sv-row">
+        <span class="sv-label">结果 (-4)</span>
+        <div class="sv-bits">
+          <div class="sv-bit new0" style="background:rgba(245,194,231,.2);color:var(--code-op);border-color:rgba(245,194,231,.35)">1</div>
+          <div class="sv-bit o">1</div><div class="sv-bit o">1</div><div class="sv-bit o">1</div>
+          <div class="sv-bit moved">1</div><div class="sv-bit moved">0</div><div class="sv-bit moved">0</div>
+        </div>
+        <span class="sv-decimal" style="color:var(--code-op)">= -4（仍是负数）✓</span>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>为什么要这样设计？</b>如果负数右移也像正数一样在高位补 0，符号位会被破坏，一个负数右移几次后可能变成正数，"除以 2 向下取整"的规律就彻底乱了。补 1（而不是补 0）能保证负数右移之后<b>仍然是负数</b>，且始终等价于"除以 2ⁿ 再向下取整"，这也是 C++20 标准正式明确规定右移必须是算术右移的原因（此前这一行为属于"实现定义"，但几乎所有主流编译器实际上都是这样做的）。</div>
     </div>
 
     <!-- Priority trap -->
@@ -580,38 +670,38 @@ b <span style="color:var(--code-kw)">^=</span> a;
         <tr>
           <td>__builtin_popcount(x)</td>
           <td>统计二进制中 1 的个数</td>
-          <td class="gcc-ex">__builtin_popcount(44)</td>
-          <td class="gcc-res">3</td>
+          <td><span class="gcc-ex">__builtin_popcount(44)</span></td>
+          <td><span class="gcc-res">3</span></td>
         </tr>
         <tr>
           <td>__builtin_clz(x)</td>
           <td>统计前导 0 的个数（32位）</td>
-          <td class="gcc-ex">__builtin_clz(44)</td>
-          <td class="gcc-res">26</td>
+          <td><span class="gcc-ex">__builtin_clz(44)</span></td>
+          <td><span class="gcc-res">26</span></td>
         </tr>
         <tr>
           <td>__builtin_ctz(x)</td>
           <td>统计末尾 0 的个数</td>
-          <td class="gcc-ex">__builtin_ctz(44)</td>
-          <td class="gcc-res">2</td>
+          <td><span class="gcc-ex">__builtin_ctz(44)</span></td>
+          <td><span class="gcc-res">2</span></td>
         </tr>
         <tr>
           <td>__builtin_ffs(x)</td>
           <td>最低位 1 的位置（从 1 开始计数）</td>
-          <td class="gcc-ex">__builtin_ffs(44)</td>
-          <td class="gcc-res">3</td>
+          <td><span class="gcc-ex">__builtin_ffs(44)</span></td>
+          <td><span class="gcc-res">3</span></td>
         </tr>
         <tr>
           <td>__builtin_parity(x)</td>
           <td>1 的个数奇偶性（奇→1，偶→0）</td>
-          <td class="gcc-ex">__builtin_parity(44)</td>
-          <td class="gcc-res">1</td>
+          <td><span class="gcc-ex">__builtin_parity(44)</span></td>
+          <td><span class="gcc-res">1</span></td>
         </tr>
         <tr>
           <td>__builtin_bswap32(x)</td>
           <td>翻转字节序（32位大小端转换）</td>
-          <td class="gcc-ex">__builtin_bswap32(0x12345678)</td>
-          <td class="gcc-res">0x78563412</td>
+          <td><span class="gcc-ex">__builtin_bswap32(0x12345678)</span></td>
+          <td><span class="gcc-res">0x78563412</span></td>
         </tr>
       </tbody>
     </table>
@@ -619,6 +709,38 @@ b <span style="color:var(--code-kw)">^=</span> a;
     <div class="callout tip">
       <span class="callout-icon">🏆</span>
       <div><b>竞赛高频：</b><code>__builtin_popcount</code> 在位集（bitmask）DP 中极常用，用来统计状态中已选了多少个元素；<code>__builtin_ctz</code> 可以快速找到最低位的 1（即 lowbit 操作），常见于树状数组（BIT）。对于 <code>long long</code> 类型，使用 <code>__builtin_popcountll</code>、<code>__builtin_clzll</code> 等带 <code>ll</code> 后缀的版本。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 7.3 常见陷阱 ═══ -->
+  <section class="section" id="s3">
+    <p class="section-label">7.3</p>
+    <h2 class="section-title">常见陷阱与易错点</h2>
+    <div class="section-body">
+      <p>把本章内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>优先级陷阱：</b>位运算符的优先级比 <code>==</code>、<code>!=</code> 等比较运算符<b>更低</b>，<code>n & 1 == 0</code> 会先算 <code>1==0</code>（得 false，即 0），再和 <code>n</code> 做按位与，结果永远是 0。判断某一位时务必加括号：<code>(n & 1) == 0</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>移位位数越界：</b>移位的位数不能达到或超过数据类型的总位数，<code>int</code> 是 32 位，<code>1 << 31</code> 及以上就会出问题（结果溢出变成负数或行为未定义）。需要更大范围时，把字面量写成 <code>1LL << k</code>，用 <code>long long</code> 参与移位。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>负数右移不是简单补 0：</b>负数右移时高位补的是符号位（补 1），这样才能保持右移后仍是负数、语义上等价于"除以 2ⁿ 再向下取整"。如果凭直觉以为负数右移和正数一样补 0，很容易在处理负数场景时算出错误结果。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>GCC 内置函数不可移植：</b><code>__builtin_popcount</code>、<code>__builtin_ctz</code> 等函数是 GCC / Clang 的编译器扩展，<b>标准 C++ 并未规定</b>，MSVC 不支持这些函数名（MSVC 有功能类似但名字不同的函数，如 <code>__popcnt</code>、<code>_BitScanForward</code>）。国内 OJ 和信息学竞赛评测系统大多用 GCC，可以放心使用，但如果代码需要跨平台，或者要在 Visual Studio 里直接编译运行，这些函数会导致编译失败。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">5</div>
+        <div class="pitfall-body"><b>混淆按位运算符和逻辑运算符：</b><code>&</code>/<code>|</code> 是按位运算符，<code>&&</code>/<code>||</code> 是逻辑运算符，两者名字相似但含义完全不同——按位运算符逐位计算并返回一个数值，逻辑运算符对整个表达式做真假判断并触发短路求值（见 4.1 节）。误把 <code>if (a & b)</code> 写成本该是 <code>if (a && b)</code> 的地方，即使能编译通过，结果也往往和预期不同。</div>
+      </div>
     </div>
   </section>
 

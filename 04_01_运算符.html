@@ -132,9 +132,10 @@
     <ul class="toc-list">
       <li><a href="#sub1"><span class="toc-num">4.1.1</span>比较运算符</a></li>
       <li><a href="#sub2"><span class="toc-num">4.1.2</span>逻辑运算符</a></li>
-      <li><a href="#sub3"><span class="toc-num">4.1.3</span>运算符优先级</a></li>
-      <li><a href="#sub4"><span class="toc-num">4.1.4</span>短路求值</a></li>
-      <li><a href="#sub5"><span class="toc-num">4.1.5</span>常见陷阱与易错点</a></li>
+      <li><a href="#sub3"><span class="toc-num">4.1.3</span>逻辑运算符的另一种写法：and / or / not</a></li>
+      <li><a href="#sub4"><span class="toc-num">4.1.4</span>运算符优先级</a></li>
+      <li><a href="#sub5"><span class="toc-num">4.1.5</span>短路求值</a></li>
+      <li><a href="#sub6"><span class="toc-num">4.1.6</span>常见陷阱与易错点</a></li>
     </ul>
   </nav>
 
@@ -191,7 +192,53 @@
       <div><b>高频错误：</b><code>==</code> 是比较（两个等号），<code>=</code> 是赋值（一个等号）。写成 <code>if (a = 5)</code> 是赋值不是比较，不会报错但逻辑完全错误，是最难发现的 bug 之一！</div>
     </div>
 
-    <h3 class="sub-title" id="sub3">4.1.3 运算符优先级</h3>
+    <h3 class="sub-title" id="sub3">4.1.3 逻辑运算符的另一种写法：and / or / not</h3>
+    <div class="section-body">
+      <p>除了 <code>&&</code>、<code>||</code>、<code>!</code> 这几个符号，C++ 标准还规定了一套用<b>英文单词</b>拼写的等价写法，含义、优先级、短路规则完全相同，只是换了一种写法：</p>
+    </div>
+
+    <table class="op-table">
+      <thead><tr><th>符号写法</th><th>单词写法</th><th>含义</th><th>示例</th></tr></thead>
+      <tbody>
+        <tr><td><span class="op-sym">&&</span></td><td><span class="op-sym" style="font-size:14px;">and</span></td><td>且（AND）</td><td class="op-ex">age&gt;=6 and age&lt;=12</td></tr>
+        <tr><td><span class="op-sym">||</span></td><td><span class="op-sym" style="font-size:14px;">or</span></td><td>或（OR）</td><td class="op-ex">x==1 or x==2</td></tr>
+        <tr><td><span class="op-sym">!</span></td><td><span class="op-sym" style="font-size:14px;">not</span></td><td>非（NOT）</td><td class="op-ex">not (x &gt; 0)</td></tr>
+        <tr><td><span class="op-sym">!=</span></td><td><span class="op-sym" style="font-size:14px;">not_eq</span></td><td>不等于</td><td class="op-ex">x not_eq 3</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · and / or / not 示例</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">age</span> <span class="op">=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="cmt">// 下面两行完全等价</span></td></tr>
+          <tr class="hl-row"><td class="ln">4</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">age</span> <span class="op">&gt;=</span> <span class="num">6</span> <span class="op">&amp;&amp;</span> <span class="fn">age</span> <span class="op">&lt;=</span> <span class="num">12</span><span class="pnc">)</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"符号写法"</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-row"><td class="ln">5</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">age</span> <span class="op">&gt;=</span> <span class="num">6</span> <span class="kw">and</span> <span class="fn">age</span> <span class="op">&lt;=</span> <span class="num">12</span><span class="pnc">)</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"单词写法"</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>为什么会有这套写法？</b>这些单词写法从 C++98 起就是标准的一部分（定义在 <code>&lt;ciso646&gt;</code> 头文件中），最初是为了照顾一些找不出 <code>&amp;</code>、<code>|</code>、<code>!</code> 这些符号的键盘或字符编码环境。它们不是"另一个运算符"，而是和符号写法<b>完全等价的替代拼写</b>，编译器眼里两者没有任何区别。</div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>MSVC 编译器要特别注意：</b>GCC / Clang（大多数 OJ 和信息学竞赛评测系统使用的编译器）默认就能直接识别 <code>and</code>、<code>or</code>、<code>not</code> 这些写法，不需要任何额外设置。但在 <b>MSVC（Visual Studio 自带编译器）的默认设置下，这些写法不会生效</b>，需要先手动 <code>#include &lt;ciso646&gt;</code>，或者开启 <code>/permissive-</code> 严格标准模式，否则会直接编译报错。如果你在 Windows 上用 Visual Studio 练习时发现 <code>and</code>/<code>or</code> 用不了，先检查是不是这个原因。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>建议：</b>虽然合法，但绝大多数 C++ 代码、教材和竞赛题解都使用符号写法（<code>&&</code>、<code>||</code>、<code>!</code>），单词写法很少见。了解它存在即可，正式写代码时优先使用符号写法，能让代码风格与其他人保持一致，减少交流障碍。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub4">4.1.4 运算符优先级</h3>
     <div class="section-body">
       <p>上面两张表格最后一列的"优先级"数字，代表运算符结合的先后顺序——<b>数字越小，越先被计算</b>。把常用运算符从高到低排一排，能看出一个清晰的规律：</p>
     </div>
@@ -233,7 +280,7 @@
       <div><b>记不住优先级？加括号就对了：</b>与其死记硬背这些数字，不如在条件复杂时主动加括号，比如写成 <code>(a &amp;&amp; b) || (c &amp;&amp; d)</code>。多余的括号不会有任何负面影响，却能让代码意图一目了然，也不用担心自己记错优先级。</div>
     </div>
 
-    <h3 class="sub-title" id="sub4">4.1.4 短路求值</h3>
+    <h3 class="sub-title" id="sub5">4.1.5 短路求值</h3>
     <div class="section-body">
       <p><code>&&</code> 和 <code>||</code> 有一个非常重要的特性——<b>短路求值</b>：一旦左边的结果已经能确定整个表达式的值，右边就<b>不会再被计算</b>。</p>
     </div>
@@ -267,7 +314,7 @@
       <div><b>|| 的短路规则正好相反：</b><code>&&</code> 是"左边为 false 就短路"，<code>||</code> 是"左边为 true 就短路"——只要 <code>||</code> 左边已经是 <code>true</code>，整个表达式必然是 <code>true</code>，右边同样不会被计算。这个特性常用来把"检查条件是否安全"的判断写在前面，防止后面访问越界、除零等错误。</div>
     </div>
 
-    <h3 class="sub-title" id="sub5">4.1.5 常见陷阱与易错点</h3>
+    <h3 class="sub-title" id="sub6">4.1.6 常见陷阱与易错点</h3>
     <div class="section-body">
       <p>把本节内容汇总成几条最容易踩坑的规则：</p>
     </div>
