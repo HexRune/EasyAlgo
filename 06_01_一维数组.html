@@ -250,6 +250,34 @@
       <span class="callout-icon">🏗️</span>
       <div><b>大数组放全局！</b><code>main()</code> 内的局部数组存放在栈（Stack）中，栈空间默认仅 1~2 MB。数组过大会立即导致<strong>栈溢出</strong>（程序崩溃），且无任何警告，是极隐蔽的错误。<br>解决方法：将大数组定义在 <code>main()</code> 外部（全局变量），它会被分配到静态存储区，空间充裕。</div>
     </div>
+
+    <div class="section-body">
+      <p>细心的话可能见过这样的写法——用一个<b>变量</b>（而不是像 <code>5</code> 这样写死的常量）来决定数组大小：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 用变量决定数组大小（变长数组 / VLA）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">n</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-err"><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">n</span><span class="pnc">] = {</span><span class="num">0</span><span class="pnc">};</span>  <span class="cmt">// 数组大小是变量 n，而不是像 5 这样的常量</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>这不是标准 C++ 语法，编译器之间表现不一致！</b>C++ 标准要求数组大小必须是<b>编译期就能确定的常量</b>（比如字面量 <code>5</code>，或者 <code>const int</code> 常量），像上面这样用一个运行时才知道值的变量 <code>n</code> 做数组大小，叫做<b>变长数组</b>（VLA，Variable Length Array），标准 C++ 里其实是不允许的。<br><br>GCC / Clang（大多数 OJ 和信息学竞赛评测系统使用的编译器）把 VLA 作为<b>编译器扩展</b>支持，写了也能编译通过；但 <b>MSVC（Visual Studio 自带编译器）不支持 VLA</b>，同样的代码在 MSVC 下会直接编译报错。这和之前提到的 <code>and</code>/<code>or</code>、<code>__builtin_popcount</code> 是同一类问题——都是"编译器扩展在不同编译器上表现不一致"。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>更安全的写法：</b>如果需要"数组大小取决于输入"，标准做法是用 <code>vector</code>（见后续 STL 章节）代替数组：<code>vector&lt;int&gt; arr(n, 0);</code>，效果一样能按变量 <code>n</code> 动态决定大小，而且是所有编译器都支持的标准写法，不用担心换个编译器就编译不过。竞赛中如果确实想用原生数组，更稳妥的办法是提前开一个足够大的<b>固定大小</b>数组（比如 <code>int arr[100005];</code>），根据题目给的数据范围上限来定，而不是直接用变量做数组大小。</div>
+    </div>
   </section>
 
   <!-- ═══ 6.1.3 访问 ═══ -->

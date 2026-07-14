@@ -96,6 +96,28 @@
   .bad  .encode-rule { background: #FFF0EC; color: var(--coral); }
   .mid  .encode-rule { background: #FFF5E6; color: var(--amber); }
   .good .encode-rule { background: #EAF8F2; color: var(--teal); }
+
+  /* ── 内存字节布局可视化 ── */
+  .mem-visual {
+    background: var(--code-bg); border-radius: var(--radius-md);
+    padding: 20px 24px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    overflow-x: auto;
+  }
+  .mem-caption { font-size: 11px; color: #6C7086; margin-bottom: 14px; }
+  .mem-row { display: flex; align-items: center; gap: 0; margin-bottom: 6px; }
+  .mem-label { font-size: 11.5px; color: #6C7086; min-width: 100px; flex-shrink: 0; }
+  .mem-bytes { display: flex; gap: 3px; }
+  .mem-byte {
+    width: 68px; height: 40px; border-radius: 6px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0; gap: 1px;
+  }
+  .mem-byte .mb-val { font-size: 14px; }
+  .mem-byte .mb-addr { font-size: 9.5px; font-weight: 400; opacity: .7; }
+  .mem-byte.hi { background: rgba(250,179,135,.18); color: var(--code-num); border: 1.5px solid rgba(250,179,135,.4); }
+  .mem-byte.lo { background: rgba(166,227,161,.18); color: var(--code-str); border: 1.5px solid rgba(166,227,161,.4); }
+  .mem-arrow-note { font-size: 11px; color: #6C7086; margin: 8px 0 16px; padding-left: 4px; }
 </style>
 </head>
 <body>
@@ -133,6 +155,7 @@
       <li><a href="#sub1"><span class="toc-num">2.3.1</span>三种编码方案</a></li>
       <li><a href="#sub2"><span class="toc-num">2.3.2</span>验证：5 + (−5)</a></li>
       <li><a href="#sub3"><span class="toc-num">2.3.3</span>三种编码对照表</a></li>
+      <li><a href="#sub4"><span class="toc-num">2.3.4</span>多字节数据的内存布局：大端与小端</a></li>
     </ul>
   </nav>
 
@@ -297,6 +320,95 @@
     <div class="callout tip">
       <span class="callout-icon">📚</span>
       <div><b>扩展阅读：</b>C++20 标准正式强制要求有符号整数使用补码表示（此前是实现定义的）。补码不再是"可选方案"，而是所有 C++ 平台的统一标准。理解三种编码的演进历史，有助于真正体会补码设计的精妙之处。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub4">2.3.4 多字节数据的内存布局：大端与小端</h3>
+    <div class="section-body">
+      <p>前面讨论的补码都是针对 <b>1 个字节（8 位）</b>展开的，但 <code>int</code> 占 4 个字节、<code>long long</code> 占 8 个字节——这些"大于 1 字节"的数据，在内存里到底是怎么摆放的？这就引出了两个新概念：<b>低位字节</b>与<b>高位字节</b>，以及数据摆放顺序的约定——<b>字节序（大端 / 小端）</b>。</p>
+    </div>
+
+    <div class="section-body">
+      <p>以十六进制数 <code>0x12345678</code> 这个 <code>int</code> 为例，把它拆成 4 个字节：<code>12</code>、<code>34</code>、<code>56</code>、<code>78</code>。数值上越"重要"（越靠左、代表的数值越大）的字节叫<b>高位字节</b>（这里是 <code>12</code>），越靠右、数值贡献越小的叫<b>低位字节</b>（这里是 <code>78</code>）——这和十进制里"千位是高位、个位是低位"是同一个道理。</p>
+    </div>
+
+    <div class="mem-visual">
+      <div class="mem-caption">int n = 0x12345678;  拆分成 4 个字节</div>
+      <div class="mem-row">
+        <span class="mem-label">字节</span>
+        <div class="mem-bytes">
+          <div class="mem-byte hi"><span class="mb-val">12</span><span class="mb-addr">高位字节</span></div>
+          <div class="mem-byte" style="background:rgba(203,166,247,.15);color:var(--code-kw);border:1.5px solid rgba(203,166,247,.35)"><span class="mb-val">34</span><span class="mb-addr">·</span></div>
+          <div class="mem-byte" style="background:rgba(137,180,250,.15);color:var(--code-fn);border:1.5px solid rgba(137,180,250,.35)"><span class="mb-val">56</span><span class="mb-addr">·</span></div>
+          <div class="mem-byte lo"><span class="mb-val">78</span><span class="mb-addr">低位字节</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>问题来了：内存地址是从小到大排列的一条线（见 6.1 节数组的内存布局），这 4 个字节该按什么顺序放进连续的地址里？"高位字节放在前面（小地址）"还是"低位字节放在前面（小地址）"，这是完全可以自行约定的两种方案，也确实都有 CPU 在用：</p>
+    </div>
+
+    <div class="mem-visual">
+      <div class="mem-caption">大端（Big-Endian）：高位字节放在低地址 —— 符合人类阅读习惯</div>
+      <div class="mem-row">
+        <span class="mem-label">地址增大 →</span>
+        <div class="mem-bytes">
+          <div class="mem-byte hi"><span class="mb-val">12</span><span class="mb-addr">0x00</span></div>
+          <div class="mem-byte" style="background:rgba(203,166,247,.15);color:var(--code-kw);border:1.5px solid rgba(203,166,247,.35)"><span class="mb-val">34</span><span class="mb-addr">0x01</span></div>
+          <div class="mem-byte" style="background:rgba(137,180,250,.15);color:var(--code-fn);border:1.5px solid rgba(137,180,250,.35)"><span class="mb-val">56</span><span class="mb-addr">0x02</span></div>
+          <div class="mem-byte lo"><span class="mb-val">78</span><span class="mb-addr">0x03</span></div>
+        </div>
+      </div>
+      <div class="mem-arrow-note">↑ 从左到右读正好是 12 34 56 78，和数字本身的书写顺序一致</div>
+
+      <div class="mem-caption" style="margin-top:8px;">小端（Little-Endian）：低位字节放在低地址 —— x86 / x64 / 大多数 ARM 采用</div>
+      <div class="mem-row">
+        <span class="mem-label">地址增大 →</span>
+        <div class="mem-bytes">
+          <div class="mem-byte lo"><span class="mb-val">78</span><span class="mb-addr">0x00</span></div>
+          <div class="mem-byte" style="background:rgba(137,180,250,.15);color:var(--code-fn);border:1.5px solid rgba(137,180,250,.35)"><span class="mb-val">56</span><span class="mb-addr">0x01</span></div>
+          <div class="mem-byte" style="background:rgba(203,166,247,.15);color:var(--code-kw);border:1.5px solid rgba(203,166,247,.35)"><span class="mb-val">34</span><span class="mb-addr">0x02</span></div>
+          <div class="mem-byte hi"><span class="mb-val">12</span><span class="mb-addr">0x03</span></div>
+        </div>
+      </div>
+      <div class="mem-arrow-note">↑ 从左到右读是 78 56 34 12，正好和数字书写顺序相反</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💻</span>
+      <div><b>你的电脑用的是哪一种？</b>我们日常使用的 x86、x64（Intel/AMD）以及绝大多数 ARM 设备（手机、树莓派等）默认都采用<b>小端</b>存储；网络传输协议（如 TCP/IP）则统一规定使用<b>大端</b>，因此某些跨网络通信的底层代码需要做字节序转换——这也是 7.2 节 <code>__builtin_bswap32</code> 这个函数真正的用武之地：它能快速把一个数的字节顺序整个翻转过来，实现大小端互转。</div>
+    </div>
+
+    <div class="section-body">
+      <p>记不住哪个是"大端"哪个是"小端"？可以这样理解名字的由来："端"指的是数值的<b>末端</b>（最低位那一端）：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">用指针技巧检测本机字节序</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="type">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span>                     <span class="cmt">// 内存中只有最低位字节是 1，其余字节是 0</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="type">char</span><span class="op">*</span> <span class="fn">p</span> <span class="op">=</span> <span class="pnc">(</span><span class="type">char</span><span class="op">*</span><span class="pnc">)</span><span class="op">&amp;</span><span class="fn">n</span><span class="pnc">;</span>       <span class="cmt">// 取 n 的地址，强制按单字节方式解读</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="op">*</span><span class="fn">p</span> <span class="op">==</span> <span class="num">1</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"小端：最低地址存的是低位字节 1"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="kw">else</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"大端：最低地址存的是高位字节 0"</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>这段代码的原理：</b><code>n</code> 的值是 1，在内存中只有最低位字节是 <code>0x01</code>，其余 3 个字节都是 <code>0x00</code>。把 <code>int*</code> 强制转换成 <code>char*</code> 再取第一个字节（也就是最低地址那个字节），如果读到的是 <code>1</code>，说明这台机器把"低位字节"放在了"低地址"——也就是小端；如果读到 <code>0</code>，则说明高位字节在最低地址，是大端。这是判断本机字节序最经典的写法。</div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>日常写代码基本不用操心字节序：</b>只要老老实实用 <code>cin</code>/<code>cout</code>、变量赋值、算术运算这些正常方式操作数据，字节序完全是透明的，编译器和 CPU 会自动处理好一切。只有当你需要"跳过语言的抽象、直接摸到内存里的每一个字节"时——比如网络编程、跨平台的二进制文件读写、或者上面这种指针强转的技巧——字节序才会成为一个需要认真考虑的问题。</div>
     </div>
   </section>
 

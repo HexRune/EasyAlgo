@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.9 高精度加法 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "1.9"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格（复用 1.7 节样式） ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 竖式加法可视化 */
+  .vcol-wrap { display: flex; justify-content: center; }
+  .vcol-grid { display: inline-grid; grid-auto-flow: column; gap: 6px; }
+  .vcol { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .vcol-carry { width: 30px; height: 24px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--code-num); }
+  .vcol-carry.empty { color: #3A3850; }
+  .vcol-digit { width: 30px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--code-text); }
+  .vcol-line { width: 100%; height: 2px; background: #3A3850; margin: 2px 0; }
+  .vcol-sign { width: 30px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--code-op); }
+  .vcol-result { color: var(--code-str); }
+  .vcol-idx { font-size: 9.5px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+
+  /* 数组存储可视化 */
+  .arrdark-wrap { display: flex; align-items: center; gap: 3px; justify-content: center; flex-wrap: wrap; }
+  .arrdark-cell { width: 44px; height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; flex-shrink: 0; }
+  .arrdark-cell.hi { background: rgba(166,227,161,.22); color: var(--code-str); border-color: rgba(166,227,161,.45); }
+  .arrdark-idx { font-size: 10.5px; color: #6C7086; text-align: center; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+  .arrdark-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="1.9">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块一 数学基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>1.9 高精度加法</span>
+    </div>
+    <h1 class="chapter-title">1.9　高精度加法</h1>
+    <p class="chapter-desc">当两个数大到连 long long 都装不下时，用数组模拟小学竖式加法的过程，逐位相加、逐位进位。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">为什么需要高精度</a></li>
+      <li><span class="toc-num">②</span><a href="#store">用数组存储大数</a></li>
+      <li><span class="toc-num">③</span><a href="#idea">竖式加法的思路</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码实现</a></li>
+      <li><span class="toc-num">⑤</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 为什么需要高精度</div>
+    <div class="section-body">
+      <p>C++ 里最大的整数类型 <code>long long</code> 能表示的范围大约是 <code>±9.2 × 10¹⁸</code>，也就是最多约 19 位十进制数字。但有些题目要求计算的数字远远超出这个范围——比如求 <code>100!</code>（100 的阶乘，结果有 158 位）、或者直接给出两个几百位的大数相加。这时候任何内置的整数类型都装不下，需要另想办法。</p>
+      <p><b>高精度算法</b>的核心思想很朴素：既然一个变量存不下这么大的数，那就用<b>数组</b>存，一个数组元素存一位数字，就像小学时用竖式做加法一样，一位一位地算、一位一位地进位。这一节先从最简单的高精度加法入手，后面几节的减法、乘法、除法都建立在同样的思路上。</p>
+    </div>
+
+    <div class="sub-title" id="store">② 用数组存储大数</div>
+    <div class="section-body">
+      <p>输入的大数通常是以字符串形式给出的（比如 <code>"12345"</code>），需要先把它转换成一个数字数组。这里有一个关键的约定：<b>数组下标 0 存个位，下标越大存的位越高</b>——也就是"倒着存"。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">字符串 "12345" 转换成数字数组（下标 0 存个位）</div>
+      <div class="arrdark-wrap">
+        <div class="arrdark-col"><div class="arrdark-cell hi">5</div><div class="arrdark-idx">[0]<br>个位</div></div>
+        <div class="arrdark-col"><div class="arrdark-cell">4</div><div class="arrdark-idx">[1]<br>十位</div></div>
+        <div class="arrdark-col"><div class="arrdark-cell">3</div><div class="arrdark-idx">[2]<br>百位</div></div>
+        <div class="arrdark-col"><div class="arrdark-cell">2</div><div class="arrdark-idx">[3]<br>千位</div></div>
+        <div class="arrdark-col"><div class="arrdark-cell">1</div><div class="arrdark-idx">[4]<br>万位</div></div>
+      </div>
+      <div class="num-visual-caption">为什么要倒着存？因为加法进位是"从低位往高位"传递的——个位进位会影响十位，十位进位会影响百位……如果下标 0 存最高位（正着存），每次进位都要往数组<strong>更小</strong>的方向找位置，还要提前预留最高位可能因为进位而多出一位的空间，处理起来别扭得多。倒着存，下标只会一路递增，进位时直接往后面写就行，代码更简洁。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 字符串转数字数组（倒序存储）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">s</span><span class="pnc">;</span>  <span class="cmt">// 输入 "12345"</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">len</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">a</span><span class="pnc">(</span><span class="fn">len</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">);</span>  <span class="cmt">// 长度按实际位数开，不需要猜一个固定大小</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">    <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">[</span><span class="fn">len</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span>  <span class="cmt">// 从字符串末尾开始取，字符转数字见 2.2 节</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🧰</span>
+      <div><b>为什么用 vector 而不是普通数组？</b>普通数组 <code>int a[505]</code> 必须提前猜一个足够大的固定长度，容易开小导致越界、开太大又浪费空间；<code>vector&lt;int&gt; a(len, 0)</code> 则是按<b>实际输入的位数</b>精确分配大小，且所有元素自动初始化成 0（免去手动清零），后面遇到长度不确定或需要动态调整大小的场景（比如接下来处理两个位数不同的数），vector 明显更省心。用法上 <code>a[i]</code> 和普通数组完全一样，几乎不需要额外学习成本。</div>
+    </div>
+
+    <div class="sub-title" id="idea">③ 竖式加法的思路</div>
+    <div class="section-body">
+      <p>存好数组之后，加法就是模拟小学竖式：<b>从个位（下标 0）开始，每一位对应相加，满 10 就往高一位进 1</b>，一直算到两个数都用完为止。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">竖式演示：4 8 9 + 1 5 = 5 0 4</div>
+      <div class="vcol-wrap">
+        <div class="vcol-grid">
+          <div class="vcol">
+            <div class="vcol-carry">1</div>
+            <div class="vcol-digit">4</div>
+            <div class="vcol-digit">8</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">5</div>
+            <div class="vcol-idx">百位</div>
+          </div>
+          <div class="vcol">
+            <div class="vcol-carry">1</div>
+            <div class="vcol-digit">8</div>
+            <div class="vcol-digit">1</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">0</div>
+            <div class="vcol-idx">十位</div>
+          </div>
+          <div class="vcol">
+            <div class="vcol-carry empty">0</div>
+            <div class="vcol-digit">9</div>
+            <div class="vcol-digit">5</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">4</div>
+            <div class="vcol-idx">个位</div>
+          </div>
+        </div>
+      </div>
+      <div class="num-visual-caption">从右往左（个位→十位→百位）逐位相加：个位 <code>9+5=14</code>，写 <strong>4</strong> 进 1；十位 <code>8+1+1(进位)=10</code>，写 <strong>0</strong> 进 1；百位 <code>4+0+1(进位)=5</code>，写 <strong>5</strong>。三步拼起来就是 <strong>504</strong>，和真实结果 <code>489+15=504</code> 完全一致。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>两个数位数不一样怎么办？</b>竖式加法允许两个数长度不同（比如 <code>489 + 5</code>），位数较短的那个数，多出来的高位就当作 0 参与运算即可——代码里只要让循环跑到"两个数中较长的那个"的位数，某一个数组越界的部分自然就是 0（因为数组一开始整体初始化成了 0），不需要特殊处理。</div>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码实现</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 高精度加法</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s1</span><span class="pnc">,</span> <span class="fn">s2</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">s1</span> <span class="op">&gt;&gt;</span> <span class="fn">s2</span><span class="pnc">;</span>  <span class="cmt">// 用字符串读入两个大数</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">len1</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="fn">len2</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">len</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">len1</span><span class="pnc">,</span> <span class="fn">len2</span><span class="pnc">);</span>  <span class="cmt">// 取较长的位数，作为两个数组的统一长度</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">a</span><span class="pnc">(</span><span class="fn">len</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">),</span> <span class="fn">b</span><span class="pnc">(</span><span class="fn">len</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">),</span> <span class="fn">c</span><span class="pnc">(</span><span class="fn">len</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">);</span>  <span class="cmt">// c 多开一位，留给最高位可能的进位</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">    <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">[</span><span class="fn">len1</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len2</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">15</td><td class="cd">    <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">[</span><span class="fn">len2</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="typ">int</span> <span class="fn">carry</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>  <span class="cmt">// 进位</span></td></tr>
+          <tr class="hl"><td class="ln">19</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">21</td><td class="cd">    <span class="typ">int</span> <span class="fn">sum</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">+</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">+</span> <span class="fn">carry</span><span class="pnc">;</span>  <span class="cmt">// 本位相加，别忘了加上进位</span></td></tr>
+          <tr class="hl"><td class="ln">22</td><td class="cd">    <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">sum</span> <span class="op">%</span> <span class="num">10</span><span class="pnc">;</span>       <span class="cmt">// 本位只留个位数字</span></td></tr>
+          <tr class="hl"><td class="ln">23</td><td class="cd">    <span class="fn">carry</span> <span class="op">=</span> <span class="fn">sum</span> <span class="op">/</span> <span class="num">10</span><span class="pnc">;</span>       <span class="cmt">// 剩下的部分作为进位，传给下一位</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">26</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">carry</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">27</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">28</td><td class="cd">    <span class="fn">c</span><span class="pnc">[</span><span class="fn">len</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">carry</span><span class="pnc">;</span>  <span class="cmt">// 最高位还有进位，多开的一位正好派上用场</span></td></tr>
+          <tr class="hl"><td class="ln">29</td><td class="cd">    <span class="fn">len</span><span class="op">++</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">30</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">31</td><td class="cd"></td></tr>
+          <tr><td class="ln">32</td><td class="cd"><span class="cmt">// 结果是倒着存的，从高位（len-1）往低位（0）输出才是正确顺序</span></td></tr>
+          <tr class="hl"><td class="ln">33</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="fn">len</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">34</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">35</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">36</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑤ 常见陷阱</div>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>忘记处理最后一次进位：</b>两数相加，结果的位数可能比原来两个数都多一位（比如 <code>99+1=100</code>），循环结束后如果 <code>carry</code> 还不是 0，必须再多存一位，否则结果会少一位数字。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>vector 长度没有留出进位需要的那一位：</b>结果数组 <code>c</code> 必须开到 <code>len+1</code>，而不是 <code>len</code>——两数相加的结果最多比原来两数中较长的那个多出一位（比如 <code>99+1=100</code>）。如果 <code>c</code> 只开了 <code>len</code> 大小，<code>c[len] = carry</code> 这一行会访问到 vector 范围之外的位置，属于未定义行为，同样需要格外小心。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>输出顺序搞反：</b>数组是倒着存的（下标 0 是个位），但输出应该是从高位到低位（符合正常读数顺序），所以输出循环要从 <code>len-1</code> 递减到 <code>0</code>，而不是从 <code>0</code> 递增——这是最容易顺手写反的地方。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>高精度减法（1.10 节）的整体框架和加法很像，但多了"借位"和"判断两数大小"两个新问题；高精度乘法（1.11 节）和除法（1.12 节）则分别对应竖式乘法和竖式除法，思路都是"先模拟小学算术，再用数组和循环实现"。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块一 · 数学基础 · 1.9 高精度加法</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A01_08_线性筛素数.html">← 1.8 线性筛素数</a>
+      <a class="nav-btn" href="A01_10_高精度减法.html">1.10 高精度减法 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

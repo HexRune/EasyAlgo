@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.10 高精度减法 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "1.10"; font-size: 44px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 竖式减法（借位）可视化 */
+  .vcol-wrap { display: flex; justify-content: center; }
+  .vcol-grid { display: inline-grid; grid-auto-flow: column; gap: 10px; }
+  .vcol { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .vcol-carry { min-width: 60px; height: 24px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--code-kw); white-space: nowrap; }
+  .vcol-carry.empty { color: #3A3850; }
+  .vcol-digit { min-width: 60px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--code-text); }
+  .vcol-transform { min-width: 60px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 5px; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; }
+  .vt-old { color: #6C7086; text-decoration: line-through; font-size: 14px; }
+  .vt-arrow { color: #45475A; font-size: 12px; }
+  .vt-new { color: var(--code-kw); }
+  .vcol-line { width: 100%; height: 2px; background: #3A3850; margin: 2px 0; }
+  .vcol-result { color: var(--code-str); }
+  .vcol-idx { font-size: 9.5px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+
+  /* 大小比较可视化 */
+  .cmp-visual { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 16px 0; font-family: 'JetBrains Mono', monospace; }
+  .cmp-num { font-size: 22px; font-weight: 700; padding: 10px 20px; border-radius: 8px; background: #2A2840; color: var(--code-text); }
+  .cmp-num.big { background: rgba(166,227,161,.2); color: var(--code-str); border: 1.5px solid rgba(166,227,161,.4); }
+  .cmp-sign { font-size: 20px; color: #6C7086; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="1.10">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块一 数学基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>1.10 高精度减法</span>
+    </div>
+    <h1 class="chapter-title">1.10　高精度减法</h1>
+    <p class="chapter-desc">和加法一样用数组模拟竖式运算，但这次要处理的是"借位"，还要先弄清楚两个数到底谁比较大。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#diff">减法比加法多了什么</a></li>
+      <li><span class="toc-num">②</span><a href="#compare">第一步：判断两数大小</a></li>
+      <li><span class="toc-num">③</span><a href="#idea">竖式减法的思路：借位</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码实现</a></li>
+      <li><span class="toc-num">⑤</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="diff">① 减法比加法多了什么</div>
+    <div class="section-body">
+      <p>高精度减法沿用了上一节（1.9 加法）"数组倒序存储 + 逐位运算"的整体框架，但比加法多出两个新问题：</p>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>两个新麻烦：</b><br>
+        1️⃣ <b>结果可能是负数</b>——如果被减数比减数小（比如 <code>15 - 489</code>），单纯按位相减会出现"不够减"的情况，需要提前判断好两数的大小关系；<br>
+        2️⃣ <b>某一位不够减时要向高位"借位"</b>——这和加法的"进位"刚好相反，进位是"往高位送 1"，借位是"从高位借 1 用"。
+      </div>
+    </div>
+
+    <div class="sub-title" id="compare">② 第一步：判断两数大小</div>
+    <div class="section-body">
+      <p>为了避免结果出现负数，高精度减法通常约定"用大数减小数"，如果被减数本来就比减数小，就先交换两者、算出差值后再在结果前面添上负号。判断两个高精度数谁大谁小，规则很直观：</p>
+    </div>
+
+    <div class="cmp-visual">
+      <div class="cmp-num">489</div>
+      <span class="cmp-sign">vs</span>
+      <div class="cmp-num big">1500</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📏</span>
+      <div>
+        <b>两条比较规则，按顺序判断：</b><br>
+        1️⃣ <b>先比位数</b>——位数多的数一定更大（没有前导 0 的情况下）。上面例子里 <code>1500</code> 是 4 位，<code>489</code> 是 3 位，<code>1500</code> 直接胜出，不需要再比第二条；<br>
+        2️⃣ <b>位数相同则从最高位开始逐位比较</b>——哪个数先出现更大的数字，哪个数就更大（一旦分出胜负立刻停止比较）。
+      </div>
+    </div>
+
+    <div class="sub-title" id="idea">③ 竖式减法的思路：借位</div>
+    <div class="section-body">
+      <p>确定了"大数 - 小数"之后，就可以从个位开始逐位相减。如果某一位不够减，就向前一位（更高的那一位）借 1 当 10 用，同时把那一位自己减 1（因为被借走了）。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">竖式演示：352 − 129 = 223</div>
+      <div class="vcol-wrap">
+        <div class="vcol-grid">
+          <div class="vcol">
+            <div class="vcol-carry empty">·</div>
+            <div class="vcol-digit">3</div>
+            <div class="vcol-digit">1</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">2</div>
+            <div class="vcol-idx">百位</div>
+          </div>
+          <div class="vcol">
+            <div class="vcol-carry">借出 1</div>
+            <div class="vcol-transform"><span class="vt-old">5</span><span class="vt-arrow">→</span><span class="vt-new">4</span></div>
+            <div class="vcol-digit">2</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">2</div>
+            <div class="vcol-idx">十位</div>
+          </div>
+          <div class="vcol">
+            <div class="vcol-carry">借入 1</div>
+            <div class="vcol-transform"><span class="vt-old">2</span><span class="vt-arrow">→</span><span class="vt-new">12</span></div>
+            <div class="vcol-digit">9</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">3</div>
+            <div class="vcol-idx">个位</div>
+          </div>
+        </div>
+      </div>
+      <div class="num-visual-caption">从个位开始：个位 <code>2 - 9</code> 不够减，向十位借 1 当 10 用，本位变成 <code>2+10=12</code>，算出 <code>12-9=3</code>；十位借出 1 之后从 <code>5</code> 变成 <code>4</code>，再算 <code>4-2=2</code>（够减，不用再向百位借）；百位没有被借位影响，直接 <code>3-1=2</code>。三位拼起来是 <strong>223</strong>，正好等于 <code>352-129</code>。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🔗</span>
+      <div><b>如果十位自己也不够减怎么办？</b>上面这个例子只借了一次位，十位借出 1 后还有富余（<code>4 ≥ 2</code>）。但如果十位借出 1 之后反而变得不够减（比如原本是 <code>504 - 89</code>，十位是 <code>0</code>，借出 1 后变成 <code>-1</code>），就要<b>继续向百位借</b>，借位可以像这样一路向更高位传递，直到借到足够为止——这也是为什么代码里的借位逻辑要放在循环里，每一位都要重新判断一次是否需要借位，而不是只判断一次。</div>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码实现</div>
+    <div class="section-body">
+      <p>先写一个独立的比较函数 <code>IsLess</code>，再串联成完整流程：读入两数 → 比较大小并在必要时交换 → 按位相减（带借位）→ 去掉前导 0 → 按符号输出。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 比较大小函数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 判断 a 是否小于 b（a、b 均为倒序存储的数字 vector）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">bool</span> <span class="fn">IsLess</span><span class="pnc">(</span><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;&amp;</span> <span class="fn">a</span><span class="pnc">,</span> <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;&amp;</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">!=</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">())</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">        <span class="kw">return</span> <span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">&lt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span>  <span class="cmt">// 规则①：位数少的更小</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span>  <span class="cmt">// 规则②：从最高位往低位比</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">!=</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">12</td><td class="cd">            <span class="kw">return</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span>  <span class="cmt">// 位数相同、每一位都相等，说明两数相等</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 高精度减法主流程</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s1</span><span class="pnc">,</span> <span class="fn">s2</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">s1</span> <span class="op">&gt;&gt;</span> <span class="fn">s2</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">len1</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="fn">len2</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">a</span><span class="pnc">(</span><span class="fn">len1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">),</span> <span class="fn">b</span><span class="pnc">(</span><span class="fn">len2</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">        <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">[</span><span class="fn">len1</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len2</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">[</span><span class="fn">len2</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">16</td><td class="cd"><span class="typ">bool</span> <span class="fn">isNegative</span> <span class="op">=</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">IsLess</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">))</span></td></tr>
+          <tr class="hl"><td class="ln">18</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">19</td><td class="cd">    <span class="fn">swap</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">);</span>       <span class="cmt">// 交换后保证 a 是较大的数</span></td></tr>
+          <tr class="hl"><td class="ln">20</td><td class="cd">    <span class="fn">isNegative</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span>  <span class="cmt">// 原本是小数减大数，结果要带负号</span></td></tr>
+          <tr class="hl"><td class="ln">21</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">22</td><td class="cd"><span class="fn">b</span><span class="pnc">.</span><span class="fn">resize</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="num">0</span><span class="pnc">);</span>  <span class="cmt">// 用 0 把 b 补到和 a 一样长，避免按位访问时越界</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd"></td></tr>
+          <tr><td class="ln">24</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">c</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="num">0</span><span class="pnc">);</span></td></tr>
+          <tr class="hl"><td class="ln">25</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">26</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">27</td><td class="cd">    <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">-=</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span>  <span class="cmt">// 本位相减</span></td></tr>
+          <tr class="hl"><td class="ln">28</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;</span> <span class="num">0</span><span class="pnc">)</span>  <span class="cmt">// 不够减，向高位借 1</span></td></tr>
+          <tr class="hl"><td class="ln">29</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">30</td><td class="cd">        <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">+=</span> <span class="num">10</span><span class="pnc">;</span>       <span class="cmt">// 本位加 10（借 1 当 10 用）</span></td></tr>
+          <tr class="hl"><td class="ln">31</td><td class="cd">        <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">-=</span> <span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 高一位被借走 1</span></td></tr>
+          <tr class="hl"><td class="ln">32</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">33</td><td class="cd">    <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">34</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">35</td><td class="cd"></td></tr>
+          <tr><td class="ln">36</td><td class="cd"><span class="cmt">// 去掉结果高位多余的 0（例如 504-500=004，应当只输出 4）</span></td></tr>
+          <tr class="hl"><td class="ln">37</td><td class="cd"><span class="typ">int</span> <span class="fn">len</span> <span class="op">=</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">c</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
+          <tr class="hl"><td class="ln">38</td><td class="cd"><span class="kw">while</span> <span class="pnc">(</span><span class="fn">len</span> <span class="op">&gt;</span> <span class="num">1</span> <span class="op">&amp;&amp;</span> <span class="fn">c</span><span class="pnc">[</span><span class="fn">len</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">39</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">40</td><td class="cd">    <span class="fn">len</span><span class="op">--</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">41</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">42</td><td class="cd"></td></tr>
+          <tr><td class="ln">43</td><td class="cd"><span class="cmt">// 特判：如果结果本身是 0，就不应该再输出负号（不存在"负0"）</span></td></tr>
+          <tr class="hl"><td class="ln">44</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">isNegative</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="pnc">(</span><span class="fn">len</span> <span class="op">==</span> <span class="num">1</span> <span class="op">&amp;&amp;</span> <span class="fn">c</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">]</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">))</span></td></tr>
+          <tr class="hl"><td class="ln">45</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">46</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"-"</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">47</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">48</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">49</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="fn">len</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">50</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">51</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">52</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🧰</span>
+      <div><b>这里 vector 帮了两个忙：</b>一是 <code>a</code>、<code>b</code> 长度可以按各自输入的实际位数分配，不需要先猜一个固定大小；二是交换较大数之后，直接用 <code>b.resize(a.size(), 0)</code> 把较短的那个数<b>用 0 补到和 a 一样长</b>，之后 <code>a[i] - b[i]</code> 就能安全地按位访问，不用担心下标越界——这一步如果用普通数组，因为数组本身已经有固定大小、天然"自带"补 0，反而不用特地处理；但换成 vector 后，必须自己动手 resize 补齐，这是使用 vector 时容易漏掉的一个细节。</div>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>忘记特判"结果为 0"时不能带负号：</b>如果两数相减结果恰好是 0（比如 <code>489 - 489</code>），即使一开始判断出"需要交换、结果为负"，也不应该在最终输出前打印负号——"负0"不符合正常的数字表达习惯，输出前必须加上这个特判。</div>
+      </div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑤ 常见陷阱</div>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>没有提前判断大小就直接相减：</b>如果不确认被减数≥减数就直接按位相减，借位会一路借到最高位之外，得到完全错误的结果。务必先比较，让"大数减小数"，符号单独在最后处理（如果原本是小数减大数，结果记得添加负号）。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>忘记去掉结果的前导 0：</b>减法很容易产生结果比原来位数少的情况（比如 <code>504-500=4</code>，但存储的数组高位是 <code>0,0,4</code>），如果不去掉多余的高位 0，直接按数组存储位数输出会变成"<code>004</code>"，还带着两个多余的 0。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>比较函数只比了位数，忘记位数相同的情况：</b>判断大小的两条规则缺一不可——位数不同直接看位数，但位数<b>相同</b>时必须老老实实从最高位开始逐位比较，不能偷懒假设"位数相同就相等"。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>高精度乘法（1.11 节）不再需要处理借位或大小比较，但会引入一个新概念——两个数各自某一位相乘的结果，要按"位置相加"的规则落到正确的结果位上，思路和加减法略有不同。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块一 · 数学基础 · 1.10 高精度减法</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A01_09_高精度加法.html">← 1.9 高精度加法</a>
+      <a class="nav-btn" href="A01_11_高精度乘法.html">1.11 高精度乘法 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
