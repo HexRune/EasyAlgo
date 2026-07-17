@@ -83,6 +83,26 @@
     <div class="sub-title" id="what">① 为什么需要高精度</div>
     <div class="section-body">
       <p>C++ 里最大的整数类型 <code>long long</code> 能表示的范围大约是 <code>±9.2 × 10¹⁸</code>，也就是最多约 19 位十进制数字。但有些题目要求计算的数字远远超出这个范围——比如求 <code>100!</code>（100 的阶乘，结果有 158 位）、或者直接给出两个几百位的大数相加。这时候任何内置的整数类型都装不下，需要另想办法。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 眼见为实：long long 也会溢出</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">long long</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">9000000000000000000</span><span class="pnc">;</span>  <span class="cmt">// 已经很接近 long long 的上限了</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">long long</span> <span class="fn">b</span> <span class="op">=</span> <span class="num">9000000000000000000</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// 期望得到一个 19 位的巨大正数……</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// 实际输出：-446744073709551616（变成了一个负数！）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">💥</span>
+      <div><b>溢出不会报错，只会默默算错：</b>两个正数相加，结果居然是负数——这就是<b>溢出</b>（见 2.3 节原码反码补码）。<code>long long</code> 存储空间是固定的 8 字节，一旦真实结果超出了它能表示的范围，多出来的部分会被直接"截断丢弃"，程序不会有任何报错提示，只会安安静静地给出一个错误答案，非常危险。这正是需要高精度算法的根本原因：当数字大到内置类型装不下时，必须换一种"能无限扩容"的存储方式。</div>
+    </div>
+
+    <div class="section-body">
       <p><b>高精度算法</b>的核心思想很朴素：既然一个变量存不下这么大的数，那就用<b>数组</b>存，一个数组元素存一位数字，就像小学时用竖式做加法一样，一位一位地算、一位一位地进位。这一节先从最简单的高精度加法入手，后面几节的减法、乘法、除法都建立在同样的思路上。</p>
     </div>
 
@@ -169,49 +189,93 @@
       <div><b>两个数位数不一样怎么办？</b>竖式加法允许两个数长度不同（比如 <code>489 + 5</code>），位数较短的那个数，多出来的高位就当作 0 参与运算即可——代码里只要让循环跑到"两个数中较长的那个"的位数，某一个数组越界的部分自然就是 0（因为数组一开始整体初始化成了 0），不需要特殊处理。</div>
     </div>
 
+    <div class="section-body">
+      <p>为了更直观地看清楚"程序到底是怎么一步步算出来的"，下面用一个稍微复杂一点的例子——<code>4827 + 358</code>——把循环每一轮的状态都列出来，逐行对照着看：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>i</th><th>a[i]</th><th>b[i]</th><th>进位（carry）</th><th>本位和（sum）</th><th>c[i] = sum % 10</th><th>新进位 = sum / 10</th></tr></thead>
+      <tbody>
+        <tr><td>0（个位）</td><td>7</td><td>8</td><td>0</td><td>7+8+0=15</td><td>5</td><td>1</td></tr>
+        <tr><td>1（十位）</td><td>2</td><td>5</td><td>1</td><td>2+5+1=8</td><td>8</td><td>0</td></tr>
+        <tr><td>2（百位）</td><td>8</td><td>3</td><td>0</td><td>8+3+0=11</td><td>1</td><td>1</td></tr>
+        <tr><td>3（千位）</td><td>4</td><td>0<span style="color:#999;font-size:11px;">（b 越界补 0）</span></td><td>1</td><td>4+0+1=5</td><td>5</td><td>0</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-body">
+      <p>循环结束后 <code>carry = 0</code>，不需要再多开一位。把 <code>c</code> 数组从高位（下标 3）往低位（下标 0）读出来，就是 <strong>5 1 8 5</strong>，也就是 <code>5185</code>——正好等于 <code>4827 + 358</code>。可以看到，<b>第 3 行（千位）里 <code>b[3]</code> 越界了，直接当成 0 处理</b>，这正好对应上面提到的"位数不同"的情况：<code>358</code> 只有 3 位，vector 声明时按照较长的 <code>4827</code>（4 位）分配大小，多出来的 <code>b[3]</code> 位置本来就是 vector 初始化时留下的 0，不需要额外写代码去判断。</p>
+    </div>
+
     <div class="sub-title" id="code">④ 完整代码实现</div>
+    <div class="section-body">
+      <p>下面把前面拆开讲的每一步拼在一起，写成一个可以直接编译运行的完整程序。建议自己动手敲一遍、编译运行看看结果，比单纯读代码印象更深：</p>
+    </div>
+
     <div class="code-block">
-      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 高精度加法</span></div>
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 高精度加法（完整可运行程序）</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s1</span><span class="pnc">,</span> <span class="fn">s2</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">s1</span> <span class="op">&gt;&gt;</span> <span class="fn">s2</span><span class="pnc">;</span>  <span class="cmt">// 用字符串读入两个大数</span></td></tr>
-          <tr><td class="ln">3</td><td class="cd"></td></tr>
-          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">len1</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="fn">len2</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
-          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">len</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">len1</span><span class="pnc">,</span> <span class="fn">len2</span><span class="pnc">);</span>  <span class="cmt">// 取较长的位数，作为两个数组的统一长度</span></td></tr>
-          <tr><td class="ln">6</td><td class="cd"></td></tr>
-          <tr class="hl"><td class="ln">7</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">a</span><span class="pnc">(</span><span class="fn">len</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">),</span> <span class="fn">b</span><span class="pnc">(</span><span class="fn">len</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">),</span> <span class="fn">c</span><span class="pnc">(</span><span class="fn">len</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">);</span>  <span class="cmt">// c 多开一位，留给最高位可能的进位</span></td></tr>
-          <tr><td class="ln">8</td><td class="cd"></td></tr>
-          <tr class="hl"><td class="ln">9</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
-          <tr class="hl"><td class="ln">10</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">11</td><td class="cd">    <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">[</span><span class="fn">len1</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
-          <tr class="hl"><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
-          <tr class="hl"><td class="ln">13</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len2</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
-          <tr class="hl"><td class="ln">14</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">15</td><td class="cd">    <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">[</span><span class="fn">len2</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
-          <tr class="hl"><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
-          <tr><td class="ln">17</td><td class="cd"></td></tr>
-          <tr><td class="ln">18</td><td class="cd"><span class="typ">int</span> <span class="fn">carry</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>  <span class="cmt">// 进位</span></td></tr>
-          <tr class="hl"><td class="ln">19</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
-          <tr><td class="ln">20</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">21</td><td class="cd">    <span class="typ">int</span> <span class="fn">sum</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">+</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">+</span> <span class="fn">carry</span><span class="pnc">;</span>  <span class="cmt">// 本位相加，别忘了加上进位</span></td></tr>
-          <tr class="hl"><td class="ln">22</td><td class="cd">    <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">sum</span> <span class="op">%</span> <span class="num">10</span><span class="pnc">;</span>       <span class="cmt">// 本位只留个位数字</span></td></tr>
-          <tr class="hl"><td class="ln">23</td><td class="cd">    <span class="fn">carry</span> <span class="op">=</span> <span class="fn">sum</span> <span class="op">/</span> <span class="num">10</span><span class="pnc">;</span>       <span class="cmt">// 剩下的部分作为进位，传给下一位</span></td></tr>
-          <tr><td class="ln">24</td><td class="cd"><span class="pnc">}</span></td></tr>
-          <tr><td class="ln">25</td><td class="cd"></td></tr>
-          <tr class="hl"><td class="ln">26</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">carry</span><span class="pnc">)</span></td></tr>
-          <tr class="hl"><td class="ln">27</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">28</td><td class="cd">    <span class="fn">c</span><span class="pnc">[</span><span class="fn">len</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">carry</span><span class="pnc">;</span>  <span class="cmt">// 最高位还有进位，多开的一位正好派上用场</span></td></tr>
-          <tr class="hl"><td class="ln">29</td><td class="cd">    <span class="fn">len</span><span class="op">++</span><span class="pnc">;</span></td></tr>
-          <tr class="hl"><td class="ln">30</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;vector&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="typ">string</span> <span class="fn">s1</span><span class="pnc">,</span> <span class="fn">s2</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">s1</span> <span class="op">&gt;&gt;</span> <span class="fn">s2</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="typ">int</span> <span class="fn">len1</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="fn">len2</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="typ">int</span> <span class="fn">len</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">len1</span><span class="pnc">,</span> <span class="fn">len2</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">a</span><span class="pnc">(</span><span class="fn">len</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">),</span> <span class="fn">b</span><span class="pnc">(</span><span class="fn">len</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">),</span> <span class="fn">c</span><span class="pnc">(</span><span class="fn">len</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">        <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">[</span><span class="fn">len1</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len2</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">        <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">[</span><span class="fn">len2</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd"></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="typ">int</span> <span class="fn">carry</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd">        <span class="typ">int</span> <span class="fn">sum</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">+</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">+</span> <span class="fn">carry</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd">        <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">sum</span> <span class="op">%</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd">        <span class="fn">carry</span> <span class="op">=</span> <span class="fn">sum</span> <span class="op">/</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">30</td><td class="cd">    <span class="pnc">}</span></td></tr>
           <tr><td class="ln">31</td><td class="cd"></td></tr>
-          <tr><td class="ln">32</td><td class="cd"><span class="cmt">// 结果是倒着存的，从高位（len-1）往低位（0）输出才是正确顺序</span></td></tr>
-          <tr class="hl"><td class="ln">33</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="fn">len</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span></td></tr>
-          <tr class="hl"><td class="ln">34</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">35</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
-          <tr class="hl"><td class="ln">36</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">32</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">carry</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">33</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">34</td><td class="cd">        <span class="fn">c</span><span class="pnc">[</span><span class="fn">len</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">carry</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">35</td><td class="cd">        <span class="fn">len</span><span class="op">++</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">36</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">37</td><td class="cd"></td></tr>
+          <tr><td class="ln">38</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="fn">len</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">39</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">40</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">41</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">42</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">43</td><td class="cd"></td></tr>
+          <tr><td class="ln">44</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">45</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="num-visual" style="padding:16px 24px;">
+      <div class="num-visual-title" style="margin-bottom:10px;">运行示例</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--code-text);line-height:2;">
+        <div><span style="color:#6C7086;">输入：</span>4827 358</div>
+        <div><span style="color:#6C7086;">输出：</span><span style="color:var(--code-str);font-weight:700;">5185</span></div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">✏️</span>
+      <div><b>动手试一试：</b>把上面的程序敲进编译器，除了 <code>4827 358</code>，再试试这几组输入，检验自己是否真的理解了每一步：<code>999 1</code>（结果多一位，<code>1000</code>）、<code>0 0</code>（结果应该是 <code>0</code>，不是空白）、两个都是 20 位以上的大数（验证 <code>long long</code> 装不下也能算对）。如果输出和预期不一致，回到本节的追踪表格，对照自己的代码一步步排查是哪一步出了偏差。</div>
     </div>
 
     <div class="sub-title" id="pitfall">⑤ 常见陷阱</div>

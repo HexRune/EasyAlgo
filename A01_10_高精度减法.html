@@ -159,92 +159,118 @@
       <div><b>如果十位自己也不够减怎么办？</b>上面这个例子只借了一次位，十位借出 1 后还有富余（<code>4 ≥ 2</code>）。但如果十位借出 1 之后反而变得不够减（比如原本是 <code>504 - 89</code>，十位是 <code>0</code>，借出 1 后变成 <code>-1</code>），就要<b>继续向百位借</b>，借位可以像这样一路向更高位传递，直到借到足够为止——这也是为什么代码里的借位逻辑要放在循环里，每一位都要重新判断一次是否需要借位，而不是只判断一次。</div>
     </div>
 
+    <div class="section-body">
+      <p>光说"可以继续借位"还是有点抽象，下面就用一个真正需要<b>连续借位三次</b>的例子——<code>6023 - 1458</code>——把循环每一轮的状态都列出来：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>i</th><th>位置</th><th>a[i] − b[i] 的计算</th><th>c[i]</th><th>对更高一位的影响</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>个位</td><td>3 − 8 = −5，不够减</td><td>5<span style="color:#999;font-size:11px;">（−5+10）</span></td><td>借1：a[1] 从 2 变成 2−1=1</td></tr>
+        <tr><td>1</td><td>十位</td><td>1 − 5 = −4，不够减</td><td>6<span style="color:#999;font-size:11px;">（−4+10）</span></td><td>借1：a[2] 从 0 变成 0−1=−1</td></tr>
+        <tr><td>2</td><td>百位</td><td>−1 − 4 = −5，不够减</td><td>5<span style="color:#999;font-size:11px;">（−5+10）</span></td><td>借1：a[3] 从 6 变成 6−1=5</td></tr>
+        <tr><td>3</td><td>千位</td><td>5 − 1 = 4，够减</td><td>4</td><td>不需要借位</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-body">
+      <p>关键在于第 1、2 行：<b>十位和百位在被计算之前，都已经因为上一轮的借位而先被扣掉了 1</b>（十位从 2 变成 1，百位从 0 变成 -1），代码里正是靠 <code>a[i+1] -= 1</code> 这一行悄悄完成了这种"预先扣款"，等循环走到 <code>i=1</code>、<code>i=2</code> 时，<code>a[i]</code> 已经是修改过的新值了。把 <code>c</code> 从高位（下标 3）到低位（下标 0）读出来就是 <strong>4 5 6 5</strong>，也就是 <code>4565</code>，正好等于 <code>6023 - 1458</code>。</p>
+    </div>
+
     <div class="sub-title" id="code">④ 完整代码实现</div>
     <div class="section-body">
       <p>先写一个独立的比较函数 <code>IsLess</code>，再串联成完整流程：读入两数 → 比较大小并在必要时交换 → 按位相减（带借位）→ 去掉前导 0 → 按符号输出。</p>
     </div>
-
     <div class="code-block">
-      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 比较大小函数</span></div>
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 高精度减法（完整可运行程序）</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 判断 a 是否小于 b（a、b 均为倒序存储的数字 vector）</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="typ">bool</span> <span class="fn">IsLess</span><span class="pnc">(</span><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;&amp;</span> <span class="fn">a</span><span class="pnc">,</span> <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;&amp;</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
-          <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">!=</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">())</span></td></tr>
-          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">6</td><td class="cd">        <span class="kw">return</span> <span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">&lt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span>  <span class="cmt">// 规则①：位数少的更小</span></td></tr>
-          <tr class="hl"><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
-          <tr><td class="ln">8</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span>  <span class="cmt">// 规则②：从最高位往低位比</span></td></tr>
-          <tr><td class="ln">9</td><td class="cd">    <span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">10</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">!=</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span></td></tr>
-          <tr class="hl"><td class="ln">11</td><td class="cd">        <span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">12</td><td class="cd">            <span class="kw">return</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
-          <tr class="hl"><td class="ln">13</td><td class="cd">        <span class="pnc">}</span></td></tr>
-          <tr><td class="ln">14</td><td class="cd">    <span class="pnc">}</span></td></tr>
-          <tr><td class="ln">15</td><td class="cd">    <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span>  <span class="cmt">// 位数相同、每一位都相等，说明两数相等</span></td></tr>
-          <tr><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;vector&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">bool</span> <span class="fn">IsLess</span><span class="pnc">(</span><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;&amp;</span> <span class="fn">a</span><span class="pnc">,</span> <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;&amp;</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">!=</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">())</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">        <span class="kw">return</span> <span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">&lt;</span> <span class="fn">b</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">()</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">!=</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">            <span class="kw">return</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="typ">string</span> <span class="fn">s1</span><span class="pnc">,</span> <span class="fn">s2</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">s1</span> <span class="op">&gt;&gt;</span> <span class="fn">s2</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd"></td></tr>
+          <tr><td class="ln">26</td><td class="cd">    <span class="typ">int</span> <span class="fn">len1</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="fn">len2</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">a</span><span class="pnc">(</span><span class="fn">len1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">),</span> <span class="fn">b</span><span class="pnc">(</span><span class="fn">len2</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd"></td></tr>
+          <tr><td class="ln">29</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">30</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">31</td><td class="cd">        <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">[</span><span class="fn">len1</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">32</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">33</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len2</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">34</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">35</td><td class="cd">        <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">[</span><span class="fn">len2</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">36</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">37</td><td class="cd"></td></tr>
+          <tr><td class="ln">38</td><td class="cd">    <span class="typ">bool</span> <span class="fn">isNegative</span> <span class="op">=</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">39</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">IsLess</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">))</span></td></tr>
+          <tr><td class="ln">40</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">41</td><td class="cd">        <span class="fn">swap</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">42</td><td class="cd">        <span class="fn">isNegative</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">43</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">44</td><td class="cd">    <span class="fn">b</span><span class="pnc">.</span><span class="fn">resize</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="num">0</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">45</td><td class="cd"></td></tr>
+          <tr><td class="ln">46</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">c</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="num">0</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">47</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">48</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">49</td><td class="cd">        <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">-=</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">50</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">51</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">52</td><td class="cd">            <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">+=</span> <span class="num">10</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">53</td><td class="cd">            <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">-=</span> <span class="num">1</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">54</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">55</td><td class="cd">        <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">56</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">57</td><td class="cd"></td></tr>
+          <tr><td class="ln">58</td><td class="cd">    <span class="typ">int</span> <span class="fn">len</span> <span class="op">=</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">c</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
+          <tr><td class="ln">59</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">len</span> <span class="op">&gt;</span> <span class="num">1</span> <span class="op">&amp;&amp;</span> <span class="fn">c</span><span class="pnc">[</span><span class="fn">len</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">60</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">61</td><td class="cd">        <span class="fn">len</span><span class="op">--</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">62</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">63</td><td class="cd"></td></tr>
+          <tr><td class="ln">64</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">isNegative</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="pnc">(</span><span class="fn">len</span> <span class="op">==</span> <span class="num">1</span> <span class="op">&amp;&amp;</span> <span class="fn">c</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">]</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">))</span></td></tr>
+          <tr><td class="ln">65</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">66</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"-"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">67</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">68</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="fn">len</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">69</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">70</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">71</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">72</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">73</td><td class="cd"></td></tr>
+          <tr><td class="ln">74</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">75</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
       </div>
     </div>
 
-    <div class="code-block">
-      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 高精度减法主流程</span></div>
-      <div class="code-body">
-        <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s1</span><span class="pnc">,</span> <span class="fn">s2</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">s1</span> <span class="op">&gt;&gt;</span> <span class="fn">s2</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">3</td><td class="cd"></td></tr>
-          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">len1</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="fn">len2</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
-          <tr><td class="ln">5</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">a</span><span class="pnc">(</span><span class="fn">len1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">),</span> <span class="fn">b</span><span class="pnc">(</span><span class="fn">len2</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">);</span></td></tr>
-          <tr><td class="ln">6</td><td class="cd"></td></tr>
-          <tr><td class="ln">7</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
-          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">{</span></td></tr>
-          <tr><td class="ln">9</td><td class="cd">        <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s1</span><span class="pnc">[</span><span class="fn">len1</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">10</td><td class="cd">    <span class="pnc">}</span></td></tr>
-          <tr><td class="ln">11</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">len2</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
-          <tr><td class="ln">12</td><td class="cd">    <span class="pnc">{</span></td></tr>
-          <tr><td class="ln">13</td><td class="cd">        <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">s2</span><span class="pnc">[</span><span class="fn">len2</span> <span class="op">-</span> <span class="num">1</span> <span class="op">-</span> <span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">14</td><td class="cd">    <span class="pnc">}</span></td></tr>
-          <tr><td class="ln">15</td><td class="cd"></td></tr>
-          <tr class="hl"><td class="ln">16</td><td class="cd"><span class="typ">bool</span> <span class="fn">isNegative</span> <span class="op">=</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
-          <tr class="hl"><td class="ln">17</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">IsLess</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">))</span></td></tr>
-          <tr class="hl"><td class="ln">18</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">19</td><td class="cd">    <span class="fn">swap</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">);</span>       <span class="cmt">// 交换后保证 a 是较大的数</span></td></tr>
-          <tr class="hl"><td class="ln">20</td><td class="cd">    <span class="fn">isNegative</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span>  <span class="cmt">// 原本是小数减大数，结果要带负号</span></td></tr>
-          <tr class="hl"><td class="ln">21</td><td class="cd"><span class="pnc">}</span></td></tr>
-          <tr class="hl"><td class="ln">22</td><td class="cd"><span class="fn">b</span><span class="pnc">.</span><span class="fn">resize</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="num">0</span><span class="pnc">);</span>  <span class="cmt">// 用 0 把 b 补到和 a 一样长，避免按位访问时越界</span></td></tr>
-          <tr><td class="ln">23</td><td class="cd"></td></tr>
-          <tr><td class="ln">24</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">c</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="num">0</span><span class="pnc">);</span></td></tr>
-          <tr class="hl"><td class="ln">25</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">a</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
-          <tr class="hl"><td class="ln">26</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">27</td><td class="cd">    <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">-=</span> <span class="fn">b</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span>  <span class="cmt">// 本位相减</span></td></tr>
-          <tr class="hl"><td class="ln">28</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;</span> <span class="num">0</span><span class="pnc">)</span>  <span class="cmt">// 不够减，向高位借 1</span></td></tr>
-          <tr class="hl"><td class="ln">29</td><td class="cd">    <span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">30</td><td class="cd">        <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">+=</span> <span class="num">10</span><span class="pnc">;</span>       <span class="cmt">// 本位加 10（借 1 当 10 用）</span></td></tr>
-          <tr class="hl"><td class="ln">31</td><td class="cd">        <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">-=</span> <span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 高一位被借走 1</span></td></tr>
-          <tr class="hl"><td class="ln">32</td><td class="cd">    <span class="pnc">}</span></td></tr>
-          <tr class="hl"><td class="ln">33</td><td class="cd">    <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
-          <tr class="hl"><td class="ln">34</td><td class="cd"><span class="pnc">}</span></td></tr>
-          <tr><td class="ln">35</td><td class="cd"></td></tr>
-          <tr><td class="ln">36</td><td class="cd"><span class="cmt">// 去掉结果高位多余的 0（例如 504-500=004，应当只输出 4）</span></td></tr>
-          <tr class="hl"><td class="ln">37</td><td class="cd"><span class="typ">int</span> <span class="fn">len</span> <span class="op">=</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">c</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span></td></tr>
-          <tr class="hl"><td class="ln">38</td><td class="cd"><span class="kw">while</span> <span class="pnc">(</span><span class="fn">len</span> <span class="op">&gt;</span> <span class="num">1</span> <span class="op">&amp;&amp;</span> <span class="fn">c</span><span class="pnc">[</span><span class="fn">len</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
-          <tr class="hl"><td class="ln">39</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">40</td><td class="cd">    <span class="fn">len</span><span class="op">--</span><span class="pnc">;</span></td></tr>
-          <tr class="hl"><td class="ln">41</td><td class="cd"><span class="pnc">}</span></td></tr>
-          <tr><td class="ln">42</td><td class="cd"></td></tr>
-          <tr><td class="ln">43</td><td class="cd"><span class="cmt">// 特判：如果结果本身是 0，就不应该再输出负号（不存在"负0"）</span></td></tr>
-          <tr class="hl"><td class="ln">44</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">isNegative</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="pnc">(</span><span class="fn">len</span> <span class="op">==</span> <span class="num">1</span> <span class="op">&amp;&amp;</span> <span class="fn">c</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">]</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">))</span></td></tr>
-          <tr class="hl"><td class="ln">45</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">46</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"-"</span><span class="pnc">;</span></td></tr>
-          <tr class="hl"><td class="ln">47</td><td class="cd"><span class="pnc">}</span></td></tr>
-          <tr><td class="ln">48</td><td class="cd"></td></tr>
-          <tr class="hl"><td class="ln">49</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="fn">len</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span></td></tr>
-          <tr class="hl"><td class="ln">50</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">51</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span></td></tr>
-          <tr class="hl"><td class="ln">52</td><td class="cd"><span class="pnc">}</span></td></tr>
-        </table>
+    <div class="num-visual" style="padding:16px 24px;">
+      <div class="num-visual-title" style="margin-bottom:10px;">运行示例</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--code-text);line-height:2;">
+        <div><span style="color:#6C7086;">输入：</span>6023 1458</div>
+        <div><span style="color:#6C7086;">输出：</span><span style="color:var(--code-str);font-weight:700;">4565</span></div>
+        <div style="margin-top:8px;"><span style="color:#6C7086;">输入：</span>15 489</div>
+        <div><span style="color:#6C7086;">输出：</span><span style="color:var(--code-str);font-weight:700;">-474</span> <span style="color:#6C7086;font-size:11px;">（被减数比减数小，结果带负号）</span></div>
       </div>
     </div>
 
@@ -253,11 +279,9 @@
       <div><b>这里 vector 帮了两个忙：</b>一是 <code>a</code>、<code>b</code> 长度可以按各自输入的实际位数分配，不需要先猜一个固定大小；二是交换较大数之后，直接用 <code>b.resize(a.size(), 0)</code> 把较短的那个数<b>用 0 补到和 a 一样长</b>，之后 <code>a[i] - b[i]</code> 就能安全地按位访问，不用担心下标越界——这一步如果用普通数组，因为数组本身已经有固定大小、天然"自带"补 0，反而不用特地处理；但换成 vector 后，必须自己动手 resize 补齐，这是使用 vector 时容易漏掉的一个细节。</div>
     </div>
 
-    <div class="pitfall-list">
-      <div class="pitfall-item">
-        <div class="pitfall-num">4</div>
-        <div class="pitfall-body"><b>忘记特判"结果为 0"时不能带负号：</b>如果两数相减结果恰好是 0（比如 <code>489 - 489</code>），即使一开始判断出"需要交换、结果为负"，也不应该在最终输出前打印负号——"负0"不符合正常的数字表达习惯，输出前必须加上这个特判。</div>
-      </div>
+    <div class="callout tip">
+      <span class="callout-icon">✏️</span>
+      <div><b>动手试一试：</b>除了上面两组，再试试这几组输入检验自己的理解：<code>489 489</code>（结果应该是 <code>0</code>，注意不能输出"-0"）、<code>1000 1</code>（十位、百位、千位连续借位）、两个 20 位以上的大数相减。如果结果不对，回到本节的追踪表格，逐行核对 <code>a[i]</code>、<code>b[i]</code> 在每一轮循环里到底是什么值，通常问题就出在某一步的借位没有正确处理。</div>
     </div>
 
     <div class="sub-title" id="pitfall">⑤ 常见陷阱</div>
@@ -277,6 +301,10 @@
       <div class="pitfall-item">
         <div class="pitfall-num">3</div>
         <div class="pitfall-body"><b>比较函数只比了位数，忘记位数相同的情况：</b>判断大小的两条规则缺一不可——位数不同直接看位数，但位数<b>相同</b>时必须老老实实从最高位开始逐位比较，不能偷懒假设"位数相同就相等"。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>忘记特判"结果为 0"时不能带负号：</b>如果两数相减结果恰好是 0（比如 <code>489 - 489</code>），即使一开始判断出"需要交换、结果为负"，也不应该在最终输出前打印负号——"负0"不符合正常的数字表达习惯，输出前必须加上这个特判。</div>
       </div>
     </div>
 
