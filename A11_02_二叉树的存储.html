@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.2 二叉树的存储 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "11.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--accent-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--accent-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-mid); border-bottom: 1px solid #D3CFFA; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-mid); background: var(--accent-light); white-space: nowrap; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+
+  /* 数组下标映射可视化 */
+  .arrdark-wrap { display: flex; align-items: center; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .arrdark-cell { width: 46px; height: 46px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 700; background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; flex-shrink: 0; }
+  .arrdark-idx { font-size: 10.5px; color: #6C7086; text-align: center; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+  .arrdark-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="11.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十一 树与二叉树</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.2 二叉树的存储</span>
+    </div>
+    <h1 class="chapter-title">11.2　二叉树的存储</h1>
+    <p class="chapter-desc">两种把二叉树装进程序里的办法：用指针连起来的链式存储，和利用下标关系的数组式存储。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#s1">为什么需要专门的存储方式</a></li>
+      <li><span class="toc-num">②</span><a href="#s2">链式存储：结构体与指针</a></li>
+      <li><span class="toc-num">③</span><a href="#s3">数组式存储：下标里的秘密</a></li>
+      <li><span class="toc-num">④</span><a href="#s4">两种方式怎么选</a></li>
+      <li><span class="toc-num">⑤</span><a href="#s5">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="s1">① 为什么需要专门的存储方式</div>
+    <div class="section-body">
+      <p>回忆一下之前学过的两种基础结构：<b>数组</b>是一段连续的空间，靠下标直接定位；<b>链表</b>靠指针把节点一个个串起来，每个节点多存一个"指向下一个节点"的指针。但二叉树是"一对多"的结构——一个节点最多要连着<b>两个</b>子节点，普通数组和普通链表都没法直接照搬，需要专门设计存储方式。</p>
+      <p>常见的做法有两种：<b>链式存储</b>——每个节点额外存两个指针，分别指向左子节点和右子节点，思路上是链表的自然延伸；<b>数组式存储</b>——只利用下标之间的数学关系，不需要额外的指针空间，但只对"完全二叉树"（11.1 节讲过的性质）好用。下面分别来看。</p>
+    </div>
+
+    <div class="sub-title" id="s2">② 链式存储：结构体与指针</div>
+    <div class="section-body">
+      <p>链式存储是最通用、平时写代码最常见的写法：每个节点是一个结构体，除了存自己的值，再存两个指针 <code>left</code>、<code>right</code>，分别指向左子节点和右子节点——如果某个子节点不存在，对应指针就是 <code>nullptr</code>。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 二叉树节点的结构体定义</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="typ">TreeNode</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">val</span><span class="pnc">;</span>              <span class="cmt">// 节点自己存的值</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">left</span><span class="pnc">;</span>   <span class="cmt">// 指向左子节点，没有就是 nullptr</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">right</span><span class="pnc">;</span>  <span class="cmt">// 指向右子节点，没有就是 nullptr</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">TreeNode</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">v</span><span class="pnc">)</span> <span class="op">:</span> <span class="fn">val</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">),</span> <span class="fn">left</span><span class="pnc">(</span><span class="kw">nullptr</span><span class="pnc">),</span> <span class="fn">right</span><span class="pnc">(</span><span class="kw">nullptr</span><span class="pnc">)</span> <span class="pnc">{}</span>  <span class="cmt">// 构造函数：新节点默认没有子节点</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">};</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>手动搭建 11.1 节那棵示例树（根节点 <code>1</code>，左子节点 <code>2</code>、右子节点 <code>3</code>，<code>2</code> 的子节点是 <code>4</code>、<code>5</code>，<code>3</code> 的左子节点是 <code>6</code>），代码就是把每个指针手动接上：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 手动搭建示例树</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">root</span> <span class="op">=</span> <span class="kw">new</span> <span class="typ">TreeNode</span><span class="pnc">(</span><span class="num">1</span><span class="pnc">);</span>          <span class="cmt">// 先建根节点</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">root</span><span class="op">-></span><span class="fn">left</span>  <span class="op">=</span> <span class="kw">new</span> <span class="typ">TreeNode</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">);</span>          <span class="cmt">// 1 的左子节点是 2</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">root</span><span class="op">-></span><span class="fn">right</span> <span class="op">=</span> <span class="kw">new</span> <span class="typ">TreeNode</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">);</span>          <span class="cmt">// 1 的右子节点是 3</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">root</span><span class="op">-></span><span class="fn">left</span><span class="op">-></span><span class="fn">left</span>  <span class="op">=</span> <span class="kw">new</span> <span class="typ">TreeNode</span><span class="pnc">(</span><span class="num">4</span><span class="pnc">);</span>  <span class="cmt">// 2 的左子节点是 4</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">root</span><span class="op">-></span><span class="fn">left</span><span class="op">-></span><span class="fn">right</span> <span class="op">=</span> <span class="kw">new</span> <span class="typ">TreeNode</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">);</span>  <span class="cmt">// 2 的右子节点是 5</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">root</span><span class="op">-></span><span class="fn">right</span><span class="op">-></span><span class="fn">left</span> <span class="op">=</span> <span class="kw">new</span> <span class="typ">TreeNode</span><span class="pnc">(</span><span class="num">6</span><span class="pnc">);</span>  <span class="cmt">// 3 的左子节点是 6，右子节点留空（nullptr）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>判断一个节点是不是叶子：</b>只要 <code>node->left == nullptr && node->right == nullptr</code>，就说明它没有任何子节点，是叶子节点——这个判断在后面写遍历、写递归终止条件时会反复用到。</div>
+    </div>
+
+    <div class="sub-title" id="s3">③ 数组式存储：下标里的秘密</div>
+    <div class="section-body">
+      <p>如果一棵二叉树恰好是<b>完全二叉树</b>（11.1 节讲过：除最后一层外都填满，最后一层从左到右紧凑排列），就可以不用指针，只靠<b>下标之间的数学关系</b>把整棵树存进一个普通数组里——把树按"从上到下、同一层从左到右"的顺序编号，编号就是数组下标。</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="num-visual-title" style="font-family:'Noto Sans SC', sans-serif; font-size:11.5px; color:#A6ADC8; margin-bottom:16px;">按层编号后存进数组，箭头是"父节点 → 子节点"的下标关系</div>
+      <svg viewBox="0 0 560 190" xmlns="http://www.w3.org/2000/svg" style="max-width:520px;width:100%;">
+        <path d="M 60 130 Q 100 70 140 130" fill="none" stroke="#F9A825" stroke-width="1.5"/>
+        <path d="M 60 130 Q 130 40 240 130" fill="none" stroke="#F9A825" stroke-width="1.5"/>
+        <text x="100" y="72" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#F9A825">2·0+1=1</text>
+        <text x="145" y="42" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#F9A825">2·0+2=2</text>
+
+        <path d="M 160 130 Q 200 85 340 130" fill="none" stroke="#89B4FA" stroke-width="1.5"/>
+        <path d="M 160 130 Q 260 55 440 130" fill="none" stroke="#89B4FA" stroke-width="1.5"/>
+        <text x="230" y="88" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#89B4FA">2·1+1=3</text>
+        <text x="270" y="56" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#89B4FA">2·1+2=4</text>
+
+        <g font-family="'JetBrains Mono',monospace">
+          <rect x="40" y="130" width="40" height="40" rx="8" fill="rgba(203,166,247,.20)" stroke="#CBA6F7" stroke-width="2"/>
+          <text x="60" y="155" text-anchor="middle" font-size="17" font-weight="700" fill="#CBA6F7">1</text>
+          <text x="60" y="184" text-anchor="middle" font-size="10.5" fill="#6C7086">[0]</text>
+
+          <rect x="140" y="130" width="40" height="40" rx="8" fill="#2A2840" stroke="#3A3850" stroke-width="1.5"/>
+          <text x="160" y="155" text-anchor="middle" font-size="17" font-weight="700" fill="#E8E8F0">2</text>
+          <text x="160" y="184" text-anchor="middle" font-size="10.5" fill="#6C7086">[1]</text>
+
+          <rect x="240" y="130" width="40" height="40" rx="8" fill="#2A2840" stroke="#3A3850" stroke-width="1.5"/>
+          <text x="260" y="155" text-anchor="middle" font-size="17" font-weight="700" fill="#E8E8F0">3</text>
+          <text x="260" y="184" text-anchor="middle" font-size="10.5" fill="#6C7086">[2]</text>
+
+          <rect x="340" y="130" width="40" height="40" rx="8" fill="#2A2840" stroke="#3A3850" stroke-width="1.5"/>
+          <text x="360" y="155" text-anchor="middle" font-size="17" font-weight="700" fill="#E8E8F0">4</text>
+          <text x="360" y="184" text-anchor="middle" font-size="10.5" fill="#6C7086">[3]</text>
+
+          <rect x="440" y="130" width="40" height="40" rx="8" fill="#2A2840" stroke="#3A3850" stroke-width="1.5"/>
+          <text x="460" y="155" text-anchor="middle" font-size="17" font-weight="700" fill="#E8E8F0">5</text>
+          <text x="460" y="184" text-anchor="middle" font-size="10.5" fill="#6C7086">[4]</text>
+
+          <rect x="510" y="130" width="40" height="40" rx="8" fill="#2A2840" stroke="#3A3850" stroke-width="1.5"/>
+          <text x="530" y="155" text-anchor="middle" font-size="17" font-weight="700" fill="#E8E8F0">6</text>
+          <text x="530" y="184" text-anchor="middle" font-size="10.5" fill="#6C7086">[5]</text>
+        </g>
+      </svg>
+      <figcaption style="text-align:left;">同一棵示例树，按层编号后依次是 <code>1,2,3,4,5,6</code>，正好对应下标 <code>0~5</code>。<span style="color:#F9A825;">橙色箭头</span>是下标 <code>0</code>（节点 1）指向它两个子节点的下标；<span style="color:#89B4FA;">蓝色箭头</span>是下标 <code>1</code>（节点 2）指向它两个子节点的下标——子节点的下标，永远等于"父节点下标 × 2"再加 1 或加 2。</figcaption>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>下标从 0 开始时的公式：</b>节点下标为 <code>i</code>，那么：<br>
+        左子节点下标 = <code>2*i + 1</code>　　右子节点下标 = <code>2*i + 2</code>　　父节点下标 = <code>(i - 1) / 2</code>（整数除法）<br>
+        验证一下：节点 2 在下标 <code>1</code>，左子节点下标应该是 <code>2*1+1=3</code>（节点 4 ✓），右子节点下标是 <code>2*1+2=4</code>（节点 5 ✓）。
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>非完全二叉树用数组存会浪费大量空间：</b>比如一棵"只有右子节点、一直往右斜下去"的树（一共 5 个节点，深度却有 4 层）。按上面的编号规则，右子节点的下标要跳到 <code>2*i+2</code>，越往下跳得越远——中间全是没有节点、却必须留出来的空位。这样一棵树最坏情况下可能需要开到几十甚至上百的数组长度，才能存下 5 个节点。这也是为什么数组式存储只适合<b>完全二叉树</b>（比如以后要学的"堆"就是完全二叉树，非常适合用数组存），普通二叉树通常还是用链式存储。</div>
+    </div>
+
+    <div class="sub-title" id="s4">④ 两种方式怎么选</div>
+    <div class="section-body">
+      <p>两种存储方式各有取舍，实际做题时按下面的表格来判断：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>对比项</th><th>链式存储</th><th>数组式存储</th></tr></thead>
+      <tbody>
+        <tr><td>适用范围</td><td>任意二叉树</td><td>只适合完全二叉树</td></tr>
+        <tr><td>额外空间</td><td>每个节点多存 2 个指针</td><td>不需要额外指针，但可能有空位浪费</td></tr>
+        <tr><td>找父/子节点</td><td>靠指针，<code>O(1)</code></td><td>靠下标计算，<code>O(1)</code>，甚至更快</td></tr>
+        <tr><td>动态增删节点</td><td>灵活，<code>new</code>/<code>delete</code> 即可</td><td>不方便，插入可能要整体挪动</td></tr>
+        <tr><td>常见场景</td><td>普通二叉树、二叉搜索树（11.4 节）</td><td>堆、线段树这类结构天然完全的场景</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="s5">⑤ 常见陷阱</div>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>新建节点忘记初始化指针：</b>如果结构体没有写构造函数，<code>new TreeNode</code> 出来的 <code>left</code>、<code>right</code> 是未初始化的"野指针"，直接判断 <code>if (node->left == nullptr)</code> 或访问它都可能出错。务必像上面代码那样写一个构造函数，把 <code>left</code>、<code>right</code> 显式设成 <code>nullptr</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>数组式存储的下标公式要看清"从 0 开始"还是"从 1 开始"：</b>本节公式是下标从 0 开始的版本（<code>左=2i+1，右=2i+2</code>）。如果数组下标习惯从 1 开始存（下标 0 空着不用），公式会变成<code>左=2i，右=2i+1，父=i/2</code>——两套公式不要混用，混用会导致找错父子节点。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记判断数组下标是否越界：</b>用公式算出左右子节点的下标后，要先检查这个下标是否小于数组实际存的节点个数，再去访问——否则可能读到"本不存在的子节点"对应的位置，把空位当成了真实节点。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>下一节（11.3）讲二叉树最核心的操作——遍历：前序、中序、后序（三种基于递归的深度优先遍历）和层序遍历（借助队列，思路和之前学过的 BFS 一脉相承）。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十一 树与二叉树 · 11.2 二叉树的存储</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A11_01_树的基本概念.html">← 11.1 树的基本概念</a>
+      <a class="nav-btn" href="A11_03_二叉树的遍历.html">11.3 二叉树的遍历 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

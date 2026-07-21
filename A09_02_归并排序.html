@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9.2 归并排序 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "9.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal); }
+
+  /* ── 数字可视化：统一暗色面板风格 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 归并可视化：分段/合并的每一步 */
+  .merge-pass { margin-bottom: 18px; }
+  .merge-pass:last-child { margin-bottom: 0; }
+  .merge-pass-label { font-size: 11.5px; color: #A6ADC8; margin-bottom: 10px; font-family: 'Noto Sans SC', sans-serif; }
+  .merge-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .merge-cell { width: 36px; height: 36px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .merge-cell.base   { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .merge-cell.left   { background: rgba(137,180,250,.20); color: #89B4FA; border: 1px solid rgba(137,180,250,.4); }
+  .merge-cell.right  { background: rgba(250,179,135,.20); color: #FAB387; border: 1px solid rgba(250,179,135,.4); }
+  .merge-cell.done   { background: rgba(166,227,161,.25); color: var(--code-str); border: 1px solid rgba(166,227,161,.5); }
+  .merge-cell.picked { background: rgba(243,139,168,.25); color: #F38BA8; border: 2px solid #F38BA8; }
+  .merge-gap { width: 14px; flex-shrink: 0; }
+  .merge-ptr { font-size: 9.5px; color: #6C7086; text-align: center; margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+  .merge-cell-wrap { display: flex; flex-direction: column; align-items: center; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal); border-bottom: 1px solid #B8E8D5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table tr:nth-child(even) td:first-child { background: var(--teal-light); }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal); background: var(--teal-light); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══ 章节头 ═══ -->
+  <header class="chapter-header" data-ch="9.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块九 分治排序</span>
+      <span class="eyebrow-sep">/</span>
+      <span>9.2 归并排序</span>
+    </div>
+    <h1 class="chapter-title">9.2　归并排序</h1>
+    <p class="chapter-desc">先把数组拆到只剩一个数（天然有序），再两两合并——合并两个有序数组，比想象中简单得多。</p>
+  </header>
+
+  <!-- ═══ 目录 ═══ -->
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#what">什么是归并排序</a></li>
+      <li><span class="toc-num">②</span><a href="#merge">核心操作：合并两个有序数组</a></li>
+      <li><span class="toc-num">③</span><a href="#recur">递归实现：先拆到底，再逐层合并</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">完整代码与复杂度</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══ 正文 ═══ -->
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="what">① 什么是归并排序</div>
+    <div class="section-body">
+      <p>如果有两个<strong>已经排好序</strong>的数组，把它们合并成一个更大的有序数组，其实是一件很简单的事——完全不需要重新排序，只要拿两根手指分别指着两个数组的开头，每次比较手指指到的两个数，把较小的那个拿出来放进新数组，对应的手指往后挪一位，一直重复，直到其中一个数组被"掏空"，另一个数组剩下的部分直接整体接到后面就行了。</p>
+      <p><strong>归并排序</strong>的思路，就是把这个"合并两个有序数组"的简单操作反复利用起来：先把原数组一路拆成一个个只有 1 个元素的小段——只有 1 个元素当然天然有序——再把相邻的小段两两合并成有序的大段，合并出来的大段再两两合并……一层一层往上合，直到合并成整个有序数组。</p>
+    </div>
+
+    <div class="sub-title" id="merge">② 核心操作：合并两个有序数组</div>
+    <div class="section-body">
+      <p>在学拆分之前，先把最核心的"合并"操作单独看清楚。假设已经有两个排好序的小数组 <code>[2, 5, 8]</code> 和 <code>[1, 3, 9]</code>，要把它们合并成一个有序数组：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">双指针合并两个有序数组</div>
+
+      <div class="merge-pass">
+        <div class="merge-pass-label">初始：两个指针都指向各自数组的开头，比较 2 和 1 —— 1 更小</div>
+        <div class="merge-row">
+          <div class="merge-cell-wrap"><div class="merge-cell left">2</div><div class="merge-ptr">↑ i</div></div>
+          <div class="merge-cell left">5</div>
+          <div class="merge-cell left">8</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell-wrap"><div class="merge-cell picked">1</div><div class="merge-ptr">↑ j</div></div>
+          <div class="merge-cell right">3</div>
+          <div class="merge-cell right">9</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell done">1</div>
+        </div>
+      </div>
+
+      <div class="merge-pass">
+        <div class="merge-pass-label">1 被取走，j 指针后移；比较 2 和 3 —— 2 更小</div>
+        <div class="merge-row">
+          <div class="merge-cell-wrap"><div class="merge-cell picked">2</div><div class="merge-ptr">↑ i</div></div>
+          <div class="merge-cell left">5</div>
+          <div class="merge-cell left">8</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell base" style="opacity:.3;">1</div>
+          <div class="merge-cell-wrap"><div class="merge-cell right">3</div><div class="merge-ptr">↑ j</div></div>
+          <div class="merge-cell right">9</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell done">1</div><div class="merge-cell done">2</div>
+        </div>
+      </div>
+
+      <div class="merge-pass">
+        <div class="merge-pass-label">2 被取走，i 指针后移；比较 5 和 3 —— 3 更小</div>
+        <div class="merge-row">
+          <div class="merge-cell base" style="opacity:.3;">2</div>
+          <div class="merge-cell-wrap"><div class="merge-cell left">5</div><div class="merge-ptr">↑ i</div></div>
+          <div class="merge-cell left">8</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell base" style="opacity:.3;">1</div>
+          <div class="merge-cell-wrap"><div class="merge-cell picked">3</div><div class="merge-ptr">↑ j</div></div>
+          <div class="merge-cell right">9</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell done">1</div><div class="merge-cell done">2</div><div class="merge-cell done">3</div>
+        </div>
+      </div>
+
+      <div class="merge-pass">
+        <div class="merge-pass-label">3 被取走，右边数组用完了 j 越界 —— 左边剩下的 5、8 直接整体接上去，不用再比较</div>
+        <div class="merge-row">
+          <div class="merge-cell base" style="opacity:.3;">2</div>
+          <div class="merge-cell left">5</div>
+          <div class="merge-cell left">8</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell base" style="opacity:.3;">1</div>
+          <div class="merge-cell base" style="opacity:.3;">3</div>
+          <div class="merge-cell base" style="opacity:.3;">9</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell done">1</div><div class="merge-cell done">2</div><div class="merge-cell done">3</div><div class="merge-cell done">5</div><div class="merge-cell done">8</div>
+        </div>
+      </div>
+
+      <div class="num-visual-caption">左边剩下的 <code>5、8</code> 整体接上去之后，别忘了右边其实还有一个 <code>9</code> 尚未处理——只是这一步右边恰好先用完了，所以看不到它被"接上"的过程。完整走完的话，最终结果应该是 <code>1 2 3 5 8 9</code>。这里想强调的是：<strong>不管是哪一边先用完，另一边剩下的所有元素都必须原样整体接到结果末尾</strong>，一个都不能漏，下面的代码和陷阱里会再强调一次。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>合并操作的关键：</b>因为两个小数组各自<strong>已经是有序的</strong>，所以每次只需要比较两个指针当前指到的数，把较小的拿走，被拿走的那一边指针后移——不需要回头比较，一路往前走一遍就能合并完，是线性的 <code>O(n)</code> 操作。这也是归并排序效率的关键所在。</div>
+    </div>
+
+    <div class="sub-title" id="recur">③ 递归实现：先拆到底，再逐层合并</div>
+    <div class="section-body">
+      <p>有了"合并"这个工具，剩下的问题就是：怎么才能拿到两个"已经排好序"的小数组？答案是<strong>递归地拆</strong>——不断把数组从中间切成两半，直到每一段都只剩 1 个元素（1 个元素当然已经是"有序"的），再把这些最小的段两两合并、逐层往上，最终合并回整个数组。用数组 <code>[5, 2, 8, 1, 9, 3]</code> 演示完整过程：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">先一路拆分，再逐层合并</div>
+
+      <div class="merge-pass">
+        <div class="merge-pass-label">原数组</div>
+        <div class="merge-row">
+          <div class="merge-cell base">5</div><div class="merge-cell base">2</div><div class="merge-cell base">8</div><div class="merge-cell base">1</div><div class="merge-cell base">9</div><div class="merge-cell base">3</div>
+        </div>
+      </div>
+
+      <div class="merge-pass">
+        <div class="merge-pass-label">拆成两半</div>
+        <div class="merge-row">
+          <div class="merge-cell left">5</div><div class="merge-cell left">2</div><div class="merge-cell left">8</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell right">1</div><div class="merge-cell right">9</div><div class="merge-cell right">3</div>
+        </div>
+      </div>
+
+      <div class="merge-pass">
+        <div class="merge-pass-label">继续拆，直到每段只剩 1 个元素（天然有序，不用再拆）</div>
+        <div class="merge-row">
+          <div class="merge-cell left">5</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell left">2</div><div class="merge-cell left">8</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell right">1</div><div class="merge-cell right">9</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell right">3</div>
+        </div>
+      </div>
+
+      <div class="merge-pass">
+        <div class="merge-pass-label">两两合并（用②的双指针方法），每一小段内部变得有序</div>
+        <div class="merge-row">
+          <div class="merge-cell left">5</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell done">2</div><div class="merge-cell done">8</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell done">1</div><div class="merge-cell done">9</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell right">3</div>
+        </div>
+      </div>
+
+      <div class="merge-pass">
+        <div class="merge-pass-label">再合并成两个更大的有序段</div>
+        <div class="merge-row">
+          <div class="merge-cell done">2</div><div class="merge-cell done">5</div><div class="merge-cell done">8</div>
+          <div class="merge-gap"></div>
+          <div class="merge-cell done">1</div><div class="merge-cell done">3</div><div class="merge-cell done">9</div>
+        </div>
+      </div>
+
+      <div class="merge-pass">
+        <div class="merge-pass-label">最后一次合并，得到完整的有序数组</div>
+        <div class="merge-row">
+          <div class="merge-cell done">1</div><div class="merge-cell done">2</div><div class="merge-cell done">3</div><div class="merge-cell done">5</div><div class="merge-cell done">8</div><div class="merge-cell done">9</div>
+        </div>
+      </div>
+
+      <div class="num-visual-caption">"拆"的过程只是不断地对半切，不做任何实际工作；真正把数排好序的，是"合"的过程——每一层合并都用②节的双指针方法，逐层把小的有序段拼成大的有序段。6 个数只需要拆 <code>3</code> 层（<code>log₂6 ≈ 2.6</code>，向上取整是 3 层），每层合并的总工作量都是 <code>O(n)</code>，所以整体是 <code>O(n log n)</code>。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 归并排序完整实现</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">temp</span><span class="pnc">[</span><span class="num">100005</span><span class="pnc">];</span>  <span class="cmt">// 合并时用的临时数组，大小要开够</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">void</span> <span class="fn">Merge</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">arr</span><span class="pnc">[],</span> <span class="typ">int</span> <span class="fn">left</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">mid</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">right</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="fn">left</span><span class="pnc">,</span> <span class="fn">j</span> <span class="op">=</span> <span class="fn">mid</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="fn">k</span> <span class="op">=</span> <span class="fn">left</span><span class="pnc">;</span>  <span class="cmt">// i管左段，j管右段，k管临时数组的位置</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">mid</span> <span class="op">&amp;&amp;</span> <span class="fn">j</span> <span class="op">&lt;=</span> <span class="fn">right</span><span class="pnc">)</span>  <span class="cmt">// 两段都还有元素没比完</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">arr</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">])</span> <span class="pnc">{</span> <span class="fn">temp</span><span class="pnc">[</span><span class="fn">k</span><span class="op">++</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">i</span><span class="op">++</span><span class="pnc">];</span> <span class="pnc">}</span>  <span class="cmt">// 左边小，拿左边</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">        <span class="kw">else</span> <span class="pnc">{</span> <span class="fn">temp</span><span class="pnc">[</span><span class="fn">k</span><span class="op">++</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="op">++</span><span class="pnc">];</span> <span class="pnc">}</span>  <span class="cmt">// 右边小，拿右边</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">mid</span><span class="pnc">)</span>   <span class="pnc">{</span> <span class="fn">temp</span><span class="pnc">[</span><span class="fn">k</span><span class="op">++</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">i</span><span class="op">++</span><span class="pnc">];</span> <span class="pnc">}</span>  <span class="cmt">// 左段还剩的，整体接上（不能漏！）</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">j</span> <span class="op">&lt;=</span> <span class="fn">right</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="fn">temp</span><span class="pnc">[</span><span class="fn">k</span><span class="op">++</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">arr</span><span class="pnc">[</span><span class="fn">j</span><span class="op">++</span><span class="pnc">];</span> <span class="pnc">}</span>  <span class="cmt">// 右段还剩的，整体接上（不能漏！）</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span> <span class="op">=</span> <span class="fn">left</span><span class="pnc">;</span> <span class="fn">x</span> <span class="op">&lt;=</span> <span class="fn">right</span><span class="pnc">;</span> <span class="fn">x</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">        <span class="fn">arr</span><span class="pnc">[</span><span class="fn">x</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">temp</span><span class="pnc">[</span><span class="fn">x</span><span class="pnc">];</span>  <span class="cmt">// 把排好的结果从临时数组写回原数组</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd"></td></tr>
+          <tr><td class="ln">22</td><td class="cd"><span class="typ">void</span> <span class="fn">MergeSort</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">arr</span><span class="pnc">[],</span> <span class="typ">int</span> <span class="fn">left</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">right</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">24</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">left</span> <span class="op">&gt;=</span> <span class="fn">right</span><span class="pnc">)</span> <span class="kw">return</span><span class="pnc">;</span>  <span class="cmt">// 递归终止：只剩 0 或 1 个元素，天然有序</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd"></td></tr>
+          <tr><td class="ln">26</td><td class="cd">    <span class="typ">int</span> <span class="fn">mid</span> <span class="op">=</span> <span class="pnc">(</span><span class="fn">left</span> <span class="op">+</span> <span class="fn">right</span><span class="pnc">)</span> <span class="op">/</span> <span class="num">2</span><span class="pnc">;</span>  <span class="cmt">// 从中间切一刀</span></td></tr>
+          <tr class="hl"><td class="ln">27</td><td class="cd">    <span class="fn">MergeSort</span><span class="pnc">(</span><span class="fn">arr</span><span class="pnc">,</span> <span class="fn">left</span><span class="pnc">,</span> <span class="fn">mid</span><span class="pnc">);</span>       <span class="cmt">// 递归排左半段</span></td></tr>
+          <tr class="hl"><td class="ln">28</td><td class="cd">    <span class="fn">MergeSort</span><span class="pnc">(</span><span class="fn">arr</span><span class="pnc">,</span> <span class="fn">mid</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="fn">right</span><span class="pnc">);</span>  <span class="cmt">// 递归排右半段</span></td></tr>
+          <tr class="hl"><td class="ln">29</td><td class="cd">    <span class="fn">Merge</span><span class="pnc">(</span><span class="fn">arr</span><span class="pnc">,</span> <span class="fn">left</span><span class="pnc">,</span> <span class="fn">mid</span><span class="pnc">,</span> <span class="fn">right</span><span class="pnc">);</span>       <span class="cmt">// 左右两段各自排好后，合并起来</span></td></tr>
+          <tr><td class="ln">30</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">31</td><td class="cd"></td></tr>
+          <tr><td class="ln">32</td><td class="cd"><span class="cmt">// 调用方式：MergeSort(arr, 0, n - 1);</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>递归的两层含义：</b><code>MergeSort</code> 自己调用自己，把"排序整个区间"拆成"排序左半区间"和"排序右半区间"两个规模更小、结构完全相同的子问题——这正是递归的核心特征。递归到 <code>left &gt;= right</code>（区间只剩 0 或 1 个元素）时停下来，因为 1 个元素不需要排序，直接就是有序的。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 完整代码与复杂度</div>
+
+    <table class="api-table">
+      <thead><tr><th>情况</th><th>时间复杂度</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>最好情况</td><td>O(n log n)</td><td>归并排序不会因为数据"本来就有序"而变快</td></tr>
+        <tr><td>平均情况</td><td>O(n log n)</td><td>拆分固定是 log n 层，每层合并固定是 O(n)</td></tr>
+        <tr><td>最坏情况</td><td>O(n log n)</td><td>三种情况复杂度完全相同，非常稳定</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>归并排序最大的特点是<strong>无论数据长什么样，复杂度永远是 O(n log n)</strong>——不像冒泡排序，遇到已经排好的数据会变快，遇到完全逆序的数据会变成最坏的 O(n²)。这种"旱涝保收"的稳定性是归并排序的优势，代价是需要额外开一个和原数组一样大的临时数组（<code>O(n)</code> 的额外空间），不是"原地排序"。另外，归并排序在相等元素之间<strong>不会交换相对顺序</strong>（比较时写的是 <code>arr[i] &lt;= arr[j]</code>，左边相等时优先取左边），这个性质叫"稳定排序"，在某些需要保持原始顺序的场景里很重要。这一节先重点吃透归并排序；同一模块的<strong>快速排序</strong>会在后面单独补上，两者都是"分治"思想的经典应用，但拆分和合并的方式正好相反。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块九 · 分治排序 · 9.2 归并排序</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A08_02_递归.html">← 8.2 递归</a>
+      <a class="nav-btn" href="A10_01_并查集.html">10.1 并查集 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

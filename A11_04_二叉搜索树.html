@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>11.4 二叉搜索树 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "11.4"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--accent-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--accent-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 20px 16px; margin: 18px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 12px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 10px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-mid); border-bottom: 1px solid #D3CFFA; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-mid); background: var(--accent-light); white-space: nowrap; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="11.4">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十一 树与二叉树</span>
+      <span class="eyebrow-sep">/</span>
+      <span>11.4 二叉搜索树</span>
+    </div>
+    <h1 class="chapter-title">11.4　二叉搜索树</h1>
+    <p class="chapter-desc">给二叉树加一条"左小右大"的规则，查找、插入的效率就能逼近二分查找。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#s1">核心规则：左小右大</a></li>
+      <li><span class="toc-num">②</span><a href="#s2">查找：像二分查找一样，一路排除一半</a></li>
+      <li><span class="toc-num">③</span><a href="#s3">插入：先找位置，再挂上去</a></li>
+      <li><span class="toc-num">④</span><a href="#s4">删除：分三种情况讨论</a></li>
+      <li><span class="toc-num">⑤</span><a href="#s5">完整代码实现</a></li>
+      <li><span class="toc-num">⑥</span><a href="#s6">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="s1">① 核心规则：左小右大</div>
+    <div class="section-body">
+      <p>回忆一下 7.2 节的<b>二分查找</b>：在一个有序数组里找一个数，每次都能排除一半的可能范围，效率是 <code>O(log n)</code>。二叉搜索树（Binary Search Tree，简称 BST）把这个"每次排除一半"的思路，从数组搬到了树上——只要给普通二叉树加一条规则：</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📏</span>
+      <div><b>BST 的核心规则：</b>对树上<b>任意一个节点</b>来说，它<b>左子树里所有节点的值</b>都比它小，<b>右子树里所有节点的值</b>都比它大。这条规则不仅对根节点成立，对树上任意一个节点（包括子树的根）都成立。</div>
+    </div>
+
+    <div class="diagram-block">
+      <svg viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg" style="max-width:460px;width:100%;">
+        <line x1="300" y1="30" x2="180" y2="100" stroke="#45475A" stroke-width="2"/>
+        <line x1="300" y1="30" x2="420" y2="100" stroke="#45475A" stroke-width="2"/>
+        <line x1="180" y1="100" x2="100" y2="170" stroke="#45475A" stroke-width="2"/>
+        <line x1="180" y1="100" x2="260" y2="170" stroke="#45475A" stroke-width="2"/>
+        <line x1="420" y1="100" x2="360" y2="170" stroke="#45475A" stroke-width="2"/>
+        <line x1="420" y1="100" x2="480" y2="170" stroke="#45475A" stroke-width="2"/>
+
+        <circle cx="300" cy="30" r="20" fill="rgba(203,166,247,.20)" stroke="#CBA6F7" stroke-width="2"/>
+        <text x="300" y="36" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" font-weight="700" fill="#CBA6F7">5</text>
+        <circle cx="180" cy="100" r="20" fill="rgba(137,180,250,.16)" stroke="#89B4FA" stroke-width="2"/>
+        <text x="180" y="106" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" font-weight="700" fill="#89B4FA">3</text>
+        <circle cx="420" cy="100" r="20" fill="rgba(137,180,250,.16)" stroke="#89B4FA" stroke-width="2"/>
+        <text x="420" y="106" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" font-weight="700" fill="#89B4FA">8</text>
+        <circle cx="100" cy="170" r="20" fill="rgba(166,227,161,.16)" stroke="#A6E3A1" stroke-width="2"/>
+        <text x="100" y="176" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" font-weight="700" fill="#A6E3A1">1</text>
+        <circle cx="260" cy="170" r="20" fill="rgba(166,227,161,.16)" stroke="#A6E3A1" stroke-width="2"/>
+        <text x="260" y="176" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" font-weight="700" fill="#A6E3A1">4</text>
+        <circle cx="360" cy="170" r="20" fill="rgba(166,227,161,.16)" stroke="#A6E3A1" stroke-width="2"/>
+        <text x="360" y="176" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" font-weight="700" fill="#A6E3A1">7</text>
+        <circle cx="480" cy="170" r="20" fill="rgba(166,227,161,.16)" stroke="#A6E3A1" stroke-width="2"/>
+        <text x="480" y="176" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="15" font-weight="700" fill="#A6E3A1">9</text>
+      </svg>
+      <figcaption>根节点 <code>5</code>：左子树 <code>{3,1,4}</code> 全部小于 5，右子树 <code>{8,7,9}</code> 全部大于 5。再往下看节点 <code>3</code>：它的左子树 <code>{1}</code> 小于 3，右子树 <code>{4}</code> 大于 3——同一条规则在树上任意位置都成立。<strong>本节接下来都用这棵树作为例子。</strong></figcaption>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>额外的好处：</b>把这棵树按 11.3 节学过的<b>中序遍历</b>（左→根→右）走一遍，会发现访问顺序正好是 <code>1 3 4 5 7 8 9</code>——完全升序排列。这不是巧合：BST 的"左小右大"规则，保证了中序遍历得到的一定是一个有序序列。</div>
+    </div>
+
+    <div class="sub-title" id="s2">② 查找：像二分查找一样，一路排除一半</div>
+    <div class="section-body">
+      <p>因为"左小右大"的规则对每个节点都成立，查找一个值时，每到一个节点只需要比较一次，就能确定接下来往左走还是往右走——和二分查找每次排除一半区间的思路完全一致。以在上面的树里查找 <code>7</code> 为例：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>当前节点</th><th>比较</th><th>下一步</th></tr></thead>
+      <tbody>
+        <tr><td>5</td><td>7 &gt; 5</td><td>往右子树走</td></tr>
+        <tr><td>8</td><td>7 &lt; 8</td><td>往左子树走</td></tr>
+        <tr><td>7</td><td>7 == 7</td><td>找到，返回</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · BST 查找（递归）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">Search</span><span class="pnc">(</span><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">root</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">target</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">root</span> <span class="op">==</span> <span class="kw">nullptr</span> <span class="op">||</span> <span class="fn">root</span><span class="op">-></span><span class="fn">val</span> <span class="op">==</span> <span class="fn">target</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">        <span class="kw">return</span> <span class="fn">root</span><span class="pnc">;</span>  <span class="cmt">// 没找到（root为空）或正好找到，都直接返回</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">target</span> <span class="op">&lt;</span> <span class="fn">root</span><span class="op">-></span><span class="fn">val</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">        <span class="kw">return</span> <span class="fn">Search</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">left</span><span class="pnc">,</span> <span class="fn">target</span><span class="pnc">);</span>   <span class="cmt">// 比根小，只可能在左子树</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="kw">else</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="kw">return</span> <span class="fn">Search</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">right</span><span class="pnc">,</span> <span class="fn">target</span><span class="pnc">);</span>  <span class="cmt">// 比根大，只可能在右子树</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么快：</b>每比较一次，要么直接命中，要么就能<b>整个排除掉另一半子树</b>，完全不用管那半边到底有什么。如果树"长得比较匀称"（左右两边节点数差不多），查找一个值最多只需要比较"树的高度"那么多次，也就是 <code>O(log n)</code>——这就是二分查找思想在树上的体现。</div>
+    </div>
+
+    <div class="sub-title" id="s3">③ 插入：先找位置，再挂上去</div>
+    <div class="section-body">
+      <p>插入一个新值，做法和查找几乎一样：按"左小右大"的规则一路往下走，走到某个方向是空（<code>nullptr</code>）的时候，说明找到了该插入的位置，把新节点挂在那里就行。以插入 <code>6</code> 为例：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>当前节点</th><th>比较</th><th>下一步</th></tr></thead>
+      <tbody>
+        <tr><td>5</td><td>6 &gt; 5</td><td>往右子树走</td></tr>
+        <tr><td>8</td><td>6 &lt; 8</td><td>往左子树走</td></tr>
+        <tr><td>7</td><td>6 &lt; 7，且 7 没有左孩子</td><td>把 6 挂在 7 的左边</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · BST 插入（递归）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">Insert</span><span class="pnc">(</span><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">root</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">val</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">root</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">        <span class="kw">return</span> <span class="kw">new</span> <span class="typ">TreeNode</span><span class="pnc">(</span><span class="fn">val</span><span class="pnc">);</span>  <span class="cmt">// 走到空位置，新建节点挂在这里</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">val</span> <span class="op">&lt;</span> <span class="fn">root</span><span class="op">-></span><span class="fn">val</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">        <span class="fn">root</span><span class="op">-></span><span class="fn">left</span> <span class="op">=</span> <span class="fn">Insert</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">left</span><span class="pnc">,</span> <span class="fn">val</span><span class="pnc">);</span>  <span class="cmt">// 递归结果重新接回 left</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="kw">else</span> <span class="kw">if</span> <span class="pnc">(</span><span class="fn">val</span> <span class="op">&gt;</span> <span class="fn">root</span><span class="op">-></span><span class="fn">val</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">        <span class="fn">root</span><span class="op">-></span><span class="fn">right</span> <span class="op">=</span> <span class="fn">Insert</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">right</span><span class="pnc">,</span> <span class="fn">val</span><span class="pnc">);</span>  <span class="cmt">// 递归结果重新接回 right</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="cmt">// val == root->val 的情况：值已存在，什么都不做（BST 通常不存重复值）</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="kw">return</span> <span class="fn">root</span><span class="pnc">;</span>  <span class="cmt">// 把（可能没变化的）root 返回给上一层</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>为什么要写 <code>root->left = Insert(root->left, val)</code> 而不是直接调用 <code>Insert(root->left, val)</code>？</b>因为当 <code>root->left</code> 原本是 <code>nullptr</code> 时，新建的节点必须真正"接"到父节点上——递归调用本身不会自动修改父节点的指针，必须靠<b>返回值 + 重新赋值</b>把新建的节点接回树里，这是递归修改树结构时的标准写法。</div>
+    </div>
+
+    <div class="sub-title" id="s4">④ 删除：分三种情况讨论</div>
+    <div class="section-body">
+      <p>删除是 BST 里最复杂的操作，因为删掉一个节点之后，还要保证"左小右大"的规则不被破坏。按被删节点的孩子个数，分三种情况处理：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>情况</th><th>处理方式</th></tr></thead>
+      <tbody>
+        <tr><td><b>叶子节点</b>（没有孩子）</td><td>直接删除，把父节点对应的指针设为 <code>nullptr</code></td></tr>
+        <tr><td><b>只有一个孩子</b></td><td>让这个孩子"补位"，直接顶替被删节点的位置</td></tr>
+        <tr><td><b>有两个孩子</b></td><td>找到<b>右子树里最小的节点</b>（它的"中序后继"），用这个值覆盖被删节点，再去右子树里删除那个后继节点（后继节点必然属于前两种简单情况）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么找"右子树里最小的节点"能保住规则？</b>右子树里所有值都比被删节点大，而右子树里最小的那个值，恰好是"比被删节点大的所有值里最小的一个"——用它顶替被删节点的位置，左边（都更小）和右边（除了它自己都更大）的大小关系依然成立。同理，用"左子树里最大的节点"顶替也是可以的，两种做法都正确。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · BST 删除（递归）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">FindMin</span><span class="pnc">(</span><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">root</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">left</span> <span class="op">!=</span> <span class="kw">nullptr</span><span class="pnc">)</span>  <span class="cmt">// 一路往左，走到底就是最小值</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">        <span class="fn">root</span> <span class="op">=</span> <span class="fn">root</span><span class="op">-></span><span class="fn">left</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">return</span> <span class="fn">root</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">Delete</span><span class="pnc">(</span><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">root</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">val</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">root</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="pnc">)</span> <span class="kw">return</span> <span class="fn">root</span><span class="pnc">;</span>  <span class="cmt">// 没找到要删的值，什么都不做</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">val</span> <span class="op">&lt;</span> <span class="fn">root</span><span class="op">-></span><span class="fn">val</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">        <span class="fn">root</span><span class="op">-></span><span class="fn">left</span> <span class="op">=</span> <span class="fn">Delete</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">left</span><span class="pnc">,</span> <span class="fn">val</span><span class="pnc">);</span>  <span class="cmt">// 要删的值更小，去左子树删</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="kw">else</span> <span class="kw">if</span> <span class="pnc">(</span><span class="fn">val</span> <span class="op">&gt;</span> <span class="fn">root</span><span class="op">-></span><span class="fn">val</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="fn">root</span><span class="op">-></span><span class="fn">right</span> <span class="op">=</span> <span class="fn">Delete</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">right</span><span class="pnc">,</span> <span class="fn">val</span><span class="pnc">);</span>  <span class="cmt">// 要删的值更大，去右子树删</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="kw">else</span>  <span class="cmt">// val == root->val，找到了要删的节点</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">24</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">left</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="pnc">)</span>  <span class="cmt">// 情况一/二：没有左孩子（含叶子）</span></td></tr>
+          <tr class="hl"><td class="ln">25</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">26</td><td class="cd">            <span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">temp</span> <span class="op">=</span> <span class="fn">root</span><span class="op">-></span><span class="fn">right</span><span class="pnc">;</span>  <span class="cmt">// 右孩子（可能是 nullptr）直接补位</span></td></tr>
+          <tr class="hl"><td class="ln">27</td><td class="cd">            <span class="kw">delete</span> <span class="fn">root</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">28</td><td class="cd">            <span class="kw">return</span> <span class="fn">temp</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">29</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">30</td><td class="cd">        <span class="kw">else</span> <span class="kw">if</span> <span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">right</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="pnc">)</span>  <span class="cmt">// 情况二：只有左孩子</span></td></tr>
+          <tr class="hl"><td class="ln">31</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">32</td><td class="cd">            <span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">temp</span> <span class="op">=</span> <span class="fn">root</span><span class="op">-></span><span class="fn">left</span><span class="pnc">;</span>  <span class="cmt">// 左孩子直接补位</span></td></tr>
+          <tr class="hl"><td class="ln">33</td><td class="cd">            <span class="kw">delete</span> <span class="fn">root</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">34</td><td class="cd">            <span class="kw">return</span> <span class="fn">temp</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">35</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">36</td><td class="cd">        <span class="kw">else</span>  <span class="cmt">// 情况三：左右孩子都有</span></td></tr>
+          <tr><td class="ln">37</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">38</td><td class="cd">            <span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">successor</span> <span class="op">=</span> <span class="fn">FindMin</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">right</span><span class="pnc">);</span>  <span class="cmt">// 右子树里最小的节点</span></td></tr>
+          <tr class="hl"><td class="ln">39</td><td class="cd">            <span class="fn">root</span><span class="op">-></span><span class="fn">val</span> <span class="op">=</span> <span class="fn">successor</span><span class="op">-></span><span class="fn">val</span><span class="pnc">;</span>  <span class="cmt">// 用后继的值覆盖当前节点</span></td></tr>
+          <tr class="hl"><td class="ln">40</td><td class="cd">            <span class="fn">root</span><span class="op">-></span><span class="fn">right</span> <span class="op">=</span> <span class="fn">Delete</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">right</span><span class="pnc">,</span> <span class="fn">successor</span><span class="op">-></span><span class="fn">val</span><span class="pnc">);</span>  <span class="cmt">// 再去右子树删掉那个后继（一定是简单情况）</span></td></tr>
+          <tr><td class="ln">41</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">42</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">43</td><td class="cd">    <span class="kw">return</span> <span class="fn">root</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">44</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">🎓</span>
+      <div><b>拓展：BST 也可能"退化"成一条链。</b>如果插入的值本身就是有序的（比如依次插入 1、2、3、4、5），每个新节点都只能挂在上一个节点的右边，整棵树会变成一条链，查找、插入的效率从 <code>O(log n)</code> 退化成 <code>O(n)</code>，二分的优势完全消失。解决这个问题需要"自平衡"的树结构（比如 AVL 树、红黑树），这部分内容比较深入，作为拓展了解即可，本节不展开。</div>
+    </div>
+
+    <div class="sub-title" id="s5">⑤ 完整代码实现</div>
+    <div class="section-body">
+      <p>把查找、插入、删除三个操作和 11.2 节的节点定义放在一起，就是一份完整可用的 BST 实现。建议自己动手敲一遍，用本节的示例数据（依次插入 <code>5,3,8,1,4,7,9</code>）验证查找和删除是否符合预期：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 二叉搜索树完整实现</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="typ">TreeNode</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">val</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">left</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">right</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">TreeNode</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">v</span><span class="pnc">)</span> <span class="op">:</span> <span class="fn">val</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">),</span> <span class="fn">left</span><span class="pnc">(</span><span class="kw">nullptr</span><span class="pnc">),</span> <span class="fn">right</span><span class="pnc">(</span><span class="kw">nullptr</span><span class="pnc">)</span> <span class="pnc">{}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">Insert</span><span class="pnc">(</span><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">root</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">val</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">root</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="pnc">)</span> <span class="kw">return</span> <span class="kw">new</span> <span class="typ">TreeNode</span><span class="pnc">(</span><span class="fn">val</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">val</span> <span class="op">&lt;</span> <span class="fn">root</span><span class="op">-></span><span class="fn">val</span><span class="pnc">)</span> <span class="fn">root</span><span class="op">-></span><span class="fn">left</span>  <span class="op">=</span> <span class="fn">Insert</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">left</span><span class="pnc">,</span>  <span class="fn">val</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="kw">else</span> <span class="kw">if</span> <span class="pnc">(</span><span class="fn">val</span> <span class="op">&gt;</span> <span class="fn">root</span><span class="op">-></span><span class="fn">val</span><span class="pnc">)</span> <span class="fn">root</span><span class="op">-></span><span class="fn">right</span> <span class="op">=</span> <span class="fn">Insert</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">right</span><span class="pnc">,</span> <span class="fn">val</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="kw">return</span> <span class="fn">root</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">Search</span><span class="pnc">(</span><span class="typ">TreeNode</span><span class="pnc">*</span> <span class="fn">root</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">target</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">root</span> <span class="op">==</span> <span class="kw">nullptr</span> <span class="op">||</span> <span class="fn">root</span><span class="op">-></span><span class="fn">val</span> <span class="op">==</span> <span class="fn">target</span><span class="pnc">)</span> <span class="kw">return</span> <span class="fn">root</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="kw">return</span> <span class="fn">target</span> <span class="op">&lt;</span> <span class="fn">root</span><span class="op">-></span><span class="fn">val</span> <span class="op">?</span> <span class="fn">Search</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">left</span><span class="pnc">,</span> <span class="fn">target</span><span class="pnc">)</span> <span class="op">:</span> <span class="fn">Search</span><span class="pnc">(</span><span class="fn">root</span><span class="op">-></span><span class="fn">right</span><span class="pnc">,</span> <span class="fn">target</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd"></td></tr>
+          <tr><td class="ln">23</td><td class="cd"><span class="cmt">// Delete 与 FindMin 见上文，此处省略（结构相同，直接拼接即可）</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">✏️</span>
+      <div><b>动手试一试：</b>把上面查找、插入、删除三段代码和结构体定义拼成一个完整程序，依次插入 <code>5,3,8,1,4,7,9</code>，然后：① 查找 <code>7</code> 和 <code>6</code>，验证一个能找到一个找不到；② 删除叶子节点 <code>1</code>，再删除只有一个孩子的节点（插入 <code>6</code> 后的节点 <code>7</code>），最后删除有两个孩子的根节点 <code>5</code>，每次删除后用中序遍历打印一遍，检查结果是否仍然有序。</div>
+    </div>
+
+    <div class="sub-title" id="s6">⑥ 常见陷阱</div>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>插入、删除时忘记用返回值重新赋值：</b>递归修改树结构时，必须写成 <code>root->left = Insert(root->left, val)</code> 这种"重新接回去"的形式，而不能只写 <code>Insert(root->left, val)</code>——否则新建或修改的节点根本没有真正连接到树上，函数看似执行了，树的结构却完全没变。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>删除"有两个孩子"的节点时，忘记处理"覆盖值之后还要删掉原来的后继节点"：</b>只把后继节点的值复制过来是不够的——右子树里原来那个后继节点还存在，必须再递归调用一次 <code>Delete</code> 把它删掉，否则同一个值会在树里出现两次。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>误以为 BST 一定是"平衡"的，查找一定是 O(log n)：</b>BST 只保证"左小右大"，不保证树的形状匀称。如果插入顺序恰好是有序的，树会退化成一条链，查找效率退化到 O(n)。写代码时如果对复杂度有严格要求，需要考虑用平衡树（AVL、红黑树等）代替普通 BST。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>本模块小结：</b>从认识"节点、深度、高度"这些基本概念开始，到用数组或链表存下一棵树，再到四种不同的遍历顺序，最后落到 BST 这个把"二分"思想搬到树上的经典应用——树是后面学习堆、线段树、字典树、乃至各种树形 DP 的共同基础，值得反复回顾这四节的内容。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十一 树与二叉树 · 11.4 二叉搜索树</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A11_03_二叉树的遍历.html">← 11.3 二叉树的遍历</a>
+      <a class="nav-btn" href="index.html">返回目录 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

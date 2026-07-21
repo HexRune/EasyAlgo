@@ -20,22 +20,27 @@
   .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
   .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
 
+  /* 竖式乘法（错位相加）可视化 */
+  .vcol-wrap { display: flex; justify-content: center; }
+  .vcol-grid { display: inline-grid; grid-auto-flow: column; gap: 6px; }
+  .vcol { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .vcol-carry { width: 30px; height: 24px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--code-num); }
+  .vcol-carry.empty { color: #3A3850; }
+  .vcol-digit { width: 30px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--code-text); }
+  .vcol-line { width: 100%; height: 2px; background: #3A3850; margin: 2px 0; }
+  .vcol-result { color: var(--code-str); }
+  .vcol-idx { font-size: 9.5px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+  .vcol-row-tag { font-size: 10px; color: #6C7086; font-family: 'Noto Sans SC', sans-serif; text-align: right; padding-right: 8px; align-self: center; }
+
   /* 乘法位置映射可视化 */
   .mul-grid-wrap { display: flex; justify-content: center; overflow-x: auto; }
   .mul-table { border-collapse: collapse; font-family: 'JetBrains Mono', monospace; }
-  .mul-table td, .mul-table th { text-align: center; padding: 6px 14px; font-size: 14px; }
+  .mul-table td, .mul-table th { text-align: center; padding: 10px 16px; font-size: 14px; }
   .mul-table th { color: #6C7086; font-weight: 400; font-size: 11px; }
   .mul-table .mul-a-label { color: var(--code-num); font-weight: 700; }
   .mul-table .mul-b-label { color: var(--code-fn); font-weight: 700; }
-  .mul-table .mul-cell { color: var(--code-str); font-weight: 700; background: #2A2840; border-radius: 6px; }
-  .mul-table .mul-pos { color: #45475A; font-size: 10px; }
-
-  /* 位置累加可视化（表格布局，避免不同列高度不一致导致的错位） */
-  .accum-table { width: 100%; border-collapse: separate; border-spacing: 10px 0; margin: 4px 0; font-family: 'JetBrains Mono', monospace; }
-  .accum-table th { color: #6C7086; font-size: 11px; font-weight: 400; padding-bottom: 8px; }
-  .accum-terms-cell { background: rgba(166,227,161,.12); border-radius: 8px; padding: 10px 8px; color: var(--code-str); font-size: 13px; line-height: 1.9; vertical-align: middle; }
-  .accum-plus { color: #6C7086; font-size: 11px; }
-  .accum-sum-cell { font-size: 17px; font-weight: 700; color: var(--code-num); padding-top: 10px; border-top: 2px solid #3A3850; }
+  .mul-table .mul-cell { color: var(--code-str); font-weight: 700; background: #2A2840; border-radius: 0 0 6px 6px; }
+  .mul-table .mul-pos { font-size: 10.5px; margin-top: 4px; }
 
   .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
   .api-table thead tr { background: var(--teal-light); }
@@ -48,7 +53,7 @@
 
   .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
   .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
-  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
   .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
   .pitfall-body b { color: var(--text-primary); }
 </style>
@@ -74,8 +79,8 @@
     <div class="toc-title">本页目录</div>
     <ul class="toc-list">
       <li><span class="toc-num">①</span><a href="#idea">核心思路：位置对应相乘</a></li>
-      <li><span class="toc-num">②</span><a href="#carry">统一处理进位</a></li>
-      <li><span class="toc-num">③</span><a href="#code">完整代码：高精度 × 高精度</a></li>
+      <li><span class="toc-num">②</span><a href="#code">完整代码：高精度 × 高精度</a></li>
+      <li><span class="toc-num">③</span><a href="#carry">统一处理进位</a></li>
       <li><span class="toc-num">④</span><a href="#simple">简化版：高精度 × 低精度</a></li>
       <li><span class="toc-num">⑤</span><a href="#pitfall">常见陷阱</a></li>
     </ul>
@@ -86,13 +91,57 @@
 
     <div class="sub-title" id="idea">① 核心思路：位置对应相乘</div>
     <div class="section-body">
-      <p>加减法都是"同一位置对齐运算"——个位对个位、十位对十位，两个数在同一个位置上的数字直接发生关系。但乘法完全不同：数组下标为 <code>i</code> 的位和下标为 <code>j</code> 的位相乘，结果<b>不是</b>放在第 <code>i</code> 位或第 <code>j</code> 位，而是要放到下标 <code>i + j</code> 的位置——这是初学者最容易搞混的地方，一定要单独强调出来。</p>
-      <p>这背后的道理其实和小学数学是一致的：数组下标 <code>i</code> 存的并不是"数字本身"，而是"第 <code>i</code> 位代表 10 的 <code>i</code> 次方"这个<b>位权</b>。比如下标 0 是个位，权重是 <code>10⁰=1</code>；下标 1 是十位，权重是 <code>10¹=10</code>。两个数相乘时，真正在做乘法的是"数字 × 数字 × 位权 × 位权"，而两个位权相乘，指数是相加的（<code>10ⁱ × 10ʲ = 10^(i+j)</code>），所以乘积自然就落在了第 <code>i+j</code> 位。</p>
-      <p>换一个更直观的说法：如果 <code>a</code> 的十位（下标 1）和 <code>b</code> 的百位（下标 2）相乘，说明这两个数字分别代表"十"和"百"，"十 × 百 = 千"，千正好是下标 <code>1+2=3</code> 对应的位——这和我们小学做竖式乘法时，每一层部分积都要"错开一位再往左移"去对齐相加，其实是同一件事，只是竖式是把这个错位过程画在纸上，代码里则是直接用下标的加法来实现错位。</p>
+      <p>回忆一下小学怎么算 <code>23 × 45</code> 这种两位数乘两位数：先用 <code>45</code> 的个位 <code>5</code> 去乘 <code>23</code>，得到 <code>115</code>；再用 <code>45</code> 的十位 <code>4</code> 去乘 <code>23</code>，得到 <code>92</code>，但这次要把结果整体<b>往左错开一位</b>（变成 <code>920</code>）；最后把两次结果相加，<code>115 + 920 = 1035</code>。这个"错位"的动作，正是本节要在代码里讲清楚的核心。</p>
     </div>
 
     <div class="num-visual">
-      <div class="num-visual-title">23 × 45 中，每一位相乘落在哪个位置</div>
+      <div class="num-visual-title">竖式乘法：23 × 45 = 1035（第二行"错位"往左移一位）</div>
+      <div class="vcol-wrap">
+        <div class="vcol-grid">
+          <div class="vcol">
+            <div class="vcol-carry">1</div>
+            <div class="vcol-digit" style="opacity:.3;">·</div>
+            <div class="vcol-digit" style="opacity:.3;">·</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">1</div>
+            <div class="vcol-idx">千位</div>
+          </div>
+          <div class="vcol">
+            <div class="vcol-carry empty">0</div>
+            <div class="vcol-digit">1</div>
+            <div class="vcol-digit">9</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">0</div>
+            <div class="vcol-idx">百位</div>
+          </div>
+          <div class="vcol">
+            <div class="vcol-carry empty">0</div>
+            <div class="vcol-digit">1</div>
+            <div class="vcol-digit">2</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">3</div>
+            <div class="vcol-idx">十位</div>
+          </div>
+          <div class="vcol">
+            <div class="vcol-carry empty">0</div>
+            <div class="vcol-digit">5</div>
+            <div class="vcol-digit">0</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">5</div>
+            <div class="vcol-idx">个位</div>
+          </div>
+        </div>
+      </div>
+      <div class="num-visual-caption">第一行是 <code>23 × 5 = 115</code>，按千百十个对齐是 <code>·115</code>；第二行是 <code>23 × 4 = 92</code>，因为乘的是十位（相当于再乘以 10），整体往左错开一位，对齐后变成 <code>920·</code>。两行逐列相加：个位 <code>5+0=5</code>；十位 <code>1+2=3</code>；百位 <code>1+9=10</code>，写 <strong>0</strong> 进 1；千位 <code>0+0+1(进位)=1</code>。合起来正好是 <strong>1035</strong>。</div>
+    </div>
+
+    <div class="section-body">
+      <p>加减法都是"同一位置对齐运算"——个位对个位、十位对十位，两个数在同一个位置上的数字直接发生关系。但乘法完全不同：数组下标为 <code>i</code> 的位和下标为 <code>j</code> 的位相乘，结果<b>不是</b>放在第 <code>i</code> 位或第 <code>j</code> 位，而是要放到下标 <code>i + j</code> 的位置——这正好对应上面竖式里"往左错开一位"的动作，只是竖式把错位画在纸上，代码里用下标的加法来实现。</p>
+      <p>这背后的道理和小学数学是一致的：数组下标 <code>i</code> 存的并不是"数字本身"，而是"第 <code>i</code> 位代表 10 的 <code>i</code> 次方"这个<b>位权</b>。比如下标 0 是个位，权重是 <code>10⁰=1</code>；下标 1 是十位，权重是 <code>10¹=10</code>。两个位权相乘，指数是相加的（<code>10ⁱ × 10ʲ = 10^(i+j)</code>），所以乘积自然就落在了第 <code>i+j</code> 位。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">23 × 45 中，每一位相乘落在哪个位置（颜色 = 目标位置）</div>
       <div class="mul-grid-wrap">
         <table class="mul-table">
           <tr>
@@ -102,70 +151,20 @@
           </tr>
           <tr>
             <td class="mul-a-label">a[0]=3</td>
-            <td class="mul-cell">15<div class="mul-pos">→ 位置 0+0=0</div></td>
-            <td class="mul-cell">12<div class="mul-pos">→ 位置 0+1=1</div></td>
+            <td class="mul-cell" style="border-top:3px solid var(--teal);">15<div class="mul-pos" style="color:var(--teal);font-weight:700;">位置 0+0=0</div></td>
+            <td class="mul-cell" style="border-top:3px solid var(--amber-mid);">12<div class="mul-pos" style="color:var(--amber-mid);font-weight:700;">位置 0+1=1</div></td>
           </tr>
           <tr>
             <td class="mul-a-label">a[1]=2</td>
-            <td class="mul-cell">10<div class="mul-pos">→ 位置 1+0=1</div></td>
-            <td class="mul-cell">8<div class="mul-pos">→ 位置 1+1=2</div></td>
+            <td class="mul-cell" style="border-top:3px solid var(--amber-mid);">10<div class="mul-pos" style="color:var(--amber-mid);font-weight:700;">位置 1+0=1</div></td>
+            <td class="mul-cell" style="border-top:3px solid var(--accent-dark);">8<div class="mul-pos" style="color:var(--accent-dark);font-weight:700;">位置 1+1=2</div></td>
           </tr>
         </table>
       </div>
-      <div class="num-visual-caption">23 倒序存储是 <code>a=[3,2]</code>（a[0]=个位3，a[1]=十位2），45 倒序存储是 <code>b=[5,4]</code>。四对数字两两相乘，乘积按"下标相加"的规则分别落到结果的第 0、1、1、2 位——注意<strong>有两个乘积（12 和 10）都落在了位置 1</strong>，说明同一个位置可能会收到好几份贡献，需要全部累加起来。</div>
+      <div class="num-visual-caption">23 倒序存储是 <code>a=[3,2]</code>（a[0]=个位3，a[1]=十位2），45 倒序存储是 <code>b=[5,4]</code>。四对数字两两相乘，乘积按"下标相加"的规则分别落到结果的第 0、1、1、2 位——上方两个<strong style="color:var(--amber-mid);">橙色</strong>标记的乘积（12 和 10）都落在了位置 1，说明同一个位置可能会收到好几份贡献，需要全部累加起来。</div>
     </div>
 
-    <div class="sub-title" id="carry">② 统一处理进位</div>
-    <div class="section-body">
-      <p>把上面 4 个乘积按位置分组累加，会得到一个"每一位还没规整"的中间结果——某些位置的数字可能远大于 9（因为多个乘积叠在了一起），需要像加法一样再做一次进位处理，把每一位规整回 0~9 的范围。</p>
-    </div>
-
-    <div class="num-visual">
-      <div class="num-visual-title">按位置累加乘积，再统一处理进位</div>
-      <table class="accum-table">
-        <thead>
-          <tr><th>位置 2</th><th>位置 1</th><th>位置 0</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="accum-terms-cell">8</td>
-            <td class="accum-terms-cell">12<br><span class="accum-plus">+</span> 10</td>
-            <td class="accum-terms-cell">15</td>
-          </tr>
-          <tr>
-            <td class="accum-sum-cell">8</td>
-            <td class="accum-sum-cell">22</td>
-            <td class="accum-sum-cell">15</td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="num-visual-caption">位置 0 是 <code>15</code>，留个位 <code>5</code>，进 <code>1</code> 到位置 1；位置 1 原本是 <code>22</code>，加上进位 <code>1</code> 变成 <code>23</code>，留 <code>3</code>，进 <code>2</code> 到位置 2；位置 2 原本是 <code>8</code>，加上进位 <code>2</code> 变成 <code>10</code>，留 <code>0</code>，再进 <code>1</code> 到位置 3。最终从高到低读出 <strong>1 0 3 5</strong>，正好是 <code>23 × 45 = 1035</code>。</div>
-    </div>
-
-    <div class="section-body">
-      <p>把上面这段话拆成表格，对照代码里 <code>c[i+1] += c[i] / 10; c[i] %= 10;</code> 这两行逐位扫描的过程，会更清楚每一步具体在做什么：</p>
-    </div>
-
-    <table class="api-table">
-      <thead><tr><th>位置</th><th>原始累加值</th><th>+ 来自低位的进位</th><th>本位最终数字（%10）</th><th>产生的新进位（/10）</th></tr></thead>
-      <tbody>
-        <tr><td>0</td><td>15</td><td>15 + 0 = 15</td><td>5</td><td>1</td></tr>
-        <tr><td>1</td><td>22</td><td>22 + 1 = 23</td><td>3</td><td>2</td></tr>
-        <tr><td>2</td><td>8</td><td>8 + 2 = 10</td><td>0</td><td>1</td></tr>
-        <tr><td>3（原本是 0）</td><td>0</td><td>0 + 1 = 1</td><td>1</td><td>0</td></tr>
-      </tbody>
-    </table>
-
-    <div class="section-body">
-      <p>从位置 3 读到位置 0，就是 <strong>1 0 3 5</strong>，也就是 <code>1035</code>。注意最后位置 3 本来是空的（初始值 0），但因为位置 2 产生了新的进位，还是被"激活"用上了——这也是为什么结果 vector 一开始要多开出 <code>len1 + len2</code> 位空间，即使乘积本身没有直接落到某个高位，进位也可能会填进去。</p>
-    </div>
-
-    <div class="callout info">
-      <span class="callout-icon">📖</span>
-      <div><b>和加减法的进位有什么不同？</b>加法的进位是"边算边处理"——算完一位立刻处理进位再算下一位；乘法则是先把<b>所有位置该收到的乘积都累加完</b>，最后再<b>统一从低位到高位扫一遍处理进位</b>。这是因为乘法某个位置可能同时收到好几个乘积的贡献（如上面的位置 1），提前进位反而会打乱后续乘积的累加，所以要等全部乘完、加完之后再统一处理。</div>
-    </div>
-
-    <div class="sub-title" id="code">③ 完整代码：高精度 × 高精度</div>
+    <div class="sub-title" id="code">② 完整代码：高精度 × 高精度</div>
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 高精度乘法（完整可运行程序）</span></div>
       <div class="code-body">
@@ -241,6 +240,74 @@
       <div><b>动手试一试：</b>试试这几组输入，检验自己是否真的理解了每一步：<code>999 999</code>（连续进位）、<code>100 100</code>（结果末尾有很多 0）、两个 10 位以上的大数相乘（验证 long long 也算不动的场景）。</div>
     </div>
 
+    <div class="sub-title" id="carry">③ 统一处理进位</div>
+    <div class="section-body">
+      <p>上面完整代码里第 31~35 行专门处理进位，这一节把这段逻辑单独拎出来，一步步讲清楚它到底在做什么。</p>
+      <p>把上面 4 个乘积按照落到的位置分组：位置 0 只收到 1 个乘积（<code>15</code>）；位置 1 收到了 2 个乘积（<code>12</code> 和 <code>10</code>）；位置 2 只收到 1 个乘积（<code>8</code>）。分组累加之后，得到的是一个"还没规整"的中间结果——比如位置 1 是 <code>12+10=22</code>，这个 <code>22</code> 本身已经不是一个"位"上该有的数字了（一位数字只能是 0~9），不能直接当成十位上的数字用。</p>
+      <p>这时候需要做的事情，和加法的进位处理完全一样：从最低位（位置 0）开始，往高位方向扫一遍，把每一位<b>超过 9 的部分</b>拆出来，作为"进位"传给更高的一位，让每一位重新变回 0~9 的范围。唯一的区别是：加法进位之前只有两个数相加，乘法进位之前，同一个位置可能已经堆了好几个乘积的和。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">按位置累加乘积，再统一处理进位（颜色对应上图的位置）</div>
+      <div class="vcol-wrap">
+        <div class="vcol-grid">
+          <div class="vcol">
+            <div class="vcol-carry">1</div>
+            <div class="vcol-digit" style="width:38px;opacity:.35;">0</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">1</div>
+            <div class="vcol-idx" style="color:#6C7086;">位置 3</div>
+          </div>
+          <div class="vcol">
+            <div class="vcol-carry">2</div>
+            <div class="vcol-digit" style="width:38px;color:var(--accent-dark);">8</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">0</div>
+            <div class="vcol-idx" style="color:var(--accent-dark);">位置 2</div>
+          </div>
+          <div class="vcol">
+            <div class="vcol-carry">1</div>
+            <div class="vcol-digit" style="width:38px;color:var(--amber-mid);">22</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">3</div>
+            <div class="vcol-idx" style="color:var(--amber-mid);">位置 1</div>
+          </div>
+          <div class="vcol">
+            <div class="vcol-carry empty">0</div>
+            <div class="vcol-digit" style="width:38px;color:var(--teal);">15</div>
+            <div class="vcol-line"></div>
+            <div class="vcol-digit vcol-result">5</div>
+            <div class="vcol-idx" style="color:var(--teal);">位置 0</div>
+          </div>
+        </div>
+      </div>
+      <div class="num-visual-caption">每一列从上到下：<b>本位收到的进位</b>（顶部数字）→ <b>这一位原始的累加值</b>（中间较大的数字）→ <b>加起来之后的最终结果</b>（底部绿色数字，即 <code>%10</code> 的余数），多出来的部分作为新的进位，传给左边一列。位置 0 没有进位输入，原始值 <code>15</code> 直接留 <strong>5</strong>，进 <strong>1</strong>；位置 1 原始值 <code>22</code> 加上进位 <code>1</code> 变成 <code>23</code>，留 <strong>3</strong>，进 <strong>2</strong>；位置 2 原始值 <code>8</code> 加上进位 <code>2</code> 变成 <code>10</code>，留 <strong>0</strong>，进 <strong>1</strong>；位置 3 本来一个乘积都没有（原始值是 0），但收到了位置 2 传来的进位 <code>1</code>，直接变成 <strong>1</strong>，成了结果最高位。从左到右读出 <strong>1 0 3 5</strong>，正好是 <code>23 × 45 = 1035</code>。</div>
+    </div>
+
+    <div class="section-body">
+      <p>把上面这段话拆成表格，对照代码里 <code>c[i+1] += c[i] / 10; c[i] %= 10;</code> 这两行逐位扫描的过程，会更清楚每一步具体在做什么：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>位置</th><th>原始累加值</th><th>+ 来自低位的进位</th><th>本位最终数字（%10）</th><th>产生的新进位（/10）</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>15</td><td>15 + 0 = 15</td><td>5</td><td>1</td></tr>
+        <tr><td>1</td><td>22</td><td>22 + 1 = 23</td><td>3</td><td>2</td></tr>
+        <tr><td>2</td><td>8</td><td>8 + 2 = 10</td><td>0</td><td>1</td></tr>
+        <tr><td>3（原本是 0）</td><td>0</td><td>0 + 1 = 1</td><td>1</td><td>0</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-body">
+      <p>从位置 3 读到位置 0，就是 <strong>1 0 3 5</strong>，也就是 <code>1035</code>。注意最后位置 3 本来是空的（初始值 0），但因为位置 2 产生了新的进位，还是被"激活"用上了——这也是为什么结果 vector 一开始要多开出 <code>len1 + len2</code> 位空间，即使乘积本身没有直接落到某个高位，进位也可能会填进去。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>和加减法的进位有什么不同？</b>加法的进位是"边算边处理"——算完一位立刻处理进位再算下一位；乘法则是先把<b>所有位置该收到的乘积都累加完</b>，最后再<b>统一从低位到高位扫一遍处理进位</b>。这是因为乘法某个位置可能同时收到好几个乘积的贡献（如上面的位置 1），提前进位反而会打乱后续乘积的累加，所以要等全部乘完、加完之后再统一处理。</div>
+    </div>
+
+
     <div class="sub-title" id="simple">④ 简化版：高精度 × 低精度</div>
     <div class="section-body">
       <p>实际做题时，更常见的场景是"一个高精度大数，乘以一个 <code>long long</code> 范围内的普通整数"（比如求阶乘 <code>n!</code>，本质就是把一个不断变大的高精度数反复乘以一个小整数）。这种情况不需要双层循环，思路和加法几乎一样简单：</p>
@@ -255,7 +322,7 @@
           <tr><td class="ln">3</td><td class="cd"></td></tr>
           <tr class="hl"><td class="ln">4</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">k</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">k</span> <span class="op">&lt;=</span> <span class="num">20</span><span class="pnc">;</span> <span class="fn">k</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 依次乘以 1, 2, 3, ..., 20</span></td></tr>
           <tr class="hl"><td class="ln">5</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">6</td><td class="cd">    <span class="typ">int</span> <span class="fn">carry</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">    <span class="typ">int</span> <span class="fn">carry</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>  <span class="cmt">// 这一轮乘法的进位</span></td></tr>
           <tr class="hl"><td class="ln">7</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">c</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
           <tr class="hl"><td class="ln">8</td><td class="cd">    <span class="pnc">{</span></td></tr>
           <tr class="hl"><td class="ln">9</td><td class="cd">        <span class="typ">int</span> <span class="fn">cur</span> <span class="op">=</span> <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">*</span> <span class="fn">k</span> <span class="op">+</span> <span class="fn">carry</span><span class="pnc">;</span>  <span class="cmt">// 本位数字直接乘以 k，再加上进位</span></td></tr>
@@ -278,7 +345,7 @@
     </div>
 
     <div class="callout tip">
-      <span class="callout-icon">🏆</span>
+      <span class="callout-icon">💡</span>
       <div><b>为什么这个版本更简单？</b>因为 <code>k</code> 是一个普通整数，不需要拆成数组，只要用高精度数组的<b>每一位</b>分别乘以这个整数、加上进位即可——不需要"位置相加"的双层循环，也不用等到最后才统一处理进位（这里的进位是"边乘边处理"，和加法的进位方式一致）。这个写法在求阶乘、求 2 的 n 次方等题目中非常常用。</div>
     </div>
 
@@ -289,15 +356,15 @@
 
     <div class="pitfall-list">
       <div class="pitfall-item">
-        <div class="pitfall-num">1</div>
+        <div class="pitfall-num">⚠</div>
         <div class="pitfall-body"><b>结果数组开小了：</b>两个数相乘，结果的位数最多是 <code>len1 + len2</code> 位（不会更多），但也不会自动变小，声明结果 vector 时必须留出这么多空间，否则 <code>c[i+j]</code> 会访问越界。</div>
       </div>
       <div class="pitfall-item">
-        <div class="pitfall-num">2</div>
+        <div class="pitfall-num">⚠</div>
         <div class="pitfall-body"><b>过早处理进位：</b>如果在双层循环内部就尝试处理进位，会因为同一位置后续还会收到新的乘积贡献而把已经进位的结果搅乱。正确做法是先把所有乘积按位置<b>累加完毕</b>，再统一从低位到高位扫一遍处理进位。</div>
       </div>
       <div class="pitfall-item">
-        <div class="pitfall-num">3</div>
+        <div class="pitfall-num">⚠</div>
         <div class="pitfall-body"><b>高精度乘低精度时忘记处理连续进位：</b>低精度乘数 <code>k</code> 如果比较大（比如 <code>k=1000</code>），单次的 <code>carry</code> 可能不止一位数字，简化版代码里必须用 <code>while(carry)</code> 循环把进位完全展开成多位再退出，不能只处理一次就了事。</div>
       </div>
     </div>

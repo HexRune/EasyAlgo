@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9.1 快速排序 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "9.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--amber-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--amber); }
+
+  /* ── 通用暗色面板 ── */
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 数组格子 */
+  .arr-row { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .arr-cell-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .arr-cell { min-width: 34px; height: 34px; padding: 0 5px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .arr-cell.base  { background: #2A2840; color: var(--code-text); border: 1px solid #3A3850; }
+  .arr-cell.left  { background: rgba(137,180,250,.2);  color: #89B4FA; border: 1px solid rgba(137,180,250,.4); }
+  .arr-cell.right { background: rgba(250,179,135,.2);  color: #FAB387; border: 1px solid rgba(250,179,135,.4); }
+  .arr-cell.pivot { background: rgba(243,139,168,.25); color: #F38BA8; border: 1px solid rgba(243,139,168,.5); }
+  .arr-idx { font-size: 10px; color: #6C7086; font-family: 'JetBrains Mono', monospace; }
+  .arr-label { font-size: 11px; color: #6C7086; width: 72px; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .arr-row-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .arr-row-wrap:last-child { margin-bottom: 0; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--amber-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--amber); border-bottom: 1px solid #E8D5A0; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FFFDF5; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--amber); background: var(--amber-light); white-space: nowrap; }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="9.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块九 分治排序</span>
+      <span class="eyebrow-sep">/</span>
+      <span>9.1 快速排序</span>
+    </div>
+    <h1 class="chapter-title">9.1　快速排序</h1>
+    <p class="chapter-desc">分治的另一种玩法：不先拆后合，而是先想办法"站好队"，站好队之后两边根本不用合并。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#s1">分治的核心思想</a></li>
+      <li><span class="toc-num">②</span><a href="#s2">快速排序：先站队，再递归</a></li>
+      <li><span class="toc-num">③</span><a href="#s3">partition 图解</a></li>
+      <li><span class="toc-num">④</span><a href="#s4">完整代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#s5">复杂度分析</a></li>
+      <li><span class="toc-num">⑥</span><a href="#s6">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <!-- ① 核心思想 -->
+    <div class="sub-title" id="s1">① 分治的核心思想</div>
+    <div class="section-body">
+      <p>分治（Divide and Conquer）由三个步骤组成：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">分治三步骤</div>
+      <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:12px;">
+        <div style="background:#1E1C2F; border-radius:8px; padding:14px; border-left:3px solid #89B4FA; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:11px; color:#89B4FA; font-weight:700; font-family:'Noto Sans SC',sans-serif;">① 分（Divide）</div>
+          <div style="font-size:12.5px; color:#A6ADC8; line-height:1.6; font-family:'Noto Sans SC',sans-serif;">把原问题拆成若干规模更小、结构相同的子问题。</div>
+        </div>
+        <div style="background:#1E1C2F; border-radius:8px; padding:14px; border-left:3px solid #F38BA8; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:11px; color:#F38BA8; font-weight:700; font-family:'Noto Sans SC',sans-serif;">② 治（Conquer）</div>
+          <div style="font-size:12.5px; color:#A6ADC8; line-height:1.6; font-family:'Noto Sans SC',sans-serif;">递归地解决每个子问题。当子问题小到可以直接处理时（如只剩 0 或 1 个元素），直接返回。</div>
+        </div>
+        <div style="background:#1E1C2F; border-radius:8px; padding:14px; border-left:3px solid #A6E3A1; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:11px; color:#A6E3A1; font-weight:700; font-family:'Noto Sans SC',sans-serif;">③ 合（Combine）</div>
+          <div style="font-size:12.5px; color:#A6ADC8; line-height:1.6; font-family:'Noto Sans SC',sans-serif;">把子问题的解合并成原问题的解。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>分治的威力在于：把一个 O(n²) 的问题，通过"拆成两半、各自解决"变成 O(n log n)——每次对半拆，只需要 log₂n 层，每层的总工作量是 O(n)，整体就是 O(n log n)。<strong>同样是排序问题，"分""治""合"这三步可以有不同的分工方式</strong>：上一节（9.2）的归并排序，"分"的时候什么都不做（只是简单地对半切），真正的工作量都在"合"这一步；本节要讲的快速排序正好相反——"分"这一步就已经把活干完了，"合"这一步反而几乎不需要做任何事。</p>
+    </div>
+
+    <!-- ② 快速排序思路 -->
+    <div class="sub-title" id="s2">② 快速排序：先站队，再递归</div>
+    <div class="section-body">
+      <p>快速排序的"分"是这样做的：从数组里选一个数当作<strong>基准值</strong>（pivot），然后把整个数组"重新排队"——比 pivot 小的都站到左边，比 pivot 大的都站到右边。这个"重新排队"的操作叫 <strong>partition（划分）</strong>。</p>
+      <p>partition 做完之后，会发现一件很方便的事：<strong>左边一整块都比右边一整块小</strong>，所以只需要分别对左边和右边递归排序，两边各自排好之后，根本不需要再做任何"合并"的动作——数组本来就已经是"左边一块、右边一块"排好的样子了，"合"这一步几乎是免费的。这正好和归并排序"分的时候什么都不做，合的时候要认真做"反过来。</p>
+    </div>
+
+    <!-- ③ partition 图解 -->
+    <div class="sub-title" id="s3">③ partition 图解</div>
+    <div class="section-body">
+      <p>用数组 <code>[5, 2, 8, 1, 9, 3]</code>、选 <code>5</code> 作为 pivot，看一次 partition 具体做了什么：</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">一次 partition 的效果（pivot = 5）</div>
+      <div class="arr-row-wrap">
+        <div class="arr-label">操作前</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-cell pivot">5</div><div class="arr-idx">pivot</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">2</div><div class="arr-idx"></div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">8</div><div class="arr-idx"></div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">1</div><div class="arr-idx"></div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">9</div><div class="arr-idx"></div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell base">3</div><div class="arr-idx"></div></div>
+        </div>
+      </div>
+      <div class="arr-row-wrap">
+        <div class="arr-label">partition 后</div>
+        <div class="arr-row">
+          <div class="arr-cell-wrap"><div class="arr-cell left">2</div><div class="arr-idx">&lt; 5</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell left">1</div><div class="arr-idx">&lt; 5</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell left">3</div><div class="arr-idx">&lt; 5</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell pivot">5</div><div class="arr-idx">pivot</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell right">8</div><div class="arr-idx">&gt; 5</div></div>
+          <div class="arr-cell-wrap"><div class="arr-cell right">9</div><div class="arr-idx">&gt; 5</div></div>
+        </div>
+        <div style="font-family:'Noto Sans SC',sans-serif;font-size:11.5px;color:#A6E3A1;margin-left:8px;">左边都比 5 小，右边都比 5 大！</div>
+      </div>
+      <div class="num-visual-caption">
+        经过一次 partition，<code>5</code>（粉色）左边全是比它小的数，右边全是比它大的数——但注意：这一次 partition <strong>不保证</strong> pivot 本身已经站到了排序完成后的最终位置（下一节代码里会具体解释为什么）。接下来只需要对左右两段分别递归调用同样的 partition，不需要额外的合并步骤。
+      </div>
+    </div>
+
+    <!-- ④ 代码 -->
+    <div class="sub-title" id="s4">④ 完整代码</div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 快速排序</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">void</span> <span class="fn">QuickSort</span>(<span class="typ">int</span> a[], <span class="typ">int</span> l, <span class="typ">int</span> r)</td></tr>
+          <tr><td class="ln">2</td><td class="cd">{</td></tr>
+          <tr class="hl-warn"><td class="ln">3</td><td class="cd">    <span class="kw">if</span> (l &gt;= r) <span class="kw">return</span>;  <span class="cmt">// 递归终止：区间只剩 0 或 1 个元素</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">int</span> pivot = a[(l + r) / <span class="num">2</span>];  <span class="cmt">// 取区间中间的元素作基准值</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">int</span> i = l - <span class="num">1</span>, j = r + <span class="num">1</span>;</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">while</span> (i &lt; j)</td></tr>
+          <tr><td class="ln">8</td><td class="cd">    {</td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">        <span class="kw">do</span> { i++; } <span class="kw">while</span> (a[i] &lt; pivot);  <span class="cmt">// i 从左往右，找第一个 ≥ pivot 的位置</span></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">        <span class="kw">do</span> { j--; } <span class="kw">while</span> (a[j] &gt; pivot);  <span class="cmt">// j 从右往左，找第一个 ≤ pivot 的位置</span></td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">        <span class="kw">if</span> (i &lt; j) { <span class="fn">swap</span>(a[i], a[j]); }   <span class="cmt">// 两个位置都找到了，交换，让左边变小、右边变大</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="fn">QuickSort</span>(a, l, j);       <span class="cmt">// 递归排左边这一段</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="fn">QuickSort</span>(a, j + <span class="num">1</span>, r);   <span class="cmt">// 递归排右边这一段</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">}</td></tr>
+          <tr><td class="ln">17</td><td class="cd"></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="cmt">// 调用方式：QuickSort(a, 0, n - 1);</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>为什么用 <code>do...while</code> 而不是普通 <code>while</code>？</b>因为需要 <code>i</code>、<code>j</code> 在比较之前<strong>先移动一步</strong>——如果 <code>a[i]</code> 恰好等于 <code>pivot</code>，用 <code>do...while</code> 能保证 <code>i</code> 至少往前挪一位，避免两个指针停在原地不动、死循环卡住。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么递归写的是 <code>QuickSort(l, j)</code> 和 <code>QuickSort(j+1, r)</code>，而不是按 pivot 的下标切？</b>这种写法（叫 Hoare 划分）的 partition 结束后，只保证下标 <code>j</code> 左边都 ≤ pivot、右边都 ≥ pivot，但 pivot 本身具体停在哪个下标是不确定的——所以正确的切分点是 <code>j</code>，而不是 pivot 最初所在的下标。这是本节最容易写错的地方，下一节陷阱里会再具体展开。</div>
+    </div>
+
+    <!-- ⑤ 复杂度 -->
+    <div class="sub-title" id="s5">⑤ 复杂度分析</div>
+
+    <table class="api-table">
+      <thead><tr><th>情况</th><th>时间复杂度</th><th>什么时候发生</th></tr></thead>
+      <tbody>
+        <tr><td>最好 / 平均</td><td>O(n log n)</td><td>每次 partition 都能把数组大致分成两半</td></tr>
+        <tr><td>最坏</td><td>O(n²)</td><td>每次 partition 都极不均衡（比如一边只有 1 个元素）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>为什么会退化到 O(n²)？</b>如果每次选的 pivot 都恰好是这一段里最小或最大的数，partition 之后一边会是空的，另一边几乎是原封不动的一整段——递归树就从"均衡的两叉树"变成了"一条链"，原本 <code>log n</code> 层的递归深度变成了 <code>n</code> 层。上面代码选择<strong>区间中间的元素</strong>作为 pivot（而不是固定选第一个或最后一个），已经能避开"数组本身就有序"这种最常见的构造方式导致的最坏情况，但仍然可能被专门构造的数据卡住——更稳妥的做法是随机选择 pivot，或者"三数取中"（取首、中、尾三个数的中位数），这里先了解思路即可。</div>
+    </div>
+
+    <!-- ⑥ 常见陷阱 -->
+    <div class="sub-title" id="s6">⑥ 常见陷阱</div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>误以为 partition 之后 pivot 已经"归位"：</b>和一些教材里"选最后一个元素作 pivot，partition 后 pivot 精确落在最终排序位置"的写法不同，本节采用的 Hoare 划分只保证"以下标 <code>j</code> 为界，左边都小、右边都大"，pivot 本身的下标可能已经变了。递归时必须按 <code>j</code> 切分，如果习惯性地写成按 pivot 原来的下标切分，会漏掉或重复处理某些元素。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>递归终止条件写成 <code>l == r</code> 而不是 <code>l &gt;= r</code>：</b>如果某次递归传入的区间是空的（<code>l &gt; r</code>），用 <code>l == r</code> 判断会漏掉这种情况，导致继续访问不属于当前区间的元素，甚至无限递归。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>数据本身接近有序时容易触发最坏情况：</b>虽然本节选了区间中间元素作 pivot，一定程度上缓解了"完全有序/完全逆序"这种最简单粗暴的构造方式，但面对专门设计过的数据，仍然可能被卡到 O(n²)。如果题目明确会用这类数据卡效率，记得考虑随机化 pivot 或者直接使用语言自带的 <code>sort</code>（背后通常已经做了这类优化）。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>和 9.2 归并排序对比：</b>两者都是分治，但分工完全相反——归并排序"分"不费力气、"合"是关键；快速排序"分（partition）"就是关键、"合"几乎不费力气。归并排序稳定、复杂度稳定在 O(n log n)，但需要额外的 O(n) 空间；快速排序原地排序、常数更小，但最坏情况会退化到 O(n²)。竞赛里两者都值得掌握，但日常排序更多直接调用语言自带的 <code>sort</code>。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块九 · 分治排序 · 9.1 快速排序</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A08_02_递归.html">← 8.2 递归</a>
+      <a class="nav-btn" href="A09_02_归并排序.html">9.2 归并排序 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

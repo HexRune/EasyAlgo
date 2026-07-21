@@ -54,7 +54,7 @@
 
   .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
   .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
-  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
   .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
   .pitfall-body b { color: var(--text-primary); }
 </style>
@@ -153,6 +153,9 @@
     </div>
 
     <div class="sub-title" id="code">② 完整代码：高精度 ÷ 低精度</div>
+    <div class="section-body">
+      <p>上面演示的每一步，对应的就是下面代码里第 8~13 行的循环体——<code>remainder = remainder * 10 + 新一位</code>、算商、<code>remainder %= divisor</code> 更新余数，这三步在循环里不断重复，直到把整个被除数处理完。</p>
+    </div>
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 高精度除以低精度</span></div>
       <div class="code-body">
@@ -187,6 +190,11 @@
     <div class="callout info">
       <span class="callout-icon">📖</span>
       <div><b>为什么这版代码不需要 vector？</b>因为处理顺序和字符串本身的顺序（最高位在前）完全一致，不需要像加减乘那样"倒过来存"才好操作，直接对 <code>string</code> 按下标从 0 开始正向遍历即可，商也直接拼接成一个新的字符串，反而比前三节更简洁。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">✏️</span>
+      <div><b>动手试一试：</b>试试这几组输入，检验自己是否真的理解了每一步：<code>100 3</code>（除不尽，看余数是不是 1）、<code>7 23</code>（被除数比除数还小，商应该是 0）、一个几十位的大数除以一个较大的 <code>long long</code> 范围整数（验证长数字也能正确处理）。</div>
     </div>
 
     <div class="sub-title" id="hard">③ 高精度 ÷ 高精度：了解即可</div>
@@ -241,19 +249,19 @@
 
     <div class="pitfall-list">
       <div class="pitfall-item">
-        <div class="pitfall-num">1</div>
+        <div class="pitfall-num">⚠</div>
         <div class="pitfall-body"><b>方向搞反：</b>除法必须从最高位开始处理，如果不小心沿用了加减乘"从最低位开始、倒序存储"的思路，会得到完全错误的结果。四种运算里，除法是唯一一个"方向不同"的，务必单独留意。</div>
       </div>
       <div class="pitfall-item">
-        <div class="pitfall-num">2</div>
+        <div class="pitfall-num">⚠</div>
         <div class="pitfall-body"><b>商的前导 0 没有去掉：</b>如果被除数的最高几位都小于除数（比如例子中前两步商都是 0），商字符串的开头会带着若干个 0，直接输出会变成"<code>0045</code>"这种带多余 0 的结果，必须先跳过前导 0 再输出。</div>
       </div>
       <div class="pitfall-item">
-        <div class="pitfall-num">3</div>
+        <div class="pitfall-num">⚠</div>
         <div class="pitfall-body"><b>用 int 而不是 long long 存储余数和除数：</b>虽然余数理论上小于除数，但中间计算 <code>remainder * 10 + 下一位</code> 时数值会先变大再取模，如果除数本身接近 <code>int</code> 的上限，中间结果可能超出 <code>int</code> 范围，建议统一用 <code>long long</code> 存储余数和除数，避免溢出。</div>
       </div>
       <div class="pitfall-item">
-        <div class="pitfall-num">4</div>
+        <div class="pitfall-num">⚠</div>
         <div class="pitfall-body"><b>除数为 0 没有特判：</b>和普通除法一样，高精度除法的除数同样不能是 0。题目通常会保证除数非零，但自己测试代码时如果误传入 0，程序会直接崩溃（除零错误），调试时要留意这一点。</div>
       </div>
     </div>
