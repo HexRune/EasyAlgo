@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.2 回溯 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "12.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--blue-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--blue); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 20px 18px; margin: 18px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 决策树文本图 */
+  .tree-outline { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 2.1; white-space: pre; color: #6C7086; }
+  .tree-outline .pick   { color: #A6E3A1; font-weight: 700; }
+  .tree-outline .undo   { color: #FAB387; font-weight: 700; }
+  .tree-outline .path   { color: #89B4FA; }
+  .tree-outline .done   { color: #F38BA8; font-weight: 700; }
+
+  /* 状态卡片（path / used） */
+  .state-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .state-row:last-child { margin-bottom: 0; }
+  .state-label { font-size: 11px; color: #6C7086; width: 70px; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .state-cell { min-width: 30px; height: 28px; padding: 0 6px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; }
+  .state-cell.filled { background: rgba(137,180,250,.2); color: #89B4FA; border: 1px solid rgba(137,180,250,.4); }
+  .state-cell.empty  { background: #2A2840; color: #3A3850; border: 1px dashed #3A3850; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--blue-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blue); border-bottom: 1px solid #BFDCF2; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--blue); background: var(--blue-light); white-space: nowrap; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="12.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十二 搜索基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.2 回溯</span>
+    </div>
+    <h1 class="chapter-title">12.2　回溯</h1>
+    <p class="chapter-desc">做一个选择，递归下去；行不通（或者已经记录完）就撤销这个选择，换下一个再试。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#s1">回溯是什么：DFS 里"撤销"这个动作</a></li>
+      <li><span class="toc-num">②</span><a href="#s2">经典例子：全排列</a></li>
+      <li><span class="toc-num">③</span><a href="#s3">决策树图解</a></li>
+      <li><span class="toc-num">④</span><a href="#s4">完整代码实现</a></li>
+      <li><span class="toc-num">⑤</span><a href="#s5">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="s1">① 回溯是什么：DFS 里"撤销"这个动作</div>
+    <div class="section-body">
+      <p>12.1 节走迷宫的例子里提到过：一个格子的四个方向都试过、都走不通之后，函数自然 <code>return</code> 回到上一层——这个"退回上一层"的过程叫回溯，但当时的代码里没有任何一行显式写着"撤销"，因为迷宫本身没有需要撤销的东西（走过的格子还是走过了，<code>visited</code> 也没必要重新变回 <code>false</code>）。</p>
+      <p>但很多问题不是"找一条能走通的路"，而是<b>要构造出一个完整的方案</b>——比如"列出所有排列方式""从几个物品里选出一部分组合"。这类问题在递归过程中会维护一个"当前正在构造的方案"，每往下递归一层，就往这个方案里加一个新的选择；一旦这一层的某个分支处理完了，要退回上一层去尝试别的选择时，就必须<b>把刚才加进方案里的这个选择拿掉</b>——不拿掉的话，方案会一直越攒越多，后面的分支会带着不属于自己的"脏数据"。这个"拿掉刚才加的选择"的动作，就是本节要讲的<b>回溯</b>，和 12.1 节比，"撤销"这一步终于要显式地写进代码里了。</p>
+    </div>
+
+    <div class="sub-title" id="s2">② 经典例子：全排列</div>
+    <div class="section-body">
+      <p>用最经典的例子来看：把 <code>[1, 2, 3]</code> 这三个数排成一排，有多少种不同的排法？回溯的思路是——维护一个"当前已经排好的部分" <code>path</code>，每次从"还没用过的数"里选一个加进 <code>path</code>，递归下去；如果 <code>path</code> 已经排满了（三个数都用上了），就记录下这一种排法；不管有没有记录，处理完之后都要把刚才加进去的数从 <code>path</code> 里<b>移出去</b>，这样才能换下一个数继续试。</p>
+    </div>
+
+    <div class="num-visual">
+      <div class="num-visual-title">走一遍最左边这条分支：选 1 → 选 2 → 选 3</div>
+      <div class="state-row">
+        <div class="state-label">第 0 步</div>
+        <div class="state-cell empty">·</div><div class="state-cell empty">·</div><div class="state-cell empty">·</div>
+        <div style="font-size:11.5px;color:#6C7086;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">path 是空的，1、2、3 都还没用过</div>
+      </div>
+      <div class="state-row">
+        <div class="state-label">选 1</div>
+        <div class="state-cell filled">1</div><div class="state-cell empty">·</div><div class="state-cell empty">·</div>
+        <div style="font-size:11.5px;color:#A6E3A1;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">1 加入 path，标记 1 已使用</div>
+      </div>
+      <div class="state-row">
+        <div class="state-label">选 2</div>
+        <div class="state-cell filled">1</div><div class="state-cell filled">2</div><div class="state-cell empty">·</div>
+        <div style="font-size:11.5px;color:#A6E3A1;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">2 加入 path，标记 2 已使用</div>
+      </div>
+      <div class="state-row">
+        <div class="state-label">选 3</div>
+        <div class="state-cell filled">1</div><div class="state-cell filled">2</div><div class="state-cell filled">3</div>
+        <div style="font-size:11.5px;color:#F38BA8;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">path 排满了！记录下 [1,2,3]，这是一种完整的排列</div>
+      </div>
+      <div class="state-row">
+        <div class="state-label">撤销 3</div>
+        <div class="state-cell filled">1</div><div class="state-cell filled">2</div><div class="state-cell empty">·</div>
+        <div style="font-size:11.5px;color:#FAB387;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">3 从 path 里移出去，标记 3 变回未使用——但这一层已经没有别的数可选了，继续退回上一层</div>
+      </div>
+      <div class="state-row">
+        <div class="state-label">撤销 2</div>
+        <div class="state-cell filled">1</div><div class="state-cell empty">·</div><div class="state-cell empty">·</div>
+        <div style="font-size:11.5px;color:#FAB387;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">2 移出去，标记变回未使用——这一层换成选 3，继续往下递归，会得到 [1,3,2]</div>
+      </div>
+      <div class="num-visual-caption">"选 1 → 选 2 → 选 3"只是众多分支里的一条。<code>path</code> 每次只增加或减少<strong>最后一个</strong>元素，增加发生在递归调用<strong>之前</strong>，减少（撤销）发生在递归调用<strong>之后</strong>——这一"先加后减"的顺序，保证了 <code>path</code> 在整个过程中，任何时刻都精确对应"从根节点走到当前这一层"所做过的选择。</div>
+    </div>
+
+    <div class="sub-title" id="s3">③ 决策树图解</div>
+    <div class="section-body">
+      <p>把所有分支都走一遍，会得到一棵完整的决策树——每个分支走到底（<code>path</code> 排满 3 个数）就是一种排列，一共有 <code>3 × 2 × 1 = 6</code> 种：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="tree-outline">[]
+├─ <span class="pick">选 1</span> → <span class="path">[1]</span>
+│    ├─ <span class="pick">选 2</span> → <span class="path">[1,2]</span> → <span class="pick">选 3</span> → <span class="path">[1,2,3]</span> <span class="done">✓</span> → <span class="undo">撤销3</span> → <span class="undo">撤销2</span>
+│    └─ <span class="pick">选 3</span> → <span class="path">[1,3]</span> → <span class="pick">选 2</span> → <span class="path">[1,3,2]</span> <span class="done">✓</span> → <span class="undo">撤销2</span> → <span class="undo">撤销3</span>
+│    <span class="undo">（撤销 1）</span>
+├─ <span class="pick">选 2</span> → <span class="path">[2]</span>
+│    ├─ <span class="pick">选 1</span> → <span class="path">[2,1]</span> → <span class="pick">选 3</span> → <span class="path">[2,1,3]</span> <span class="done">✓</span> → <span class="undo">撤销3</span> → <span class="undo">撤销1</span>
+│    └─ <span class="pick">选 3</span> → <span class="path">[2,3]</span> → <span class="pick">选 1</span> → <span class="path">[2,3,1]</span> <span class="done">✓</span> → <span class="undo">撤销1</span> → <span class="undo">撤销3</span>
+│    <span class="undo">（撤销 2）</span>
+└─ <span class="pick">选 3</span> → <span class="path">[3]</span>
+     ├─ <span class="pick">选 1</span> → <span class="path">[3,1]</span> → <span class="pick">选 2</span> → <span class="path">[3,1,2]</span> <span class="done">✓</span> → <span class="undo">撤销2</span> → <span class="undo">撤销1</span>
+     └─ <span class="pick">选 2</span> → <span class="path">[3,2]</span> → <span class="pick">选 1</span> → <span class="path">[3,2,1]</span> <span class="done">✓</span> → <span class="undo">撤销1</span> → <span class="undo">撤销2</span>
+     <span class="undo">（撤销 3）</span></div>
+      <figcaption>绿色是"做选择"，蓝色是当前 <code>path</code> 的内容，粉色 <code>✓</code> 是记录下一种排列，橙色是"撤销选择"。六条分支互不干扰——每次撤销之后，<code>path</code> 都准确地回到了"进入这一层之前"的状态，所以从同一个节点出发的不同分支，看到的都是干净的、没有被别的分支"污染"过的 <code>path</code>。</figcaption>
+    </div>
+
+    <div class="sub-title" id="s4">④ 完整代码实现</div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 回溯法生成全排列</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">nums</span><span class="pnc">[]</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">};</span>  <span class="cmt">// 要排列的这几个数</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">path</span><span class="pnc">[</span><span class="num">3</span><span class="pnc">];</span>          <span class="cmt">// 当前正在构造的排列</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">bool</span> <span class="fn">used</span><span class="pnc">[</span><span class="num">3</span><span class="pnc">];</span>       <span class="cmt">// used[i] 表示 nums[i] 是否已经用在 path 里了</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="typ">void</span> <span class="fn">Backtrack</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">depth</span><span class="pnc">)</span>  <span class="cmt">// depth：path 里已经填了几个数</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">depth</span> <span class="op">==</span> <span class="num">3</span><span class="pnc">)</span>  <span class="cmt">// path 排满了，是一种完整的排列</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">12</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">3</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">path</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd">        <span class="kw">return</span><span class="pnc">;</span>  <span class="cmt">// 记录完就返回，这一层不用再往下走了</span></td></tr>
+          <tr class="hl"><td class="ln">15</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">3</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 依次尝试把 nums[i] 作为下一个数</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">used</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span> <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span>  <span class="cmt">// 这个数已经用过了，跳过</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">21</td><td class="cd">        <span class="fn">path</span><span class="pnc">[</span><span class="fn">depth</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">nums</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span>  <span class="cmt">// ① 做选择：把 nums[i] 放进 path</span></td></tr>
+          <tr class="hl"><td class="ln">22</td><td class="cd">        <span class="fn">used</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">23</td><td class="cd">        <span class="fn">Backtrack</span><span class="pnc">(</span><span class="fn">depth</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">);</span>  <span class="cmt">// ② 递归下去，填 path 的下一个位置</span></td></tr>
+          <tr class="hl"><td class="ln">24</td><td class="cd">        <span class="fn">used</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">false</span><span class="pnc">;</span>  <span class="cmt">// ③ 撤销选择：把 nums[i] 标记回"未使用"</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd"></td></tr>
+          <tr><td class="ln">28</td><td class="cd"><span class="cmt">// 调用方式：Backtrack(0);</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>为什么 <code>path[depth]</code> 不需要显式"清空"？</b>因为下一次这个位置被用到时，一定会先执行第 21 行的赋值，把旧值直接覆盖掉——不会有代码去读一个"应该被撤销但没清空"的 <code>path[depth]</code>。真正必须撤销的是第 24 行的 <code>used[i] = false</code>，因为 <code>used</code> 数组是靠"读取"来判断某个数能不能选的，如果不撤销，这个数在其它分支里会一直被误判为"已经用过"，导致某些排列永远生成不出来。</div>
+    </div>
+
+    <div class="sub-title" id="s5">⑤ 常见陷阱</div>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记撤销选择：</b>如果漏写 <code>used[i] = false</code> 这一行，某个数一旦被用过，就会在所有其它分支里都被当成"已使用"，永远不会再被选中——最终只能生成一部分排列，而且通常是错误地"漏掉"了很多种，而不是报错崩溃，非常隐蔽。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>"做选择"和"撤销选择"的位置没有对称：</b>第 21~22 行做了两件事（填 <code>path</code>、标记 <code>used</code>），第 24 行撤销时必须把<b>对应的每一件事都撤销一遍</b>。如果做选择时改了三个状态、撤销时只改了两个，等于留下了"半撤销"的脏状态，后面的分支会读到不该存在的数据。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>如果用 <code>vector</code> 存 <code>path</code>，撤销要用 <code>pop_back()</code>，不能用"覆盖下一个值"来偷懒：</b>本节用固定长度的数组 <code>path[3]</code>，覆盖赋值确实够用；但如果改用 <code>vector&lt;int&gt; path</code> 并且用 <code>push_back</code> 做选择，撤销那一步必须显式调用 <code>path.pop_back()</code> 删掉最后一个元素，否则 <code>path</code> 的长度会只增不减，第 10 行判断"排满了没有"的条件也会跟着出错。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>本节的全排列，每一层其实都要把"还没用过的数"完整地试一遍——如果数字很多，分支数量会爆炸性增长。12.3 节（剪枝优化）要讲的，就是怎么提前判断出"这个分支肯定不会有更好的结果"，从而直接跳过整段递归，不用等它真正走到底才知道行不通。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十二 · 搜索基础 · 12.2 回溯</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A12_01_DFS.html">← 12.1 DFS 深度优先搜索</a>
+      <a class="nav-btn" href="A12_03_剪枝优化.html">12.3 剪枝优化 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

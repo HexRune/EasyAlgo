@@ -118,7 +118,7 @@
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 枚举法求最小公倍数</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Lcm</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">LCM</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
           <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">bigger</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">);</span></td></tr>
           <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">smaller</span> <span class="op">=</span> <span class="fn">min</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">);</span></td></tr>
@@ -135,11 +135,11 @@
     </div>
 
     <div class="section-body">
-      <p>用 <code>Lcm(15, 8)</code> 走一遍：从 <code>15</code> 开始，每次加 <code>15</code>，一路检查能不能被 <code>8</code> 整除：</p>
+      <p>用 <code>LCM(15, 8)</code> 走一遍：从 <code>15</code> 开始，每次加 <code>15</code>，一路检查能不能被 <code>8</code> 整除：</p>
     </div>
 
     <div class="num-visual">
-      <div class="num-visual-title">Lcm(15, 8) 的枚举过程 —— 一共试了 8 次才找到答案</div>
+      <div class="num-visual-title">LCM(15, 8) 的枚举过程 —— 一共试了 8 次才找到答案</div>
       <div class="set-row" style="flex-wrap: wrap;">
         <div class="set-cell a-only">15</div>
         <div class="set-cell a-only">30</div>
@@ -150,7 +150,7 @@
         <div class="set-cell a-only">105</div>
         <div class="set-cell lcmmin">120</div>
       </div>
-      <div class="num-visual-caption">前面 7 个数（<code>15、30、45、60、75、90、105</code>）除以 <code>8</code> 都有余数，直到第 8 个数 <code>120</code> 才正好整除——<code>Lcm(15, 8) = 120</code>。如果两个数都比较大、最小公倍数又特别大，这种"一格一格跳过去试"的办法会跳很多很多次。</div>
+      <div class="num-visual-caption">前面 7 个数（<code>15、30、45、60、75、90、105</code>）除以 <code>8</code> 都有余数，直到第 8 个数 <code>120</code> 才正好整除——<code>LCM(15, 8) = 120</code>。如果两个数都比较大、最小公倍数又特别大，这种"一格一格跳过去试"的办法会跳很多很多次。</div>
     </div>
 
     <div class="sub-title" id="gcd">③ 优化：借助最大公约数</div>
@@ -194,9 +194,9 @@
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 借助最大公约数求最小公倍数</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Lcm</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">LCM</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">return</span> <span class="fn">a</span> <span class="op">/</span> <span class="fn">Gcd</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">)</span> <span class="op">*</span> <span class="fn">b</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">return</span> <span class="fn">a</span> <span class="op">/</span> <span class="fn">GCD</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">)</span> <span class="op">*</span> <span class="fn">b</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">4</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
       </div>
@@ -204,10 +204,10 @@
 
     <div class="callout warn">
       <span class="callout-icon">⚠️</span>
-      <div><b>一定要先除再乘，不要写成 <code>a * b / Gcd(a, b)</code>：</b>两种写法数学上结果一样，但计算的<strong>中间过程</strong>不一样安全。<code>a / Gcd(a,b)</code> 算出来的是"a 独有的部分"，这个数不会比 <code>a</code> 本身大，再乘以 <code>b</code> 风险比较小；而 <code>a * b</code> 是直接把两个原数相乘，哪怕最终答案不大，<strong>中间这一步</strong>也可能先溢出。比如 <code>a = b = 100000</code> 时，最终的最小公倍数其实只有 <code>100000</code>（很小），但 <code>a * b</code> 会先算出 <code>100亿</code>，早就超过了 <code>int</code> 能装的范围（约 21 亿）——明明答案没问题，却因为算的顺序不对而出错。<code>a / Gcd(a,b) * b</code> 从头到尾都不会经过这么大的中间值，更安全。</div>
+      <div><b>一定要先除再乘，不要写成 <code>a * b / GCD(a, b)</code>：</b>两种写法数学上结果一样，但计算的<strong>中间过程</strong>不一样安全。<code>a / GCD(a,b)</code> 算出来的是"a 独有的部分"，这个数不会比 <code>a</code> 本身大，再乘以 <code>b</code> 风险比较小；而 <code>a * b</code> 是直接把两个原数相乘，哪怕最终答案不大，<strong>中间这一步</strong>也可能先溢出。比如 <code>a = b = 100000</code> 时，最终的最小公倍数其实只有 <code>100000</code>（很小），但 <code>a * b</code> 会先算出 <code>100亿</code>，早就超过了 <code>int</code> 能装的范围（约 21 亿）——明明答案没问题，却因为算的顺序不对而出错。<code>a / Gcd(a,b) * b</code> 从头到尾都不会经过这么大的中间值，更安全。</div>
     </div>
 
-    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+    <div class="sub-title" id="compare">④ 两种写法对比</div>
     <div class="section-body">
       <p>用 <code>Lcm(63, 40)</code>（这两个数互质，最大公约数是 1）实际数一数两种写法的步骤数：</p>
     </div>

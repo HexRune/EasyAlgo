@@ -152,7 +152,7 @@
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 枚举法求最大公约数</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Gcd</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">GCD</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
           <tr><td class="ln">3</td><td class="cd">    <span class="typ">int</span> <span class="fn">smaller</span> <span class="op">=</span> <span class="fn">min</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span> <span class="fn">b</span><span class="pnc">);</span></td></tr>
           <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="fn">smaller</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&gt;=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">--</span><span class="pnc">)</span></td></tr>
@@ -242,7 +242,7 @@
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 欧几里得算法（循环写法）</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Gcd</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">GCD</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
           <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">b</span> <span class="op">!=</span> <span class="num">0</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
@@ -274,11 +274,11 @@
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 欧几里得算法（递归写法）</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Gcd</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">GCD</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
           <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">b</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="fn">a</span><span class="pnc">;</span>          <span class="cmt">// 递归出口：地板正好铺满，a 就是答案</span></td></tr>
           <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">%</span> <span class="fn">b</span> <span class="op">==</span> <span class="num">0</span><span class="pnc">)</span> <span class="kw">return</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// a 正好能被 b 整除，b 自己就是答案</span></td></tr>
-          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">return</span> <span class="fn">Gcd</span><span class="pnc">(</span><span class="fn">b</span><span class="pnc">,</span> <span class="fn">a</span> <span class="op">%</span> <span class="fn">b</span><span class="pnc">);</span>     <span class="cmt">// 否则换成剩下那条窄地板，继续铺</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">return</span> <span class="fn">GCD</span><span class="pnc">(</span><span class="fn">b</span><span class="pnc">,</span> <span class="fn">a</span> <span class="op">%</span> <span class="fn">b</span><span class="pnc">);</span>     <span class="cmt">// 否则换成剩下那条窄地板，继续铺</span></td></tr>
           <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
       </div>
@@ -289,14 +289,14 @@
     </div>
 
     <div class="num-visual">
-      <div class="num-visual-title">Gcd(48, 18) 的递归调用链</div>
+      <div class="num-visual-title">GCD(48, 18) 的递归调用链</div>
       <div class="recur-chain">
-        <div class="recur-call">Gcd(48, 18)</div>
+        <div class="recur-call">GCD(48, 18)</div>
         <div class="recur-arrow-wrap"><div class="recur-arrow-label">48%18≠0，调用</div><div class="recur-arrow-glyph">↓</div></div>
-        <div class="recur-call">Gcd(18, 12)</div>
+        <div class="recur-call">GCD(18, 12)</div>
         <div class="recur-arrow-wrap"><div class="recur-arrow-label">18%12≠0，调用</div><div class="recur-arrow-glyph">↓</div></div>
-        <div class="recur-call base">Gcd(12, 6)</div>
-        <div class="recur-return">12 % 6 == 0 —— 直接返回 b = 6，这个结果会一路向上传回去，<code>Gcd(48, 18)</code> 最终的结果也是 6</div>
+        <div class="recur-call base">GCD(12, 6)</div>
+        <div class="recur-return">12 % 6 == 0 —— 直接返回 b = 6，这个结果会一路向上传回去，<code>GCD(48, 18)</code> 最终的结果也是 6</div>
       </div>
     </div>
 
@@ -305,7 +305,7 @@
       <div><b>循环和递归，本质是同一个过程的两种写法：</b>循环版本里，每一轮用变量重新赋值（<code>a = b; b = remainder;</code>）来"前进到下一轮"；递归版本里，每一层用一次新的函数调用来"前进到下一轮"——两者经历的中间结果完全对应，只是"记住当前进度"的方式不同：循环靠变量覆盖，递归靠每一层调用自带的参数。两种写法都正确，竞赛代码里因为递归版本更简短，会更常见一些。</div>
     </div>
 
-    <div class="sub-title" id="compare">④ 完整代码与对比</div>
+    <div class="sub-title" id="compare">④ 两种写法对比</div>
     <div class="section-body">
       <p>用 <code>GCD(360, 48)</code> 实际数一数两种写法的检查/计算次数，差距非常明显：</p>
     </div>

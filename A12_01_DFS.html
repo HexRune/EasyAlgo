@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.1 DFS 深度优先搜索 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "12.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--blue-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--blue); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 20px 18px; margin: 18px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 迷宫网格 */
+  .maze-wrap { display: flex; justify-content: center; }
+  .maze-grid { display: grid; grid-template-columns: repeat(4, 52px); grid-template-rows: repeat(4, 52px); gap: 5px; }
+  .maze-cell { position: relative; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; }
+  .maze-cell.wall  { background: #16141F; border: 1px solid #2A2840; }
+  .maze-cell.open  { background: #2A2840; border: 1px solid #3A3850; color: #6C7086; }
+  .maze-cell.start { background: rgba(166,227,161,.20); border: 1px solid #A6E3A1; color: #A6E3A1; }
+  .maze-cell.end   { background: rgba(243,139,168,.20); border: 1px solid #F38BA8; color: #F38BA8; }
+  .maze-cell.dead  { background: rgba(250,179,135,.15); border: 1px solid rgba(250,179,135,.4); color: #FAB387; }
+  .maze-cell.path  { background: rgba(137,180,250,.20); border: 1px solid #89B4FA; color: #89B4FA; }
+  .maze-order { position: absolute; top: -7px; right: -7px; width: 20px; height: 20px; border-radius: 50%; background: #F9A825; color: #1E1D2E; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .maze-legend { display: flex; gap: 16px; justify-content: center; margin-top: 16px; flex-wrap: wrap; font-family: 'Noto Sans SC', sans-serif; font-size: 11px; color: #A6ADC8; }
+  .maze-legend-item { display: flex; align-items: center; gap: 6px; }
+  .maze-legend-dot { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+
+  /* 调用栈可视化 */
+  .stack-wrap { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; }
+  .stack-col { display: flex; flex-direction: column; align-items: center; }
+  .stack-title { font-size: 11.5px; color: #A6ADC8; margin-bottom: 10px; font-family: 'Noto Sans SC', sans-serif; }
+  .stack-frames { display: flex; flex-direction: column-reverse; gap: 4px; }
+  .stack-frame { width: 90px; height: 30px; border-radius: 6px; background: rgba(137,180,250,.18); border: 1px solid rgba(137,180,250,.4); color: #89B4FA; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; }
+  .stack-frame.top { background: rgba(243,139,168,.22); border-color: #F38BA8; color: #F38BA8; }
+  .stack-base { font-size: 9.5px; color: #6C7086; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--blue-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blue); border-bottom: 1px solid #BFDCF2; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--blue); background: var(--blue-light); white-space: nowrap; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="12.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十二 搜索基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.1 DFS 深度优先搜索</span>
+    </div>
+    <h1 class="chapter-title">12.1　DFS 深度优先搜索</h1>
+    <p class="chapter-desc">一条路走到底，走不通就退回上一步换条路——这种"一头扎到底"的探索方式，就是 DFS。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#s1">什么是 DFS：一条路走到底</a></li>
+      <li><span class="toc-num">②</span><a href="#s2">用 DFS 走迷宫</a></li>
+      <li><span class="toc-num">③</span><a href="#s3">完整代码实现</a></li>
+      <li><span class="toc-num">④</span><a href="#s4">两个关键点：标记访问过 与 回溯</a></li>
+      <li><span class="toc-num">⑤</span><a href="#s5">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="s1">① 什么是 DFS：一条路走到底</div>
+    <div class="section-body">
+      <p>还记得 11.3 节讲二叉树遍历时提到的<b>前序遍历</b>吗？"先访问自己，再一头扎进左子树的最深处，处理完了才回头处理右子树"——这种"一条路走到底，走不通（或者走完了）才往回退"的访问方式，其实有一个正式的名字，叫 <b>DFS（Depth-First Search，深度优先搜索）</b>。</p>
+      <p>11.3 节的 DFS 只能在"树"这种结构上走——因为树不会绕圈，每个节点最多只有两个方向（左、右孩子）可以走。但 DFS 这套思路完全可以用在更一般的场景里：走迷宫、在网格里找路、甚至是"从若干个选择里试出一条可行方案"（这是下一节"回溯"要讲的内容）。这些场景往往不止两个方向可以走，而且路径可能绕回原地——这也是本节要重点解决的新问题。</p>
+    </div>
+
+    <div class="sub-title" id="s2">② 用 DFS 走迷宫</div>
+    <div class="section-body">
+      <p>下面用一个 4×4 的小迷宫来看 DFS 具体是怎么走的。<code>S</code> 是起点，<code>E</code> 是终点，深色格子是墙，每一步都按照"右、下、左、上"的顺序尝试下一个方向：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="maze-wrap">
+        <div class="maze-grid">
+          <div class="maze-cell start">S<div class="maze-order">1</div></div>
+          <div class="maze-cell dead">·<div class="maze-order">2</div></div>
+          <div class="maze-cell wall"></div>
+          <div class="maze-cell open">·</div>
+
+          <div class="maze-cell path">·<div class="maze-order">3</div></div>
+          <div class="maze-cell wall"></div>
+          <div class="maze-cell open">·</div>
+          <div class="maze-cell open">·</div>
+
+          <div class="maze-cell path">·<div class="maze-order">4</div></div>
+          <div class="maze-cell path">·<div class="maze-order">5</div></div>
+          <div class="maze-cell path">·<div class="maze-order">6</div></div>
+          <div class="maze-cell wall"></div>
+
+          <div class="maze-cell wall"></div>
+          <div class="maze-cell open">·</div>
+          <div class="maze-cell path">·<div class="maze-order">7</div></div>
+          <div class="maze-cell end">E<div class="maze-order">8</div></div>
+        </div>
+      </div>
+      <div class="maze-legend">
+        <div class="maze-legend-item"><div class="maze-legend-dot" style="background:rgba(166,227,161,.3);border:1px solid #A6E3A1;"></div>起点</div>
+        <div class="maze-legend-item"><div class="maze-legend-dot" style="background:rgba(243,139,168,.3);border:1px solid #F38BA8;"></div>终点</div>
+        <div class="maze-legend-item"><div class="maze-legend-dot" style="background:rgba(137,180,250,.3);border:1px solid #89B4FA;"></div>最终走通的路</div>
+        <div class="maze-legend-item"><div class="maze-legend-dot" style="background:rgba(250,179,135,.25);border:1px solid #FAB387;"></div>走过的死胡同</div>
+        <div class="maze-legend-item"><div class="maze-legend-dot" style="background:#16141F;border:1px solid #2A2840;"></div>墙</div>
+      </div>
+      <figcaption>橙色小圆圈是<b>第几步访问到这个格子</b>。从 <code>S</code> 出发，先往右走一步（②），发现前后左右都是墙或已经走过的格子——<b>死胡同</b>，只能原路退回 <code>S</code>；退回后换一个方向，往下走（③④⑤⑥），再往下（⑦），最后往右恰好到达终点 <code>E</code>（⑧）。</figcaption>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>"死胡同"是 DFS 的常态，不是例外：</b>走到②那一步时，DFS 并不知道这个方向是死路——它是<b>先走过去试一下，发现真的走不通了，才退回来换方向</b>。这种"先试错、走不通再退回上一步"的动作，就叫<b>回溯</b>，是 DFS 天然自带的行为，会在④节详细说明。</div>
+    </div>
+
+    <div class="section-body">
+      <p>如果把每一步的访问，看成一次函数调用（访问一个格子 = 调用一次 <code>DFS</code> 函数，尝试它的每个方向 = 在函数里递归调用自己），DFS 走迷宫的过程，用<b>函数调用栈</b>来看会更清楚——走得越深，栈里摞的层数就越多；一旦某个方向撞墙或者退无可退，这一层就从栈里弹出去，退回上一层继续尝试其它方向：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="stack-wrap">
+        <div class="stack-col">
+          <div class="stack-title">走到死胡同（第②步）时的调用栈</div>
+          <div class="stack-frames">
+            <div class="stack-frame">(0,0)</div>
+            <div class="stack-frame top">(0,1)</div>
+          </div>
+          <div class="stack-base">栈底</div>
+        </div>
+        <div class="stack-col">
+          <div class="stack-title">找到终点（第⑧步）时的调用栈</div>
+          <div class="stack-frames">
+            <div class="stack-frame">(0,0)</div>
+            <div class="stack-frame">(1,0)</div>
+            <div class="stack-frame">(2,0)</div>
+            <div class="stack-frame">(2,1)</div>
+            <div class="stack-frame">(2,2)</div>
+            <div class="stack-frame">(3,2)</div>
+            <div class="stack-frame top">(3,3)</div>
+          </div>
+          <div class="stack-base">栈底</div>
+        </div>
+      </div>
+      <figcaption>左边走到死胡同时，栈里只有 2 层——(0,1) 这一层发现无路可走，直接从栈里弹出（对应函数 <code>return</code>），退回 (0,0) 这一层继续试下一个方向。右边找到终点时，栈里摞了 7 层，正好对应从起点到终点经过的 7 个格子——这也是为什么 DFS 又常被描述成"用递归的调用栈，隐式地记录了走过的完整路径"。</figcaption>
+    </div>
+
+    <div class="sub-title" id="s3">③ 完整代码实现</div>
+    <div class="section-body">
+      <p>把上面的迷宫用二维数组表示（<code>0</code> 表示可以走，<code>1</code> 表示墙），写出完整的、可以直接编译运行的程序：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · DFS 走迷宫（完整可运行程序）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">maze</span><span class="pnc">[</span><span class="num">4</span><span class="pnc">][</span><span class="num">4</span><span class="pnc">]</span> <span class="op">=</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">    <span class="pnc">{</span><span class="num">0</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">},</span>  <span class="cmt">// 第0行：对应演示图的第一行</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">    <span class="pnc">{</span><span class="num">0</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">},</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">    <span class="pnc">{</span><span class="num">0</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">},</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">    <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">}</span>   <span class="cmt">// 第3行，(3,3) 是终点，值是 0（可以走）</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd"><span class="pnc">};</span>  <span class="cmt">// 0 = 可以走，1 = 墙，和演示图完全对应</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">bool</span> <span class="fn">visited</span><span class="pnc">[</span><span class="num">4</span><span class="pnc">][</span><span class="num">4</span><span class="pnc">];</span>  <span class="cmt">// 全局数组，C++ 会自动清零（全部是 false），不用手动初始化</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="typ">bool</span> <span class="fn">found</span> <span class="op">=</span> <span class="kw">false</span><span class="pnc">;</span>  <span class="cmt">// 是否已经找到终点</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd"><span class="typ">int</span> <span class="fn">result</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>  <span class="cmt">// 到达终点时一共走了多少步</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="cmt">// 四个方向：右、下、左、上（和演示图的尝试顺序一致）</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="typ">int</span> <span class="fn">dr</span><span class="pnc">[]</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">0</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">,</span> <span class="op">-</span><span class="num">1</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="typ">int</span> <span class="fn">dc</span><span class="pnc">[]</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">,</span> <span class="op">-</span><span class="num">1</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">19</td><td class="cd"><span class="typ">void</span> <span class="fn">DFS</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">r</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">c</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">steps</span><span class="pnc">)</span>  <span class="cmt">// steps：走到 (r,c) 已经花了几步</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">r</span> <span class="op">==</span> <span class="num">3</span> <span class="op">&amp;&amp;</span> <span class="fn">c</span> <span class="op">==</span> <span class="num">3</span><span class="pnc">)</span>  <span class="cmt">// 走到了终点</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">        <span class="fn">found</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">24</td><td class="cd">        <span class="fn">result</span> <span class="op">=</span> <span class="fn">steps</span><span class="pnc">;</span>  <span class="cmt">// 当场把步数记下来，不能指望递归返回后再读 steps</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">        <span class="kw">return</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd"></td></tr>
+          <tr><td class="ln">28</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">d</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">d</span> <span class="op">&lt;</span> <span class="num">4</span><span class="pnc">;</span> <span class="fn">d</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 依次尝试四个方向</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">30</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">found</span><span class="pnc">)</span> <span class="kw">return</span><span class="pnc">;</span>  <span class="cmt">// 别的分支已经找到终点，不用再试了</span></td></tr>
+          <tr><td class="ln">31</td><td class="cd"></td></tr>
+          <tr><td class="ln">32</td><td class="cd">        <span class="typ">int</span> <span class="fn">nr</span> <span class="op">=</span> <span class="fn">r</span> <span class="op">+</span> <span class="fn">dr</span><span class="pnc">[</span><span class="fn">d</span><span class="pnc">],</span> <span class="fn">nc</span> <span class="op">=</span> <span class="fn">c</span> <span class="op">+</span> <span class="fn">dc</span><span class="pnc">[</span><span class="fn">d</span><span class="pnc">];</span>  <span class="cmt">// 下一个格子的坐标</span></td></tr>
+          <tr><td class="ln">33</td><td class="cd"></td></tr>
+          <tr><td class="ln">34</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">nr</span> <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> <span class="fn">nr</span> <span class="op">&gt;=</span> <span class="num">4</span> <span class="op">||</span> <span class="fn">nc</span> <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> <span class="fn">nc</span> <span class="op">&gt;=</span> <span class="num">4</span><span class="pnc">)</span>  <span class="cmt">// 越界，跳过</span></td></tr>
+          <tr><td class="ln">35</td><td class="cd">        <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">36</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">maze</span><span class="pnc">[</span><span class="fn">nr</span><span class="pnc">][</span><span class="fn">nc</span><span class="pnc">]</span> <span class="op">==</span> <span class="num">1</span> <span class="op">||</span> <span class="fn">visited</span><span class="pnc">[</span><span class="fn">nr</span><span class="pnc">][</span><span class="fn">nc</span><span class="pnc">])</span>  <span class="cmt">// 是墙，或者已经走过，跳过</span></td></tr>
+          <tr><td class="ln">37</td><td class="cd">        <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">38</td><td class="cd"></td></tr>
+          <tr><td class="ln">39</td><td class="cd">        <span class="fn">visited</span><span class="pnc">[</span><span class="fn">nr</span><span class="pnc">][</span><span class="fn">nc</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span>  <span class="cmt">// 标记这个格子走过了，出发前先标记</span></td></tr>
+          <tr class="hl"><td class="ln">40</td><td class="cd">        <span class="fn">DFS</span><span class="pnc">(</span><span class="fn">nr</span><span class="pnc">,</span> <span class="fn">nc</span><span class="pnc">,</span> <span class="fn">steps</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">);</span>  <span class="cmt">// 递归深入这个方向，步数 +1</span></td></tr>
+          <tr><td class="ln">41</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">42</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">43</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">44</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr class="hl"><td class="ln">45</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">46</td><td class="cd">    <span class="fn">visited</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">][</span><span class="num">0</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span>  <span class="cmt">// 起点也要标记，否则可能被兜圈子走回来</span></td></tr>
+          <tr class="hl"><td class="ln">47</td><td class="cd">    <span class="fn">DFS</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">,</span> <span class="num">0</span><span class="pnc">);</span>  <span class="cmt">// 从起点 (0,0) 出发，起点自己不算一步，steps 从 0 开始</span></td></tr>
+          <tr class="hl"><td class="ln">48</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">49</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">found</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"找到终点！走了 "</span> <span class="op">&lt;&lt;</span> <span class="fn">result</span> <span class="op">&lt;&lt;</span> <span class="str">" 步"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">50</td><td class="cd">    <span class="kw">else</span>       <span class="pnc">{</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"没有路可以走到终点"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">51</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">52</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="num-visual" style="padding:16px 24px;">
+      <div class="num-visual-title" style="margin-bottom:10px;">运行结果</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--code-str);">找到终点！走了 7 步</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么 <code>steps</code> 不需要像 <code>visited</code> 那样手动"撤销"？</b>因为 <code>steps</code> 是<b>函数参数</b>，每一层递归调用都有自己独立的一份——递归深入的时候自然 <code>+1</code> 传给下一层，函数返回（回溯）的时候，这一层的 <code>steps</code> 就随着栈帧一起消失了，不需要手动写"steps--"。这和 11.1 节讲的"深度"是同一件事：每往下一层，深度自然加一，回退的时候也不用手动做任何清理。</div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">🎓</span>
+      <div><b>拓展：<code>result</code> 记下的步数不一定是"最短"的。</b>DFS 只保证能找到<b>一条</b>能走到终点的路，不保证这条路是所有可行路径里最短的——如果把方向尝试顺序换成"下、右、左、上"，走出来的路径和步数完全可能不一样。真正能保证"最短步数"的是 BFS（还记得 11.3 节末尾提到的那个"后面章节会正式学到"的名字吗？），这也是 DFS 和 BFS 最核心的区别之一，留到"搜索进阶"模块详细展开。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>为什么 <code>visited</code> 没有手动初始化，也不会有随机的"垃圾值"？</b>因为它是写在 <code>main</code> 函数外面的<b>全局数组</b>——C++ 规定全局变量在程序启动时会自动清零（<code>int</code> 全局变量默认是 <code>0</code>，<code>bool</code> 全局变量默认是 <code>false</code>）。但如果把 <code>visited</code> 挪到 <code>main</code> 函数<b>内部</b>去声明，它就变成了局部数组，局部数组不会自动清零，里面会是不确定的垃圾值，必须自己手动初始化（比如 <code>memset(visited, false, sizeof(visited));</code>）才能保证一开始全是 <code>false</code>。</div>
+    </div>
+
+    <div class="sub-title" id="s4">④ 两个关键点：标记访问过 与 回溯</div>
+    <div class="section-body">
+      <p>对比 11.3 节树上的 DFS（前序遍历），走迷宫的 DFS 多了一个必须要做的动作——<b>标记某个格子"已经走过"</b>（<code>visited</code> 数组）。这是因为树不会绕圈，从根往下走，永远不可能重新走回父节点；但迷宫（以及更一般的图）里，从一个格子出发，很可能兜一圈又走回原来的格子。如果不标记，DFS 会在几个格子之间来回打转，永远停不下来。</p>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">🎓</span>
+      <div><b>"回溯"这个词，其实描述的正是递归函数自然的返回过程：</b>当一个格子的四个方向都试过、都走不通（撞墙、越界、或者已经走过）之后，<code>for</code> 循环结束，函数自然执行到最后一行，<code>return</code> 回到上一层调用它的地方——这个"退回上一层"的动作就是回溯，不需要专门写额外的代码去"撤销"什么。下一节会讲一类更强调"主动撤销选择"的问题（比如排列组合），那时候回溯的动作会更明显地体现在代码里。</div>
+    </div>
+
+    <div class="sub-title" id="s5">⑤ 常见陷阱</div>
+    <div class="section-body">
+      <p>把本节内容汇总成几条最容易踩坑的规则：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记标记 <code>visited</code>，或者标记的时机不对：</b>必须在"即将递归进入某个格子之前"就标记它，而不是进入递归函数内部才标记——如果四个方向都各自在递归调用里才标记，同一个格子可能会被多个方向同时重复访问，既浪费时间，也可能导致栈溢出。上面代码选择在第 39 行、调用 <code>DFS</code> 之前先标记，就是为了避免这个问题。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记判断越界：</b>四个方向里，任何一个方向都可能走出网格范围（比如从第 0 行往上走）。第 34 行的越界检查必须放在访问 <code>maze[nr][nc]</code> 之前，顺序反了会导致数组越界访问。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>递归深度过大导致栈溢出：</b>DFS 的递归深度最坏情况下等于网格里格子的总数（一条路走遍所有格子）。如果网格特别大（比如几十万个格子），递归可能会因为深度太深而栈溢出——这种情况下通常需要把递归改写成用栈模拟的迭代版本，这里先了解这个风险即可。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>下一节（12.2）讲<b>回溯</b>——一类更强调"做出选择、发现不行就撤销选择、换一个选择再试"的问题（比如排列、组合、N 皇后），本质上仍然是 DFS，但撤销选择这个动作会更明显地写在代码里。再往后的 12.3（剪枝优化）和 12.4（记忆化搜索），都是在这套 DFS 框架基础上，想办法减少不必要的重复搜索。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十二 · 搜索基础 · 12.1 DFS 深度优先搜索</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A11_04_二叉搜索树.html">← 11.4 二叉搜索树</a>
+      <a class="nav-btn" href="A12_02_回溯.html">12.2 回溯 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
