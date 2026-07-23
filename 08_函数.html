@@ -118,6 +118,31 @@
   .rf-ret  { color: #6C7086; font-size: 11.5px }
   .rec-divider { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #45475A; font-size: 20px; padding-top: 24px }
   .rec-div-label { font-size: 10px; color: #45475A; letter-spacing: .06em }
+
+  /* 内存地址可视化（参数传递用，风格与第九章保持一致） */
+  .mem-visual {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 20px 24px; margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    overflow-x: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+  .mv-title { font-size: 11px; color: #6C7086; margin-bottom: 14px; letter-spacing: .06em }
+  .mv-grid { display: flex; gap: 4px; align-items: stretch; flex-wrap: nowrap }
+  .mv-cell { display: flex; flex-direction: column; align-items: center; min-width: 78px; flex-shrink: 0 }
+  .mv-box { width: 100%; height: 52px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; border: 2px solid; flex-shrink: 0 }
+  .mv-box.var-a { background: rgba(250,179,135,.15); border-color: rgba(250,179,135,.5); color: var(--code-num) }
+  .mv-box.var-b { background: rgba(166,227,161,.15); border-color: rgba(166,227,161,.5); color: var(--code-str) }
+  .mv-box.ptr-p { background: rgba(137,180,250,.15); border-color: rgba(137,180,250,.5); color: var(--code-fn) }
+  .mv-box.shared { background: rgba(203,166,247,.18); border-color: rgba(203,166,247,.55); color: var(--code-kw) }
+  .mv-addr { font-size: 10.5px; color: #6C7086; margin-top: 5px; text-align: center }
+  .mv-name { font-size: 12px; color: var(--code-text); margin-bottom: 5px; text-align: center }
+  .mv-arrow { display: flex; align-items: center; gap: 0; align-self: center; padding: 0 4px; margin-top: 18px }
+  .mv-arrow-line { height: 2px; width: 28px; background: var(--code-op) }
+  .mv-arrow-head { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid var(--code-op) }
+  .mv-legend { display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap }
+  .mv-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #6C7086 }
+  .mv-legend-box { width: 14px; height: 14px; border-radius: 3px; border: 2px solid; flex-shrink: 0 }
 </style>
 </head>
 <body>
@@ -378,6 +403,28 @@
         </table>
       </div>
     </div>
+
+    <!-- 值传递内存可视化：两块独立内存，互不相干 -->
+    <div class="mem-visual">
+      <div class="mv-title">TryDouble(a) 调用瞬间 —— a 和 x 是两块完全独立的内存</div>
+      <div class="mv-grid">
+        <div class="mv-cell">
+          <div class="mv-name" style="color:var(--code-num)">a（main 里）</div>
+          <div class="mv-box var-a">5</div>
+          <div class="mv-addr">0x1000</div>
+        </div>
+        <div class="mv-cell" style="margin-left:20px">
+          <div class="mv-name" style="color:var(--code-fn)">x（函数里的副本）</div>
+          <div class="mv-box ptr-p">5 → 10</div>
+          <div class="mv-addr">0x2000（另一块地址）</div>
+        </div>
+      </div>
+      <div class="mv-legend">
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(250,179,135,.15);border-color:rgba(250,179,135,.5)"></div>a 的地址是 0x1000，从头到尾没变过</div>
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.5)"></div>x 是另一块地址 0x2000，被改成 10 也不会影响 a</div>
+      </div>
+    </div>
+
     <div class="callout info">
       <span class="callout-icon">📌</span>
       <div><b>内存模型：</b>值传递会在栈上额外分配一块空间存放副本。对于 <code>int</code> 这样的小型类型开销极小；但若传递大型结构体或 <code>string</code>，拷贝成本较高，此时应改用引用传递。</div>
@@ -419,6 +466,23 @@
         </table>
       </div>
     </div>
+
+    <!-- 引用传递内存可视化：a 和 x 是同一块内存的两个名字 -->
+    <div class="mem-visual">
+      <div class="mv-title">RealDouble(a) 调用瞬间 —— a 和 x 其实是同一块内存的两个名字</div>
+      <div class="mv-grid">
+        <div class="mv-cell">
+          <div class="mv-name" style="color:var(--code-kw)">a（main 里）/ x（引用形参）</div>
+          <div class="mv-box shared">5 → 10</div>
+          <div class="mv-addr">同一个地址 0x1000</div>
+        </div>
+      </div>
+      <div class="mv-legend">
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(203,166,247,.18);border-color:rgba(203,166,247,.55)"></div>只有一块内存，只是同时挂了 a、x 两个名字牌</div>
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(203,166,247,.18);border-color:rgba(203,166,247,.55)"></div>不管通过哪个名字改，改的都是同一个值</div>
+      </div>
+    </div>
+
     <div class="callout tip">
       <span class="callout-icon">💡</span>
       <div><b>const 引用：只读不改</b><br>如果只想避免大对象拷贝、但不需要修改原值，可以用 <code>const int &amp;x</code>。编译器会阻止你在函数内修改 <code>x</code>，既安全又高效。</div>
@@ -461,6 +525,32 @@
         </table>
       </div>
     </div>
+
+    <!-- 指针传递内存可视化：x 存的是地址，箭头指向 a -->
+    <div class="mem-visual">
+      <div class="mv-title">PtrDouble(&amp;a) 调用瞬间 —— x 里存的不是数值，而是 a 的地址</div>
+      <div class="mv-grid">
+        <div class="mv-cell">
+          <div class="mv-name" style="color:var(--code-fn)">x（指针形参）</div>
+          <div class="mv-box ptr-p" style="font-size:12px">0x1000</div>
+          <div class="mv-addr">0x2000</div>
+        </div>
+        <div class="mv-arrow">
+          <div class="mv-arrow-line"></div>
+          <div class="mv-arrow-head"></div>
+        </div>
+        <div class="mv-cell">
+          <div class="mv-name" style="color:var(--code-num)">a（main 里）</div>
+          <div class="mv-box var-a">5 → 10</div>
+          <div class="mv-addr">0x1000</div>
+        </div>
+      </div>
+      <div class="mv-legend">
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.5)"></div>x 自己也占一块内存（0x2000），但存的内容是 a 的地址</div>
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(250,179,135,.15);border-color:rgba(250,179,135,.5)"></div>写 <code>*x</code> 就是"顺着箭头走过去"，操作箭头指向的 a</div>
+      </div>
+    </div>
+
     <div class="callout warn">
       <span class="callout-icon">⚠️</span>
       <div><b>指针 vs 引用的区别：</b>引用一旦绑定就不能改变指向，而指针可以指向不同变量，也可以为 <code>nullptr</code>（空指针）。因此指针比引用更灵活，但也更危险——解引用空指针会导致程序崩溃。</div>
@@ -542,6 +632,14 @@
     <div class="section-body">
       <p>我们知道函数可以调用其他函数——那函数能不能调用<strong>自己</strong>？答案是可以，这就是<b>递归</b>。</p>
       <p>以计算 <code>4!</code>（4的阶乘）为例：<code>4! = 4 × 3!</code>，而 <code>3! = 3 × 2!</code>，<code>2! = 2 × 1!</code>，<code>1! = 1</code>。问题的规模在每一步都缩小了一级，直到答案已知为止。这种"把大问题分解成同结构的小问题"的思路，正是递归的本质。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🪆</span>
+      <div><b>可以把递归想象成一套俄罗斯套娃：</b>打开最大的娃娃，里面是一个一模一样、只是更小的娃娃；再打开它，里面还是更小的一个……直到打开最里面那个<b>打不开、也不用再打开</b>的实心娃娃（这就是"边界"）。之后再把打开的娃娃一个一个合起来，就是从里往外"组装"的过程（这就是"回归"）。<code>Factorial(4)</code> 调用 <code>Factorial(3)</code>，就像打开一层套娃看到更小的一层——直到 <code>Factorial(1)</code> 这个"实心娃娃"，不用再往下拆了。</div>
+    </div>
+
+    <div class="section-body">
       <p>一个正确的递归函数必须具备两个要素，缺一不可：</p>
     </div>
 

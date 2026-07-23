@@ -167,6 +167,40 @@
       <p>计算机的内存就像一排有编号的格子，每个格子都有一个唯一的编号，称为<strong>地址</strong>。每个变量都占据内存中的一段连续格子。使用 <code>&amp;</code> 取址运算符可以获取变量的首地址：</p>
     </div>
 
+    <div class="mem-visual">
+      <div class="mv-title">先建立直觉：把内存想象成一排连续编号的储物柜</div>
+      <div class="mv-grid">
+        <div class="mv-cell">
+          <div class="mv-name" style="color:#2A2840">空柜子</div>
+          <div class="mv-box empty">?</div>
+          <div class="mv-addr">0x1000</div>
+        </div>
+        <div class="mv-cell">
+          <div class="mv-name" style="color:var(--code-num)">a</div>
+          <div class="mv-box var-a">10</div>
+          <div class="mv-addr">0x1004</div>
+        </div>
+        <div class="mv-cell">
+          <div class="mv-name" style="color:#2A2840">空柜子</div>
+          <div class="mv-box empty">?</div>
+          <div class="mv-addr">0x1008</div>
+        </div>
+        <div class="mv-cell">
+          <div class="mv-name" style="color:#2A2840">空柜子</div>
+          <div class="mv-box empty">?</div>
+          <div class="mv-addr">0x100C</div>
+        </div>
+      </div>
+      <div class="mv-legend">
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(250,179,135,.15);border-color:rgba(250,179,135,.5)"></div>声明 <code>int a = 10;</code> 时，编译器找了一个空柜子，把 10 放进去，柜子编号是 0x1004</div>
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:#16141F;border-color:#2A2840"></div>其他柜子这时还没被用到，里面是未知的垃圾值</div>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p><code>&amp;a</code> 问的就是一句话——<b>"变量 a 放在哪个编号的柜子里？"</b>——答案就是这个柜子的编号（十六进制表示的地址）。之后 9.2 节要学的指针，本质上就是"专门用来记住某个柜子编号"的变量。</p>
+    </div>
+
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 取址运算符</span></div>
       <div class="code-body">
@@ -202,6 +236,11 @@
     <h2 class="section-title">指针变量</h2>
     <div class="section-body">
       <p>指针变量存储的是另一个变量的<strong>内存地址</strong>。通过指针，可以间接访问和修改它所指向的变量。</p>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🎒</span>
+      <div><b>为什么需要指针？</b>假设你和同桌要共用一本很厚的字典。与其把整本字典搬来搬去，不如直接告诉同桌"字典在我书包第二层"——同桌凭这句话就能自己找到并翻阅，不用真的把字典搬一次。这句"东西放在哪里"的话，对应的就是指针里存的<b>地址</b>：指针本身很小（不管指向多大的数据，指针的大小都固定），但通过它能找到并操作任意大小的数据。第八章讲的"指针传递"用的正是这个思路——传的是"字典在哪"，而不是字典本身。</div>
     </div>
 
     <!-- Pointer visual: p → a -->
@@ -370,6 +409,11 @@
     <h2 class="section-title">引用</h2>
     <div class="section-body">
       <p>引用是变量的<strong>别名</strong>，对引用的所有操作等同于直接操作原变量。引用比指针更安全、语法更简洁，声明时必须立即初始化，且绑定后不能再改变。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🏷️</span>
+      <div><b>"别名"是什么意思？</b>就像班里有个同学大家都叫他"外号"，外号和学籍册上的本名说的是<b>同一个人</b>——喊外号或喊本名，答应的都是他，成绩单上记的也是同一份成绩。<code>int &amp;ref = a;</code> 之后，<code>ref</code> 和 <code>a</code> 就是同一块内存的两个名字，不存在"复制了一份"，改 <code>ref</code> 就是改 <code>a</code> 本身。这一点和 9.2 节的指针不同：指针 <code>p</code> 是另外找了一个柜子存"a 的编号"，而引用<b>压根没有新柜子</b>，只是给已有的柜子多贴了一张名字标签。</div>
     </div>
 
     <!-- Reference visual -->

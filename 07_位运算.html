@@ -170,6 +170,19 @@
       <p>这样做有什么好处？两个原因：一是<b>速度极快</b>，位运算是 CPU 最底层支持的操作，比乘除法快得多；二是能实现一些用普通算术运算很难甚至无法做到的技巧，比如用一个整数同时表示"32 个开关的状态"（状态压缩）、不用额外变量交换两个数、快速判断一个数是不是 2 的幂等等。这些技巧在竞赛中出现频率很高，值得花时间掌握。</p>
     </div>
 
+    <div style="background:var(--code-bg);border-radius:var(--r-md);padding:14px 18px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:12px;">
+      <div style="color:#6C7086;margin-bottom:8px;">📌 忘记二进制了？花 10 秒复习一下：二进制每一位都对应一个"2 的次方"位值，从右往左依次是 1、2、4、8、16、32、64、128……以数字 <b style="color:var(--code-text)">6</b> 为例（只需要用到前 3 位）：</div>
+      <div style="display:flex;gap:2px;margin-bottom:4px;padding-left:0;">
+        <div style="width:20px;text-align:center;color:#6C7086;font-size:10px;">4</div>
+        <div style="width:20px;text-align:center;color:#6C7086;font-size:10px;">2</div>
+        <div style="width:20px;text-align:center;color:#6C7086;font-size:10px;">1</div>
+      </div>
+      <div class="bit44">
+        <div class="b44 hi">1</div><div class="b44 hi">1</div><div class="b44 z">0</div>
+      </div>
+      <div style="color:#6C7086;margin-top:8px;font-size:11.5px;">高亮的两位对应位值 4 和 2，相加 4 + 2 = <b style="color:var(--code-str)">6</b> —— 这就是为什么二进制 <code>110</code> 就是十进制的 <code>6</code>。想系统复习，请回顾 <a href="02_03_原码反码补码.html">2.3 节「原码反码补码」</a>。下面表格里的每一行位运算，本质上都是把两个数按这种"位值对齐"的方式一位一位地比较。</div>
+    </div>
+
     <table class="op-overview">
       <thead><tr><th>符号</th><th>名称与规则</th><th>记忆口诀</th><th>优先级</th></tr></thead>
       <tbody>
@@ -346,6 +359,38 @@
       </div>
     </div>
 
+    <div class="bin-op-card">
+      <div class="bin-op-header">
+        <div class="bin-op-sym sym-or">|</div>
+        <div>
+          <div class="bin-op-title sym-or-t">READ | WRITE = 3（二进制 011）</div>
+          <div style="font-size:12px;color:#6C7086;margin-top:2px">把"可读"和"可写"两个独立的开关，合并进同一个整数里</div>
+        </div>
+      </div>
+      <div class="bin-row">
+        <span class="bin-label">READ</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd z">0</div><div class="bd hi-o">1</div>
+        </div>
+        <span class="bin-decimal">(1) 第0位=可读</span>
+      </div>
+      <div class="bin-row">
+        <span class="bin-label">WRITE</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd hi-o">1</div><div class="bd z">0</div>
+        </div>
+        <span class="bin-decimal">(2) 第1位=可写</span>
+      </div>
+      <div class="bin-sep"></div>
+      <div class="bin-row">
+        <span class="bin-label">=</span>
+        <div class="bin-digits">
+          <div class="bd z">0</div><div class="bd hi-o">1</div><div class="bd hi-o">1</div>
+        </div>
+        <span class="bin-decimal" style="color:var(--code-str);font-weight:700">(3) 同时拥有两个权限 ✓</span>
+      </div>
+    </div>
+
     <div class="callout tip">
       <span class="callout-icon">💡</span>
       <div><b>为什么要用按位或合并标志位？</b>如果每种权限都单独定义一个 <code>bool</code> 变量，权限一多就要维护一大堆变量；而用不同的<b>二进制位</b>分别代表一种权限，就能把好几个开关状态压缩进<b>一个整数</b>里存储和传递，既省空间又方便统一判断（配合按位与就能反过来查询"是否拥有某个权限"，见 7.1.1 节）。</div>
@@ -483,9 +528,47 @@
       </div>
     </div>
 
+    <div class="section-body">
+      <p>光看符号推导可能有点绕，不如直接代入具体数字，一行一行地跟踪 <code>a</code>、<code>b</code> 的值是怎么变化的。设初始 <code>a = 6</code>、<code>b = 3</code>（和本节前面的例子保持一致）：</p>
+    </div>
+
+    <table class="op-overview">
+      <thead><tr><th>步骤</th><th>代码</th><th>计算过程</th><th>a 的值</th><th>b 的值</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>—</td>
+          <td><div class="op-name">初始状态</div></td>
+          <td><div class="op-rule">—</div></td>
+          <td><div class="op-name">6</div></td>
+          <td><div class="op-name">3</div></td>
+        </tr>
+        <tr>
+          <td>①</td>
+          <td><div class="op-name">a ^= b</div></td>
+          <td><div class="op-rule">6 ^ 3 = 5</div></td>
+          <td><div class="op-name" style="color:var(--code-kw)">5</div></td>
+          <td><div class="op-name">3（不变）</div></td>
+        </tr>
+        <tr>
+          <td>②</td>
+          <td><div class="op-name">b ^= a</div></td>
+          <td><div class="op-rule">3 ^ 5 = 6</div></td>
+          <td><div class="op-name">5（不变）</div></td>
+          <td><div class="op-name" style="color:var(--code-kw)">6</div></td>
+        </tr>
+        <tr>
+          <td>③</td>
+          <td><div class="op-name">a ^= b</div></td>
+          <td><div class="op-rule">5 ^ 6 = 3</div></td>
+          <td><div class="op-name" style="color:var(--code-kw)">3</div></td>
+          <td><div class="op-name">6（不变）</div></td>
+        </tr>
+      </tbody>
+    </table>
+
     <div class="callout info">
       <span class="callout-icon">💡</span>
-      <div><b>用途① 是怎么推导出来的？</b>沿着"自己异或自己得 0、和 0 异或不变"这两条性质往下推：第 2 行 <code>b^=a</code> 实际算的是 <code>b^(a^b)</code>，异或满足交换律，可以重新排列成 <code>(b^b)^a</code>，也就是 <code>0^a = a</code>——所以第 2 行结束后 <code>b</code> 就已经变成了原来的 <code>a</code>。第 3 行同理可以推出 <code>a</code> 变成了原来的 <code>b</code>。虽然节省了一个临时变量，但可读性不如直接用临时变量交换，实际工程代码中很少这样用，了解原理即可。</div>
+      <div><b>三行走完，a 变成了原来的 3（原来的 b），b 变成了原来的 6（原来的 a）——两个数确实互换了！</b>背后的原理沿着"自己异或自己得 0、和 0 异或不变"这两条性质往下推：第②行 <code>b^=a</code> 实际算的是 <code>b^(a^b)</code>，异或满足交换律，可以重新排列成 <code>(b^b)^a</code>，也就是 <code>0^a = a</code>——所以第②行结束后 <code>b</code> 就已经变成了原来的 <code>a</code>。第③行同理可以推出 <code>a</code> 变成了原来的 <code>b</code>。虽然节省了一个临时变量，但可读性不如直接用临时变量交换，实际工程代码中很少这样用，了解原理即可。</div>
     </div>
 
     <div class="callout tip">

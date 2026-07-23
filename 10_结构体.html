@@ -177,8 +177,9 @@
       <li><a href="#s1"><span class="toc-num">10.1</span>定义结构体</a></li>
       <li><a href="#s2"><span class="toc-num">10.2</span>使用结构体</a></li>
       <li><a href="#s3"><span class="toc-num">10.3</span>结构体数组</a></li>
-      <li><a href="#s4"><span class="toc-num">10.4</span>结构体与函数</a></li>
-      <li><a href="#s5"><span class="toc-num">10.5</span>结构体与排序</a></li>
+      <li><a href="#s4"><span class="toc-num">10.4</span>结构体的成员函数</a></li>
+      <li><a href="#s5"><span class="toc-num">10.5</span>结构体作为函数参数</a></li>
+      <li><a href="#s6"><span class="toc-num">10.6</span>结构体与排序</a></li>
     </ul>
   </nav>
 
@@ -357,10 +358,147 @@
     </div>
   </section>
 
-  <!-- ═══ 10.4 结构体与函数 ═══ -->
+  <!-- ═══ 10.4 结构体的成员函数 ═══ -->
   <section class="section" id="s4">
     <p class="section-label">10.4</p>
-    <h2 class="section-title">结构体与函数</h2>
+    <h2 class="section-title">结构体的成员函数</h2>
+    <div class="section-body">
+      <p>前面的例子里，"数据"（姓名、年龄、分数）和"操作数据的函数"（比如打印学生信息）是分开写的：数据放在 <code>struct</code> 里，函数则是一个独立的普通函数，调用时要把结构体变量当参数传进去，像 <code>PrintStudent(s1)</code> 这样。</p>
+      <p>其实 C++ 的 <code>struct</code> 不只能装数据，也可以把"操作这些数据的函数"<strong>直接写在结构体内部</strong>，这样的函数叫<strong>成员函数</strong>。成员函数天生就能访问同一个结构体里的其他成员，不需要再通过参数传入、也不需要加前缀。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 把函数写进结构体内部</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="fn">Student</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> <span class="fn">name</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">age</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">float</span> <span class="fn">score</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl-g"><td class="ln">7</td><td class="cd">    <span class="cmt">// 成员函数：写在结构体内部，直接用 name、score，不用加前缀</span></td></tr>
+          <tr class="hl-g"><td class="ln">8</td><td class="cd">    <span class="kw">void</span> <span class="fn">Print</span><span class="pnc">()</span></td></tr>
+          <tr class="hl-g"><td class="ln">9</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl-g"><td class="ln">10</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">name</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">score</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-g"><td class="ln">11</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr class="hl-g"><td class="ln">13</td><td class="cd">    <span class="cmt">// 成员函数也可以有返回值和参数，和普通函数一样</span></td></tr>
+          <tr class="hl-g"><td class="ln">14</td><td class="cd">    <span class="typ">bool</span> <span class="fn">IsPass</span><span class="pnc">()</span></td></tr>
+          <tr class="hl-g"><td class="ln">15</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl-g"><td class="ln">16</td><td class="cd">        <span class="kw">return</span> <span class="fn">score</span> <span class="op">&gt;=</span> <span class="num">60.0</span><span class="pnc">;</span>  <span class="cmt">// 60 分及格</span></td></tr>
+          <tr class="hl-g"><td class="ln">17</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="fn">Student</span> <span class="fn">s1</span> <span class="op">=</span> <span class="pnc">{</span><span class="str">"小明"</span><span class="pnc">,</span> <span class="num">15</span><span class="pnc">,</span> <span class="num">92.5</span><span class="pnc">};</span></td></tr>
+          <tr class="hl"><td class="ln">23</td><td class="cd">    <span class="fn">s1</span><span class="pnc">.</span><span class="fn">Print</span><span class="pnc">();</span>          <span class="cmt">// 小明 92.5，用 . 调用成员函数，和访问成员变量的写法一样</span></td></tr>
+          <tr class="hl"><td class="ln">24</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">s1</span><span class="pnc">.</span><span class="fn">IsPass</span><span class="pnc">())</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"及格了！"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>对比一下：</b>之前写法是 <code>PrintStudent(s1)</code>——把 <code>s1</code> 当"原料"喂给一个外部函数；现在写法是 <code>s1.Print()</code>——直接叫 <code>s1</code> 自己去执行"打印"这个动作。后者读起来更像一句话："让 s1 打印自己"，这正是"面向对象"思路的雏形：把数据和操作数据的行为绑定在一起。第十二章会在此基础上系统展开。</div>
+    </div>
+
+    <h3 class="sub-title">构造函数：创建对象时自动执行的初始化代码</h3>
+    <div class="section-body">
+      <p>前面创建 <code>Student</code> 变量，要么逐个成员赋值（<code>s1.name = "小明";</code>），要么用花括号按顺序初始化（<code>Student s1 = {"小明", 15, 92.5};</code>）。C++ 还提供了第三种、更灵活的方式——<strong>构造函数</strong>：一个和结构体<strong>同名</strong>、<strong>没有返回类型</strong>的特殊成员函数，在每次创建对象时会被<strong>自动调用</strong>，专门用来完成初始化工作。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 构造函数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="fn">Student</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> <span class="fn">name</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">age</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">float</span> <span class="fn">score</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr class="hl-g"><td class="ln">7</td><td class="cd">    <span class="cmt">// 构造函数：函数名和结构体名一样叫 Student，没有返回类型（连 void 都不写）</span></td></tr>
+          <tr class="hl-g"><td class="ln">8</td><td class="cd">    <span class="fn">Student</span><span class="pnc">(</span><span class="typ">string</span> <span class="fn">n</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">float</span> <span class="fn">sc</span><span class="pnc">)</span></td></tr>
+          <tr class="hl-g"><td class="ln">9</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl-g"><td class="ln">10</td><td class="cd">        <span class="fn">name</span> <span class="op">=</span> <span class="fn">n</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-g"><td class="ln">11</td><td class="cd">        <span class="fn">age</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-g"><td class="ln">12</td><td class="cd">        <span class="fn">score</span> <span class="op">=</span> <span class="fn">sc</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-g"><td class="ln">13</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">name</span> <span class="op">&lt;&lt;</span> <span class="str">" 被创建了！"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr class="hl-g"><td class="ln">14</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">19</td><td class="cd">    <span class="fn">Student</span> <span class="fn">s1</span><span class="pnc">(</span><span class="str">"小明"</span><span class="pnc">,</span> <span class="num">15</span><span class="pnc">,</span> <span class="num">92.5</span><span class="pnc">);</span>  <span class="cmt">// 创建的瞬间自动调用构造函数，输出"小明 被创建了！"</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="fn">s1</span><span class="pnc">.</span><span class="fn">Print</span><span class="pnc">();</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>构造函数的两个关键特征：</b>① 函数名必须和结构体名<strong>完全一致</strong>；② <strong>没有返回类型</strong>，连 <code>void</code> 都不写——如果写了返回类型，编译器就不认为它是构造函数了。创建对象时写 <code>Student s1("小明", 15, 92.5)</code>（圆括号传参），而不是花括号，两者会分别匹配到构造函数和之前学过的"按顺序初始化"，本质上是两种不同的创建方式。</div>
+    </div>
+
+    <h3 class="sub-title">析构函数：对象销毁时自动执行的清理代码</h3>
+    <div class="section-body">
+      <p>和构造函数相对的是<strong>析构函数</strong>：对象<strong>销毁</strong>时（比如函数运行结束、变量离开作用域）自动调用的特殊函数，用来做"收尾工作"（比如释放构造函数里申请的资源）。写法是在结构体名前加一个 <code>~</code>，没有返回类型，也<strong>不能有参数</strong>——因为它是自动触发的，不需要（也无法）手动传参。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 析构函数</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">struct</span> <span class="fn">Student</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="typ">string</span> <span class="fn">name</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr class="hl-a"><td class="ln">5</td><td class="cd">    <span class="fn">Student</span><span class="pnc">(</span><span class="typ">string</span> <span class="fn">n</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="fn">name</span> <span class="op">=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">name</span> <span class="op">&lt;&lt;</span> <span class="str">" 出生"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">; }</span>  <span class="cmt">// 构造函数</span></td></tr>
+          <tr class="hl-a"><td class="ln">6</td><td class="cd">    <span class="op">~</span><span class="fn">Student</span><span class="pnc">()</span> <span class="pnc">{</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">name</span> <span class="op">&lt;&lt;</span> <span class="str">" 销毁"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">; }</span>  <span class="cmt">// 析构函数：~ + 结构体名，无参数无返回类型</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">    <span class="fn">Student</span> <span class="fn">s1</span><span class="pnc">(</span><span class="str">"小明"</span><span class="pnc">);</span>  <span class="cmt">// 输出：小明 出生</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"---函数继续运行---"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd"><span class="pnc">}</span> <span class="cmt">// s1 在这里离开作用域，自动输出：小明 销毁</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:stretch;gap:14px;background:var(--code-bg);border-radius:var(--r-md);padding:18px 22px;margin:18px 0;font-family:'JetBrains Mono',monospace;font-size:12.5px;overflow-x:auto;box-shadow:0 2px 8px rgba(0,0,0,.18);">
+      <div style="background:rgba(166,227,161,.14);border:1px solid rgba(166,227,161,.4);border-radius:6px;padding:10px 16px;text-align:center;white-space:nowrap;flex-shrink:0;color:var(--code-str)">
+        ① 构造函数自动执行<br><span style="font-size:11px;color:#6C7086">对象诞生时（如 <code style="color:#6C7086">Student s1(...)</code> 这一行）</span>
+      </div>
+      <div style="display:flex;align-items:center;color:#45475A;font-size:18px;flex-shrink:0">→</div>
+      <div style="background:rgba(137,180,250,.12);border:1px solid rgba(137,180,250,.35);border-radius:6px;padding:10px 16px;text-align:center;white-space:nowrap;flex-shrink:0;color:var(--code-fn)">
+        ② 正常使用对象<br><span style="font-size:11px;color:#6C7086">调用成员函数、访问/修改成员变量</span>
+      </div>
+      <div style="display:flex;align-items:center;color:#45475A;font-size:18px;flex-shrink:0">→</div>
+      <div style="background:rgba(245,194,231,.14);border:1px solid rgba(245,194,231,.4);border-radius:6px;padding:10px 16px;text-align:center;white-space:nowrap;flex-shrink:0;color:var(--code-type)">
+        ③ 析构函数自动执行<br><span style="font-size:11px;color:#6C7086">对象销毁时（如离开 <code style="color:#6C7086">{ }</code> 作用域）</span>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>不用手动调用构造/析构函数！</b>它们都是<strong>自动触发</strong>的——创建对象时自动调用构造函数，对象销毁时自动调用析构函数，代码里永远不会看到 <code>s1.Student(...)</code> 或 <code>s1.~Student()</code> 这样主动调用它们的写法。目前我们还没学到动态内存分配（<code>new</code>/<code>delete</code>），析构函数暂时只用来做简单的收尾提示；等第十二章学到动态内存管理后，析构函数会承担起"自动释放资源、防止内存泄漏"的重要职责。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>本节只介绍成员函数、构造函数、析构函数最基础的用法。</b>更完整的内容——构造函数的三种写法、初始化列表、拷贝构造函数、运算符重载等——将在 <a href="12_00_类与面向对象.html" style="color:var(--accent);font-weight:600;">第十二章「类与面向对象」</a> 中系统讲解。竞赛中的结构体大多数时候只用来"打包数据"，不必强行加上构造/析构函数；但理解这两个概念，能帮你更顺利地过渡到面向对象编程。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 10.5 结构体作为函数参数 ═══ -->
+  <section class="section" id="s5">
+    <p class="section-label">10.5</p>
+    <h2 class="section-title">结构体作为函数参数</h2>
     <div class="section-body">
       <p>结构体可以作为函数参数传递，同样分为值传递和引用传递两种方式。由于结构体往往包含多个字段，<strong>引用传递更为推荐</strong>，可避免昂贵的拷贝开销。</p>
     </div>
@@ -419,9 +557,9 @@
     </table>
   </section>
 
-  <!-- ═══ 10.5 排序 ═══ -->
-  <section class="section" id="s5">
-    <p class="section-label">10.5</p>
+  <!-- ═══ 10.6 排序 ═══ -->
+  <section class="section" id="s6">
+    <p class="section-label">10.6</p>
     <h2 class="section-title">结构体与排序</h2>
     <div class="section-body">
       <p>竞赛中，结构体最常用的场景之一就是配合 <code>sort()</code> 进行<strong>自定义排序</strong>。需要提供一个比较函数 <code>Cmp</code>，告诉 sort 按什么规则排序。</p>
