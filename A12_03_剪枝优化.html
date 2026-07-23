@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.3 剪枝优化 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "12.3"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--blue-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--blue); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 20px 18px; margin: 18px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 棋盘 */
+  .board-wrap { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+  .board-col { display: flex; flex-direction: column; align-items: center; }
+  .board-title { font-size: 11.5px; color: #A6ADC8; margin-bottom: 10px; font-family: 'Noto Sans SC', sans-serif; }
+  .board-grid { display: grid; grid-template-columns: repeat(4, 44px); grid-template-rows: repeat(4, 44px); gap: 3px; }
+  .board-cell { border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .board-cell.light { background: #2A2840; }
+  .board-cell.dark  { background: #232135; }
+  .board-cell.queen { background: rgba(137,180,250,.22); border: 1px solid #89B4FA; color: #89B4FA; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 16px; }
+  .board-cell.conflict { background: rgba(243,139,168,.22); border: 1px solid #F38BA8; color: #F38BA8; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 16px; }
+  .board-cell.skip { opacity: .25; }
+  .board-note { font-size: 10.5px; color: #6C7086; margin-top: 8px; font-family: 'Noto Sans SC', sans-serif; text-align: center; max-width: 200px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--blue-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blue); border-bottom: 1px solid #BFDCF2; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--blue); background: var(--blue-light); white-space: nowrap; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="12.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十二 搜索基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.3 剪枝优化</span>
+    </div>
+    <h1 class="chapter-title">12.3　剪枝优化</h1>
+    <p class="chapter-desc">还没走到底，就提前发现这条路走不通——直接放弃，省下后面一大段本该白费的功夫。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要剪枝</a></li>
+      <li><span class="toc-num">②</span><a href="#basic">基础写法：先生成完排列，再检查</a></li>
+      <li><span class="toc-num">③</span><a href="#opt1">优化一：边放边判断，冲突就剪掉</a></li>
+      <li><span class="toc-num">④</span><a href="#opt2">优化二：用数组记录占用，判断变成 O(1)</a></li>
+      <li><span class="toc-num">⑤</span><a href="#compare">完整代码与效果对比</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要剪枝</div>
+    <div class="section-body">
+      <p>12.2 节的回溯，每一层都会把"还没用过的数"完整地试一遍——如果问题规模变大，分支数量会爆炸性增长（比如把 8 个数排列，就有 <code>8! = 40320</code> 种可能）。<b>剪枝</b>要解决的问题是：很多分支其实<b>还没走到底就已经能看出肯定不行了</b>，与其老老实实递归到最深处才发现白费功夫，不如提前判断出来，直接放弃这整条分支，连递归都不用往下走。</p>
+      <p>本节用经典的 <b>N 皇后问题</b>来演示剪枝：在 <code>N×N</code> 的棋盘上放 <code>N</code> 个皇后，要求任意两个皇后都不能在同一行、同一列、同一条对角线上。为了方便，可以规定"每一行必须且只能放一个皇后"——这样问题就变成了：给第 <code>0</code> 行到第 <code>N-1</code> 行分别分配一个列号，列号不能重复。这其实和 12.2 节的"排列"是同一件事：给 <code>N</code> 行分配 <code>0~N-1</code> 这 <code>N</code> 个列号，就是这 <code>N</code> 个数的一种排列，只是这次多了一条"不能在同一条对角线上"的额外规则。</p>
+    </div>
+
+    <div class="sub-title" id="basic">② 基础写法：先生成完排列，再检查</div>
+    <div class="section-body">
+      <p>最直接的想法：完全照搬 12.2 节的全排列代码，先把 <code>N</code> 行的所有排列方式都生成出来（列号不重复这条规则，在生成排列的过程中天然就满足了），每生成一个完整的排列，才检查它有没有任意两个皇后落在同一条对角线上。</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="board-wrap">
+        <div class="board-col">
+          <div class="board-title">生成完整排列 [0,1,2,3] 之后再检查</div>
+          <div class="board-grid">
+            <div class="board-cell queen">♛</div><div class="board-cell dark"></div><div class="board-cell light"></div><div class="board-cell dark"></div>
+            <div class="board-cell light"></div><div class="board-cell queen">♛</div><div class="board-cell dark"></div><div class="board-cell light"></div>
+            <div class="board-cell dark"></div><div class="board-cell light"></div><div class="board-cell queen">♛</div><div class="board-cell dark"></div>
+            <div class="board-cell light"></div><div class="board-cell dark"></div><div class="board-cell light"></div><div class="board-cell queen">♛</div>
+          </div>
+          <div class="board-note">四个皇后排成一条对角线，任意两个都冲突——但基础写法要等排列完全生成出来，才发现这一个不合法</div>
+        </div>
+      </div>
+      <figcaption>排列 <code>[0,1,2,3]</code> 表示第 0 行放第 0 列、第 1 行放第 1 列……结果四个皇后正好落在同一条对角线上，是明显不合法的方案。但基础写法在生成这个排列的过程中，其实第 1 行放 1 的时候就已经能看出和第 0 行冲突了——只是代码里没有做这个判断，非要等 4 行全部放完才检查。</figcaption>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 基础写法：生成全排列后再逐个检查</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="num">4</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">path</span><span class="pnc">[</span><span class="num">20</span><span class="pnc">];</span>   <span class="cmt">// path[i] 表示第 i 行的皇后放在哪一列</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">bool</span> <span class="fn">used</span><span class="pnc">[</span><span class="num">20</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">count</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>  <span class="cmt">// 合法方案的总数</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">bool</span> <span class="fn">IsValid</span><span class="pnc">()</span>  <span class="cmt">// 检查 path 里已经排满的这一整个排列，有没有对角线冲突</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="fn">i</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 两两比较所有皇后</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">            <span class="kw">if</span> <span class="pnc">(</span><span class="fn">abs</span><span class="pnc">(</span><span class="fn">path</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="fn">path</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">])</span> <span class="op">==</span> <span class="fn">abs</span><span class="pnc">(</span><span class="fn">i</span> <span class="op">-</span> <span class="fn">j</span><span class="pnc">))</span>  <span class="cmt">// 行差 == 列差，说明在同一条对角线</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">                <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">return</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="typ">void</span> <span class="fn">Backtrack</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">depth</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">depth</span> <span class="op">==</span> <span class="fn">n</span><span class="pnc">)</span>  <span class="cmt">// 排列生成完了，这时候才检查</span></td></tr>
+          <tr class="hl"><td class="ln">18</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">19</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">IsValid</span><span class="pnc">())</span> <span class="pnc">{</span> <span class="fn">count</span><span class="op">++</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">20</td><td class="cd">        <span class="kw">return</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">21</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">used</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span> <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">        <span class="fn">path</span><span class="pnc">[</span><span class="fn">depth</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">i</span><span class="pnc">;</span> <span class="fn">used</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">        <span class="fn">Backtrack</span><span class="pnc">(</span><span class="fn">depth</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd">        <span class="fn">used</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>问题出在哪：</b>第 17 行的判断 <code>depth == n</code> 意味着——不管中间过程冲突得多明显，代码都会老老实实地把这一整条分支递归到最深处，才在第 19 行检查一次。以 <code>[0,1,……]</code> 开头的排列一共有 <code>(n-2)!</code> 种（剩下的行随便排），而这些排列<b>全部</b>都会因为第 0 行和第 1 行本身就冲突而不合法——但代码要把它们<b>一个不漏地全部生成出来</b>，才能发现这一点。</div>
+    </div>
+
+    <div class="sub-title" id="opt1">③ 优化一：边放边判断，冲突就剪掉</div>
+    <div class="section-body">
+      <p>与其等排列生成完再检查，不如每往下放一个新皇后，就立刻检查它和<b>已经放置的所有皇后</b>是否冲突——只要发现冲突，直接放弃这个位置，连递归都不用调用，更不用说把剩下的行也走一遍了。</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="board-wrap">
+        <div class="board-col">
+          <div class="board-title">第 1 行刚放下就发现冲突，直接剪掉</div>
+          <div class="board-grid">
+            <div class="board-cell queen">♛</div><div class="board-cell dark"></div><div class="board-cell light"></div><div class="board-cell dark"></div>
+            <div class="board-cell conflict">✕</div><div class="board-cell light"></div><div class="board-cell dark"></div><div class="board-cell light"></div>
+            <div class="board-cell skip dark"></div><div class="board-cell skip light"></div><div class="board-cell skip dark"></div><div class="board-cell skip light"></div>
+            <div class="board-cell skip light"></div><div class="board-cell skip dark"></div><div class="board-cell skip light"></div><div class="board-cell skip dark"></div>
+          </div>
+          <div class="board-note">第 2、3 行整个变暗——这条分支根本不会走到这里，直接剪掉</div>
+        </div>
+      </div>
+      <figcaption>第 0 行放在第 0 列，第 1 行尝试放第 0 列相邻的第 1 列——两者行差是 <code>1</code>，列差也是 <code>1</code>，正好在同一条对角线上，<b>立刻</b>就能判断出冲突（红色 <code>✕</code>）。剪枝之后，代码<b>根本不会递归进入第 2 行</b>，直接放弃这个选择、换第 1 行的下一个列继续试——而基础写法要把第 2、3 行的所有排列方式都生成完（<code>2! = 2</code> 种）才能发现同样的结论。</figcaption>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 优化一：放置前先判断，冲突就不递归</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">bool</span> <span class="fn">Conflict</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">row</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">col</span><span class="pnc">)</span>  <span class="cmt">// 判断新皇后 (row,col) 和已放置的皇后是否冲突</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">row</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 只需要看前面已经放好的这些行</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">abs</span><span class="pnc">(</span><span class="fn">path</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">-</span> <span class="fn">col</span><span class="pnc">)</span> <span class="op">==</span> <span class="fn">abs</span><span class="pnc">(</span><span class="fn">i</span> <span class="op">-</span> <span class="fn">row</span><span class="pnc">))</span>  <span class="cmt">// 行差 == 列差，在同一条对角线</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="pnc">{</span> <span class="kw">return</span> <span class="kw">true</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">return</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">void</span> <span class="fn">Backtrack</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">depth</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">depth</span> <span class="op">==</span> <span class="fn">n</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="fn">count</span><span class="op">++</span><span class="pnc">;</span> <span class="kw">return</span><span class="pnc">;</span> <span class="pnc">}</span>  <span class="cmt">// 能走到这里，说明前面全部合法，不用再检查了</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">used</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span> <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">Conflict</span><span class="pnc">(</span><span class="fn">depth</span><span class="pnc">,</span> <span class="fn">i</span><span class="pnc">))</span> <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span>  <span class="cmt">// ★ 剪枝：这里冲突就直接跳过，连递归都不调用</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">        <span class="fn">path</span><span class="pnc">[</span><span class="fn">depth</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">i</span><span class="pnc">;</span> <span class="fn">used</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">        <span class="fn">Backtrack</span><span class="pnc">(</span><span class="fn">depth</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="fn">used</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">false</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>这就是"剪枝"这个名字的由来：</b>把整个回溯过程想象成一棵决策树（12.2 节画过这种图），"不合法的整个子树"就像是从树上剪掉的一根树枝——第 17 行的判断，剪掉的正是"以当前冲突为开头"的<b>一整片</b>子树，而不只是省了一次判断。这一整片子树里可能藏着成千上万种排列，全部都不用再展开了。</div>
+    </div>
+
+    <div class="sub-title" id="opt2">④ 优化二：用数组记录占用，判断变成 O(1)</div>
+    <div class="section-body">
+      <p>优化一虽然提前剪了枝，但 <code>Conflict</code> 函数每次都要<b>遍历一遍前面所有已经放置的皇后</b>（第 3 行的 <code>for</code> 循环），判断一次的开销是 <code>O(depth)</code>。可以换个思路：用几个数组分别记录"这一列""这条对角线"是否已经被占用，放置或撤销的时候同步更新这些数组，判断就只需要查一次数组，变成 <code>O(1)</code>。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>数组</th><th>下标怎么算</th><th>含义</th></tr></thead>
+      <tbody>
+        <tr><td><code>colUsed[col]</code></td><td>直接用列号</td><td>第 <code>col</code> 列是否已经有皇后</td></tr>
+        <tr><td><code>diag1[row - col + n]</code></td><td>行号减列号（加 <code>n</code> 避免负数下标）</td><td>同一条"左上到右下"对角线上，<code>row - col</code> 是常数</td></tr>
+        <tr><td><code>diag2[row + col]</code></td><td>行号加列号</td><td>同一条"右上到左下"对角线上，<code>row + col</code> 是常数</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 优化二：用数组把判断变成 O(1)</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">bool</span> <span class="fn">colUsed</span><span class="pnc">[</span><span class="num">20</span><span class="pnc">],</span> <span class="fn">diag1</span><span class="pnc">[</span><span class="num">40</span><span class="pnc">],</span> <span class="fn">diag2</span><span class="pnc">[</span><span class="num">40</span><span class="pnc">];</span>  <span class="cmt">// 对角线最多有 2n-1 条，数组要开够</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">void</span> <span class="fn">Backtrack</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">depth</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">depth</span> <span class="op">==</span> <span class="fn">n</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="fn">count</span><span class="op">++</span><span class="pnc">;</span> <span class="kw">return</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">col</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">col</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">col</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">colUsed</span><span class="pnc">[</span><span class="fn">col</span><span class="pnc">]</span> <span class="op">||</span> <span class="fn">diag1</span><span class="pnc">[</span><span class="fn">depth</span> <span class="op">-</span> <span class="fn">col</span> <span class="op">+</span> <span class="fn">n</span><span class="pnc">]</span> <span class="op">||</span> <span class="fn">diag2</span><span class="pnc">[</span><span class="fn">depth</span> <span class="op">+</span> <span class="fn">col</span><span class="pnc">])</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">        <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span>  <span class="cmt">// ★ 三个数组一查就知道冲不冲突，不用遍历</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">        <span class="fn">colUsed</span><span class="pnc">[</span><span class="fn">col</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">diag1</span><span class="pnc">[</span><span class="fn">depth</span> <span class="op">-</span> <span class="fn">col</span> <span class="op">+</span> <span class="fn">n</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">diag2</span><span class="pnc">[</span><span class="fn">depth</span> <span class="op">+</span> <span class="fn">col</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span>  <span class="cmt">// 三个数组同时标记占用</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="fn">Backtrack</span><span class="pnc">(</span><span class="fn">depth</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">);</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">        <span class="fn">colUsed</span><span class="pnc">[</span><span class="fn">col</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">diag1</span><span class="pnc">[</span><span class="fn">depth</span> <span class="op">-</span> <span class="fn">col</span> <span class="op">+</span> <span class="fn">n</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">diag2</span><span class="pnc">[</span><span class="fn">depth</span> <span class="op">+</span> <span class="fn">col</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">false</span><span class="pnc">;</span>  <span class="cmt">// 三个数组同时撤销</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>为什么撤销要同时改三个数组？</b>和 12.2 节"做选择"改了几个状态、"撤销"就必须改回几个状态是同一个道理——第 11 行同时标记了 <code>colUsed</code>、<code>diag1</code>、<code>diag2</code> 三个数组，第 13 行也必须把这三个数组<b>同时</b>改回 <code>false</code>，少改一个都会让后面的分支读到不该存在的"占用"记录，把明明合法的位置误判成冲突。</div>
+    </div>
+
+    <div class="sub-title" id="compare">⑤ 三种写法对比</div>
+    <div class="section-body">
+      <p>三种写法的核心区别：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>写法</th><th>什么时候发现冲突</th><th>单次判断开销</th></tr></thead>
+      <tbody>
+        <tr><td>② 基础写法</td><td>排列生成完（第 <code>n</code> 行）才检查</td><td>O(n²)（两两比较所有皇后）</td></tr>
+        <tr><td>③ 优化一</td><td>每放一个新皇后就检查，冲突立刻停止</td><td>O(depth)（遍历前面已放置的皇后）</td></tr>
+        <tr><td>④ 优化二</td><td>同优化一，提前发现</td><td>O(1)（查三个数组）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>优化一和优化二"发现冲突的时机"是一样的——真正的效率飞跃，是从②到③：<b>提前判断，避免把明显不合法的整片子树都生成出来</b>，这是"剪枝"这个名字真正对应的动作。③到④只是把"怎么判断冲突"这一步从遍历变成了查表，属于常数级别的优化，但当 <code>n</code> 变大、递归层数很深时，这个常数优化累积起来也很可观。两种优化经常一起使用：<b>用剪枝减少要走的分支数量，再用更快的判断方式降低每个分支的开销</b>。</div>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把"剪枝"和"提前 return"搞混：</b>剪枝剪掉的是<b>还没被创建的子树</b>——判断到不合法就直接 <code>continue</code>，压根不调用递归；如果已经调用了递归、深入到子树内部才判断退出，那只是普通的递归终止条件，并没有省下"生成这棵子树"的开销。剪枝的关键在于判断必须发生在<b>递归调用之前</b>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>用数组记录状态时，撤销漏掉某一个：</b>本节的 <code>colUsed</code>、<code>diag1</code>、<code>diag2</code> 必须同步标记、同步撤销。实际写代码时如果拆成三行分别写，很容易漏掉其中一行的撤销，导致状态"越攒越脏"，后面的分支会莫名其妙地被判断为冲突（或者反过来，本该冲突的却被判断为合法）。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>对角线数组下标忘记 +n 防止负数：</b><code>depth - col</code> 的取值范围是 <code>-(n-1)</code> 到 <code>n-1</code>，直接当数组下标会出现负数、导致越界访问。必须像第 8、11、13 行那样统一加上 <code>n</code>，把整个范围平移到非负区间。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>本节的剪枝解决的是"同一个分支被反复展开"的浪费；下一节（12.4 记忆化搜索）要解决另一种浪费——<b>不同分支之间可能会重复计算完全相同的子问题</b>，把算过的结果缓存起来，下次遇到直接取用，不用重新递归。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十二 · 搜索基础 · 12.3 剪枝优化</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A12_02_回溯.html">← 12.2 回溯</a>
+      <a class="nav-btn" href="A12_04_记忆化搜索.html">12.4 记忆化搜索 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

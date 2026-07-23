@@ -351,7 +351,7 @@
       <div>因为每个合数<strong>确确实实只被标记一次</strong>，整个算法做的"标记"次数刚好等于合数的个数，时间复杂度是严格的 <strong>O(n)</strong>——这也是"线性筛"这个名字的来源。比埃氏筛法的 O(n log log n) 更快，不过对于 CSP-J/S 常见的数据范围，两者实际跑起来的速度差距并不算特别夸张，重要的是理解这个"只标记一次"的思路。</div>
     </div>
 
-    <div class="sub-title" id="compare">⑤ 完整代码与对比</div>
+    <div class="sub-title" id="compare">⑤ 两种写法对比</div>
     <div class="section-body">
       <p>用 <code>n = 1000</code> 数一数两种筛法总共做了多少次标记：</p>
     </div>
@@ -377,12 +377,6 @@
         <tr><td>线性筛</td><td>每个合数只由它的最小质因子标记一次</td><td>O(n)</td></tr>
       </tbody>
     </table>
-
-    <div class="callout tip">
-      <span class="callout-icon">📌</span>
-      <div><b>模块一到这里就结束了。</b>从最基础的拆数字（1.1），到判断回文、质数，再到约数、倍数、进制转换、快速幂，最后是批量筛质数——这一路用到的核心工具，几乎都是"循环 + 取余/整除"这一个骨架的变体。后面模块二开始，会进入枚举、模拟这些更偏"解题思路"而不是"数学技巧"的内容。</div>
-    </div>
-
   </section>
 
   <footer class="doc-footer">

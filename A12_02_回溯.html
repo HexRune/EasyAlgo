@@ -17,6 +17,12 @@
   .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
   .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
 
+  .num-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 24px 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+  .num-visual-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+  .num-visual-caption { font-size: 12px; color: #A6ADC8; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2A2840; line-height: 1.8; font-family: 'Noto Sans SC', sans-serif; }
+  .num-visual-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .num-visual-caption strong { color: #F2CDCD; font-weight: 700; }
+
   /* 决策树文本图 */
   .tree-outline { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 2.1; white-space: pre; color: #6C7086; }
   .tree-outline .pick   { color: #A6E3A1; font-weight: 700; }
@@ -31,6 +37,8 @@
   .state-cell { min-width: 30px; height: 28px; padding: 0 6px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; }
   .state-cell.filled { background: rgba(137,180,250,.2); color: #89B4FA; border: 1px solid rgba(137,180,250,.4); }
   .state-cell.empty  { background: #2A2840; color: #3A3850; border: 1px dashed #3A3850; }
+  .state-cell.flash-add  { box-shadow: 0 0 0 2px #A6E3A1; }
+  .state-cell.flash-undo { box-shadow: 0 0 0 2px #FAB387; }
 
   .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
   .api-table thead tr { background: var(--blue-light); }
@@ -87,7 +95,7 @@
     </div>
 
     <div class="num-visual">
-      <div class="num-visual-title">走一遍最左边这条分支：选 1 → 选 2 → 选 3</div>
+      <div class="num-visual-title">走一遍"选 1"这个分支：先试出 [1,2,3]，撤销后再试出 [1,3,2]</div>
       <div class="state-row">
         <div class="state-label">第 0 步</div>
         <div class="state-cell empty">·</div><div class="state-cell empty">·</div><div class="state-cell empty">·</div>
@@ -95,30 +103,44 @@
       </div>
       <div class="state-row">
         <div class="state-label">选 1</div>
-        <div class="state-cell filled">1</div><div class="state-cell empty">·</div><div class="state-cell empty">·</div>
+        <div class="state-cell filled flash-add">1</div><div class="state-cell empty">·</div><div class="state-cell empty">·</div>
         <div style="font-size:11.5px;color:#A6E3A1;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">1 加入 path，标记 1 已使用</div>
       </div>
       <div class="state-row">
         <div class="state-label">选 2</div>
-        <div class="state-cell filled">1</div><div class="state-cell filled">2</div><div class="state-cell empty">·</div>
+        <div class="state-cell filled">1</div><div class="state-cell filled flash-add">2</div><div class="state-cell empty">·</div>
         <div style="font-size:11.5px;color:#A6E3A1;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">2 加入 path，标记 2 已使用</div>
       </div>
       <div class="state-row">
         <div class="state-label">选 3</div>
-        <div class="state-cell filled">1</div><div class="state-cell filled">2</div><div class="state-cell filled">3</div>
+        <div class="state-cell filled">1</div><div class="state-cell filled">2</div><div class="state-cell filled flash-add">3</div>
         <div style="font-size:11.5px;color:#F38BA8;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">path 排满了！记录下 [1,2,3]，这是一种完整的排列</div>
       </div>
       <div class="state-row">
         <div class="state-label">撤销 3</div>
-        <div class="state-cell filled">1</div><div class="state-cell filled">2</div><div class="state-cell empty">·</div>
+        <div class="state-cell filled">1</div><div class="state-cell filled">2</div><div class="state-cell empty flash-undo">·</div>
         <div style="font-size:11.5px;color:#FAB387;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">3 从 path 里移出去，标记 3 变回未使用——但这一层已经没有别的数可选了，继续退回上一层</div>
       </div>
       <div class="state-row">
         <div class="state-label">撤销 2</div>
-        <div class="state-cell filled">1</div><div class="state-cell empty">·</div><div class="state-cell empty">·</div>
-        <div style="font-size:11.5px;color:#FAB387;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">2 移出去，标记变回未使用——这一层换成选 3，继续往下递归，会得到 [1,3,2]</div>
+        <div class="state-cell filled">1</div><div class="state-cell empty flash-undo">·</div><div class="state-cell empty">·</div>
+        <div style="font-size:11.5px;color:#FAB387;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">2 移出去，标记变回未使用——这一层的 2 已经试过了，换成试 3</div>
       </div>
-      <div class="num-visual-caption">"选 1 → 选 2 → 选 3"只是众多分支里的一条。<code>path</code> 每次只增加或减少<strong>最后一个</strong>元素，增加发生在递归调用<strong>之前</strong>，减少（撤销）发生在递归调用<strong>之后</strong>——这一"先加后减"的顺序，保证了 <code>path</code> 在整个过程中，任何时刻都精确对应"从根节点走到当前这一层"所做过的选择。</div>
+      <div class="state-row">
+        <div class="state-label">选 3</div>
+        <div class="state-cell filled">1</div><div class="state-cell filled flash-add">3</div><div class="state-cell empty">·</div>
+        <div style="font-size:11.5px;color:#A6E3A1;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">3 加入 path，标记 3 已使用——注意这是 path 的第 2 个位置，不是第 3 个</div>
+      </div>
+      <div class="state-row">
+        <div class="state-label">选 2</div>
+        <div class="state-cell filled">1</div><div class="state-cell filled">3</div><div class="state-cell filled flash-add">2</div>
+        <div style="font-size:11.5px;color:#F38BA8;font-family:'Noto Sans SC',sans-serif;margin-left:6px;">path 又排满了！记录下 [1,3,2]，这是第二种排列</div>
+      </div>
+      <div class="num-visual-caption">这条完整走下来一共记录了 <strong>[1,2,3]</strong> 和 <strong>[1,3,2]</strong> 两种排列——都是"1 打头"的排列，全部试完之后才会退回最外层，换 2 打头、3 打头继续。<code>path</code> 每次只增加或减少<strong>最后一个</strong>元素，增加发生在递归调用<strong>之前</strong>，减少（撤销）发生在递归调用<strong>之后</strong>——这一"先加后减"的顺序，保证了 <code>path</code> 在整个过程中，任何时刻都精确对应"从根节点走到当前这一层"所做过的选择。</div>
+    </div>
+
+    <div class="section-body">
+      <p>"1 打头"的这两种排列走完之后，会继续退回最外层、换 2 打头和 3 打头分别重复同样的过程——完整的六种排列，下面用一张图一次性展示：</p>
     </div>
 
     <div class="sub-title" id="s3">③ 决策树图解</div>
