@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15.6 拓扑排序 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "15.6"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--coral-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--coral); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #f0c4ae; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+
+  /* 依赖关系图（节点 + 箭头） */
+  .topo-graph { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+  .topo-node {
+    width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700;
+    background: rgba(137,180,250,.18); color: #89B4FA; border: 2px solid rgba(137,180,250,.5); flex-shrink: 0;
+  }
+  .topo-arrow { color: #6C7086; font-size: 16px; flex-shrink: 0; }
+  .topo-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+  /* 队列执行过程追踪 */
+  .kahn-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; width: 100%; }
+  .kahn-table th, .kahn-table td { padding: 8px 10px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .kahn-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; }
+  .kahn-table td.pop { background: rgba(166,227,161,.2); color: #A6E3A1; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="15.6">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十五 图论基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>15.6 拓扑排序</span>
+    </div>
+    <h1 class="chapter-title">15.6　拓扑排序</h1>
+    <p class="chapter-desc">不关心"距离"或"权值之和"，只关心一堆有先后依赖关系的任务，应该按什么顺序执行才不会违反任何一条依赖。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">什么是拓扑排序</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：Kahn 算法——不断移除入度为 0 的点</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：选课依赖问题的完整执行过程</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#complexity">复杂度分析</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 什么是拓扑排序</div>
+    <div class="section-body">
+      <p>给定一张<strong>有向无环图</strong>（Directed Acyclic Graph，简称 DAG），把所有顶点排成一个线性顺序，使得对于图中的<strong>每一条有向边</strong> <code>u → v</code>，<code>u</code> 在排列中都出现在 <code>v</code> 的<strong>前面</strong>——这样的排列就叫<strong>拓扑排序</strong>。</p>
+      <p>最经典的场景是"选课依赖"：某些课程要求先修完另一些课程才能选（比如"数据结构"要求先学完"程序设计基础"）。把每门课当成一个顶点，"先修关系"画成有向边，拓扑排序算出来的顺序，就是一种<strong>不违反任何先修要求</strong>的合法选课顺序。同样的模型也能用于任务调度、编译时的模块依赖顺序等场景。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>拓扑排序的结果通常不唯一：</b>只要满足"每条边都是前面指向后面"，多种不同的排列都可能是合法的拓扑序。本节讲的方法能找出<strong>其中一种</strong>合法顺序，而不是唯一确定的答案。</div>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：Kahn 算法——不断移除入度为 0 的点</div>
+    <div class="section-body">
+      <p>每个顶点的<strong>入度</strong>是指有多少条边指向它——对应到选课场景，就是"这门课还有几门先修课没有安排"。入度为 <code>0</code> 的顶点，意味着它<strong>没有任何未完成的前置依赖</strong>，可以立刻安排。<strong>Kahn 算法</strong>用一个队列反复做这件事：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>步骤</th><th>做什么</th></tr></thead>
+      <tbody>
+        <tr><td>① 统计入度</td><td>遍历所有边，统计每个顶点的入度</td></tr>
+        <tr><td>② 初始化队列</td><td>把所有入度为 0 的顶点放入队列</td></tr>
+        <tr><td>③ 反复处理</td><td>每次弹出队首顶点 u，加入拓扑序结果；把 u 指向的每个顶点 v 的入度减 1，如果减到 0 就把 v 入队</td></tr>
+        <tr><td>④ 结束</td><td>队列为空时算法结束，此时拓扑序结果里的顶点顺序，就是一种合法的拓扑排序</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>"移除入度为 0 的点"和"把它指向的点入度减 1"，为什么合理？</b>入度为 0 的点已经没有任何依赖，可以第一批处理；处理完它之后，它对"它指向的点"的依赖就已经满足了一部分，所以要把那些点的入度减 1——如果某个点的所有依赖都已经处理完（入度减到 0），它也就可以被安排了。这个过程和 14.1 节 BFS 的队列操作在写法上非常相似，只是这里维护的是"入度"而不是"距离"。</div>
+    </div>
+
+    <div class="sub-title" id="trace">③ 图解：选课依赖问题的完整执行过程</div>
+    <div class="section-body">
+      <p>假设有 4 门课 <code>A B C D</code>：<code>A</code> 和 <code>B</code> 都是 <code>C</code> 的先修课，<code>C</code> 又是 <code>D</code> 的先修课（对应边：<code>A→C</code>，<code>B→C</code>，<code>C→D</code>）：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">依赖关系图</div>
+      <div class="topo-graph">
+        <div class="topo-col">
+          <div class="topo-node">A</div>
+        </div>
+        <div class="topo-arrow">↘</div>
+        <div class="topo-col">
+          <div class="topo-node">C</div>
+        </div>
+        <div class="topo-arrow">→</div>
+        <div class="topo-col">
+          <div class="topo-node">D</div>
+        </div>
+        <div class="topo-arrow" style="align-self:flex-start;margin-top:-8px">↗</div>
+      </div>
+      <div class="topo-graph" style="margin-top:-14px">
+        <div class="topo-col"><div class="topo-node" style="visibility:hidden">A</div></div>
+        <div class="topo-col"><div class="topo-node">B</div></div>
+      </div>
+      <figcaption>初始入度：<code>A</code>=0，<code>B</code>=0（都没有先修课），<code>C</code>=2（依赖 A 和 B），<code>D</code>=1（依赖 C）。</figcaption>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">Kahn 算法执行过程</div>
+      <table class="kahn-table">
+        <thead><tr><th>队列（处理前）</th><th>弹出</th><th>更新入度</th><th>拓扑序结果</th></tr></thead>
+        <tbody>
+          <tr><td>[A, B]</td><td class="pop">A</td><td>C 的入度 2→1（还不能入队）</td><td>A</td></tr>
+          <tr><td>[B]</td><td class="pop">B</td><td>C 的入度 1→0，C 入队</td><td>A, B</td></tr>
+          <tr><td>[C]</td><td class="pop">C</td><td>D 的入度 1→0，D 入队</td><td>A, B, C</td></tr>
+          <tr><td>[D]</td><td class="pop">D</td><td>（D 没有指向任何点）</td><td>A, B, C, D</td></tr>
+        </tbody>
+      </table>
+      <figcaption>最终拓扑序是 <code>A, B, C, D</code>——检查一下三条边：<code>A→C</code>（A 在 C 前面 ✓），<code>B→C</code>（B 在 C 前面 ✓），<code>C→D</code>（C 在 D 前面 ✓），全部满足。如果一开始队列里 <code>B</code> 排在 <code>A</code> 前面，得到的结果会是 <code>B, A, C, D</code>——同样合法，这正是 ① 提到的"拓扑序通常不唯一"。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · Kahn 算法（BFS 实现拓扑排序）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd">vector&lt;<span class="typ">int</span>&gt; adj[MAXN];  <span class="cmt">// adj[u]：u 指向的所有点</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> inDeg[MAXN];  <span class="cmt">// 每个点的入度</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd">vector&lt;<span class="typ">int</span>&gt; <span class="fn">TopoSort</span>(<span class="typ">int</span> n)  <span class="cmt">// 返回拓扑序；若长度小于 n，说明图中有环（见 ⑥）</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">{</td></tr>
+          <tr><td class="ln">6</td><td class="cd">    queue&lt;<span class="typ">int</span>&gt; q;</td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++)</td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">        <span class="kw">if</span> (inDeg[i] == <span class="num">0</span>) q.push(i);  <span class="cmt">// ★ 入度为 0 的点先入队</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    vector&lt;<span class="typ">int</span>&gt; order;</td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="kw">while</span> (!q.empty())</td></tr>
+          <tr><td class="ln">12</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="typ">int</span> u = q.front(); q.pop();</td></tr>
+          <tr><td class="ln">14</td><td class="cd">        order.push_back(u);</td></tr>
+          <tr><td class="ln">15</td><td class="cd">        <span class="kw">for</span> (<span class="typ">int</span> v : adj[u])</td></tr>
+          <tr><td class="ln">16</td><td class="cd">        {</td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd">            <span class="kw">if</span> (--inDeg[v] == <span class="num">0</span>) q.push(v);  <span class="cmt">// 依赖减少 1，减到 0 就可以安排了</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">        }</td></tr>
+          <tr><td class="ln">19</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="kw">return</span> order;</td></tr>
+          <tr><td class="ln">21</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>和 14.1 节 BFS 几乎是同一套骨架：</b>都是"初始化队列 → 弹出、处理、把满足条件的新节点入队"这套流程。区别在于：BFS 是"距离"一层层扩展，拓扑排序是"入度"一点点减少到 0；BFS 关心的是"最短距离"，拓扑排序关心的是"先后顺序"。</div>
+    </div>
+
+    <div class="sub-title" id="complexity">⑤ 复杂度分析</div>
+    <div class="section-body">
+      <p>统计入度需要遍历所有边，<code>O(E)</code>；每个顶点入队、出队各一次，<code>O(V)</code>；每条边在"更新入度"时被处理一次，<code>O(E)</code>。总时间复杂度 <code>O(V+E)</code>，和 BFS 是同一量级。</p>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>图中存在环时，拓扑排序不存在：</b>如果图里有一个环（比如 <code>X→Y→Z→X</code>），环上的每个点入度都至少是 <code>1</code>，永远不会被减到 <code>0</code>，也就永远不会入队——这些点会被"晾在一边"，最终 <code>order</code> 的长度会<strong>小于</strong> <code>n</code>。判断"图中有没有环"，只需要检查 <code>order.size() == n</code> 是否成立：不成立就说明存在环，根本不存在合法的拓扑排序（对应"选课依赖"的场景，就是几门课互相要求对方先修，谁也没法先上）。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把"拓扑排序不唯一"误认为程序写错了：</b>只要每条边都满足"前面指向后面"，不同的实现（甚至同一份代码在不同编译器下 <code>queue</code> 的实现细节差异）都可能给出不同但同样合法的顺序。判断对错应该去检查"每条边是否都满足方向要求"，而不是去比较是否和某个特定顺序完全一致。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>初始化入度数组时忘记清零，或者统计入度时漏掉某些边：</b>入度是通过遍历所有边统计出来的（对每条边 <code>u→v</code>，<code>inDeg[v]++</code>），如果建图时漏加了某条边，或者多组数据之间忘记把 <code>inDeg</code> 数组重新清零，统计出来的入度会不准确，进而导致初始队列里该有的点没入队、或者不该有的点提前入队。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>模块小结：</b>15.1～15.6 节把图论基础走了一遍：图的两种存储方式 → 任意两点最短路（Floyd）→ 单源最短路（Dijkstra）→ 最小生成树的两种做法（Kruskal、Prim）→ 有向无环图的执行顺序（拓扑排序）。这几种算法看似解决的问题各不相同，但反复出现同样的几个身影——并查集、优先队列、贪心、BFS 式的队列操作——图论问题很大程度上是在用前面模块学过的这些基础工具，去解决不同形状的具体问题。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十五 图论基础 · 15.6 拓扑排序</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A15_05_Prim最小生成树.html">← 15.5 Prim 最小生成树</a>
+      <a class="nav-btn" href="index.html">返回目录 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

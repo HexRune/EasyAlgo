@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15.5 Prim 最小生成树 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "15.5"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--coral-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--coral); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; text-align: left; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; text-align: left; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #f0c4ae; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+
+  /* 逐步扩展树的追踪表 */
+  .pr-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; width: 100%; }
+  .pr-table th, .pr-table td { padding: 8px 10px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .pr-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; }
+  .pr-table td.take { background: rgba(166,227,161,.2); color: #A6E3A1; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="15.5">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十五 图论基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>15.5 Prim 最小生成树</span>
+    </div>
+    <h1 class="chapter-title">15.5　Prim 最小生成树</h1>
+    <p class="chapter-desc">同样是求最小生成树，换一个角度：不给边排序，而是从一个点出发，像树在生长一样，每次贪心地吞并离自己最近的那个新点。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">Prim 和 Kruskal 的视角差异：从边出发，还是从点出发</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：让树一点点长大</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：从 A 出发，树是怎么长大的</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#compare">Prim vs Kruskal：该选哪个</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① Prim 和 Kruskal 的视角差异：从边出发，还是从点出发</div>
+    <div class="section-body">
+      <p>15.4 节的 Kruskal 站在"<strong>边</strong>"的视角：把所有边排好序，一条条考察要不要加入。<strong>Prim 算法</strong>站在"<strong>点</strong>"的视角：从某一个点开始，维护一棵正在生长的树，每一步都贪心地选<strong>一条连接"树内"和"树外"、权值最小的边</strong>，把树外的那个点纳入树中——像细胞分裂一样，树每一步只长大一个点，直到把所有点都纳入进来。</p>
+      <p>这个"每次贪心地吞并最近的新点"的过程，和 15.3 节 <strong>Dijkstra</strong> 的操作方式几乎一模一样——区别只在于贪心的依据：Dijkstra 比较的是"离起点的<strong>累计</strong>距离"，Prim 比较的是"离<strong>当前树</strong>最近的<strong>单条边</strong>权值"。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：让树一点点长大</div>
+    <table class="api-table">
+      <thead><tr><th>步骤</th><th>做什么</th></tr></thead>
+      <tbody>
+        <tr><td>① 初始化</td><td>随便挑一个起点纳入树中，其余点都在树外</td></tr>
+        <tr><td>② 找候选边</td><td>在所有"一端在树内、一端在树外"的边里，找权值最小的那一条</td></tr>
+        <tr><td>③ 扩展</td><td>把这条边和它树外的那个端点，一起纳入树中</td></tr>
+        <tr><td>④ 重复</td><td>重复 ②③，直到所有点都被纳入树中（选够 V-1 条边）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="trace">③ 图解：从 A 出发，树是怎么长大的</div>
+    <div class="section-body">
+      <p>还是 15.1～15.4 节的示例图（<code>A-B=4</code>，<code>A-C=1</code>，<code>B-C=2</code>，<code>B-D=5</code>，<code>C-D=8</code>），从 <code>A</code> 出发跑一遍 Prim：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">树每一步吞并一个新点</div>
+      <table class="pr-table">
+        <thead><tr><th>当前树</th><th>树内→树外的候选边</th><th>选中最小的一条</th><th>树扩展为</th></tr></thead>
+        <tbody>
+          <tr><td>{A}</td><td>A-B(4)，A-C(1)</td><td class="take">A-C(1)</td><td>{A, C}</td></tr>
+          <tr><td>{A, C}</td><td>A-B(4)，C-B(2)，C-D(8)</td><td class="take">C-B(2)</td><td>{A, B, C}</td></tr>
+          <tr><td>{A, B, C}</td><td>B-D(5)，C-D(8)</td><td class="take">B-D(5)</td><td>{A, B, C, D}</td></tr>
+        </tbody>
+      </table>
+      <figcaption>选中的三条边依然是 <code>A-C(1)、B-C(2)、B-D(5)</code>，总权值 <code>1+2+5=8</code>——和 15.4 节 Kruskal 算出的结果<strong>完全一样</strong>（这并非巧合：只要图连通，最小生成树的总权值是唯一确定的，Kruskal、Prim 只是用不同顺序把它找出来）。留意第二步：<code>A-B(4)</code> 一直摆在候选里，但因为后来出现了更便宜的 <code>C-B(2)</code>，它从未被选中——这也是"贪心"在每一步都做局部最优选择的体现。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · Prim 最小生成树（优先队列实现）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">const</span> <span class="typ">int</span> INF = <span class="num">0x3f3f3f3f</span>;</td></tr>
+          <tr><td class="ln">2</td><td class="cd">vector&lt;pair&lt;<span class="typ">int</span>,<span class="typ">int</span>&gt;&gt; adj[MAXN];  <span class="cmt">// adj[u]：(邻居, 边权)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> key_[MAXN];      <span class="cmt">// key_[v]：目前"树到 v"最便宜的单条边权值</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">bool</span> inTree[MAXN];  <span class="cmt">// v 是否已经被纳入树中</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">int</span> <span class="fn">Prim</span>(<span class="typ">int</span> n)  <span class="cmt">// 从 1 号点出发，返回最小生成树总权值（不连通返回 -1）</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">{</td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">fill</span>(key_ + <span class="num">1</span>, key_ + <span class="num">1</span> + n, INF);</td></tr>
+          <tr><td class="ln">9</td><td class="cd">    priority_queue&lt;pair&lt;<span class="typ">int</span>,<span class="typ">int</span>&gt;, vector&lt;pair&lt;<span class="typ">int</span>,<span class="typ">int</span>&gt;&gt;, greater&lt;&gt;&gt; pq;</td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">    key_[<span class="num">1</span>] = <span class="num">0</span>; pq.push({<span class="num">0</span>, <span class="num">1</span>});  <span class="cmt">// 起点距离"树"的代价记为 0</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="typ">int</span> total = <span class="num">0</span>, cnt = <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="kw">while</span> (!pq.empty())</td></tr>
+          <tr><td class="ln">14</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">15</td><td class="cd">        <span class="kw">auto</span> [d, u] = pq.top(); pq.pop();</td></tr>
+          <tr class="hl-warn"><td class="ln">16</td><td class="cd">        <span class="kw">if</span> (inTree[u]) <span class="kw">continue</span>;  <span class="cmt">// ★ u 已经在树里了，这条是过时记录，跳过</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">        inTree[u] = <span class="kw">true</span>;</td></tr>
+          <tr><td class="ln">18</td><td class="cd">        total += d;  cnt++;   <span class="cmt">// 把"吞并 u 花的这条边权值"计入总权值</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"></td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="kw">for</span> (<span class="kw">auto</span> [v, w] : adj[u])</td></tr>
+          <tr><td class="ln">21</td><td class="cd">        {</td></tr>
+          <tr class="hl"><td class="ln">22</td><td class="cd">            <span class="kw">if</span> (!inTree[v] &amp;&amp; w &lt; key_[v])  <span class="cmt">// v 还在树外，且这条边比 v 已知最便宜的边还便宜</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">            {</td></tr>
+          <tr><td class="ln">24</td><td class="cd">                key_[v] = w;</td></tr>
+          <tr><td class="ln">25</td><td class="cd">                pq.push({w, v});</td></tr>
+          <tr><td class="ln">26</td><td class="cd">            }</td></tr>
+          <tr><td class="ln">27</td><td class="cd">        }</td></tr>
+          <tr><td class="ln">28</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">29</td><td class="cd">    <span class="kw">return</span> cnt == n ? total : <span class="op">-</span><span class="num">1</span>;</td></tr>
+          <tr><td class="ln">30</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>和 Dijkstra 代码几乎一样，但有一处关键区别：</b>第 22 行的判断是 <code>w &lt; key_[v]</code>——只看<strong>这一条边本身</strong>的权值；而 15.3 节 Dijkstra 第 18 行判断的是 <code>dist_[u] + w &lt; dist_[v]</code>——看的是<strong>累计</strong>距离。这正是 ① 提到的"单条边权值"和"累计距离"的区别，也是 Prim 和 Dijkstra 唯一的本质差异。另外这里用了显式的 <code>inTree[]</code> 数组（而不是 15.3 节 Dijkstra 那种"比较 <code>d</code> 和 <code>dist_[u]</code>"的过时判断），两种写法都能达到同样的"跳过重复处理"效果，属于同一个技巧的不同实现方式。</div>
+    </div>
+
+    <div class="sub-title" id="compare">⑤ Prim vs Kruskal：该选哪个</div>
+    <table class="api-table">
+      <thead><tr><th>对比项</th><th>Kruskal（15.4 节）</th><th>Prim（本节）</th></tr></thead>
+      <tbody>
+        <tr><td>贪心视角</td><td>边——排序后逐条考察</td><td>点——树逐步扩展</td></tr>
+        <tr><td>依赖的数据结构</td><td>并查集</td><td>优先队列（或邻接矩阵朴素实现）</td></tr>
+        <tr><td>时间复杂度</td><td>O(E log E)，只和边数有关</td><td>堆优化 O(E log V)；邻接矩阵朴素版 O(V²)，只和点数有关</td></tr>
+        <tr><td>适合场景</td><td>稀疏图（边数远小于 V²）</td><td>稠密图（边数接近 V²）用朴素版更快</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>两种算法求出的最小生成树<strong>总权值一定相同</strong>（只是选出的具体边在有多种最优方案时可能不同），选哪个更多是效率和实现习惯的权衡：图比较"稀疏"（点多边少）时 Kruskal 通常更简单直接；图比较"稠密"（接近完全图）时，Prim 的邻接矩阵朴素版（每轮 O(V) 扫描找最小候选边，共 O(V) 轮，总 O(V²)）反而比"边数很多导致排序很慢"的 Kruskal 更划算。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把 Prim 的"边权比较"错写成 Dijkstra 的"累计距离比较"：</b>这是从 Dijkstra 代码直接照抄改写时最容易犯的错误——第 22 行必须是 <code>w &lt; key_[v]</code>（只看这条边本身），如果照抄 Dijkstra 写成 <code>key_[u] + w &lt; key_[v]</code>，算出来的就不再是最小生成树，而是变成了一个和 Dijkstra 功能重复、意义不明的东西。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>原图不连通时，树长不到所有点：</b>和 Kruskal 一样，如果图本身分成几个互不相连的部分，从某一个点出发的 Prim 永远无法触及另一部分的点，优先队列会提前空掉，纳入树中的点数 <code>cnt</code> 会小于 <code>n</code>。第 29 行用 <code>cnt == n</code> 判断这种情况，返回 <code>-1</code> 表示生成树不存在。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>稠密图上还在死用优先队列版本，效率不如朴素版：</b>本节给出的是堆优化写法，适合稀疏图；如果图接近完全图（边数接近 <code>V²</code>），堆里会塞进大量边，<code>O(E log V)</code> 里的 <code>E</code> 趋近 <code>V²</code>，反而不如"不用堆，每轮直接 <code>O(V)</code> 线性扫描找最小候选点"的朴素版 <code>O(V²)</code> 实现划算——这是稠密图场景下值得注意的优化方向。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>模块小结：</b>15.1～15.5 节把图论基础走了一遍：图的两种存储方式 → 任意两点最短路（Floyd）→ 单源最短路（Dijkstra）→ 最小生成树的两种做法（Kruskal、Prim）。15.6 节的<strong>拓扑排序</strong>会换一类完全不同的问题——不再关心"距离"或"权值之和"，而是关心一张有向无环图里，一系列有先后依赖关系的任务，应该按什么顺序执行。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十五 图论基础 · 15.5 Prim 最小生成树</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A15_04_Kruskal最小生成树.html">← 15.4 Kruskal 最小生成树</a>
+      <a class="nav-btn" href="A15_06_拓扑排序.html">15.6 拓扑排序 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

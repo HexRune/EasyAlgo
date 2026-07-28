@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>16.2 树状数组 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "16.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal-mid); border-bottom: 1px solid #a6ded0; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal-mid); background: var(--teal-light); white-space: nowrap; }
+
+  /* 数组卡片 */
+  .arr-row { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; }
+  .arr-cell { display: flex; flex-direction: column; align-items: center; min-width: 40px; flex-shrink: 0; }
+  .arr-idx { font-size: 10px; color: #6C7086; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .arr-val {
+    min-width: 34px; height: 36px; padding: 0 4px; border-radius: 6px; background: #2A2840;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
+    color: #A6ADC8; border: 1.5px solid transparent;
+  }
+  .arr-val.hi { background: rgba(166,227,161,.2); border-color: #A6E3A1; color: #A6E3A1; }
+  .arr-val.hi2 { background: rgba(137,180,250,.18); border-color: #89B4FA; color: #89B4FA; }
+
+  /* 覆盖区间条 */
+  .cov-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .cov-bar-label { width: 60px; flex-shrink: 0; color: #89B4FA; text-align: right; }
+  .cov-bar-track { flex: 1; display: flex; gap: 2px; }
+  .cov-bar-seg { height: 20px; border-radius: 4px; background: #2A2840; flex-shrink: 0; }
+  .cov-bar-seg.on { background: rgba(166,227,161,.35); }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="16.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十六 树状数组与线段树</span>
+      <span class="eyebrow-sep">/</span>
+      <span>16.2 树状数组</span>
+    </div>
+    <h1 class="chapter-title">16.2　树状数组</h1>
+    <p class="chapter-desc">5.1 节的前缀和查询飞快，但只要改一个数就要整个重算——树状数组用一个巧妙的二进制技巧，让"改一个数"和"查一段和"都只需要 O(log n)。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要树状数组：前缀和的短板</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：lowbit 与"管辖区间"</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：一个具体数组的树状数组结构</a></li>
+      <li><span class="toc-num">④</span><a href="#update">单点修改：顺着 lowbit 往上跳</a></li>
+      <li><span class="toc-num">⑤</span><a href="#query">前缀和查询：顺着 lowbit 往下跳</a></li>
+      <li><span class="toc-num">⑥</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑦</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要树状数组：前缀和的短板</div>
+    <div class="section-body">
+      <p>5.1 节讲过的前缀和数组，能在 <code>O(1)</code> 时间内查询任意区间的和——但它有一个致命短板：如果原数组中间的某个值被<strong>修改</strong>了，这个位置之后的所有前缀和都要跟着变，重新计算一遍就是 <code>O(n)</code>。如果题目要求"频繁修改单个值 + 频繁查询区间和"交替进行，前缀和数组就不够用了。</p>
+      <p><strong>树状数组</strong>（Binary Indexed Tree，简称 BIT，也叫 Fenwick Tree）就是为了同时兼顾这两种操作而设计的：单点修改和前缀和查询，都只需要 <code>O(log n)</code>。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：lowbit 与"管辖区间"</div>
+    <div class="section-body">
+      <p>树状数组的核心是一个叫 <code>lowbit</code> 的运算：<code>lowbit(x) = x &amp; (-x)</code>，取出 <code>x</code> 的二进制表示中<strong>最低位的 1</strong> 所代表的数值（比如 <code>x=6</code>，二进制是 <code>110</code>，最低位的 1 在第 2 位，<code>lowbit(6)=2</code>）。</p>
+      <p>树状数组用一个数组 <code>tree[]</code> 存储信息，但 <code>tree[i]</code> 存的<strong>不是</strong> <code>a[i]</code> 本身，而是"原数组里一段区间的和"——具体管辖的是区间 <code>(i - lowbit(i), i]</code>（从 <code>i - lowbit(i) + 1</code> 到 <code>i</code>）。不同的 <code>i</code>，管辖的区间长度不同，恰好由 <code>lowbit(i)</code> 决定。</p>
+    </div>
+
+    <div class="sub-title" id="trace">③ 图解：一个具体数组的树状数组结构</div>
+    <div class="section-body">
+      <p>原数组 <code>a = [3, 2, 5, 6, 1, 4, 7, 2]</code>（下标从 1 开始，<code>n=8</code>）：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">原数组 a</div>
+      <div class="arr-row">
+        <div class="arr-cell"><div class="arr-idx">1</div><div class="arr-val">3</div></div>
+        <div class="arr-cell"><div class="arr-idx">2</div><div class="arr-val">2</div></div>
+        <div class="arr-cell"><div class="arr-idx">3</div><div class="arr-val">5</div></div>
+        <div class="arr-cell"><div class="arr-idx">4</div><div class="arr-val">6</div></div>
+        <div class="arr-cell"><div class="arr-idx">5</div><div class="arr-val">1</div></div>
+        <div class="arr-cell"><div class="arr-idx">6</div><div class="arr-val">4</div></div>
+        <div class="arr-cell"><div class="arr-idx">7</div><div class="arr-val">7</div></div>
+        <div class="arr-cell"><div class="arr-idx">8</div><div class="arr-val">2</div></div>
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">每个 tree[i] 管辖的区间（灰色格子是它覆盖的原数组范围）</div>
+      <div class="cov-bar-row"><div class="cov-bar-label">tree[1]</div><div class="cov-bar-track">
+        <div class="cov-bar-seg on" style="flex:1"></div><div class="cov-bar-seg" style="flex:7"></div>
+      </div><div style="color:#6C7086;width:110px">[1,1] = 3</div></div>
+      <div class="cov-bar-row"><div class="cov-bar-label">tree[2]</div><div class="cov-bar-track">
+        <div class="cov-bar-seg on" style="flex:2"></div><div class="cov-bar-seg" style="flex:6"></div>
+      </div><div style="color:#6C7086;width:110px">[1,2] = 5</div></div>
+      <div class="cov-bar-row"><div class="cov-bar-label">tree[3]</div><div class="cov-bar-track">
+        <div class="cov-bar-seg" style="flex:2"></div><div class="cov-bar-seg on" style="flex:1"></div><div class="cov-bar-seg" style="flex:5"></div>
+      </div><div style="color:#6C7086;width:110px">[3,3] = 5</div></div>
+      <div class="cov-bar-row"><div class="cov-bar-label">tree[4]</div><div class="cov-bar-track">
+        <div class="cov-bar-seg on" style="flex:4"></div><div class="cov-bar-seg" style="flex:4"></div>
+      </div><div style="color:#6C7086;width:110px">[1,4] = 16</div></div>
+      <div class="cov-bar-row"><div class="cov-bar-label">tree[5]</div><div class="cov-bar-track">
+        <div class="cov-bar-seg" style="flex:4"></div><div class="cov-bar-seg on" style="flex:1"></div><div class="cov-bar-seg" style="flex:3"></div>
+      </div><div style="color:#6C7086;width:110px">[5,5] = 1</div></div>
+      <div class="cov-bar-row"><div class="cov-bar-label">tree[6]</div><div class="cov-bar-track">
+        <div class="cov-bar-seg" style="flex:4"></div><div class="cov-bar-seg on" style="flex:2"></div><div class="cov-bar-seg" style="flex:2"></div>
+      </div><div style="color:#6C7086;width:110px">[5,6] = 5</div></div>
+      <div class="cov-bar-row"><div class="cov-bar-label">tree[7]</div><div class="cov-bar-track">
+        <div class="cov-bar-seg" style="flex:6"></div><div class="cov-bar-seg on" style="flex:1"></div><div class="cov-bar-seg" style="flex:1"></div>
+      </div><div style="color:#6C7086;width:110px">[7,7] = 7</div></div>
+      <div class="cov-bar-row"><div class="cov-bar-label">tree[8]</div><div class="cov-bar-track">
+        <div class="cov-bar-seg on" style="flex:8"></div>
+      </div><div style="color:#6C7086;width:110px">[1,8] = 30</div></div>
+      <figcaption><code>lowbit(i)</code> 决定了每个 <code>tree[i]</code> 管辖区间的长度：<code>lowbit(8)=8</code>，所以 <code>tree[8]</code> 管辖了最大的一段 <code>[1,8]</code>；<code>lowbit(1)=lowbit(3)=lowbit(5)=lowbit(7)=1</code>，这些位置各自只管辖自己这一个数。这种"有的管一大段、有的只管一个点"的结构，用不多的空间（仍然只是一个长度为 <code>n</code> 的数组）就能同时支持快速修改和快速查询。</figcaption>
+    </div>
+
+    <div class="sub-title" id="update">④ 单点修改：顺着 lowbit 往上跳</div>
+    <div class="section-body">
+      <p>把 <code>a[3]</code> 增加 <code>2</code>（从 <code>5</code> 变成 <code>7</code>）：需要更新<strong>所有管辖范围包含下标 3</strong> 的 <code>tree[i]</code>。做法是从 <code>i=3</code> 开始，不断执行 <code>i += lowbit(i)</code>，跳到下一个需要更新的位置，直到 <code>i</code> 超过 <code>n</code>：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>当前 i</th><th>lowbit(i)</th><th>更新 tree[i]</th><th>跳到 i += lowbit(i)</th></tr></thead>
+      <tbody>
+        <tr><td>3</td><td>1</td><td>tree[3]：5 → 7</td><td>3+1=4</td></tr>
+        <tr><td>4</td><td>4</td><td>tree[4]：16 → 18</td><td>4+4=8</td></tr>
+        <tr><td>8</td><td>8</td><td>tree[8]：30 → 32</td><td>8+8=16 &gt; n=8，停止</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么是 <code>i += lowbit(i)</code>？</b>只有"管辖区间包含下标 3"的 <code>tree[i]</code> 才需要更新——观察 ③ 的图会发现，这些 <code>i</code>（3、4、8）在树状数组的结构里，从下标 3 开始不断"跳到管辖范围更大、且仍然包含 3"的下一个位置，正好对应 <code>i += lowbit(i)</code> 这个操作。整个跳跃路径最多经过 <code>O(log n)</code> 个位置。</div>
+    </div>
+
+    <div class="sub-title" id="query">⑤ 前缀和查询：顺着 lowbit 往下跳</div>
+    <div class="section-body">
+      <p>查询 <code>a[1]+a[2]+...+a[6]</code>（前 6 个数的和）：从 <code>i=6</code> 开始，不断把 <code>tree[i]</code> 累加进答案，然后执行 <code>i -= lowbit(i)</code>，直到 <code>i</code> 变成 <code>0</code>：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>当前 i</th><th>lowbit(i)</th><th>累加 tree[i]</th><th>累计和</th><th>跳到 i -= lowbit(i)</th></tr></thead>
+      <tbody>
+        <tr><td>6</td><td>2</td><td>tree[6] = 5</td><td>5</td><td>6-2=4</td></tr>
+        <tr><td>4</td><td>4</td><td>tree[4] = 16</td><td>21</td><td>4-4=0，停止</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>验证一下：</b><code>a[1]+...+a[6] = 3+2+5+6+1+4 = 21</code>，和查询结果一致。刚才 ④ 把 <code>a[3]</code> 改成了 <code>7</code>（增加了 <code>2</code>），如果这时候重新查询 <code>Query(6)</code>，走的路径是 <code>i=6→tree[6]=5</code>，<code>i=4→tree[4]=18</code>（已经被 ④ 更新过），总和 <code>5+18=23</code>，正好是 <code>21+2</code>——修改的效果被正确地反映到了查询结果里。</div>
+    </div>
+
+    <div class="sub-title" id="code">⑥ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 树状数组</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> tree[MAXN], n;</td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">Lowbit</span>(<span class="typ">int</span> x) { <span class="kw">return</span> x &amp; (<span class="op">-</span>x); }  <span class="cmt">// 取出 x 最低位的 1</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">void</span> <span class="fn">Update</span>(<span class="typ">int</span> i, <span class="typ">int</span> delta)  <span class="cmt">// 把 a[i] 增加 delta</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">{</td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">    <span class="kw">for</span> (; i &lt;= n; i += <span class="fn">Lowbit</span>(i))  <span class="cmt">// ★ 往上跳，更新所有管辖范围包含 i 的位置</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        tree[i] += delta;</td></tr>
+          <tr><td class="ln">9</td><td class="cd">}</td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">int</span> <span class="fn">Query</span>(<span class="typ">int</span> i)  <span class="cmt">// 查询 a[1] + a[2] + ... + a[i]</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">{</td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="typ">int</span> sum = <span class="num">0</span>;</td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd">    <span class="kw">for</span> (; i &gt; <span class="num">0</span>; i -= <span class="fn">Lowbit</span>(i))  <span class="cmt">// ★ 往下跳，累加沿途的 tree[i]</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">        sum += tree[i];</td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="kw">return</span> sum;</td></tr>
+          <tr><td class="ln">17</td><td class="cd">}</td></tr>
+          <tr><td class="ln">18</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">19</td><td class="cd"><span class="typ">int</span> <span class="fn">RangeSum</span>(<span class="typ">int</span> l, <span class="typ">int</span> r)  <span class="cmt">// 查询区间 [l, r] 的和</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">{</td></tr>
+          <tr class="hl-ref"><td class="ln">21</td><td class="cd">    <span class="kw">return</span> <span class="fn">Query</span>(r) - <span class="fn">Query</span>(l - <span class="num">1</span>);  <span class="cmt">// 和 5.1 节前缀和求区间和的思路完全一样</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>任意区间 <code>[l, r]</code> 的和，用两次前缀和相减：</b>这一点和 5.1 节的前缀和数组是同一个思路——<code>Query(r) - Query(l-1)</code> 就是区间 <code>[l,r]</code> 的和。区别只在于：普通前缀和数组改一次要 <code>O(n)</code>，而这里的 <code>Query</code> 和 <code>Update</code> 都只要 <code>O(log n)</code>。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑦ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>下标必须从 1 开始，不能是 0：</b><code>lowbit(0) = 0</code>，如果 <code>Update</code> 或 <code>Query</code> 传入下标 <code>0</code>，循环条件 <code>i += Lowbit(i)</code>（或 <code>i -= Lowbit(i)</code>）会永远停在 <code>0</code>，变成死循环。树状数组的下标约定统一从 <code>1</code> 开始，这也是 16.1 节离散化时特意 <code>+1</code> 让排名从 1 开始的原因。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把"单点修改"理解成"覆盖赋值"：</b><code>Update(i, delta)</code> 里的 <code>delta</code> 是"变化量"（增加多少），不是"新值本身"。如果想把 <code>a[i]</code> 直接改成某个新值 <code>x</code>，需要先算出 <code>delta = x - a[i]</code>（旧值和新值的差），再调用 <code>Update(i, delta)</code>，同时记得更新记录旧值的数组。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>数据范围较大时，忘记先做 16.1 节的离散化：</b>树状数组的下标范围就是数组大小 <code>n</code>，如果原始数据值域很大（比如坐标可以是 <code>10⁹</code>），必须先离散化压缩到 <code>1~n</code>，再用离散化后的排名当树状数组的下标，否则数组根本开不下。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>树状数组代码简短、常数小，但它能维护的信息比较有限（主要是"区间和"这类可以用前缀和思想处理的信息）。16.3 节的<strong>线段树</strong>会用一种更通用的树形结构，能维护区间最大值、区间最小值等更丰富的信息，代价是代码比树状数组更长一些。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十六 树状数组与线段树 · 16.2 树状数组</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A16_01_离散化.html">← 16.1 离散化</a>
+      <a class="nav-btn" href="A16_03_线段树.html">16.3 线段树 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

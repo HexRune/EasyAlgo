@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>17.3 Trie 字典树 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "17.3"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--accent-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--accent-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-mid); border-bottom: 1px solid #c9c4f5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-mid); background: var(--accent-light); white-space: nowrap; }
+
+  /* Trie 树结构图 */
+  .trie-tree { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .trie-row { display: flex; gap: 26px; justify-content: center; flex-wrap: wrap; }
+  .trie-node {
+    width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700;
+    background: #2A2840; color: #A6ADC8; border: 2px solid transparent; position: relative; flex-shrink: 0;
+  }
+  .trie-node.root { background: #1A1830; color: #6C7086; font-size: 10px; }
+  .trie-node.end { background: rgba(166,227,161,.22); color: #A6E3A1; border-color: #A6E3A1; }
+  .trie-node.end::after {
+    content: "★"; position: absolute; top: -9px; right: -7px; font-size: 11px; color: #F9E2AF;
+  }
+  .trie-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .trie-word-label { font-size: 10px; color: #6C7086; margin-top: 4px; font-family: 'Noto Sans SC', sans-serif; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="17.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十七 字符串算法</span>
+      <span class="eyebrow-sep">/</span>
+      <span>17.3 Trie 字典树</span>
+    </div>
+    <h1 class="chapter-title">17.3　Trie 字典树</h1>
+    <p class="chapter-desc">很多字符串挤在一起，公共前缀被反复存了很多遍——Trie 把这些公共前缀合并成共享的树枝，查询只和字符串长度有关，和字符串总数无关。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要 Trie</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：公共前缀共享同一段树枝</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：插入几个单词后的 Trie 结构</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#complexity">复杂度分析</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要 Trie</div>
+    <div class="section-body">
+      <p>如果有一个包含很多单词的词典，需要频繁判断"某个字符串是不是词典里的一个单词"或者"某个字符串是不是词典里某个单词的前缀"——如果把单词逐个存成普通字符串列表，每次查询都要挨个比较，效率和单词总数、单词长度都有关。</p>
+      <p><strong>Trie（字典树 / 前缀树）</strong>把所有单词的<strong>公共前缀合并</strong>存储成一棵树，之后每次查询只需要沿着树"走"一遍待查字符串的长度那么多步，<strong>和词典里到底有多少个单词完全无关</strong>。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：公共前缀共享同一段树枝</div>
+    <div class="section-body">
+      <p>Trie 是一棵树：根节点代表"空字符串"，从根节点出发的每一条边对应一个字符，从根走到某个节点所经过的字符连起来，就是该节点代表的一段前缀。如果两个单词有相同的前缀，它们在 Trie 里会<strong>共用</strong>从根节点开始的这一段路径，只在前缀分叉的地方才各自延伸出不同的树枝。每个节点还需要一个标记，记录"走到这里，是否恰好构成一个完整的单词"（因为一个单词的路径，可能正好是另一个更长单词路径的前半段）。</p>
+    </div>
+
+    <div class="sub-title" id="trace">③ 图解：插入几个单词后的 Trie 结构</div>
+    <div class="section-body">
+      <p>依次插入 <code>"cat"</code>、<code>"car"</code>、<code>"do"</code>、<code>"dog"</code> 这 4 个单词：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">Trie 结构（带 ★ 的节点表示"走到这里恰好是一个完整单词"）</div>
+      <div class="trie-tree">
+        <div class="trie-row">
+          <div class="trie-node root">root</div>
+        </div>
+        <div class="trie-row">
+          <div class="trie-col"><div class="trie-node">c</div></div>
+          <div class="trie-col"><div class="trie-node">d</div></div>
+        </div>
+        <div class="trie-row">
+          <div class="trie-col"><div class="trie-node">a</div></div>
+          <div class="trie-col"><div class="trie-node end">o</div><div class="trie-word-label">"do" ✓</div></div>
+        </div>
+        <div class="trie-row">
+          <div class="trie-col"><div class="trie-node end">t</div><div class="trie-word-label">"cat" ✓</div></div>
+          <div class="trie-col"><div class="trie-node end">r</div><div class="trie-word-label">"car" ✓</div></div>
+          <div class="trie-col"><div class="trie-node end">g</div><div class="trie-word-label">"dog" ✓</div></div>
+        </div>
+      </div>
+      <figcaption><code>"cat"</code> 和 <code>"car"</code> 共用了 <code>c→a</code> 这一段公共前缀，只在第三个字符分叉成 <code>t</code> 和 <code>r</code> 两条树枝。更值得注意的是 <code>"do"</code> 和 <code>"dog"</code>：<code>"do"</code> 本身是一个完整单词（<code>o</code> 节点带 ★），但它同时也是 <code>"dog"</code> 的前缀，所以这个节点<strong>既标记了 ★，又继续往下延伸</strong>了一条树枝到 <code>g</code>。这正是"完整单词"和"只是路径存在"必须分开判断的原因（见 ⑥ 陷阱）。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码</div>
+    <div class="section-body">
+      <p>竞赛中通常用<strong>静态数组</strong>模拟树形结构（避免频繁 <code>new</code> 动态节点的开销），<code>trie[cur][c]</code> 表示节点 <code>cur</code> 沿着字符 <code>c</code> 这条边走到的下一个节点编号，<code>0</code> 表示"这条边不存在"：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · Trie（静态数组实现）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> trie[MAXN][<span class="num">26</span>], cnt;  <span class="cmt">// trie[cur][c]：节点 cur 沿字符 c 走到的节点编号；cnt：已用节点数</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">bool</span> isEnd[MAXN];  <span class="cmt">// isEnd[node]：走到 node 是否恰好是一个完整单词</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">void</span> <span class="fn">Insert</span>(<span class="kw">const</span> string&amp; word)</td></tr>
+          <tr><td class="ln">5</td><td class="cd">{</td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">int</span> cur = <span class="num">0</span>;  <span class="cmt">// 0 号节点是根节点</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">for</span> (<span class="typ">char</span> c : word)</td></tr>
+          <tr><td class="ln">8</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">9</td><td class="cd">        <span class="typ">int</span> idx = c - <span class="str">'a'</span>;</td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">        <span class="kw">if</span> (!trie[cur][idx]) trie[cur][idx] = ++cnt;  <span class="cmt">// ★ 这条边不存在就新建一个节点</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">        cur = trie[cur][idx];  <span class="cmt">// 沿着这条边走过去</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    }</td></tr>
+          <tr class="hl-ref"><td class="ln">13</td><td class="cd">    isEnd[cur] = <span class="kw">true</span>;  <span class="cmt">// 单词插入完毕，标记终点</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">}</td></tr>
+          <tr><td class="ln">15</td><td class="cd"></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="typ">bool</span> <span class="fn">Search</span>(<span class="kw">const</span> string&amp; word)  <span class="cmt">// 词典里是否存在这个完整单词</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">{</td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="typ">int</span> cur = <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="kw">for</span> (<span class="typ">char</span> c : word)</td></tr>
+          <tr><td class="ln">20</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">21</td><td class="cd">        <span class="typ">int</span> idx = c - <span class="str">'a'</span>;</td></tr>
+          <tr class="hl-warn"><td class="ln">22</td><td class="cd">        <span class="kw">if</span> (!trie[cur][idx]) <span class="kw">return</span> <span class="kw">false</span>;  <span class="cmt">// 路径都走不通，一定不存在</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">        cur = trie[cur][idx];</td></tr>
+          <tr><td class="ln">24</td><td class="cd">    }</td></tr>
+          <tr class="hl-ref"><td class="ln">25</td><td class="cd">    <span class="kw">return</span> isEnd[cur];  <span class="cmt">// ★ 路径走通了，还要看这里是不是一个"完整单词"的终点</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">}</td></tr>
+          <tr><td class="ln">27</td><td class="cd"></td></tr>
+          <tr><td class="ln">28</td><td class="cd"><span class="typ">bool</span> <span class="fn">StartsWith</span>(<span class="kw">const</span> string&amp; prefix)  <span class="cmt">// 词典里是否存在以 prefix 为前缀的单词</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd">{</td></tr>
+          <tr><td class="ln">30</td><td class="cd">    <span class="typ">int</span> cur = <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">31</td><td class="cd">    <span class="kw">for</span> (<span class="typ">char</span> c : prefix)</td></tr>
+          <tr><td class="ln">32</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">33</td><td class="cd">        <span class="typ">int</span> idx = c - <span class="str">'a'</span>;</td></tr>
+          <tr><td class="ln">34</td><td class="cd">        <span class="kw">if</span> (!trie[cur][idx]) <span class="kw">return</span> <span class="kw">false</span>;</td></tr>
+          <tr><td class="ln">35</td><td class="cd">        cur = trie[cur][idx];</td></tr>
+          <tr><td class="ln">36</td><td class="cd">    }</td></tr>
+          <tr class="hl-ref"><td class="ln">37</td><td class="cd">    <span class="kw">return</span> <span class="kw">true</span>;  <span class="cmt">// ★ 只要路径存在就够了，不需要看 isEnd</span></td></tr>
+          <tr><td class="ln">38</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b><code>Search</code> 和 <code>StartsWith</code> 几乎是同一份代码，只差最后一行：</b><code>Search</code> 要求走到的节点必须<strong>恰好是</strong>某个单词的终点（<code>isEnd</code> 为真）；<code>StartsWith</code> 只要求路径能走通，不关心走到的节点是不是某个单词的终点——这正对应 ③ 图解里 <code>"do"</code> 和 <code>"dog"</code> 的区别：查询前缀 <code>"do"</code> 应该返回 <code>true</code>（路径存在），但查询完整单词时，"do" 是词典里的词，"dog" 也是，两者都能在 <code>isEnd</code> 上得到确认。</div>
+    </div>
+
+    <div class="sub-title" id="complexity">⑤ 复杂度分析</div>
+    <div class="section-body">
+      <p>插入或查询一个长度为 <code>L</code> 的字符串，只需要沿着树走 <code>L</code> 步，每一步是 <code>O(1)</code>（数组下标访问），所以单次操作是 <code>O(L)</code>——<strong>和词典里已经存了多少个单词完全无关</strong>。空间上，最坏情况下（所有单词没有公共前缀）需要的节点数是所有单词长度之和。</p>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把"路径存在"当成"单词存在"：</b>这是最容易犯的错——查询 <code>"do"</code> 这个单词时，路径 <code>root→d→o</code> 确实存在（因为 <code>"dog"</code> 也经过这里），但如果词典里<strong>只插入了 <code>"dog"</code>，没有插入 <code>"do"</code></strong>，此时 <code>isEnd[o节点]</code> 是 <code>false</code>——查询完整单词 <code>"do"</code> 应该返回不存在，必须依赖 <code>isEnd</code> 判断，不能只看路径能不能走通。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>数组大小 <code>MAXN</code> 开得不够：</b>节点总数最坏情况下等于<strong>所有插入单词的长度之和</strong>（而不是单词的<strong>个数</strong>），如果词典很大且单词之间几乎没有公共前缀，需要的节点数会接近这个总长度，数组开小了会越界。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>字符集较大时，26 个子节点浪费空间：</b>本节假设字符集是小写字母（<code>26</code> 个），如果需要支持大小写字母、数字甚至更大的字符集，<code>trie[MAXN][26]</code> 这种固定大小的写法会浪费大量内存（大部分子节点其实是空的）。这种情况下可以考虑用 <code>map</code> 或 <code>unordered_map</code> 代替固定大小的数组存边，用空间换取灵活性，但访问速度会比数组慢一些。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>模块小结：</b>17.1～17.3 节的三种字符串工具分别解决不同的问题：字符串哈希把"子串比较"变成 <code>O(1)</code> 的数字比较；KMP 解决"一个模式串在文本里的所有出现位置"；Trie 解决"很多字符串共享前缀"的场景，让前缀相关的查询和字符串总数无关。三者经常配合其他数据结构（比如 Trie 常和 DFS、动态规划结合）解决更复杂的字符串问题。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十七 字符串算法 · 17.3 Trie 字典树</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A17_02_KMP字符串匹配.html">← 17.2 KMP 字符串匹配</a>
+      <a class="nav-btn" href="index.html">返回目录 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>14.2 双向 BFS — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "14.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--blue-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--blue-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--blue-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blue-mid); border-bottom: 1px solid #93c5fd; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #f0f5ff; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--blue-mid); background: var(--blue-light); white-space: nowrap; }
+
+  /* 双向扩展链路可视化 */
+  .chain-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .chain-cell { min-width: 44px; height: 40px; padding: 0 8px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0; border: 1.5px solid transparent; }
+  .chain-cell.s { background: rgba(137,180,250,.2); color: #89B4FA; border-color: rgba(137,180,250,.45); }
+  .chain-cell.t { background: rgba(243,139,168,.2); color: #F38BA8; border-color: rgba(243,139,168,.45); }
+  .chain-cell.meet { background: rgba(166,227,161,.25); color: #A6E3A1; border-color: #A6E3A1; }
+  .chain-arrow { color: #45475A; font-size: 14px; }
+  .chain-label { font-size: 10.5px; color: #6C7086; text-align: center; margin-top: 4px; font-family: 'Noto Sans SC', sans-serif; }
+  .chain-col { display: flex; flex-direction: column; align-items: center; }
+
+  /* 队列可视化（沿用 14.1 的风格） */
+  .queue-row { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .q-cell { min-width: 44px; height: 38px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .q-cell.s { background: rgba(137,180,250,.2); color: #89B4FA; border: 1px solid rgba(137,180,250,.4); }
+  .q-cell.t { background: rgba(243,139,168,.15); color: #F38BA8; border: 1px solid rgba(243,139,168,.35); }
+  .q-cell.meet { background: rgba(166,227,161,.2); color: #A6E3A1; border: 1px solid rgba(166,227,161,.45); }
+  .q-label { font-size: 11px; color: #6C7086; width: 96px; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; line-height: 1.4; }
+  .q-row-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #2A2840; }
+  .q-row-wrap:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .q-note { font-size: 11.5px; color: #A6ADC8; font-family: 'Noto Sans SC', sans-serif; margin-left: 4px; flex: 1; line-height: 1.5; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="14.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十四 搜索进阶</span>
+      <span class="eyebrow-sep">/</span>
+      <span>14.2 双向 BFS</span>
+    </div>
+    <h1 class="chapter-title">14.2　双向 BFS</h1>
+    <p class="chapter-desc">起点和终点都已知时，与其让一条水波独自扩散到终点，不如让两端同时扩散，在中间碰头——能省下大量不必要的搜索。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要双向 BFS：单向搜索的爆炸增长</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：两端同时扩展，相遇即停</a></li>
+      <li><span class="toc-num">③</span><a href="#code">模板代码</a></li>
+      <li><span class="toc-num">④</span><a href="#trace">图解：两个方向的队列如何在中间相遇</a></li>
+      <li><span class="toc-num">⑤</span><a href="#pitfall">适用条件与常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要双向 BFS：单向搜索的爆炸增长</div>
+    <div class="section-body">
+      <p>14.1 节的 BFS 已经能保证找到最短路，但它有一个隐藏的代价：如果图的<strong>分支因子</strong>（平均每个节点能扩展到多少个新节点）是 <code>b</code>，最短路长度是 <code>d</code>，那么单向 BFS 在最坏情况下要访问的节点数量级是 <code>O(b^d)</code>——随着 <code>d</code> 增大，访问的节点数会<strong>指数级爆炸</strong>。</p>
+      <p>如果<strong>终点也是已知的</strong>（比如"从状态 A 变到状态 B，最少几步"，A 和 B 都给定），有一个更聪明的办法：<strong>从起点和终点同时开始扩展</strong>，两边各自只需要扩展到大约 <code>d/2</code> 层，就能在中间相遇。这样访问的节点数量级变成 <code>O(2 × b^(d/2))</code>——同样是指数级，但指数减半带来的差距非常悬殊：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>分支因子 b</th><th>最短路 d</th><th>单向 BFS 访问量 O(b^d)</th><th>双向 BFS 访问量 O(2×b^(d/2))</th></tr></thead>
+      <tbody>
+        <tr><td>10</td><td>6</td><td>约 1,000,000</td><td>约 2,000</td></tr>
+        <tr><td>10</td><td>10</td><td>约 100 亿</td><td>约 200,000</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么指数减半差距这么大？</b>指数函数增长极快——<code>b^d</code> 和 <code>2×b^(d/2)</code> 看起来只是指数少了一半，但因为是指数关系，一半的指数意味着底数相同时数值差了一个数量级以上的平方根倍。<code>d</code> 越大、<code>b</code> 越大，双向 BFS 相对单向 BFS 省下的计算量就越夸张。</div>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：两端同时扩展，相遇即停</div>
+    <div class="section-body">
+      <p>双向 BFS 维护<strong>两个独立的 BFS</strong>：一个从起点 <code>S</code> 出发向外扩展，一个从终点 <code>T</code> 出发向外扩展。两边各自维护自己的距离数组（<code>distS</code>、<code>distT</code>），交替扩展一层。每次扩展新节点时，检查这个节点<strong>有没有被另一边访问过</strong>——一旦发现某个节点同时被两边访问到，说明两股"水波"在这里相遇了，答案就是 <code>distS[相遇点] + distT[相遇点]</code>。</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">一条长度为 4 的路径上，两种 BFS 的访问范围对比</div>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div>
+          <div style="font-size:11px;color:#89B4FA;margin-bottom:8px;font-family:'Noto Sans SC',sans-serif">单向 BFS：从 S 一路扩展到 T，要访问全部 5 个节点</div>
+          <div class="chain-row">
+            <div class="chain-col"><div class="chain-cell s">S</div><div class="chain-label">dist=0</div></div>
+            <div class="chain-arrow">→</div>
+            <div class="chain-col"><div class="chain-cell s">A</div><div class="chain-label">dist=1</div></div>
+            <div class="chain-arrow">→</div>
+            <div class="chain-col"><div class="chain-cell s">B</div><div class="chain-label">dist=2</div></div>
+            <div class="chain-arrow">→</div>
+            <div class="chain-col"><div class="chain-cell s">C</div><div class="chain-label">dist=3</div></div>
+            <div class="chain-arrow">→</div>
+            <div class="chain-col"><div class="chain-cell s">T</div><div class="chain-label">dist=4</div></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#A6E3A1;margin-bottom:8px;font-family:'Noto Sans SC',sans-serif">双向 BFS：两端各自只扩展 2 层，在 B 相遇</div>
+          <div class="chain-row">
+            <div class="chain-col"><div class="chain-cell s">S</div><div class="chain-label">distS=0</div></div>
+            <div class="chain-arrow">→</div>
+            <div class="chain-col"><div class="chain-cell s">A</div><div class="chain-label">distS=1</div></div>
+            <div class="chain-arrow">→</div>
+            <div class="chain-col"><div class="chain-cell meet">B</div><div class="chain-label">distS=2　distT=2</div></div>
+            <div class="chain-arrow">←</div>
+            <div class="chain-col"><div class="chain-cell t">C</div><div class="chain-label">distT=1</div></div>
+            <div class="chain-arrow">←</div>
+            <div class="chain-col"><div class="chain-cell t">T</div><div class="chain-label">distT=0</div></div>
+          </div>
+        </div>
+      </div>
+      <figcaption>相遇点 <code>B</code> 同时被"从 S 出发"和"从 T 出发"的两股搜索访问到：<code>distS[B]=2</code>，<code>distT[B]=2</code>，答案 <code>= distS[B] + distT[B] = 4</code>，和单向 BFS 算出的路径长度一致，但双向 BFS 全程只碰到了 <code>S、A、B、C、T</code> 中的每一个节点各一次，在真实的大规模图上（分支因子较大时）能少访问大量根本没必要看的节点。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">③ 模板代码</div>
+    <div class="section-body">
+      <p>以一般图（邻接表）为例，两个方向<strong>交替各扩展一整层</strong>，每扩展一个新节点就检查它是否已经被对面访问过：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 双向 BFS 模板</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd">vector&lt;<span class="typ">int</span>&gt; adj[MAXN];</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> distS[MAXN], distT[MAXN];  <span class="cmt">// -1 表示未访问；分别记录"从起点/终点出发"的距离</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// 扩展 q 队列一整层；hitDist 是"对面"的距离数组，用来检测相遇</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">ExpandLayer</span>(queue&lt;<span class="typ">int</span>&gt; &amp;q, <span class="typ">int</span> myDist[], <span class="typ">int</span> hitDist[])</td></tr>
+          <tr><td class="ln">6</td><td class="cd">{</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="typ">int</span> sz = q.<span class="fn">size</span>();  <span class="cmt">// 只扩展"当前已经在队列里"的这一层，不把新加入的也算进去</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> t = <span class="num">0</span>; t &lt; sz; t++)</td></tr>
+          <tr><td class="ln">9</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="typ">int</span> u = q.<span class="fn">front</span>(); q.<span class="fn">pop</span>();</td></tr>
+          <tr><td class="ln">11</td><td class="cd">        <span class="kw">for</span> (<span class="typ">int</span> v : adj[u])</td></tr>
+          <tr><td class="ln">12</td><td class="cd">        {</td></tr>
+          <tr class="hl-warn"><td class="ln">13</td><td class="cd">            <span class="kw">if</span> (hitDist[v] != <span class="num">-1</span>) <span class="kw">return</span> myDist[u] + <span class="num">1</span> + hitDist[v];  <span class="cmt">// ★ 对面已经到过 v，相遇！</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">            <span class="kw">if</span> (myDist[v] != <span class="num">-1</span>) <span class="kw">continue</span>;  <span class="cmt">// 自己这边已经访问过，跳过</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">            myDist[v] = myDist[u] + <span class="num">1</span>;</td></tr>
+          <tr><td class="ln">16</td><td class="cd">            q.<span class="fn">push</span>(v);</td></tr>
+          <tr><td class="ln">17</td><td class="cd">        }</td></tr>
+          <tr><td class="ln">18</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="kw">return</span> <span class="num">-1</span>;  <span class="cmt">// 这一层扩展完还没相遇</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">}</td></tr>
+          <tr><td class="ln">21</td><td class="cd"></td></tr>
+          <tr><td class="ln">22</td><td class="cd"><span class="typ">int</span> <span class="fn">BidirectionalBFS</span>(<span class="typ">int</span> S, <span class="typ">int</span> T)</td></tr>
+          <tr><td class="ln">23</td><td class="cd">{</td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="kw">if</span> (S == T) <span class="kw">return</span> <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">25</td><td class="cd">    <span class="fn">memset</span>(distS, <span class="num">-1</span>, <span class="kw">sizeof</span>(distS));</td></tr>
+          <tr><td class="ln">26</td><td class="cd">    <span class="fn">memset</span>(distT, <span class="num">-1</span>, <span class="kw">sizeof</span>(distT));</td></tr>
+          <tr><td class="ln">27</td><td class="cd">    queue&lt;<span class="typ">int</span>&gt; qS, qT;</td></tr>
+          <tr class="hl-ref"><td class="ln">28</td><td class="cd">    distS[S] = <span class="num">0</span>; qS.<span class="fn">push</span>(S);</td></tr>
+          <tr class="hl-ref"><td class="ln">29</td><td class="cd">    distT[T] = <span class="num">0</span>; qT.<span class="fn">push</span>(T);</td></tr>
+          <tr><td class="ln">30</td><td class="cd"></td></tr>
+          <tr><td class="ln">31</td><td class="cd">    <span class="kw">while</span> (!qS.<span class="fn">empty</span>() &amp;&amp; !qT.<span class="fn">empty</span>())</td></tr>
+          <tr><td class="ln">32</td><td class="cd">    {</td></tr>
+          <tr class="hl"><td class="ln">33</td><td class="cd">        <span class="typ">int</span> res = <span class="fn">ExpandLayer</span>(qS, distS, distT);  <span class="cmt">// 从起点这边扩展一层</span></td></tr>
+          <tr><td class="ln">34</td><td class="cd">        <span class="kw">if</span> (res != <span class="num">-1</span>) <span class="kw">return</span> res;</td></tr>
+          <tr class="hl"><td class="ln">35</td><td class="cd">        res = <span class="fn">ExpandLayer</span>(qT, distT, distS);  <span class="cmt">// 从终点这边扩展一层</span></td></tr>
+          <tr><td class="ln">36</td><td class="cd">        <span class="kw">if</span> (res != <span class="num">-1</span>) <span class="kw">return</span> res;</td></tr>
+          <tr><td class="ln">37</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">38</td><td class="cd">    <span class="kw">return</span> <span class="op">-1</span>;  <span class="cmt">// 两边都扩展完了还没相遇，说明 S、T 不连通</span></td></tr>
+          <tr><td class="ln">39</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>和普通 BFS 相比多了什么？</b>结构上几乎一样，只是从"一个队列、一个距离数组"变成了"两个队列、两个距离数组"，并且第 7 行用 <code>q.size()</code> 提前记录本层节点数，确保每次只扩展"已经在队列里"的这一层，不会把这一层扩展时新塞进去的下一层节点也算进当前这一轮——这样才能保证两边真正是"交替地一层一层"扩展，而不是一边偷跑到很深的地方。</div>
+    </div>
+
+    <div class="sub-title" id="trace">④ 图解：两个方向的队列如何在中间相遇</div>
+    <div class="section-body">
+      <p>用一张网格图演示：起点 <code>S</code> 在左上角，终点 <code>T</code> 在右下角，两支队列交替扩展，直到某一层扩展时踩到对方的地盘：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">两支队列交替扩展的过程</div>
+
+      <div class="q-row-wrap">
+        <div class="q-label" style="color:#89B4FA">起点队列<br>第 1 层</div>
+        <div class="queue-row">
+          <div class="q-cell s">S 的邻居们</div>
+        </div>
+        <div class="q-note">distS 记为 1；此时 distT 里没有任何一个是这些点，未相遇</div>
+      </div>
+
+      <div class="q-row-wrap">
+        <div class="q-label" style="color:#F38BA8">终点队列<br>第 1 层</div>
+        <div class="queue-row">
+          <div class="q-cell t">T 的邻居们</div>
+        </div>
+        <div class="q-note">distT 记为 1；同样未相遇</div>
+      </div>
+
+      <div class="q-row-wrap">
+        <div class="q-label" style="color:#89B4FA">起点队列<br>第 2 层</div>
+        <div class="queue-row">
+          <div class="q-cell s">…</div>
+          <div class="q-cell meet">M</div>
+        </div>
+        <div class="q-note">扩展到节点 <b>M</b> 时，发现 <code>distT[M] != -1</code>（终点那边第 1 层已经到过 M）——<b>相遇！</b>直接返回 <code>distS[M] + 1 + distT[M]</code></div>
+      </div>
+
+    </div>
+
+    <div class="sub-title" id="pitfall">⑤ 适用条件与常见陷阱</div>
+    <div class="section-body">
+      <p>双向 BFS 不是任何时候都能用，也不是任何时候都比单向 BFS 划算：</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>终点必须提前已知：</b>双向 BFS 的前提是"起点和终点都给定，求两者之间的最短距离"。如果问题是"从起点出发，找到第一个满足某种条件的位置"（终点本身不确定，需要一边搜索一边判断），就没法从终点反向扩展，只能用普通的单向 BFS。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记检查"扩展到的新节点"和"相遇判断"的先后顺序：</b>第 13、14 行的判断顺序很关键——必须先检查<b>对面</b>有没有访问过（判断相遇），再检查<b>自己</b>有没有访问过（避免重复入队）。如果顺序反了，可能会在已经相遇的情况下继续把节点当作"自己的新节点"入队，导致要么错过正确答案，要么多做无用功。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>有向图中，终点这边不能沿着原方向扩展：</b>如果图是有向图（边有方向），从终点 <code>T</code> 出发反向扩展时，要沿着<strong>反向边</strong>走（"谁能到达 T"而不是"T 能到达谁"），需要额外建一张反图。本节的例子和模板代码都以无向图为例，实际做有向图的双向 BFS 时要特别注意这一点。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>本节小结：</b>双向 BFS 本质仍然是 BFS——用队列保证"先近后远"，只是同时从两端各跑一遍，利用"指数减半"的数学优势大幅压缩要访问的节点数。它不能替代单向 BFS（终点未知时用不了），但在终点已知、分支因子较大的场景（比如经典的"八数码"问题两端状态之间求最少步数）非常有效，是竞赛中常见的 BFS 优化技巧之一。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十四 搜索进阶 · 14.2 双向 BFS</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A14_01_BFS.html">← 14.1 BFS 广度优先搜索</a>
+      <a class="nav-btn" href="A14_03_迭代加深搜索.html">14.3 迭代加深搜索 IDDFS →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

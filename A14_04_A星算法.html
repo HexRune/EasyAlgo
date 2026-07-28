@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>14.4 A* 算法 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "14.4"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--blue-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--blue-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--blue-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blue-mid); border-bottom: 1px solid #93c5fd; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #f0f5ff; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--blue-mid); background: var(--blue-light); white-space: nowrap; }
+
+  /* 网格扩展范围对比 */
+  .astar-wrap { display: flex; gap: 34px; flex-wrap: wrap; justify-content: center; }
+  .astar-col { display: flex; flex-direction: column; align-items: center; }
+  .astar-title { font-size: 11.5px; color: #A6ADC8; margin-bottom: 10px; font-family: 'Noto Sans SC', sans-serif; }
+  .astar-grid { display: flex; flex-direction: column; gap: 3px; }
+  .astar-row { display: flex; gap: 3px; }
+  .astar-cell { width: 28px; height: 28px; border-radius: 5px; background: #232135; }
+  .astar-cell.v-bfs { background: rgba(137,180,250,.35); }
+  .astar-cell.v-astar { background: rgba(166,227,161,.4); }
+  .astar-cell.pt { display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: #1A1830; background: #F9E2AF; }
+  .astar-note { font-size: 11px; color: #6C7086; margin-top: 10px; font-family: 'Noto Sans SC', sans-serif; text-align: center; max-width: 200px; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="14.4">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十四 搜索进阶</span>
+      <span class="eyebrow-sep">/</span>
+      <span>14.4 A* 算法</span>
+    </div>
+    <h1 class="chapter-title">14.4　A* 算法</h1>
+    <p class="chapter-desc">BFS 不管方向、往四面八方均匀扩展——A* 多了一个"感觉离终点还有多远"的估计，优先朝着这个方向探索，能少走很多冤枉路。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要 A*：BFS 不知道"哪个方向更接近终点"</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：f(n) = g(n) + h(n)</a></li>
+      <li><span class="toc-num">③</span><a href="#heuristic">启发式函数怎么定义：曼哈顿距离与"不能高估"</a></li>
+      <li><span class="toc-num">④</span><a href="#compare">图解：同一张网格，BFS 和 A* 各自访问的范围</a></li>
+      <li><span class="toc-num">⑤</span><a href="#code">模板代码</a></li>
+      <li><span class="toc-num">⑥</span><a href="#dijkstra">特殊情况：h(n) = 0 时就是 Dijkstra</a></li>
+      <li><span class="toc-num">⑦</span><a href="#pitfall">适用条件与常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要 A*：BFS 不知道"哪个方向更接近终点"</div>
+    <div class="section-body">
+      <p>14.1 节的 BFS 像一圈圈扩散的水波——不管终点在哪个方向，它都会均匀地往四面八方探索，一层一层扩大范围，直到扩散到终点为止。如果终点其实就在正前方不远处，BFS 依然会把"背对终点"的方向也探索个遍，才轮到终点所在的方向——这些背离终点方向的探索，其实是白费的。</p>
+      <p><strong>A* 算法</strong>在 BFS（严格说是 Dijkstra，见 ⑥）的基础上，多引入了一条信息：<strong>每个位置"大概"离终点还有多远</strong>（不要求精确，只要是一个合理的估计）。有了这条信息，搜索就能<strong>优先朝着"感觉更接近终点"的方向扩展</strong>，像手里多了一个指南针，不再是无差别地往四周探索。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：f(n) = g(n) + h(n)</div>
+    <div class="section-body">
+      <p>A* 给每个待探索的节点算一个分数 <code>f(n)</code>，由两部分相加组成：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>符号</th><th>含义</th></tr></thead>
+      <tbody>
+        <tr><td>g(n)</td><td>从起点<strong>实际走到</strong> n 已经花费的代价（这部分是精确值，不是估计）</td></tr>
+        <tr><td>h(n)</td><td>从 n <strong>估计</strong>还要多少代价才能到达终点（启发式函数，Heuristic）</td></tr>
+        <tr><td>f(n) = g(n) + h(n)</td><td>"如果经过 n"，从起点到终点的<strong>总代价估计</strong></td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-body">
+      <p>A* 用一个<strong>优先队列</strong>（小顶堆）代替 BFS 的普通队列，每次<strong>弹出 <code>f(n)</code> 最小的节点</strong>来扩展——也就是"当前看起来最有希望、总代价最小"的那个节点优先探索，而不是像 BFS 那样按入队顺序（也就是纯粹按距离远近）挨个处理。</p>
+    </div>
+
+    <div class="sub-title" id="heuristic">③ 启发式函数怎么定义：曼哈顿距离与"不能高估"</div>
+    <div class="section-body">
+      <p>在网格寻路里，最常用的启发式函数是<strong>曼哈顿距离</strong>（只能上下左右移动时）：<code>h(n) = |n.x - T.x| + |n.y - T.y|</code>——横纵坐标差的绝对值之和，也就是"不考虑障碍物，直着走过去需要几步"。</p>
+      <p>启发式函数 <code>h(n)</code> 有一条<strong>必须遵守</strong>的规则：<strong>永远不能高估真实代价</strong>（这样的 <code>h</code> 称为"可采纳的"，admissible）。如果 <code>h(n)</code> 估得比实际需要的步数还多，A* 可能会因为"觉得这条路太远"而提前放弃一条其实更优的路径，导致算出的答案不是最短路。曼哈顿距离在只能上下左右移动的网格里，天然满足"不高估"——真实路径可能因为障碍物绕远，但绝不会比直线距离更短。</p>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>h(n) = 0 也是合法的（只是没有意义）：</b>如果 <code>h(n)</code> 恒为 <code>0</code>，A* 就退化成了普通的 Dijkstra／BFS——没有方向指引，纯粹按已走代价排序。<code>h</code> 估计得越准（同时不高估），A* 能"提前排除"的无关方向就越多，效率提升越明显；估得越不准，效率提升就越有限。</div>
+    </div>
+
+    <div class="sub-title" id="compare">④ 图解：同一张网格，BFS 和 A* 各自访问的范围</div>
+    <div class="section-body">
+      <p>在一张 <code>5×7</code> 的空网格上，起点 <code>S</code> 在最左列正中间，终点 <code>T</code> 在最右列正中间，两者相距 4 步（无障碍物）。对比 BFS 和 A*（曼哈顿距离启发）各自访问过的格子：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="astar-wrap">
+        <div class="astar-col">
+          <div class="astar-title">BFS 访问范围（23 / 35 格）</div>
+          <div class="astar-grid">
+            <div class="astar-row"><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div></div>
+            <div class="astar-row"><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell"></div><div class="astar-cell"></div></div>
+            <div class="astar-row"><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell"></div></div>
+            <div class="astar-row"><div class="astar-cell v-bfs pt">S</div><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs pt">T</div></div>
+            <div class="astar-row"><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell"></div></div>
+            <div class="astar-row"><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell"></div><div class="astar-cell"></div></div>
+            <div class="astar-row"><div class="astar-cell v-bfs"></div><div class="astar-cell v-bfs"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div></div>
+          </div>
+          <div class="astar-note">像水波一样往上下左右均匀扩散，直到第 4 层才碰到 T——上下两个方向也探索了一大片</div>
+        </div>
+        <div class="astar-col">
+          <div class="astar-title">A* 访问范围（5 / 35 格）</div>
+          <div class="astar-grid">
+            <div class="astar-row"><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div></div>
+            <div class="astar-row"><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div></div>
+            <div class="astar-row"><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div></div>
+            <div class="astar-row"><div class="astar-cell v-astar pt">S</div><div class="astar-cell v-astar"></div><div class="astar-cell v-astar"></div><div class="astar-cell v-astar"></div><div class="astar-cell v-astar pt">T</div></div>
+            <div class="astar-row"><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div></div>
+            <div class="astar-row"><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div></div>
+            <div class="astar-row"><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div><div class="astar-cell"></div></div>
+          </div>
+          <div class="astar-note">只沿着 S、T 所在的这一行直接探索，上下方向的格子因为 f 值更大，根本没被碰过</div>
+        </div>
+      </div>
+      <figcaption>差距是怎么来的？以偏离直线一行的格子 <code>(col=1, row=2)</code> 为例：<code>g</code>（从 S 走到这里）需要 <code>2</code> 步，<code>h</code>（曼哈顿估计到 T）是 <code>3+1=4</code>，<code>f = 2+4 = 6</code>；而直线上的格子 <code>(col=1, row=3)</code>：<code>g=1</code>，<code>h=3</code>，<code>f=1+3=4</code>。优先队列每次弹出 <code>f</code> 最小的节点，<code>f=4</code> 的这一整行会被<strong>优先</strong>处理完，等不到 <code>f=6</code> 的格子被拿出来，S 到 T 之间的最短路已经找到了。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">⑤ 模板代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · A* 网格寻路模板</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> n, m, er, ec;  <span class="cmt">// 网格大小、终点坐标</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> g[MAXN][MAXN];        <span class="cmt">// g[r][c]：从起点到 (r,c) 的实际步数，-1 表示未访问</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> dx[] = {<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">-1</span>}, dy[] = {<span class="num">1</span>, <span class="num">-1</span>, <span class="num">0</span>, <span class="num">0</span>};</td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">H</span>(<span class="typ">int</span> r, <span class="typ">int</span> c)  <span class="cmt">// 曼哈顿距离估价</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">{</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">return</span> <span class="fn">abs</span>(r - er) + <span class="fn">abs</span>(c - ec);</td></tr>
+          <tr><td class="ln">8</td><td class="cd">}</td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="cmt">// 队列里存 (f, r, c)；pair 默认按 f 从小到大比较，用 greater 做小顶堆</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">int</span> <span class="fn">AStar</span>(<span class="typ">int</span> sr, <span class="typ">int</span> sc)</td></tr>
+          <tr><td class="ln">12</td><td class="cd">{</td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="fn">memset</span>(g, <span class="num">-1</span>, <span class="kw">sizeof</span>(g));</td></tr>
+          <tr><td class="ln">14</td><td class="cd">    priority_queue&lt;tuple&lt;<span class="typ">int</span>,<span class="typ">int</span>,<span class="typ">int</span>&gt;, vector&lt;tuple&lt;<span class="typ">int</span>,<span class="typ">int</span>,<span class="typ">int</span>&gt;&gt;, greater&lt;&gt;&gt; pq;</td></tr>
+          <tr class="hl-ref"><td class="ln">15</td><td class="cd">    g[sr][sc] = <span class="num">0</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">16</td><td class="cd">    pq.<span class="fn">push</span>({<span class="fn">H</span>(sr, sc), sr, sc});  <span class="cmt">// f = g(0) + h</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="kw">while</span> (!pq.<span class="fn">empty</span>())</td></tr>
+          <tr><td class="ln">19</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="kw">auto</span> [f, r, c] = pq.<span class="fn">top</span>(); pq.<span class="fn">pop</span>();  <span class="cmt">// ★ 每次取 f 最小的节点</span></td></tr>
+          <tr class="hl-warn"><td class="ln">21</td><td class="cd">        <span class="kw">if</span> (r == er &amp;&amp; c == ec) <span class="kw">return</span> g[r][c];  <span class="cmt">// 第一次弹出终点，g 就是最短距离</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">        <span class="kw">if</span> (f &gt; g[r][c] + <span class="fn">H</span>(r, c)) <span class="kw">continue</span>;  <span class="cmt">// 过时的队列项，跳过（见 ⑦ 陷阱）</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd"></td></tr>
+          <tr><td class="ln">24</td><td class="cd">        <span class="kw">for</span> (<span class="typ">int</span> k = <span class="num">0</span>; k &lt; <span class="num">4</span>; k++)</td></tr>
+          <tr><td class="ln">25</td><td class="cd">        {</td></tr>
+          <tr><td class="ln">26</td><td class="cd">            <span class="typ">int</span> nr = r + dx[k], nc = c + dy[k];</td></tr>
+          <tr><td class="ln">27</td><td class="cd">            <span class="kw">if</span> (nr &lt; <span class="num">0</span> || nr &gt;= n || nc &lt; <span class="num">0</span> || nc &gt;= m) <span class="kw">continue</span>;</td></tr>
+          <tr><td class="ln">28</td><td class="cd">            <span class="typ">int</span> ng = g[r][c] + <span class="num">1</span>;</td></tr>
+          <tr class="hl"><td class="ln">29</td><td class="cd">            <span class="kw">if</span> (g[nr][nc] == <span class="op">-1</span> || ng &lt; g[nr][nc])  <span class="cmt">// 没访问过，或者找到了更短的路</span></td></tr>
+          <tr><td class="ln">30</td><td class="cd">            {</td></tr>
+          <tr><td class="ln">31</td><td class="cd">                g[nr][nc] = ng;</td></tr>
+          <tr class="hl"><td class="ln">32</td><td class="cd">                pq.<span class="fn">push</span>({ng + <span class="fn">H</span>(nr, nc), nr, nc});  <span class="cmt">// f = 新的 g + h</span></td></tr>
+          <tr><td class="ln">33</td><td class="cd">            }</td></tr>
+          <tr><td class="ln">34</td><td class="cd">        }</td></tr>
+          <tr><td class="ln">35</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">36</td><td class="cd">    <span class="kw">return</span> <span class="op">-1</span>;</td></tr>
+          <tr><td class="ln">37</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>和 BFS 相比，改动集中在两处：</b>用<strong>优先队列</strong>（按 <code>f</code> 排序）代替普通队列；每次入队时多加一项 <code>H(nr, nc)</code> 算出 <code>f</code>。除此之外的骨架——记录已走距离、四方向扩展、越界检查——和 14.1 节的 BFS 完全一样。</div>
+    </div>
+
+    <div class="sub-title" id="dijkstra">⑥ 特殊情况：h(n) = 0 时就是 Dijkstra</div>
+    <div class="section-body">
+      <p>观察 <code>f(n) = g(n) + h(n)</code>：如果把 <code>h(n)</code> 恒定设为 <code>0</code>，A* 的优先队列就完全按 <code>g(n)</code>（实际已走代价）排序——这正是 <strong>Dijkstra 算法</strong>的做法。再进一步，如果每条边的代价都固定是 <code>1</code>（无权图），按 <code>g(n)</code> 排序又和"先入队的先处理"的普通队列（BFS）等价。可以说，<strong>BFS ⊂ Dijkstra ⊂ A*</strong>——A* 是在 Dijkstra 的基础上加上了"目标方向感"，Dijkstra 又是 BFS 在带权图上的推广。</p>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑦ 适用条件与常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>启发式函数高估，导致算出的不是最短路：</b>比如把网格的曼哈顿距离误用成"斜线直线距离"（欧几里得距离）却只允许上下左右移动，会导致 <code>h</code> 有时比真实代价小、有时因为四舍五入等问题反而更大。<b>只要 <code>h</code> 存在高估的可能，A* 就不再保证找到最短路</b>——设计启发式函数时，宁可估得保守一些（偏小），也不能有高估的风险。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>同一个格子被多次以不同的 g 值入队：</b>代码第 29 行允许"找到更短的路就更新 <code>g</code> 并重新入队"，这意味着同一个坐标可能同时有好几条记录躺在优先队列里，其中大部分已经"过时"（后来被更小的 <code>g</code> 覆盖了）。第 22 行 <code>if (f &gt; g[r][c] + H(r,c)) continue;</code> 就是用来识别并跳过这些过时记录的——如果漏掉这一行判断，程序不会出错，但会重复处理很多已经不需要再处理的节点，白白浪费时间。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>h(n) 设计得太"贴合"具体地图，换个场景就失效：</b>启发式函数只应该利用"坐标"这类通用信息（比如曼哈顿距离、欧几里得距离），不应该依赖某一张具体地图才成立的巧合规律。地图和移动规则变了（比如允许斜着走、或者移动代价不再是 1），原来的 <code>h</code> 函数可能不再满足"不高估"，需要重新设计（比如允许斜走时改用切比雪夫距离）。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>本节的 A* 使用优先队列，内存开销和 BFS 类似（需要保存整个搜索前沿）。14.5 节的 <strong>IDA*</strong> 会把 14.3 节 IDDFS 的"深度限制、反复加深"思路搬过来，把限制的对象从"深度"换成"<code>f</code> 值"，用 DFS 的低内存开销实现和 A* 一样的启发式剪枝效果。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十四 搜索进阶 · 14.4 A* 算法</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A14_03_迭代加深搜索.html">← 14.3 迭代加深搜索 IDDFS</a>
+      <a class="nav-btn" href="A14_05_IDA星算法.html">14.5 IDA* 算法 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

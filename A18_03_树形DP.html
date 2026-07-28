@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>18.3 树形 DP — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "18.3"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--amber-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--amber); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--amber-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--amber); border-bottom: 1px solid #F0D9A8; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--amber); background: var(--amber-light); white-space: nowrap; }
+
+  /* 树形结构图 */
+  .tt-tree { display: flex; flex-direction: column; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .tt-node {
+    padding: 8px 10px; border-radius: 7px; background: #2A2840; color: #A6ADC8;
+    border: 1.5px solid transparent; text-align: center; line-height: 1.5; min-width: 64px;
+  }
+  .tt-node .nm { font-size: 13px; font-weight: 700; color: #89B4FA; display: block; }
+  .tt-node .vv { font-size: 10.5px; color: #6C7086; }
+  .tt-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  .tt-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .tt-children { display: flex; gap: 16px; }
+
+  /* dp值追踪表 */
+  .tdp-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; width: 100%; }
+  .tdp-table th, .tdp-table td { padding: 8px 10px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .tdp-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11px; }
+  .tdp-table td.pick { background: rgba(166,227,161,.2); color: #A6E3A1; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="18.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十八 动态规划进阶</span>
+      <span class="eyebrow-sep">/</span>
+      <span>18.3 树形 DP</span>
+    </div>
+    <h1 class="chapter-title">18.3　树形 DP</h1>
+    <p class="chapter-desc">状态定义在树的每个节点上，通过一次 DFS 后序遍历，让子节点的信息先算好，再一层层汇总给父节点。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">什么是树形 DP</a></li>
+      <li><span class="toc-num">②</span><a href="#tsp">引例：没有上司的舞会</a></li>
+      <li><span class="toc-num">③</span><a href="#idea">核心思想：dp[u][0/1] 与后序遍历</a></li>
+      <li><span class="toc-num">④</span><a href="#trace">图解：一棵具体树的完整求解过程</a></li>
+      <li><span class="toc-num">⑤</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">复杂度与常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 什么是树形 DP</div>
+    <div class="section-body">
+      <p><strong>树形 DP</strong> 把动态规划的状态定义在树的每一个<strong>节点</strong>上——一个节点的最优解，取决于它<strong>所有子节点</strong>的最优解。这天然对应树的递归结构：用 DFS 从根节点出发，先递归处理完所有子节点（后序遍历），子节点的信息算好之后，再回过头来计算当前节点的答案。11 模块讲过的二叉树遍历，到这里派上了用场。</p>
+    </div>
+
+    <div class="sub-title" id="tsp">② 引例：没有上司的舞会</div>
+    <div class="section-body">
+      <p>公司的员工关系构成一棵树（每个员工只有一个直属上司，大老板是根节点）。每个员工有一个"快乐指数"。要邀请一部分员工参加舞会，使得<strong>快乐指数总和最大</strong>，但有一条限制：<strong>如果某个员工来了，他的直属上司就不能来</strong>（反之亦然）。这是"树的最大独立集"问题的经典变体——树上任意一条边的两个端点，不能同时被选中。</p>
+    </div>
+
+    <div class="sub-title" id="idea">③ 核心思想：dp[u][0/1] 与后序遍历</div>
+    <div class="section-body">
+      <p>设 <code>dp[u][1]</code> 表示"以 <code>u</code> 为根的子树中，<code>u</code> 参加舞会"时能达到的最大快乐指数总和；<code>dp[u][0]</code> 表示"<code>u</code> 不参加"时的最大值。转移方程：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>情况</th><th>转移方程</th><th>原因</th></tr></thead>
+      <tbody>
+        <tr><td>u 参加（dp[u][1]）</td><td>value[u] + Σ dp[child][0]</td><td>u 参加了，所有孩子都不能参加，只能用孩子"不参加"的值</td></tr>
+        <tr><td>u 不参加（dp[u][0]）</td><td>Σ max(dp[child][0], dp[child][1])</td><td>u 不参加，对孩子没有限制，每个孩子取"参加"和"不参加"里更大的</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>必须先算完所有孩子，才能算当前节点：</b>这正是"后序遍历"的意义——递归到某个节点时，先对它的每个孩子调用递归，等这些递归全部返回（意味着每个孩子的 <code>dp[child][0]</code>、<code>dp[child][1]</code> 都已经算好）之后，再用上面的公式计算当前节点的 <code>dp[u][0]</code>、<code>dp[u][1]</code>。</div>
+    </div>
+
+    <div class="sub-title" id="trace">④ 图解：一棵具体树的完整求解过程</div>
+    <div class="section-body">
+      <p>6 名员工，快乐指数分别是：<code>1号(老板)=10，2号=5，3号=3，4号=8，5号=2，6号=6</code>；上下级关系：1 是 2、3 的上司，2 是 4、5 的上司，3 是 6 的上司：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">员工关系树（数字是快乐指数）</div>
+      <div class="tt-tree">
+        <div class="tt-node"><span class="nm">1（老板）</span><span class="vv">value=10</span></div>
+        <div class="tt-row">
+          <div class="tt-group">
+            <div class="tt-node"><span class="nm">2</span><span class="vv">value=5</span></div>
+            <div class="tt-children">
+              <div class="tt-node"><span class="nm">4</span><span class="vv">value=8</span></div>
+              <div class="tt-node"><span class="nm">5</span><span class="vv">value=2</span></div>
+            </div>
+          </div>
+          <div class="tt-group">
+            <div class="tt-node"><span class="nm">3</span><span class="vv">value=3</span></div>
+            <div class="tt-children">
+              <div class="tt-node"><span class="nm">6</span><span class="vv">value=6</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">按后序遍历（从叶子往根）依次算出每个节点的 dp 值</div>
+      <table class="tdp-table">
+        <thead><tr><th>节点</th><th>dp[u][1]（参加）</th><th>dp[u][0]（不参加）</th><th>计算过程</th></tr></thead>
+        <tbody>
+          <tr><td>4（叶子）</td><td>8</td><td>0</td><td>叶子没有孩子，dp[1]=value，dp[0]=0</td></tr>
+          <tr><td>5（叶子）</td><td>2</td><td>0</td><td>同上</td></tr>
+          <tr><td>6（叶子）</td><td>6</td><td>0</td><td>同上</td></tr>
+          <tr><td>2</td><td>5</td><td>10</td><td>dp[1]=5+dp[4][0]+dp[5][0]=5+0+0；dp[0]=max(0,8)+max(0,2)=8+2</td></tr>
+          <tr><td>3</td><td>3</td><td>6</td><td>dp[1]=3+dp[6][0]=3+0；dp[0]=max(0,6)=6</td></tr>
+          <tr><td>1（根）</td><td class="pick">26</td><td>16</td><td>dp[1]=10+dp[2][0]+dp[3][0]=10+10+6=<strong>26</strong>；dp[0]=max(10,5)+max(6,3)=10+6=16</td></tr>
+        </tbody>
+      </table>
+      <figcaption>最终答案是 <code>max(dp[1][0], dp[1][1]) = max(16, 26) = 26</code>，在 <code>1</code> 参加时取得。对应的实际方案是：<strong>1、4、5、6 号参加，2、3 号不参加</strong>——快乐指数总和 <code>10+8+2+6=26</code>。这里有个容易被忽略的细节：<strong>1 参加，虽然它的孩子 2、3 不能参加，但"孙子"4、5、6 完全可以参加</strong>（因为限制只针对直接的上下级关系）——树形 DP 的 <code>dp[u][1]</code> 用 <code>dp[child][0]</code> 转移，而不是简单地"隔一层选一层"，正确地体现了这一点。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">⑤ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 没有上司的舞会（树形 DP）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> value[MAXN], dp[MAXN][<span class="num">2</span>];  <span class="cmt">// dp[u][0/1]：u 不参加/参加时的最大值</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd">vector&lt;<span class="typ">int</span>&gt; children[MAXN];  <span class="cmt">// children[u]：u 的所有直接下属</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">void</span> <span class="fn">DFS</span>(<span class="typ">int</span> u)</td></tr>
+          <tr><td class="ln">5</td><td class="cd">{</td></tr>
+          <tr><td class="ln">6</td><td class="cd">    dp[u][<span class="num">1</span>] = value[u];  <span class="cmt">// 先假设 u 参加，只算上 u 自己的贡献</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    dp[u][<span class="num">0</span>] = <span class="num">0</span>;</td></tr>
+          <tr class="hl-warn"><td class="ln">8</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> v : children[u])</td></tr>
+          <tr><td class="ln">9</td><td class="cd">    {</td></tr>
+          <tr class="hl-warn"><td class="ln">10</td><td class="cd">        <span class="fn">DFS</span>(v);  <span class="cmt">// ★ 先递归处理孩子，回来后 dp[v][0]、dp[v][1] 才是算好的</span></td></tr>
+          <tr class="hl"><td class="ln">11</td><td class="cd">        dp[u][<span class="num">1</span>] += dp[v][<span class="num">0</span>];                     <span class="cmt">// u 参加，孩子只能用"不参加"的值</span></td></tr>
+          <tr class="hl"><td class="ln">12</td><td class="cd">        dp[u][<span class="num">0</span>] += max(dp[v][<span class="num">0</span>], dp[v][<span class="num">1</span>]);  <span class="cmt">// u 不参加，孩子取两者较大值</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">14</td><td class="cd">}</td></tr>
+          <tr><td class="ln">15</td><td class="cd"></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="typ">int</span> <span class="fn">MaxHappiness</span>(<span class="typ">int</span> root)</td></tr>
+          <tr><td class="ln">17</td><td class="cd">{</td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">DFS</span>(root);</td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="kw">return</span> max(dp[root][<span class="num">0</span>], dp[root][<span class="num">1</span>]);</td></tr>
+          <tr><td class="ln">20</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>递归本身就保证了"后序遍历"的顺序：</b>第 10 行 <code>DFS(v)</code> 递归调用<strong>先于</strong>第 11、12 行对 <code>dp[u]</code> 的更新——函数调用的顺序天然保证了"孩子先算完，父亲才能用它的结果"，不需要像区间 DP 那样手动控制"按什么顺序填表"，DFS 的递归结构自动就是正确的顺序。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 复杂度与常见陷阱</div>
+    <div class="section-body">
+      <p>每个节点、每条边都只会被访问一次，时间复杂度 <code>O(n)</code>，和树的遍历同阶。</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>在递归里不小心往"父亲"方向走，形成死循环：</b>如果树是用一般的邻接表存储（每条边正反两个方向都存了），<code>DFS</code> 从父节点走向子节点时，子节点的邻居列表里也包含"父节点"这个方向，如果不加判断直接递归，会不停地在父子之间来回递归，永远不会结束。常见解决办法：存图时只保留"父指向子"这一个方向（像本节 <code>children[]</code> 数组那样），或者递归时额外传入 <code>parent</code> 参数，跳过指向父节点的这条边。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>森林（多棵树）情况下，只处理了一个根：</b>如果输入数据不保证是一整棵连通的树，而是几棵独立的树组成的森林，需要对每一个"没有上司"的节点（入度为 0，或者说没有父节点的节点）都单独调用一次 <code>DFS</code>，把每棵树的根节点各自的 <code>max(dp[root][0], dp[root][1])</code> 加起来，才是整个森林的答案。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把"隔一层选一层"当成正确策略：</b>直觉上容易以为"选了爷爷就不能选孙子"，但题目的限制只针对<strong>直接</strong>的上下级关系——④ 的例子里 <code>1</code>（爷爷）和 <code>4、5、6</code>（孙子）是可以同时参加的。树形 DP 的转移方程 <code>dp[u][1]</code> 只减去了"儿子必须不参加"这一层限制，并没有对"孙子"做任何限制，这正是转移方程设计正确、而不是简单按层交替选择的原因。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>18.4 节的<strong>数位 DP</strong>会换到一个完全不同的场景——统计"某个区间内，有多少个数满足某种数位上的条件"（比如"不含 4 这个数字的数有多少个"），状态定义在数字的每一位上，是动态规划应用范围里比较特别的一类。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十八 动态规划进阶 · 18.3 树形 DP</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A18_02_状压DP.html">← 18.2 状压 DP</a>
+      <a class="nav-btn" href="A18_04_数位DP.html">18.4 数位 DP →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

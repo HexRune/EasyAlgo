@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>18.2 状压 DP — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "18.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--amber-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--amber); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--amber-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--amber); border-bottom: 1px solid #F0D9A8; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--amber); background: var(--amber-light); white-space: nowrap; }
+
+  /* 二进制位可视化 */
+  .bit-row { display: flex; gap: 6px; }
+  .bit-cell { display: flex; flex-direction: column; align-items: center; min-width: 46px; flex-shrink: 0; }
+  .bit-label { font-size: 10px; color: #6C7086; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .bit-box {
+    width: 40px; height: 36px; border-radius: 6px; background: #2A2840;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: #A6ADC8;
+    border: 1.5px solid transparent;
+  }
+  .bit-box.on { background: rgba(166,227,161,.2); border-color: #A6E3A1; color: #A6E3A1; }
+
+  /* dp路径追踪表 */
+  .tsp-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; width: 100%; }
+  .tsp-table th, .tsp-table td { padding: 8px 9px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .tsp-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 10.5px; }
+  .tsp-table td.res { color: #A6E3A1; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="18.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十八 动态规划进阶</span>
+      <span class="eyebrow-sep">/</span>
+      <span>18.2 状压 DP</span>
+    </div>
+    <h1 class="chapter-title">18.2　状压 DP</h1>
+    <p class="chapter-desc">有些状态本质上是"一个集合"——用一个整数的每一位代表"某个元素在不在集合里"，把集合压缩进一个数字，直接当数组下标。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要状压 DP</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：二进制位表示集合</a></li>
+      <li><span class="toc-num">③</span><a href="#tsp">引例：旅行商问题（TSP）</a></li>
+      <li><span class="toc-num">④</span><a href="#trace">图解：4 个城市的完整求解过程</a></li>
+      <li><span class="toc-num">⑤</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">复杂度与常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要状压 DP</div>
+    <div class="section-body">
+      <p>有些问题的"状态"，本质上是"一组元素里，哪些被选中了、哪些没有"——比如"这几个城市有没有被访问过"、"这几个物品有没有被选中"。如果元素个数不多（一般在 <strong>20 个以内</strong>），可以把整个"选择情况"压缩成<strong>一个二进制数</strong>：第 <code>i</code> 位是 <code>1</code> 表示第 <code>i</code> 个元素被选中，是 <code>0</code> 表示没被选中。这样一来，原本需要一整个数组才能描述的"集合状态"，就能直接当成一个整数，用作 dp 数组的下标——这就是<strong>状态压缩 DP</strong>（简称状压 DP）。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：二进制位表示集合</div>
+    <div class="section-body">
+      <p>以 4 个元素（编号 0~3）为例，用一个 4 位的二进制数表示"这 4 个元素各自在不在集合里"：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">二进制数 1101 表示的集合</div>
+      <div class="bit-row">
+        <div class="bit-cell"><div class="bit-label">第 3 位</div><div class="bit-box on">1</div><div class="bit-label" style="margin-top:4px">城市 3 ✓</div></div>
+        <div class="bit-cell"><div class="bit-label">第 2 位</div><div class="bit-box on">1</div><div class="bit-label" style="margin-top:4px">城市 2 ✓</div></div>
+        <div class="bit-cell"><div class="bit-label">第 1 位</div><div class="bit-box">0</div><div class="bit-label" style="margin-top:4px">城市 1 ✗</div></div>
+        <div class="bit-cell"><div class="bit-label">第 0 位</div><div class="bit-box on">1</div><div class="bit-label" style="margin-top:4px">城市 0 ✓</div></div>
+      </div>
+      <figcaption>二进制 <code>1101</code>（十进制 <code>13</code>）表示"城市 0、2、3 已经访问过，城市 1 还没有"。常用的位运算技巧：<code>state &gt;&gt; i &amp; 1</code> 判断第 <code>i</code> 位是不是 <code>1</code>；<code>state | (1&lt;&lt;i)</code> 把第 <code>i</code> 位设成 <code>1</code>（添加元素 <code>i</code>）。</figcaption>
+    </div>
+
+    <div class="sub-title" id="tsp">③ 引例：旅行商问题（TSP）</div>
+    <div class="section-body">
+      <p><strong>旅行商问题</strong>（Travelling Salesman Problem）：有 <code>n</code> 个城市，从城市 <code>0</code> 出发，要访问其余所有城市<strong>各恰好一次</strong>，最后回到城市 <code>0</code>，求最短的总路程。朴素想法是枚举所有访问顺序（<code>n!</code> 种排列），状压 DP 能把这个问题优化到 <code>O(2ⁿ × n²)</code>。</p>
+      <p>状态定义：<code>dp[state][i]</code> 表示"已经访问过 <code>state</code> 这个集合里的所有城市，当前正好停在城市 <code>i</code>"时，走过的最短路程。转移方程：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">转移方程</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#CBA6F7;margin:0">dp[state | (1&lt;&lt;j)][j] = min( dp[state | (1&lt;&lt;j)][j],&nbsp;&nbsp;dp[state][i] + dist[i][j] )</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12px;color:#A6ADC8;margin:10px 0 0">枚举当前已经访问的集合 <code style="color:#CBA6F7">state</code>、当前停留的城市 <code style="color:#CBA6F7">i</code>（要求 <code style="color:#CBA6F7">i</code> 在 <code style="color:#CBA6F7">state</code> 里），再枚举一个还没访问过的城市 <code style="color:#CBA6F7">j</code>（<code style="color:#CBA6F7">j</code> 不在 <code style="color:#CBA6F7">state</code> 里）——从 <code style="color:#CBA6F7">i</code> 走到 <code style="color:#CBA6F7">j</code>，更新"访问集合变成 <code style="color:#CBA6F7">state</code> 加上 <code style="color:#CBA6F7">j</code>、停在 <code style="color:#CBA6F7">j</code>"这个新状态。</p>
+    </div>
+
+    <div class="sub-title" id="trace">④ 图解：4 个城市的完整求解过程</div>
+    <div class="section-body">
+      <p>4 个城市（0、1、2、3），距离矩阵如下：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>dist</th><th>城市 0</th><th>城市 1</th><th>城市 2</th><th>城市 3</th></tr></thead>
+      <tbody>
+        <tr><td>城市 0</td><td>0</td><td>10</td><td>15</td><td>20</td></tr>
+        <tr><td>城市 1</td><td>10</td><td>0</td><td>35</td><td>25</td></tr>
+        <tr><td>城市 2</td><td>15</td><td>35</td><td>0</td><td>30</td></tr>
+        <tr><td>城市 3</td><td>20</td><td>25</td><td>30</td><td>0</td></tr>
+      </tbody>
+    </table>
+
+    <div class="diagram-block">
+      <div class="diagram-title">从城市 0 出发，跟踪其中一条最优路径的状态演变</div>
+      <table class="tsp-table">
+        <thead><tr><th>state（二进制）</th><th>已访问的城市</th><th>当前所在城市</th><th>dp 值</th></tr></thead>
+        <tbody>
+          <tr><td>0001</td><td>{0}</td><td>0</td><td>0（起点）</td></tr>
+          <tr><td>0011</td><td>{0,1}</td><td>1</td><td>0 + dist[0][1] = 10</td></tr>
+          <tr><td>1011</td><td>{0,1,3}</td><td>3</td><td>10 + dist[1][3] = 35</td></tr>
+          <tr><td>1111</td><td>{0,1,2,3}</td><td>2</td><td>35 + dist[3][2] = 65</td></tr>
+          <tr><td colspan="4" class="res">全部城市访问完毕，回到起点：65 + dist[2][0] = 65 + 15 = <strong>80</strong></td></tr>
+        </tbody>
+      </table>
+      <figcaption>这条路径是 <code>0 → 1 → 3 → 2 → 0</code>，总路程 <code>10+25+30+15=80</code>。状压 DP 会同时计算<strong>所有</strong> <code>state</code> 和 <code>i</code> 的组合（16 个 <code>state</code> × 4 个城市），这里只展示了最终得到最优解的那一条路径；实际运行时，另一条路径 <code>0→2→3→1→0</code>（方向相反）算出的也是 <code>80</code>，说明这两条路径其实是同一个环形路线的两个方向，distance 相同并不意外。真正的答案要在<strong>所有</strong> <code>dp[1111][i] + dist[i][0]</code> 里取最小值，本节的例子里，<code>i=1</code>、<code>i=2</code> 两种都能取到 <code>80</code>，是当前数据下的最优解。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">⑤ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 旅行商问题（状压 DP）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> dist[MAXCITY][MAXCITY], dp[<span class="num">1</span> &lt;&lt; MAXCITY][MAXCITY], n;</td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">TSP</span>()</td></tr>
+          <tr><td class="ln">4</td><td class="cd">{</td></tr>
+          <tr><td class="ln">5</td><td class="cd">    memset(dp, <span class="num">0x3f</span>, <span class="kw">sizeof</span>(dp));  <span class="cmt">// 全部初始化成"正无穷"</span></td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    dp[<span class="num">1</span>][<span class="num">0</span>] = <span class="num">0</span>;  <span class="cmt">// ★ 只访问了城市 0（state=0001），停在城市 0，代价为 0</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> state = <span class="num">1</span>; state &lt; (<span class="num">1</span> &lt;&lt; n); state++)  <span class="cmt">// ★ 枚举所有子集</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">        <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">0</span>; i &lt; n; i++)</td></tr>
+          <tr><td class="ln">10</td><td class="cd">        {</td></tr>
+          <tr class="hl-warn"><td class="ln">11</td><td class="cd">            <span class="kw">if</span> (!(state &gt;&gt; i &amp; <span class="num">1</span>) || dp[state][i] &gt;= <span class="num">0x3f3f3f3f</span>) <span class="kw">continue</span>;  <span class="cmt">// i 不在 state 里，或这个状态本来就不可达，跳过</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">            <span class="kw">for</span> (<span class="typ">int</span> j = <span class="num">0</span>; j &lt; n; j++)</td></tr>
+          <tr><td class="ln">13</td><td class="cd">            {</td></tr>
+          <tr class="hl-warn"><td class="ln">14</td><td class="cd">                <span class="kw">if</span> (state &gt;&gt; j &amp; <span class="num">1</span>) <span class="kw">continue</span>;  <span class="cmt">// j 已经在 state 里了，不能重复访问</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">                <span class="typ">int</span> next_state = state | (<span class="num">1</span> &lt;&lt; j);</td></tr>
+          <tr><td class="ln">16</td><td class="cd">                dp[next_state][j] = min(dp[next_state][j], dp[state][i] + dist[i][j]);</td></tr>
+          <tr><td class="ln">17</td><td class="cd">            }</td></tr>
+          <tr><td class="ln">18</td><td class="cd">        }</td></tr>
+          <tr><td class="ln">19</td><td class="cd"></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="typ">int</span> full = (<span class="num">1</span> &lt;&lt; n) - <span class="num">1</span>, ans = <span class="num">0x3f3f3f3f</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">21</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">0</span>; i &lt; n; i++)  <span class="cmt">// ★ 所有城市都访问完后，加上"回到起点"的这一段</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">        ans = min(ans, dp[full][i] + dist[i][<span class="num">0</span>]);</td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="kw">return</span> ans;</td></tr>
+          <tr><td class="ln">24</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>整个 dp 数组的下标就是"状态压缩"的体现：</b><code>dp[1 &lt;&lt; MAXCITY][MAXCITY]</code> 里的第一维大小是 <code>2ⁿ</code>——每一个可能的"访问集合"都对应数组的一个下标，而不是像普通数组那样按 <code>0,1,2,3...</code> 顺序排列。第 8 行 <code>state</code> 从 <code>1</code> 遍历到 <code>2ⁿ-1</code>，恰好覆盖了"城市 0~n-1"所有可能的子集。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 复杂度与常见陷阱</div>
+    <div class="section-body">
+      <p>状态数是 <code>O(2ⁿ × n)</code>，每个状态转移要枚举下一个城市 <code>j</code>，<code>O(n)</code>。总时间复杂度 <code>O(2ⁿ × n²)</code>——比 <code>O(n!)</code> 的暴力枚举快得多，但 <code>2ⁿ</code> 依然是指数级增长，<code>n</code> 一般不能超过 20 左右。</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>n 太大导致状态数爆炸：</b><code>n=20</code> 时 <code>2ⁿ</code> 已经超过 100 万，<code>n=25</code> 就超过 3000 万，再往上内存和时间都吃不消。状压 DP 只适合"集合规模较小"的场景，如果 <code>n</code> 达到几十甚至上百，需要换别的方法。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>位运算的运算符优先级坑：</b><code>state &gt;&gt; i &amp; 1</code> 里，<code>&gt;&gt;</code> 和 <code>&amp;</code> 的优先级<strong>低于</strong> <code>==</code>、<code>&lt;</code> 这些比较运算符，如果写成 <code>state &gt;&gt; i &amp; 1 == 0</code>，会被解析成 <code>state &gt;&gt; i &amp; (1==0)</code>（先算 <code>1==0</code> 得到 <code>false</code>），完全不是想要的结果。需要的话给整个位运算表达式加上括号：<code>(state &gt;&gt; i &amp; 1) == 0</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记"回到起点"这一段距离：</b>本题是"环形"路线（要求最后回到出发的城市），dp 数组本身只记录了"访问完所有城市、停在城市 <code>i</code>"的代价，最后还要在第 21～22 行手动加上 <code>dist[i][0]</code> 这一段"回程"的距离，才是完整的环形路程。如果题目不要求回到起点（开放式路径），则不需要这一步，直接取 <code>dp[full][i]</code> 的最小值即可。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>18.3 节的<strong>树形 DP</strong>会把 dp 的状态定义在树的节点上，转移方向是"子节点的信息汇总给父节点"——同样是动态规划，但组织状态的方式和本节的"集合压缩"完全不同，适合解决树形结构上的最优化问题。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十八 动态规划进阶 · 18.2 状压 DP</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A18_01_区间DP.html">← 18.1 区间 DP</a>
+      <a class="nav-btn" href="A18_03_树形DP.html">18.3 树形 DP →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

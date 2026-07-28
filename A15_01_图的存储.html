@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15.1 图的存储 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "15.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--coral-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--coral); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; text-align: left; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; text-align: left; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #f0c4ae; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+
+  /* 邻接矩阵 / 邻接表可视化 */
+  .mat-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .mat-table th, .mat-table td { width: 46px; height: 38px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .mat-table th { background: #1A1830; color: #89B4FA; font-weight: 700; }
+  .mat-table td.diag { color: #45475A; }
+  .mat-table td.inf { color: #45475A; font-size: 11px; }
+  .mat-table td.edge { background: rgba(166,227,161,.18); color: #A6E3A1; font-weight: 700; }
+
+  .adj-list { display: flex; flex-direction: column; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: left; max-width: 360px; margin: 0 auto; }
+  .adj-row { display: flex; align-items: center; gap: 8px; }
+  .adj-head { width: 26px; height: 26px; border-radius: 6px; background: rgba(137,180,250,.2); color: #89B4FA; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .adj-arrow { color: #45475A; }
+  .adj-node { padding: 3px 9px; border-radius: 5px; background: rgba(166,227,161,.15); color: #A6E3A1; font-size: 12px; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="15.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十五 图论基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>15.1 图的存储</span>
+    </div>
+    <h1 class="chapter-title">15.1　图的存储</h1>
+    <p class="chapter-desc">树只是图的一种特殊情况——去掉"不能有环、必须连通"这些限制，就得到了更一般的图。存好图，是后面最短路、生成树这些算法的第一步。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">从树到图：更一般的结构</a></li>
+      <li><span class="toc-num">②</span><a href="#concept">图的基本概念</a></li>
+      <li><span class="toc-num">③</span><a href="#matrix">存储方式一：邻接矩阵</a></li>
+      <li><span class="toc-num">④</span><a href="#list">存储方式二：邻接表</a></li>
+      <li><span class="toc-num">⑤</span><a href="#compare">两种存储方式怎么选</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 从树到图：更一般的结构</div>
+    <div class="section-body">
+      <p>11.1 节讲过，树是"连通、没有环"的一种特殊结构——任意两个节点之间<strong>只有一条唯一的路径</strong>。如果去掉这些限制：允许存在环，允许一个节点连着好几条能到达同一个地方的路，甚至允许某些节点之间根本无法互相到达——就得到了更一般的结构：<strong>图（Graph）</strong>。图论要研究的问题（怎么找最短路、怎么用最少的边连通所有点……）都是建立在"图存好了"这个前提之上的，本节就是图论的第一课：怎么把一张图存进程序里。</p>
+    </div>
+
+    <div class="sub-title" id="concept">② 图的基本概念</div>
+    <div class="section-body">
+      <p>一张图由<strong>顶点（节点）</strong>和<strong>边</strong>组成，记作 <code>G = (V, E)</code>。围绕"边"有几组基本分类，贯穿整个图论部分：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>分类</th><th>含义</th></tr></thead>
+      <tbody>
+        <tr><td>无向图 / 有向图</td><td>无向图的边没有方向（A-B 和 B-A 是同一条边）；有向图的边有方向（A→B 不代表 B→A 也存在）</td></tr>
+        <tr><td>带权图 / 无权图</td><td>带权图的每条边有一个数值（比如距离、代价）；无权图的边只表示"连通"，没有额外数值</td></tr>
+        <tr><td>简单图</td><td>没有自环（自己连自己）、没有重边（两点之间不止一条边）的图；本节的例子都是简单图</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-body">
+      <p>本节统一用这张<strong>无向带权图</strong>做例子（4 个顶点，5 条边）：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">示例图（顶点 A B C D，边上数字是权值）</div>
+      <svg width="320" height="220" viewbox="0 0 320 220">
+        <line x1="70" y1="50" x2="250" y2="50" stroke="#45475A" stroke-width="2"/>
+        <line x1="70" y1="50" x2="70" y2="170" stroke="#45475A" stroke-width="2"/>
+        <line x1="70" y1="170" x2="250" y2="50" stroke="#45475A" stroke-width="2"/>
+        <line x1="250" y1="50" x2="250" y2="170" stroke="#45475A" stroke-width="2"/>
+        <line x1="70" y1="170" x2="250" y2="170" stroke="#45475A" stroke-width="2"/>
+        <text x="160" y="42" fill="#A6ADC8" font-size="13" font-family="JetBrains Mono, monospace" text-anchor="middle">4</text>
+        <text x="52" y="115" fill="#A6ADC8" font-size="13" font-family="JetBrains Mono, monospace" text-anchor="middle">1</text>
+        <text x="175" y="100" fill="#A6ADC8" font-size="13" font-family="JetBrains Mono, monospace" text-anchor="middle">2</text>
+        <text x="268" y="115" fill="#A6ADC8" font-size="13" font-family="JetBrains Mono, monospace" text-anchor="middle">5</text>
+        <text x="160" y="188" fill="#A6ADC8" font-size="13" font-family="JetBrains Mono, monospace" text-anchor="middle">8</text>
+        <circle cx="70" cy="50" r="20" fill="#2A2840" stroke="#89B4FA" stroke-width="2"/>
+        <text x="70" y="56" fill="#89B4FA" font-size="15" font-weight="700" font-family="JetBrains Mono, monospace" text-anchor="middle">A</text>
+        <circle cx="250" cy="50" r="20" fill="#2A2840" stroke="#89B4FA" stroke-width="2"/>
+        <text x="250" y="56" fill="#89B4FA" font-size="15" font-weight="700" font-family="JetBrains Mono, monospace" text-anchor="middle">B</text>
+        <circle cx="70" cy="170" r="20" fill="#2A2840" stroke="#89B4FA" stroke-width="2"/>
+        <text x="70" y="176" fill="#89B4FA" font-size="15" font-weight="700" font-family="JetBrains Mono, monospace" text-anchor="middle">C</text>
+        <circle cx="250" cy="170" r="20" fill="#2A2840" stroke="#89B4FA" stroke-width="2"/>
+        <text x="250" y="176" fill="#89B4FA" font-size="15" font-weight="700" font-family="JetBrains Mono, monospace" text-anchor="middle">D</text>
+      </svg>
+      <figcaption>5 条边：<code>A-B(4)</code>、<code>A-C(1)</code>、<code>B-C(2)</code>、<code>B-D(5)</code>、<code>C-D(8)</code>。下面用两种不同的方式把这张图存进程序里。</figcaption>
+    </div>
+
+    <div class="sub-title" id="matrix">③ 存储方式一：邻接矩阵</div>
+    <div class="section-body">
+      <p><strong>邻接矩阵</strong>：开一个 <code>V×V</code> 的二维数组 <code>g</code>，<code>g[i][j]</code> 直接存"顶点 <code>i</code> 到顶点 <code>j</code> 这条边的权值"；如果两点之间没有边，就存一个"不可能出现的数"（通常用一个很大的数表示，记作 <code>INF</code>，代表"不可达"）。</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">示例图的邻接矩阵</div>
+      <table class="mat-table">
+        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+        <tr><th>A</th><td class="diag">0</td><td class="edge">4</td><td class="edge">1</td><td class="inf">INF</td></tr>
+        <tr><th>B</th><td class="edge">4</td><td class="diag">0</td><td class="edge">2</td><td class="edge">5</td></tr>
+        <tr><th>C</th><td class="edge">1</td><td class="edge">2</td><td class="diag">0</td><td class="edge">8</td></tr>
+        <tr><th>D</th><td class="inf">INF</td><td class="edge">5</td><td class="edge">8</td><td class="diag">0</td></tr>
+      </table>
+      <figcaption>因为是无向图，矩阵沿对角线<strong>左右对称</strong>——<code>g[A][B]</code> 和 <code>g[B][A]</code> 存的是同一条边，值相等。对角线上 <code>g[i][i]=0</code> 表示"自己到自己"距离为 0；<code>A-D</code> 之间没有直接的边，存 <code>INF</code>，而不是 <code>0</code>（<code>0</code> 会被误认为"存在一条权值为 0 的边"）。</figcaption>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 邻接矩阵</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">const</span> <span class="typ">int</span> INF = <span class="num">0x3f3f3f3f</span>;</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> g[MAXN][MAXN];  <span class="cmt">// g[i][j]：i 到 j 这条边的权值，INF 表示没有边</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">void</span> <span class="fn">InitGraph</span>(<span class="typ">int</span> n)</td></tr>
+          <tr><td class="ln">5</td><td class="cd">{</td></tr>
+          <tr class="hl-warn"><td class="ln">6</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++)</td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="kw">for</span> (<span class="typ">int</span> j = <span class="num">1</span>; j &lt;= n; j++)</td></tr>
+          <tr><td class="ln">8</td><td class="cd">            g[i][j] = (i == j) ? <span class="num">0</span> : INF;  <span class="cmt">// ★ 默认全部设成 INF（不可达），对角线是 0</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">}</td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">void</span> <span class="fn">AddEdge</span>(<span class="typ">int</span> u, <span class="typ">int</span> v, <span class="typ">int</span> w)</td></tr>
+          <tr><td class="ln">12</td><td class="cd">{</td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">    g[u][v] = w;</td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd">    g[v][u] = w;  <span class="cmt">// 无向图：两个方向都要存；有向图只存 g[u][v] 这一个方向</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="list">④ 存储方式二：邻接表</div>
+    <div class="section-body">
+      <p><strong>邻接表</strong>：给每个顶点开一个"列表"，只记录<strong>它真正连着的那些邻居</strong>（以及边权），而不是像矩阵那样把"所有顶点两两之间"的关系都存一遍。C++ 里最方便的写法是<strong>每个顶点对应一个 <code>vector</code></strong>，存"邻居编号 + 边权"这一对信息。</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">示例图的邻接表</div>
+      <div class="adj-list">
+        <div class="adj-row"><div class="adj-head">A</div><div class="adj-arrow">→</div><div class="adj-node">(B, 4)</div><div class="adj-node">(C, 1)</div></div>
+        <div class="adj-row"><div class="adj-head">B</div><div class="adj-arrow">→</div><div class="adj-node">(A, 4)</div><div class="adj-node">(C, 2)</div><div class="adj-node">(D, 5)</div></div>
+        <div class="adj-row"><div class="adj-head">C</div><div class="adj-arrow">→</div><div class="adj-node">(A, 1)</div><div class="adj-node">(B, 2)</div><div class="adj-node">(D, 8)</div></div>
+        <div class="adj-row"><div class="adj-head">D</div><div class="adj-arrow">→</div><div class="adj-node">(B, 5)</div><div class="adj-node">(C, 8)</div></div>
+      </div>
+      <figcaption>每个顶点只列出<strong>真正相连</strong>的邻居——<code>A</code> 只存了 <code>(B,4)</code>、<code>(C,1)</code> 两项，完全不需要提到"A 和 D 没有边"这件事。这正是邻接表比邻接矩阵省空间的原因：矩阵会把"没有边"的关系也存一遍（存成 <code>INF</code>），邻接表则压根不提。</figcaption>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 邻接表</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd">vector&lt;pair&lt;<span class="typ">int</span>,<span class="typ">int</span>&gt;&gt; adj[MAXN];  <span class="cmt">// adj[u] 里的每一项 (v, w) 表示 u 到 v 有一条权值为 w 的边</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">void</span> <span class="fn">AddEdge</span>(<span class="typ">int</span> u, <span class="typ">int</span> v, <span class="typ">int</span> w)</td></tr>
+          <tr><td class="ln">4</td><td class="cd">{</td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    adj[u].<span class="fn">push_back</span>({v, w});</td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">    adj[v].<span class="fn">push_back</span>({u, w});  <span class="cmt">// 无向图：两个方向各存一次；有向图只存这一行</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">}</td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 遍历顶点 u 的所有邻居：</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="kw">for</span> (<span class="kw">auto</span> [v, w] : adj[u])</td></tr>
+          <tr><td class="ln">11</td><td class="cd">    cout &lt;&lt; <span class="str">"邻居 "</span> &lt;&lt; v &lt;&lt; <span class="str">"，边权 "</span> &lt;&lt; w &lt;&lt; endl;</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="compare">⑤ 两种存储方式怎么选</div>
+    <div class="section-body">
+      <p>关键看图<strong>稀疏还是稠密</strong>——顶点数是 <code>V</code>，边数是 <code>E</code>：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>对比项</th><th>邻接矩阵</th><th>邻接表</th></tr></thead>
+      <tbody>
+        <tr><td>空间开销</td><td>O(V²)，不管边多边少都要开这么大</td><td>O(V+E)，只存真正存在的边</td></tr>
+        <tr><td>查询"u、v 之间有没有边"</td><td>O(1)，直接看 g[u][v]</td><td>O(度数)，要遍历 u 的邻居列表</td></tr>
+        <tr><td>遍历"u 的所有邻居"</td><td>O(V)，要扫一整行（哪怕大部分是 INF）</td><td>O(度数)，只遍历真正的邻居，不浪费</td></tr>
+        <tr><td>适合场景</td><td>顶点数较少、边很稠密（接近 V² 条边）</td><td>顶点数较多、边比较稀疏（远小于 V² 条边）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>竞赛中的经验法则：</b>大多数题目给出的图都是<strong>稀疏图</strong>（边数和点数是同一个数量级，而不是点数的平方），邻接表几乎总是更省空间、更高效的选择。邻接矩阵的优势主要在于"query 单条边是否存在"特别方便，以及后面 15.2 节 Floyd 算法这种<strong>本身就需要用矩阵来表达"任意两点间距离"</strong>的场景——两种存储方式并不是谁淘汰谁，而是配合不同算法各自发挥所长。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>无向图只存了一个方向：</b>无向图的一条边 <code>A-B</code> 其实包含"A 能到 B"和"B 能到 A"两条信息，邻接矩阵要设置 <code>g[A][B]</code> 和 <code>g[B][A]</code> 两个位置，邻接表要往 <code>adj[A]</code> 和 <code>adj[B]</code> 各插入一次——只存一个方向，会导致后续算法（比如从 B 出发做 BFS/DFS）漏掉这条边，图变成"看起来"是有向的。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>用 0 表示"没有边"，和"边权恰好是 0"混淆：</b>邻接矩阵初始化时，"没有边"应该用一个远大于所有可能边权之和的数（<code>INF</code>）表示，而不是 <code>0</code>——如果题目里真的存在权值为 <code>0</code> 的边，用 <code>0</code> 表示"不可达"会让程序把这条边误判成"没有这条边"，或者反过来把"不可达"误判成"有一条权值为 0 的边"，后续最短路算法全盘出错。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>重边、自环没有特殊处理：</b>如果题目的图存在重边（两点之间有多条边）或自环（自己连自己），邻接矩阵默认写法会用"最后一次赋值"覆盖之前的边权——如果题目要求"取重边中权值最小的那条"，需要在 <code>AddEdge</code> 里改成 <code>g[u][v] = min(g[u][v], w)</code>；邻接表天然支持重边（每条边都是列表里单独的一项），但涉及自环时要注意部分算法（比如后面的最小生成树）可能需要提前把自环过滤掉。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>本节的两种存储方式会贯穿整个图论基础模块——15.2 节的 Floyd 算法直接在邻接矩阵上做三重循环；15.3 节的 Dijkstra、15.5 节的拓扑排序则更常搭配邻接表使用。选对存储方式，是写对图论算法的第一步。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十五 图论基础 · 15.1 图的存储</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A14_05_IDA星算法.html">← 14.5 IDA* 算法</a>
+      <a class="nav-btn" href="A15_02_Floyd最短路.html">15.2 Floyd 最短路 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

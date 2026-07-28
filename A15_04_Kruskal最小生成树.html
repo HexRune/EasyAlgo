@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15.4 Kruskal 最小生成树 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "15.4"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--coral-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--coral); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; text-align: left; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; text-align: left; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #f0c4ae; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+
+  /* 排序后逐条处理边的追踪表 */
+  .kr-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; width: 100%; }
+  .kr-table th, .kr-table td { padding: 8px 10px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .kr-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; }
+  .kr-table td.take { background: rgba(166,227,161,.2); color: #A6E3A1; font-weight: 700; }
+  .kr-table td.skip { background: rgba(243,139,168,.1); color: #F38BA8; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="15.4">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十五 图论基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>15.4 Kruskal 最小生成树</span>
+    </div>
+    <h1 class="chapter-title">15.4　Kruskal 最小生成树</h1>
+    <p class="chapter-desc">不关心"最短距离"，而是关心"用最少、最便宜的边把所有点连通"——按边权从小到大贪心地挑，配合并查集判断会不会成环。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">什么是最小生成树</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：按边权排序，贪心地加边</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：逐条边处理的完整过程</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#complexity">复杂度分析</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 什么是最小生成树</div>
+    <div class="section-body">
+      <p>给定一张<strong>连通的带权无向图</strong>，从中选出一部分边，让<strong>所有顶点仍然连通</strong>，并且选出的边的<strong>权值之和最小</strong>——这些边构成的结构就叫<strong>最小生成树</strong>（Minimum Spanning Tree，简称 MST）。</p>
+      <p>"生成树"这个名字点出了它的两个特征：<strong>树</strong>——意味着不能有环，<code>V</code> 个顶点恰好用 <code>V-1</code> 条边连通；<strong>生成</strong>——意味着它覆盖了原图<strong>全部</strong>顶点，不能漏掉任何一个点。一张图可能存在多种不同的生成树，而最小生成树是其中边权之和最小的那一种（可能不止一种方案能取到这个最小值，但最小值本身是唯一确定的）。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：按边权排序，贪心地加边</div>
+    <div class="section-body">
+      <p><strong>Kruskal 算法</strong>的做法非常直接：把图里所有的边按权值从小到大排序，然后依次考察每一条边——如果这条边的两个端点<strong>还没有被连通</strong>，就选中这条边（把两个端点合并到同一个连通块）；如果两个端点<strong>已经连通</strong>了，选中这条边只会形成环（多余、不需要），直接跳过。选够 <code>V-1</code> 条边后，最小生成树就构建完成了。</p>
+      <p>"判断两个点是不是已经连通"，正是 10.1 节讲过的<strong>并查集</strong>最擅长的事情——Kruskal 算法可以说是并查集最经典的应用场景之一。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>步骤</th><th>做什么</th></tr></thead>
+      <tbody>
+        <tr><td>① 排序</td><td>把所有边按权值从小到大排序</td></tr>
+        <tr><td>② 初始化</td><td>每个顶点各自成为一个独立的并查集（谁也不连谁）</td></tr>
+        <tr><td>③ 依次处理</td><td>按排好的顺序考察每条边 (u, v, w)：如果 Find(u) ≠ Find(v)，选中这条边，Union(u, v)；否则跳过</td></tr>
+        <tr><td>④ 结束</td><td>选中的边数达到 V-1 条时，最小生成树构建完成（也可以处理完所有边后自然结束）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="trace">③ 图解：逐条边处理的完整过程</div>
+    <div class="section-body">
+      <p>还是 15.1～15.3 节的示例图（顶点 <code>A B C D</code>，边 <code>A-B=4</code>，<code>A-C=1</code>，<code>B-C=2</code>，<code>B-D=5</code>，<code>C-D=8</code>），先把 5 条边按权值从小到大排序：<code>A-C(1)，B-C(2)，A-B(4)，B-D(5)，C-D(8)</code>，再依次处理：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">按权值从小到大依次处理每条边</div>
+      <table class="kr-table">
+        <thead><tr><th>边</th><th>权值</th><th>Find(u) 与 Find(v)</th><th>结果</th><th>当前连通块</th></tr></thead>
+        <tbody>
+          <tr><td>A-C</td><td>1</td><td>不同（各自独立）</td><td class="take">选中，Union(A,C)</td><td>{A,C}　{B}　{D}</td></tr>
+          <tr><td>B-C</td><td>2</td><td>不同（B 独立，C 在 {A,C}）</td><td class="take">选中，Union(B,C)</td><td>{A,B,C}　{D}</td></tr>
+          <tr><td>A-B</td><td>4</td><td><strong>相同</strong>（A、B 都已在 {A,B,C}）</td><td class="skip">跳过——会成环</td><td>{A,B,C}　{D}</td></tr>
+          <tr><td>B-D</td><td>5</td><td>不同（D 独立）</td><td class="take">选中，Union(B,D)</td><td>{A,B,C,D}</td></tr>
+          <tr><td>C-D</td><td>8</td><td colspan="2" class="skip">已经选够 V-1=3 条边，提前结束，不用再看</td></tr>
+        </tbody>
+      </table>
+      <figcaption>选中的 3 条边是 <code>A-C(1)、B-C(2)、B-D(5)</code>，权值之和 <code>1+2+5=8</code>，这就是最小生成树的总权值。<code>A-B</code> 被跳过的原因很直观：这时候 <code>A</code> 和 <code>B</code> 已经能通过 <code>A-C-B</code> 这条路径连通了，再选一条直接的 <code>A-B</code> 边只会形成一个多余的环，对"连通所有点"这个目标没有任何帮助。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · Kruskal 最小生成树</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> parent[MAXN];  <span class="cmt">// 并查集数组，见 10.1 节</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">Find</span>(<span class="typ">int</span> x) { <span class="kw">return</span> parent[x] == x ? x : parent[x] = <span class="fn">Find</span>(parent[x]); }</td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="kw">struct</span> <span class="fn">Edge</span> { <span class="typ">int</span> u, v, w; };  <span class="cmt">// 一条边：两个端点 + 边权</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">vector&lt;Edge&gt; edges;</td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="typ">int</span> <span class="fn">Kruskal</span>(<span class="typ">int</span> n)  <span class="cmt">// n 个顶点，返回最小生成树的总权值（若不连通返回 -1）</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">{</td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++) parent[i] = i;  <span class="cmt">// 初始化：每个点各自独立</span></td></tr>
+          <tr class="hl-warn"><td class="ln">11</td><td class="cd">    <span class="fn">sort</span>(edges.begin(), edges.end(), [](<span class="kw">const</span> Edge&amp; a, <span class="kw">const</span> Edge&amp; b) { <span class="kw">return</span> a.w &lt; b.w; });  <span class="cmt">// ★ 按边权从小到大排序</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="typ">int</span> total = <span class="num">0</span>, cnt = <span class="num">0</span>;  <span class="cmt">// total：总权值；cnt：已选中的边数</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="kw">for</span> (<span class="kw">auto</span>&amp; e : edges)</td></tr>
+          <tr><td class="ln">15</td><td class="cd">    {</td></tr>
+          <tr class="hl"><td class="ln">16</td><td class="cd">        <span class="kw">if</span> (<span class="fn">Find</span>(e.u) == <span class="fn">Find</span>(e.v)) <span class="kw">continue</span>;  <span class="cmt">// 已经连通，选它只会成环，跳过</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">        parent[<span class="fn">Find</span>(e.u)] = <span class="fn">Find</span>(e.v);  <span class="cmt">// 合并两个连通块</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">        total += e.w;</td></tr>
+          <tr><td class="ln">19</td><td class="cd">        cnt++;</td></tr>
+          <tr><td class="ln">20</td><td class="cd">        <span class="kw">if</span> (cnt == n - <span class="num">1</span>) <span class="kw">break</span>;  <span class="cmt">// 已经选够 V-1 条边，提前结束</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">    }</td></tr>
+          <tr class="hl-ref"><td class="ln">22</td><td class="cd">    <span class="kw">return</span> cnt == n - <span class="num">1</span> ? total : <span class="op">-</span><span class="num">1</span>;  <span class="cmt">// 选出的边不够 V-1 条，说明原图本身就不连通</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>整个算法的骨架就是"排序 + 并查集"：</b>第 11 行排序决定了处理边的顺序（贪心的关键），第 16 行 <code>Find(e.u) == Find(e.v)</code> 就是"判断会不会成环"，第 17 行 <code>Union</code> 合并连通块——除此之外没有更多的技巧。这也是 Kruskal 常被当作"贪心算法 + 并查集"综合应用的经典入门例题。</div>
+    </div>
+
+    <div class="sub-title" id="complexity">⑤ 复杂度分析</div>
+    <div class="section-body">
+      <p>设顶点数为 <code>V</code>，边数为 <code>E</code>：排序耗时 <code>O(E log E)</code>；之后每条边只需要做一次（近似 <code>O(1)</code> 的）并查集查找和合并操作，总共 <code>O(E)</code>。整体时间复杂度由排序主导，是 <code>O(E log E)</code>。</p>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>什么时候选 Kruskal？</b>Kruskal 的效率只和<strong>边数</strong>相关，天然适合<strong>稀疏图</strong>（边数远小于 <code>V²</code>）。如果图很稠密（边数接近 <code>V²</code>），15.5 节的 <strong>Prim 算法</strong>（从点出发扩展，而不是给边排序）在某些实现下会更有优势——两种算法求出的最小生成树总权值一定相同，选哪个更多是效率和实现习惯上的考量。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记排序，或排序方向反了：</b>Kruskal 的贪心策略建立在"优先考虑权值小的边"这个前提上——如果忘记排序，或者不小心按权值从大到小排序，选出来的就不再是最小生成树（甚至可能是权值最大的生成树）。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>原图本身不连通时，选不出 V-1 条边：</b>如果原图分成好几个互不相连的部分，不管怎么选边都无法把所有点连通——Kruskal 处理完所有边后，选中的边数会<strong>小于</strong> <code>V-1</code>。第 22 行用 <code>cnt == n-1</code> 判断这种情况，返回 <code>-1</code> 表示"不存在生成树"，而不是把选到的边数直接当成答案返回。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>图中存在重边、自环时没有特殊处理：</b>自环（一条边的两个端点是同一个点）选中后必然成环，靠第 16 行 <code>Find(e.u)==Find(e.v)</code> 会自动被跳过，不需要额外处理；重边（两点之间有多条边）也不需要提前去重——因为排序后权值小的重边会先被处理并选中，权值大的重边处理时两端点已经连通，自然会被跳过，Kruskal 的判环逻辑天然就能正确处理这两种情况。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>15.5 节的 <strong>Prim 算法</strong>会用完全不同的角度求解同一个最小生成树问题——不是给边排序，而是从一个点开始，每次贪心地选"离当前生成树最近的一个新点"逐步扩展，思路上更接近 15.3 节的 Dijkstra。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十五 图论基础 · 15.4 Kruskal 最小生成树</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A15_03_Dijkstra最短路.html">← 15.3 Dijkstra 最短路</a>
+      <a class="nav-btn" href="A15_05_Prim最小生成树.html">15.5 Prim 最小生成树 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

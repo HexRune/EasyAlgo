@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>12.4 记忆化搜索 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "12.4"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--blue-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--blue); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 20px 18px; margin: 18px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; text-align: left; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+
+  /* 滑雪网格可视化 */
+  .ski-wrap { display: flex; justify-content: center; gap: 34px; flex-wrap: wrap; }
+  .ski-col { display: flex; flex-direction: column; align-items: center; }
+  .ski-title { font-size: 11.5px; color: #A6ADC8; margin-bottom: 10px; font-family: 'Noto Sans SC', sans-serif; }
+  .ski-grid { display: grid; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); gap: 5px; }
+  .ski-cell {
+    border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 700;
+    background: #232135; color: #6C7086; border: 1.5px solid transparent;
+  }
+  .ski-cell.path { background: rgba(137,180,250,.18); border-color: #89B4FA; color: #89B4FA; }
+  .ski-cell.shared { background: rgba(243,139,168,.2); border-color: #F38BA8; color: #F38BA8; }
+  .ski-note { font-size: 10.5px; color: #6C7086; margin-top: 10px; font-family: 'Noto Sans SC', sans-serif; text-align: center; max-width: 220px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--blue-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blue); border-bottom: 1px solid #BFDCF2; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--blue); background: var(--blue-light); white-space: nowrap; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="12.4">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十二 搜索基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>12.4 记忆化搜索</span>
+    </div>
+    <h1 class="chapter-title">12.4　记忆化搜索</h1>
+    <p class="chapter-desc">不同的搜索路径，可能会绕到完全相同的状态——把算过的状态缓存起来，下次直接查表，不用再重新展开一次搜索。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">从"剪枝"到"记忆化"：另一种浪费</a></li>
+      <li><span class="toc-num">②</span><a href="#intro">引例：滑雪——网格里最长的下降路径</a></li>
+      <li><span class="toc-num">③</span><a href="#naive">朴素 DFS：不同起点会重复展开同一个状态</a></li>
+      <li><span class="toc-num">④</span><a href="#memo">加上记忆化：每个状态只算一次</a></li>
+      <li><span class="toc-num">⑤</span><a href="#full">完整代码与复杂度对比</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">适用条件与常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 从"剪枝"到"记忆化"：另一种浪费</div>
+    <div class="section-body">
+      <p>12.3 节的剪枝解决的是：<b>一条分支还没走到底，就已经能看出走不通</b>，于是提前放弃，省下后面白费的递归。本节要解决的是另一种、更隐蔽的浪费：有些分支<b>各自看起来都合法</b>，会一路正常地递归下去——但走着走着，两条完全不同的分支可能会<b>殊途同归</b>，绕到了完全相同的一个"状态"上，而代码并不知道这一点，于是把这个状态从头到尾又重新搜索了一遍。</p>
+      <p>8.2 节已经用斐波那契数列演出过这个思路：<code>fib(4)</code> 展开成一棵树后，<code>fib(2)</code> 被不同的分支各算了一次；解决办法是<strong>把算过的结果存起来，下次查表直接用，不重新递归</strong>，这就是<strong>记忆化（Memoization）</strong>。但斐波那契毕竟只是一条简单的线性递推，状态空间也就是一个数字 <code>n</code>。本节要把同样的思路用到真正的<strong>搜索</strong>问题上——状态不再是一个简单的数字，而是像"网格里的一个格子"这样更复杂的东西，搜索的方式也是 DFS，和 12.1～12.3 节一脉相承。</p>
+    </div>
+
+    <div class="sub-title" id="intro">② 引例：滑雪——网格里最长的下降路径</div>
+    <div class="section-body">
+      <p>给定一个 <code>R×C</code> 的网格，每个格子有一个高度值。可以从当前格子滑向<strong>上下左右相邻</strong>的格子，但只能往<strong>严格更低</strong>的地方滑（目标格子的高度必须比当前格子小）。问：整个网格里，能滑的<strong>最长路径</strong>（经过的格子数）是多少？——这是信息学竞赛里"记忆化搜索"最经典的入门题（滑雪问题）。</p>
+      <p>用一个 <code>3×3</code> 的小网格来演示：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="ski-wrap">
+        <div class="ski-col">
+          <div class="ski-title">网格高度</div>
+          <div class="ski-grid">
+            <div class="ski-cell path">9</div><div class="ski-cell">8</div><div class="ski-cell">7</div>
+            <div class="ski-cell path">6</div><div class="ski-cell path">5</div><div class="ski-cell path">4</div>
+            <div class="ski-cell">3</div><div class="ski-cell">2</div><div class="ski-cell path">1</div>
+          </div>
+          <div class="ski-note">高亮的一条路径：<code>9→6→5→4→1</code>（下、右、右、下），每一步都严格变小，一共 5 个格子</div>
+        </div>
+      </div>
+      <figcaption>这条路径就是整个网格里的<strong>最长下降路径</strong>，长度是 5。定义 <code>dfs(i,j)</code> 表示"从格子 <code>(i,j)</code> 出发，能滑的最长路径有多少个格子"——整个网格的答案，就是所有格子的 <code>dfs(i,j)</code> 中的最大值。<code>dfs(i,j)</code> 天然满足递归关系：<code>dfs(i,j) = 1 + max{ dfs(相邻且更低的格子) }</code>，如果四周没有比它更低的格子，<code>dfs(i,j) = 1</code>（滑到这里就停了）。</figcaption>
+    </div>
+
+    <div class="sub-title" id="naive">③ 朴素 DFS：不同起点会重复展开同一个状态</div>
+    <div class="section-body">
+      <p>最直接的想法：对每个格子都调用一次 <code>dfs(i,j)</code>，取所有结果里的最大值。<code>dfs</code> 本身就是一次 DFS——从 <code>(i,j)</code> 出发，往四个方向试探，只要相邻格子更低就递归下去，四个方向都不能走时返回 1。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 朴素 DFS（没有记忆化）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">h</span><span class="pnc">[</span><span class="num">55</span><span class="pnc">][</span><span class="num">55</span><span class="pnc">];</span>  <span class="cmt">// 网格高度</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">R</span><span class="pnc">,</span> <span class="fn">C</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">dx</span><span class="pnc">[</span><span class="num">4</span><span class="pnc">] =</span> <span class="pnc">{-</span><span class="num">1</span><span class="pnc">,</span><span class="num">1</span><span class="pnc">,</span><span class="num">0</span><span class="pnc">,</span><span class="num">0</span><span class="pnc">},</span> <span class="fn">dy</span><span class="pnc">[</span><span class="num">4</span><span class="pnc">] =</span> <span class="pnc">{</span><span class="num">0</span><span class="pnc">,</span><span class="num">0</span><span class="pnc">,-</span><span class="num">1</span><span class="pnc">,</span><span class="num">1</span><span class="pnc">};</span>  <span class="cmt">// 上下左右</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">dfs</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">j</span><span class="pnc">)</span>  <span class="cmt">// 从 (i,j) 出发能滑的最长路径</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="typ">int</span> <span class="fn">best</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 至少能"滑"这一个格子本身</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">k</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">k</span> <span class="op">&lt;</span> <span class="num">4</span><span class="pnc">;</span> <span class="fn">k</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="typ">int</span> <span class="fn">ni</span> <span class="op">=</span> <span class="fn">i</span> <span class="op">+</span> <span class="fn">dx</span><span class="pnc">[</span><span class="fn">k</span><span class="pnc">],</span> <span class="fn">nj</span> <span class="op">=</span> <span class="fn">j</span> <span class="op">+</span> <span class="fn">dy</span><span class="pnc">[</span><span class="fn">k</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">ni</span> <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> <span class="fn">ni</span> <span class="op">&gt;=</span> <span class="fn">R</span> <span class="op">||</span> <span class="fn">nj</span> <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> <span class="fn">nj</span> <span class="op">&gt;=</span> <span class="fn">C</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span>  <span class="cmt">// 出界</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">h</span><span class="pnc">[</span><span class="fn">ni</span><span class="pnc">][</span><span class="fn">nj</span><span class="pnc">]</span> <span class="op">&gt;=</span> <span class="fn">h</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">])</span> <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span>  <span class="cmt">// 没有更低，不能滑</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">        <span class="fn">best</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">best</span><span class="pnc">,</span> <span class="num">1</span> <span class="op">+</span> <span class="fn">dfs</span><span class="pnc">(</span><span class="fn">ni</span><span class="pnc">,</span> <span class="fn">nj</span><span class="pnc">));</span>  <span class="cmt">// ★ 每次都重新递归，即使 (ni,nj) 之前算过</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="kw">return</span> <span class="fn">best</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>问题出在第 13 行：从不同格子出发的搜索，很可能会绕到<strong>同一个格子</strong>。以刚才的 <code>3×3</code> 网格为例，格子 <code>(1,1)=5</code> 既能从 <code>(0,1)=8</code> 往下滑到达，也能从 <code>(1,0)=6</code> 往右滑到达——两条完全不同的搜索分支，都会各自调用一次 <code>dfs(1,1)</code>，把"从 5 出发还能滑多远"这件事重新搜索一遍：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="ski-wrap">
+        <div class="ski-col">
+          <div class="ski-title">分支 A：从 (0,1)=8 出发</div>
+          <div class="ski-grid">
+            <div class="ski-cell">9</div><div class="ski-cell path">8</div><div class="ski-cell">7</div>
+            <div class="ski-cell">6</div><div class="ski-cell shared">5</div><div class="ski-cell path">4</div>
+            <div class="ski-cell">3</div><div class="ski-cell">2</div><div class="ski-cell path">1</div>
+          </div>
+          <div class="ski-note">8 → 5 → 4 → 1</div>
+        </div>
+        <div class="ski-col">
+          <div class="ski-title">分支 B：从 (1,0)=6 出发</div>
+          <div class="ski-grid">
+            <div class="ski-cell">9</div><div class="ski-cell">8</div><div class="ski-cell">7</div>
+            <div class="ski-cell path">6</div><div class="ski-cell shared">5</div><div class="ski-cell path">4</div>
+            <div class="ski-cell">3</div><div class="ski-cell">2</div><div class="ski-cell path">1</div>
+          </div>
+          <div class="ski-note">6 → 5 → 4 → 1</div>
+        </div>
+      </div>
+      <figcaption><code>(1,1)=5</code> 这个格子（粉色）在两条分支里都被当作起点重新搜索了一次——两次调用 <code>dfs(1,1)</code> 算出的答案<strong>完全相同</strong>（都是从 5 出发能滑 3 个格子：<code>5→4→1</code>）。网格越大，这种"殊途同归"的情况会越来越多，朴素 DFS 的调用次数会随格子数指数级增长。</figcaption>
+    </div>
+
+    <div class="sub-title" id="memo">④ 加上记忆化：每个状态只算一次</div>
+    <div class="section-body">
+      <p>解决办法和 8.2 节一样：<strong>用一个数组把每个状态的答案缓存起来</strong>，进入 <code>dfs(i,j)</code> 时先查表，如果这个格子已经算过，直接返回缓存的结果，不再重新展开搜索。这里的"状态"是二维的 <code>(i,j)</code>，所以缓存数组也开成二维。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 记忆化 DFS</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">dp</span><span class="pnc">[</span><span class="num">55</span><span class="pnc">][</span><span class="num">55</span><span class="pnc">];</span>  <span class="cmt">// 记忆表：dp[i][j] 表示 dfs(i,j) 是否已经算过、算出的值是多少</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">dfs</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">j</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">!=</span> <span class="op">-</span><span class="num">1</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="kw">return</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">];</span> <span class="pnc">}</span>  <span class="cmt">// ✅ 查表：算过就直接返回，不再往下搜索</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">int</span> <span class="fn">best</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">k</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">k</span> <span class="op">&lt;</span> <span class="num">4</span><span class="pnc">;</span> <span class="fn">k</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">        <span class="typ">int</span> <span class="fn">ni</span> <span class="op">=</span> <span class="fn">i</span> <span class="op">+</span> <span class="fn">dx</span><span class="pnc">[</span><span class="fn">k</span><span class="pnc">],</span> <span class="fn">nj</span> <span class="op">=</span> <span class="fn">j</span> <span class="op">+</span> <span class="fn">dy</span><span class="pnc">[</span><span class="fn">k</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">ni</span> <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> <span class="fn">ni</span> <span class="op">&gt;=</span> <span class="fn">R</span> <span class="op">||</span> <span class="fn">nj</span> <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> <span class="fn">nj</span> <span class="op">&gt;=</span> <span class="fn">C</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">h</span><span class="pnc">[</span><span class="fn">ni</span><span class="pnc">][</span><span class="fn">nj</span><span class="pnc">]</span> <span class="op">&gt;=</span> <span class="fn">h</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">])</span> <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="fn">best</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">best</span><span class="pnc">,</span> <span class="num">1</span> <span class="op">+</span> <span class="fn">dfs</span><span class="pnc">(</span><span class="fn">ni</span><span class="pnc">,</span> <span class="fn">nj</span><span class="pnc">));</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr class="hl-ref"><td class="ln">14</td><td class="cd">    <span class="kw">return</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">best</span><span class="pnc">;</span>  <span class="cmt">// ✅ 存表：算完顺手存起来，再返回</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>只改了两行，但效果天差地别：</b>第 5 行在搜索之前先查表——分支 B 调用 <code>dfs(1,1)</code> 时，如果分支 A 已经算过并存进了 <code>dp[1][1]</code>，就直接把结果拿来用，<strong>连四个方向的 for 循环都不会执行</strong>。第 14 行把"返回"和"存表"合并成一行：算出 <code>best</code> 之后，先赋值给 <code>dp[i][j]</code>，同一个表达式的值又是这次要返回的结果，一举两得。</div>
+    </div>
+
+    <div class="sub-title" id="full">⑤ 完整代码与复杂度对比</div>
+    <div class="section-body">
+      <p>加上读入数据和主函数，对每个格子调用一次 <code>dfs</code>，取所有结果里的最大值：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 滑雪问题完整代码</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span> <span class="str">&lt;cstring&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">h</span><span class="pnc">[</span><span class="num">55</span><span class="pnc">][</span><span class="num">55</span><span class="pnc">],</span> <span class="fn">dp</span><span class="pnc">[</span><span class="num">55</span><span class="pnc">][</span><span class="num">55</span><span class="pnc">],</span> <span class="fn">R</span><span class="pnc">,</span> <span class="fn">C</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">int</span> <span class="fn">dx</span><span class="pnc">[</span><span class="num">4</span><span class="pnc">] =</span> <span class="pnc">{-</span><span class="num">1</span><span class="pnc">,</span><span class="num">1</span><span class="pnc">,</span><span class="num">0</span><span class="pnc">,</span><span class="num">0</span><span class="pnc">},</span> <span class="fn">dy</span><span class="pnc">[</span><span class="num">4</span><span class="pnc">] =</span> <span class="pnc">{</span><span class="num">0</span><span class="pnc">,</span><span class="num">0</span><span class="pnc">,-</span><span class="num">1</span><span class="pnc">,</span><span class="num">1</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="typ">int</span> <span class="fn">dfs</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">j</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">!=</span> <span class="op">-</span><span class="num">1</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="kw">return</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">];</span> <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="typ">int</span> <span class="fn">best</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">k</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">k</span> <span class="op">&lt;</span> <span class="num">4</span><span class="pnc">;</span> <span class="fn">k</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="typ">int</span> <span class="fn">ni</span> <span class="op">=</span> <span class="fn">i</span> <span class="op">+</span> <span class="fn">dx</span><span class="pnc">[</span><span class="fn">k</span><span class="pnc">],</span> <span class="fn">nj</span> <span class="op">=</span> <span class="fn">j</span> <span class="op">+</span> <span class="fn">dy</span><span class="pnc">[</span><span class="fn">k</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">ni</span> <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> <span class="fn">ni</span> <span class="op">&gt;=</span> <span class="fn">R</span> <span class="op">||</span> <span class="fn">nj</span> <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> <span class="fn">nj</span> <span class="op">&gt;=</span> <span class="fn">C</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">h</span><span class="pnc">[</span><span class="fn">ni</span><span class="pnc">][</span><span class="fn">nj</span><span class="pnc">]</span> <span class="op">&gt;=</span> <span class="fn">h</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">])</span> <span class="pnc">{</span> <span class="kw">continue</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">        <span class="fn">best</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">best</span><span class="pnc">,</span> <span class="num">1</span> <span class="op">+</span> <span class="fn">dfs</span><span class="pnc">(</span><span class="fn">ni</span><span class="pnc">,</span> <span class="fn">nj</span><span class="pnc">));</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr class="hl-ref"><td class="ln">19</td><td class="cd">    <span class="kw">return</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">best</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd"></td></tr>
+          <tr><td class="ln">22</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">R</span> <span class="op">&gt;&gt;</span> <span class="fn">C</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">R</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="fn">C</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span> <span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">h</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">];</span></td></tr>
+          <tr class="hl"><td class="ln">27</td><td class="cd">    <span class="fn">memset</span><span class="pnc">(</span><span class="fn">dp</span><span class="pnc">,</span> <span class="op">-</span><span class="num">1</span><span class="pnc">,</span> <span class="kw">sizeof</span><span class="pnc">(</span><span class="fn">dp</span><span class="pnc">));</span>  <span class="cmt">// ★ 全部初始化成 -1，表示"还没算过"</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd"></td></tr>
+          <tr><td class="ln">29</td><td class="cd">    <span class="typ">int</span> <span class="fn">ans</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">30</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">R</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">31</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="fn">C</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">32</td><td class="cd">            <span class="fn">ans</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">ans</span><span class="pnc">,</span> <span class="fn">dfs</span><span class="pnc">(</span><span class="fn">i</span><span class="pnc">,</span> <span class="fn">j</span><span class="pnc">));</span>  <span class="cmt">// 每个格子都可能是最长路径的起点</span></td></tr>
+          <tr><td class="ln">33</td><td class="cd"></td></tr>
+          <tr><td class="ln">34</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">ans</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">35</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>写法</th><th>每个状态被计算的次数</th><th>时间复杂度</th></tr></thead>
+      <tbody>
+        <tr><td>③ 朴素 DFS</td><td>可能被多条分支重复计算，最坏情况下随格子数指数增长</td><td>最坏 O(2^(R×C)) 级别</td></tr>
+        <tr><td>④⑤ 记忆化 DFS</td><td>每个状态<b>只计算一次</b>，之后全部查表</td><td>O(R×C)（状态数）× O(4)（每个状态的转移）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>记忆化搜索的效率提升，本质和 8.2 节的斐波那契一模一样：<b>状态总数是固定的（这里是 R×C 个格子），只要保证每个状态只被真正计算一次，总时间就等于"状态数 × 每个状态的转移开销"</b>。朴素 DFS 之所以慢，不是因为搜索方式错了，而是<b>同一个状态被反复当成"新问题"从头搜索</b>；记忆化搜索的代码结构和朴素 DFS 几乎一样，只是多了"查表"和"存表"这两步。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 适用条件与常见陷阱</div>
+    <div class="section-body">
+      <p>并不是所有 DFS 都能直接套上记忆化，需要满足两个条件：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>条件</th><th>在滑雪问题里对应什么</th></tr></thead>
+      <tbody>
+        <tr><td>① 状态能被清晰地定义、编号</td><td>用 <code>(i,j)</code> 这一对坐标就能唯一确定一个状态，可以直接当数组下标</td></tr>
+        <tr><td>② 状态转移无后效性（不能有环）</td><td>只能往<b>严格更低</b>的格子滑——高度值只减不增，保证不会滑回原来的格子，状态之间不会形成循环依赖</td></tr>
+      </tbody>
+    </table>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>用 0 表示"还没算过"，却忘了 0 也可能是合法答案：</b>本节用 <code>-1</code> 初始化 <code>dp</code> 数组，就是因为最短路径长度也可能是一些边界情况下的合法值。如果偷懒直接把数组默认初始化为 <code>0</code>，一旦某个状态的正确答案恰好是 <code>0</code>，就会被误判成"没算过"而重复计算；反过来，如果某个状态还没算过，却被误当成"已经算出 0"直接返回，答案就错了。养成习惯：初始化用一个<b>不可能是合法答案</b>的值（比如 <code>-1</code>），或者干脆用一个额外的 <code>bool visited[][]</code> 数组专门记录"是否算过"。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>状态转移里存在环，记忆化会死循环：</b>如果去掉"严格更低"这个限制、允许滑向高度<b>相等或更高</b>的格子，两个格子就可能互相依赖（<code>dfs(A)</code> 需要 <code>dfs(B)</code>，<code>dfs(B)</code> 又需要 <code>dfs(A)</code>），递归永远无法触底，直接栈溢出。记忆化搜索能生效的前提，是状态之间的依赖关系构成一张<b>有向无环图（DAG）</b>——本题正是靠"严格递减"这个条件天然保证了不会成环。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>记忆表开的位置或大小不对：</b><code>dp</code> 数组要开在全局（或用 <code>static</code>），不能开在 <code>dfs</code> 函数内部当局部变量——否则每次调用都会重新创建一份空的记忆表，等于完全没有缓存效果。数组大小也要按题目给定的最大范围开够，避免越界。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>模块小结与展望：</b>12.1～12.4 节走完了一条完整的路：DFS（暴力搜索所有可能）→ 回溯（用"做选择/撤销选择"规范地遍历分支）→ 剪枝（提前放弃不合法的分支）→ 记忆化（缓存重复出现的状态，避免同一个状态被反复搜索）。记忆化搜索还有一个更重要的身份——它本质上就是<b>"自顶向下"的动态规划</b>：从大问题出发，递归拆解成小问题，用缓存避免重复计算。下一模块（13 动态规划基础）要学的，是同一件事的"自底向上"写法——不用递归，而是按顺序把小问题的答案先算出来，再逐步推导出大问题的答案。两种写法能解决同一类问题，各有优势，值得对照着学。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十二 · 搜索基础 · 12.4 记忆化搜索</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A12_03_剪枝优化.html">← 12.3 剪枝优化</a>
+      <a class="nav-btn" href="index.html">返回目录 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>16.1 离散化 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "16.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal-mid); border-bottom: 1px solid #a6ded0; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal-mid); background: var(--teal-light); white-space: nowrap; }
+
+  /* 数组卡片可视化 */
+  .arr-row { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; }
+  .arr-cell { display: flex; flex-direction: column; align-items: center; min-width: 52px; flex-shrink: 0; }
+  .arr-idx { font-size: 10px; color: #6C7086; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .arr-val {
+    min-width: 46px; height: 40px; padding: 0 6px; border-radius: 7px; background: #2A2840;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
+    color: #A6ADC8; border: 1.5px solid transparent;
+  }
+  .arr-val.rk { background: rgba(166,227,161,.2); border-color: #A6E3A1; color: #A6E3A1; }
+  .arr-arrow-down { text-align: center; color: #6C7086; font-size: 16px; margin: 6px 0; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="16.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十六 树状数组与线段树</span>
+      <span class="eyebrow-sep">/</span>
+      <span>16.1 离散化</span>
+    </div>
+    <h1 class="chapter-title">16.1　离散化</h1>
+    <p class="chapter-desc">数值本身可能大到离谱，但真正出现过的数值没几个——只保留"排第几"这个相对顺序，把天文数字压缩成 1~n 的连续下标。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要离散化</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：只保留相对大小关系</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：一个具体数组的离散化过程</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#complexity">复杂度分析</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要离散化</div>
+    <div class="section-body">
+      <p>16.2、16.3 节要学的树状数组、线段树，通常要求维护的下标是 <code>1~n</code> 这样连续的整数——数组开多大、循环怎么写，都建立在"下标范围不大"这个前提上。但实际题目里，数据的<strong>取值范围</strong>可能非常夸张（比如坐标范围是 <code>1~10⁹</code>），而<strong>数据的个数</strong>却很少（比如只有 <code>10⁵</code> 个数）。如果直接按数值大小开数组，要么开不下（内存不够），要么绝大部分空间都在浪费（真正用到的值稀稀拉拉分布在一个巨大的范围里）。</p>
+      <p><strong>离散化</strong>解决的正是这个矛盾——把一堆"数值很大、但个数不多"的数，压缩成 <code>1~n</code> 的连续整数，压缩前后，数值之间原本的<strong>大小顺序保持不变</strong>。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：只保留相对大小关系</div>
+    <div class="section-body">
+      <p>很多题目真正关心的并不是某个数<strong>具体是多少</strong>，而是它在所有出现过的数里<strong>排第几</strong>（比如"求区间内比它小的数有多少个"，只需要知道相对顺序，不需要知道具体数值）。离散化就是利用这一点：把原始数组<strong>排序、去重</strong>后，每个数在这个"去重排序后的数组"里的位置（下标），就是它离散化之后的新值——这个新值一定落在 <code>1~n</code>（<code>n</code> 是去重后的个数）范围内。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>步骤</th><th>做什么</th></tr></thead>
+      <tbody>
+        <tr><td>① 复制</td><td>把原数组复制一份，准备排序（保留原数组不动，后面还要用）</td></tr>
+        <tr><td>② 排序</td><td>对复制的数组从小到大排序</td></tr>
+        <tr><td>③ 去重</td><td>相同的数值只保留一份（常用 <code>unique</code>）</td></tr>
+        <tr><td>④ 查名次</td><td>对原数组里的每个数，在"排序去重后的数组"里用二分查找（<code>lower_bound</code>）找到它的位置，就是离散化后的新值</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="trace">③ 图解：一个具体数组的离散化过程</div>
+    <div class="section-body">
+      <p>原数组 <code>a = [100, 5000000, 3, 100, 50]</code>——数值分布得很散，但只有 <code>5</code> 个数：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">原数组</div>
+      <div class="arr-row">
+        <div class="arr-cell"><div class="arr-idx">a[0]</div><div class="arr-val">100</div></div>
+        <div class="arr-cell"><div class="arr-idx">a[1]</div><div class="arr-val">5000000</div></div>
+        <div class="arr-cell"><div class="arr-idx">a[2]</div><div class="arr-val">3</div></div>
+        <div class="arr-cell"><div class="arr-idx">a[3]</div><div class="arr-val">100</div></div>
+        <div class="arr-cell"><div class="arr-idx">a[4]</div><div class="arr-val">50</div></div>
+      </div>
+
+      <div class="arr-arrow-down">↓ 复制一份，排序 + 去重（100 只保留一份）</div>
+
+      <div class="diagram-title">排序去重后的数组（离散化"字典"），下标即排名</div>
+      <div class="arr-row">
+        <div class="arr-cell"><div class="arr-idx">排名 1</div><div class="arr-val rk">3</div></div>
+        <div class="arr-cell"><div class="arr-idx">排名 2</div><div class="arr-val rk">50</div></div>
+        <div class="arr-cell"><div class="arr-idx">排名 3</div><div class="arr-val rk">100</div></div>
+        <div class="arr-cell"><div class="arr-idx">排名 4</div><div class="arr-val rk">5000000</div></div>
+      </div>
+
+      <div class="arr-arrow-down">↓ 原数组每个数，去"字典"里查自己的排名</div>
+
+      <div class="diagram-title">离散化之后的数组</div>
+      <div class="arr-row">
+        <div class="arr-cell"><div class="arr-idx">a[0]=100</div><div class="arr-val rk">3</div></div>
+        <div class="arr-cell"><div class="arr-idx">a[1]=5000000</div><div class="arr-val rk">4</div></div>
+        <div class="arr-cell"><div class="arr-idx">a[2]=3</div><div class="arr-val rk">1</div></div>
+        <div class="arr-cell"><div class="arr-idx">a[3]=100</div><div class="arr-val rk">3</div></div>
+        <div class="arr-cell"><div class="arr-idx">a[4]=50</div><div class="arr-val rk">2</div></div>
+      </div>
+      <figcaption>原本从 <code>3</code> 一路跨到 <code>5000000</code> 的数值范围，压缩成了 <code>1~4</code> 的连续整数。两个 <code>100</code>（<code>a[0]</code> 和 <code>a[3]</code>）离散化后都是排名 <code>3</code>——大小关系完全保留：谁在原数组里更大，离散化后的排名也更大；相同的数，排名也相同。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 离散化模板</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> a[MAXN], n;      <span class="cmt">// 原数组</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd">vector&lt;<span class="typ">int</span>&gt; b;   <span class="cmt">// b：排序去重后的"离散化字典"</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">void</span> <span class="fn">Discretize</span>()</td></tr>
+          <tr><td class="ln">5</td><td class="cd">{</td></tr>
+          <tr class="hl-ref"><td class="ln">6</td><td class="cd">    b.assign(a + <span class="num">1</span>, a + <span class="num">1</span> + n);  <span class="cmt">// ① 复制一份原数组</span></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">    sort(b.begin(), b.end());                       <span class="cmt">// ② 排序</span></td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">    b.erase(unique(b.begin(), b.end()), b.end());   <span class="cmt">// ③ 去重（unique 把重复项挪到末尾，erase 删掉）</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++)</td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">        a[i] = lower_bound(b.begin(), b.end(), a[i]) - b.begin() + <span class="num">1</span>;  <span class="cmt">// ④ 二分查名次，+1 让排名从 1 开始</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b><code>lower_bound</code> 在这里做的事情，就是"查字典"：</b><code>lower_bound(b.begin(), b.end(), a[i])</code> 在有序数组 <code>b</code> 里，找到第一个"大于等于 <code>a[i]</code>"的位置——因为 <code>a[i]</code> 一定在 <code>b</code> 里出现过（<code>b</code> 就是从 <code>a</code> 复制来的），这个位置对应的正是 <code>a[i]</code> 本身。返回的是一个迭代器，减去 <code>b.begin()</code> 转换成从 0 开始的下标，再 <code>+1</code> 让排名从 <code>1</code> 开始（方便后续直接当树状数组、线段树的下标使用）。</div>
+    </div>
+
+    <div class="sub-title" id="complexity">⑤ 复杂度分析</div>
+    <div class="section-body">
+      <p>排序 <code>O(n log n)</code>；对每个数做一次二分查找 <code>O(log n)</code>，一共 <code>n</code> 次，合计 <code>O(n log n)</code>。整体离散化的时间复杂度是 <code>O(n log n)</code>，空间上多开一个大小为 <code>n</code> 的 <code>b</code> 数组，<code>O(n)</code>。</p>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记去重，直接对排序后的数组做二分：</b>如果跳过第 8 行的 <code>unique</code>，数组 <code>b</code> 里会保留重复的数值，<code>lower_bound</code> 依然能正确工作（原理不受影响），但 <code>b</code> 的长度不再等于"不同数值的个数"，后续树状数组、线段树开的数组大小、下标范围都会跟着算错，很容易引发越界之类的问题。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>离散化之后，丢失了原始数值，无法还原：</b>离散化把 <code>100</code> 变成了排名 <code>3</code>，如果题目后续还需要"排名 3 对应的原始数值是多少"，必须自己保留 <code>b</code> 这个数组（<code>b[排名-1]</code> 就是原始数值），不能只保留离散化后的结果就把原始信息丢掉。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>多组测试数据之间，忘记清空 <code>b</code>：</b><code>vector</code> 不会像普通数组那样"用完自动清零"，如果每组数据前忘记 <code>b.clear()</code>，上一组遗留的数据会混进这一组的离散化结果里，导致排名算错。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>离散化本身不是一个"目的"，而是给 16.2 节的<strong>树状数组</strong>、16.3 节的<strong>线段树</strong>打前站——这两种数据结构都要求下标是连续的小范围整数，遇到值域巨大的题目，通常都要先离散化，再把离散化后的排名当下标使用。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十六 树状数组与线段树 · 16.1 离散化</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A15_06_拓扑排序.html">← 15.6 拓扑排序</a>
+      <a class="nav-btn" href="A16_02_树状数组.html">16.2 树状数组 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

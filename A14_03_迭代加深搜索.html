@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>14.3 迭代加深搜索 IDDFS — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "14.3"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--blue-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--blue-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--blue-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--blue-mid); border-bottom: 1px solid #93c5fd; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #f0f5ff; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--blue-mid); background: var(--blue-light); white-space: nowrap; }
+
+  /* 每一轮搜索的访问顺序可视化 */
+  .round-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .round-row:last-child { margin-bottom: 0; }
+  .round-label { font-size: 11.5px; color: #A6ADC8; width: 108px; flex-shrink: 0; font-family: 'Noto Sans SC', sans-serif; }
+  .id-node {
+    min-width: 34px; height: 34px; padding: 0 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex-shrink: 0;
+    background: rgba(137,180,250,.15); color: #89B4FA; border: 1.5px solid rgba(137,180,250,.4);
+  }
+  .id-node.hit { background: rgba(166,227,161,.25); color: #A6E3A1; border-color: #A6E3A1; }
+  .id-node.cut { background: rgba(243,139,168,.1); color: #F38BA8; border: 1.5px dashed rgba(243,139,168,.4); font-size: 10.5px; }
+  .id-arrow { color: #45475A; font-size: 13px; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="14.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十四 搜索进阶</span>
+      <span class="eyebrow-sep">/</span>
+      <span>14.3 迭代加深搜索 IDDFS</span>
+    </div>
+    <h1 class="chapter-title">14.3　迭代加深搜索 IDDFS</h1>
+    <p class="chapter-desc">给 DFS 套上一个逐渐放宽的深度限制，反复搜索——用 DFS 的省内存，换来和 BFS 一样"最先找到的就是最浅的解"这个保证。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要 IDDFS：DFS 和 BFS 各自的短板</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：深度限制 DFS + 反复加深</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：三轮搜索如何找到答案</a></li>
+      <li><span class="toc-num">④</span><a href="#code">模板代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#complexity">重复搜索浅层，代价大不大？</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">适用条件与常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要 IDDFS：DFS 和 BFS 各自的短板</div>
+    <div class="section-body">
+      <p>12.1 节的 DFS 内存开销很小——只需要 <code>O(深度)</code> 的栈空间，但它<strong>不保证第一个找到的解是最浅的</strong>：DFS 会一条道走到黑，如果先走的那条分支恰好很深、绕了很远才碰到解，DFS 就会先返回那个更深的解，即使旁边其实存在一个浅得多的解。</p>
+      <p>14.1 节的 BFS 能保证第一个找到的解就是最浅的，但它的代价是<strong>内存</strong>：BFS 的队列里，某一时刻要同时装下"这一层全部的节点"，当分支因子 <code>b</code> 较大、深度 <code>d</code> 也较大时，队列能膨胀到 <code>O(b^d)</code> 量级——很多题目（尤其是搜索空间几乎无穷大的场景，比如某些迷题、状态空间搜索）会直接把内存爆掉。</p>
+      <p><strong>迭代加深搜索（Iterative Deepening DFS，简称 IDDFS）</strong>就是为了同时拿到"DFS 的低内存"和"BFS 的最浅解保证"而设计的：给 DFS 加一个<strong>深度限制</strong>，超过这个深度就不再往下探；如果限制内没找到解，就把限制<strong>加一层</strong>，重新从头开始搜索。因为每一轮都是先探浅的、后探深的（在限制范围内仍然是深度优先，但整体上是一轮比一轮更深），第一次找到解的那一轮，深度必然是最浅的。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：深度限制 DFS + 反复加深</div>
+    <div class="section-body">
+      <p>IDDFS 由两部分组成：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>组成部分</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td>深度限制 DFS</td><td>普通的 DFS，但多带一个参数 <code>limit</code>；一旦当前深度达到 <code>limit</code>，就不再继续往下递归（即使还没到终点）</td></tr>
+        <tr><td>外层驱动循环</td><td>从 <code>limit = 0</code> 开始，每次深度限制 DFS 找不到解就把 <code>limit</code> 加 1，重新完整地搜索一遍，直到找到解为止</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="trace">③ 图解：三轮搜索如何找到答案</div>
+    <div class="section-body">
+      <p>用一棵简单的树演示：根节点 <code>A</code>（深度 0），<code>A</code> 有两个孩子 <code>B、C</code>（深度 1），<code>B</code> 的孩子是 <code>D、E</code>，<code>C</code> 的孩子是 <code>F、G</code>（都是深度 2）。假设目标节点是最右边的 <code>G</code>：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">深度限制从 0 开始，逐轮加深，直到找到 G</div>
+
+      <div class="round-row">
+        <div class="round-label" style="color:#F38BA8">第 1 轮 limit=0</div>
+        <div class="id-node">A</div>
+        <div class="id-node cut">达到限制，不再往下</div>
+      </div>
+
+      <div class="round-row">
+        <div class="round-label" style="color:#F38BA8">第 2 轮 limit=1</div>
+        <div class="id-node">A</div><div class="id-arrow">→</div>
+        <div class="id-node">B</div><div class="id-arrow">→</div>
+        <div class="id-node">C</div>
+        <div class="id-node cut">达到限制，不再往下</div>
+      </div>
+
+      <div class="round-row">
+        <div class="round-label" style="color:#A6E3A1">第 3 轮 limit=2</div>
+        <div class="id-node">A</div><div class="id-arrow">→</div>
+        <div class="id-node">B</div><div class="id-arrow">→</div>
+        <div class="id-node">D</div><div class="id-arrow">→</div>
+        <div class="id-node">E</div><div class="id-arrow">→</div>
+        <div class="id-node">C</div><div class="id-arrow">→</div>
+        <div class="id-node">F</div><div class="id-arrow">→</div>
+        <div class="id-node hit">G ✓</div>
+      </div>
+
+      <figcaption>前两轮（<code>limit=0</code>、<code>limit=1</code>）都没找到 <code>G</code>，因为限制不够深，根本没搜索到 <code>G</code> 所在的深度；第 3 轮 <code>limit=2</code> 时，<code>DFS</code> 依然是"一条道走到黑"的顺序（<code>A→B→D→E</code>，退回来再 <code>→C→F→G</code>），最终在深度 2 找到 <code>G</code>。因为是逐轮加深、每轮都从浅到深搜索，<strong>第一次找到目标的那一轮，深度必然是最小的</strong>——这正是 IDDFS 能保证"最浅解"的原因。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">④ 模板代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · IDDFS 模板</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd">vector&lt;<span class="typ">int</span>&gt; adj[MAXN];</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> target;</td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// 深度限制 DFS：depth 是当前深度，limit 是这一轮允许的最大深度</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">bool</span> <span class="fn">DLS</span>(<span class="typ">int</span> u, <span class="typ">int</span> depth, <span class="typ">int</span> limit)</td></tr>
+          <tr><td class="ln">6</td><td class="cd">{</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">if</span> (u == target) <span class="kw">return</span> <span class="kw">true</span>;   <span class="cmt">// 找到了</span></td></tr>
+          <tr class="hl-warn"><td class="ln">8</td><td class="cd">    <span class="kw">if</span> (depth == limit) <span class="kw">return</span> <span class="kw">false</span>;  <span class="cmt">// ★ 到达本轮深度上限，不再往下递归</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> v : adj[u])</td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="kw">if</span> (<span class="fn">DLS</span>(v, depth + <span class="num">1</span>, limit)) <span class="kw">return</span> <span class="kw">true</span>;</td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="kw">return</span> <span class="kw">false</span>;</td></tr>
+          <tr><td class="ln">12</td><td class="cd">}</td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">int</span> <span class="fn">IDDFS</span>(<span class="typ">int</span> root, <span class="typ">int</span> maxPossibleDepth)</td></tr>
+          <tr><td class="ln">15</td><td class="cd">{</td></tr>
+          <tr class="hl"><td class="ln">16</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> limit = <span class="num">0</span>; limit &lt;= maxPossibleDepth; limit++)  <span class="cmt">// ★ 深度限制从 0 开始逐层加深</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">18</td><td class="cd">        <span class="kw">if</span> (<span class="fn">DLS</span>(root, <span class="num">0</span>, limit)) <span class="kw">return</span> limit;  <span class="cmt">// 这一轮找到了，limit 就是最浅深度</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="kw">return</span> <span class="op">-1</span>;  <span class="cmt">// 到最大可能深度都没找到，说明不存在</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>和普通 DFS 相比只多了一个参数：</b>第 5～12 行的 <code>DLS</code>（Depth-Limited Search）几乎就是一个标准的 DFS，唯一的区别是第 8 行——多了一个"到达深度上限就返回"的判断。真正实现"逐轮加深"的，是第 16 行的外层循环：<code>limit</code> 从 <code>0</code> 开始，每次 <code>DLS</code> 找不到解就把 <code>limit</code> 加 1，重新完整地跑一次 <code>DLS</code>。</div>
+    </div>
+
+    <div class="sub-title" id="complexity">⑤ 重复搜索浅层，代价大不大？</div>
+    <div class="section-body">
+      <p>看起来 IDDFS 很浪费——<code>limit=2</code> 那一轮，等于把 <code>limit=0</code>、<code>limit=1</code> 时探索过的节点又重新走了一遍。但因为树（或图）的节点数量是<strong>随深度指数增长</strong>的，浅层节点数量相比最深一层几乎可以忽略：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>深度</th><th>该层节点数（分支因子 b=10）</th><th>占最深一层的比例</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>1</td><td>约 0.001%</td></tr>
+        <tr><td>1</td><td>10</td><td>约 0.01%</td></tr>
+        <tr><td>2</td><td>100</td><td>约 0.1%</td></tr>
+        <tr><td>3</td><td>1,000</td><td>约 1%</td></tr>
+        <tr><td>4（最深一层）</td><td>10,000</td><td>100%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div>把所有轮次访问的节点数加起来，总和是一个等比数列，<strong>主要由最后一轮（最深的那一层）决定</strong>——前面几轮加起来的节点数总和，也不会超过最后一轮的 <code>b/(b-1)</code> 倍（这里 <code>b</code> 是分支因子）。也就是说，IDDFS 的总时间复杂度和"直接对最深一层做一次 BFS"是<strong>同一个数量级</strong>，只是多了一个不到 2 倍的常数因子——用这一点点重复计算的代价，换来了 <code>O(深度)</code> 的内存占用（而不是 BFS 的 <code>O(b^深度)</code>），在搜索空间巨大、内存吃紧的场景下非常划算。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 适用条件与常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记在深度限制 DFS 里判重（走过的路径可能形成环）：</b>如果搜索空间是一般的图而不是树，同一个节点可能通过不同路径被重复访问，甚至绕成环导致无限递归。需要额外记录"当前路径上已经访问过的节点"（走到头要撤销标记，因为不同分支之间可以重复用），这一点和 12.2 节回溯的"做选择/撤销选择"是同一个思路。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>分支因子很小、深度很浅时，不值得用 IDDFS：</b>IDDFS 的优势建立在"节点数随深度指数增长"上；如果搜索树本身又矮又窄（分支因子小、深度浅），重复搜索浅层的开销占比会明显增大，此时直接用 BFS（内存也不大）反而更简单直接。IDDFS 更适合分支因子较大、搜索空间几乎无穷、内存是主要瓶颈的场景。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把"深度限制"和"记忆化"混在一起用反而更慢：</b>因为 IDDFS 每一轮都是完全独立的一次新搜索，13.2 节讲过的"缓存已经算过的结果"在这里通常不适用（下一轮的深度限制变了，之前缓存的"在某深度内搜不到"的结论可能因为深度变化而失效）。IDDFS 的效率来自于对深度的巧妙控制，而不是缓存。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>本节的 IDDFS 只关心"深度"，每一步的代价都被当作相同的 1。14.4 节的 <strong>A* 算法</strong>会引入"启发式函数"，让搜索优先朝着"看起来更接近终点"的方向探索；14.5 节的 <strong>IDA*</strong> 则是把本节的"深度限制"换成"启发式估价的限制"，把 IDDFS 和 A* 的优点结合在一起。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十四 搜索进阶 · 14.3 迭代加深搜索 IDDFS</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A14_02_双向BFS.html">← 14.2 双向 BFS</a>
+      <a class="nav-btn" href="A14_04_A星算法.html">14.4 A* 算法 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

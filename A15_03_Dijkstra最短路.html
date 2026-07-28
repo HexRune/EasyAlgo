@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15.3 Dijkstra 最短路 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "15.3"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--coral-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--coral); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; text-align: left; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; text-align: left; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #f0c4ae; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+
+  /* 优先队列弹出顺序追踪 */
+  .pq-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; width: 100%; }
+  .pq-table th, .pq-table td { padding: 8px 10px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .pq-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; }
+  .pq-table td.stale { color: #F38BA8; text-decoration: line-through; }
+  .pq-table td.upd { background: rgba(166,227,161,.18); color: #A6E3A1; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="15.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十五 图论基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>15.3 Dijkstra 最短路</span>
+    </div>
+    <h1 class="chapter-title">15.3　Dijkstra 最短路</h1>
+    <p class="chapter-desc">只关心"从一个点出发"的最短路，不需要 Floyd 那种任意两点都算一遍的高昂代价——贪心地每次确定当前最近的点，像水波一样一圈圈地把距离确定下来。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要 Dijkstra：单源最短路不需要 O(n³)</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：贪心 + 优先队列</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：从 A 出发，一步步确定每个点的最短距离</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#complexity">复杂度分析</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">适用条件与常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要 Dijkstra：单源最短路不需要 O(n³)</div>
+    <div class="section-body">
+      <p>15.2 节的 Floyd 能算出<strong>任意两点</strong>之间的最短距离，但代价是 <code>O(n³)</code>，点数一多就跑不动了。如果只关心"<strong>从某一个固定的起点</strong>出发，到图中所有点的最短距离"（单源最短路），完全没必要把"任意两点"都算一遍——<strong>Dijkstra 算法</strong>正是针对这个更常见的场景设计的，用贪心的思路把复杂度降到 <code>O((V+E) log V)</code>，能应付大得多的图。</p>
+      <p>14.4 节的 A* 其实已经用到了 Dijkstra 的核心机制，只是多加了一个启发函数 <code>h(n)</code>；如果把 A* 的 <code>h(n)</code> 恒定设为 <code>0</code>，就直接退化成了本节的 Dijkstra——这一点在 14.4 节 ⑥ 已经提过。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：贪心 + 优先队列</div>
+    <div class="section-body">
+      <p>Dijkstra 的过程可以概括成一句话：<strong>每次从"还没确定最短距离"的点里，挑出当前已知距离最小的那个，把它的距离"钉死"为最终答案，再用它去尝试缩短它邻居的距离</strong>。这是一个贪心策略——之所以"距离最小的点，它的距离就已经是最终答案"，是因为如果还存在更短的路径，那条路径必然要经过某个"距离更大"的中间点，而这与"当前它是距离最小的点"矛盾。</p>
+      <p>用<strong>优先队列</strong>（小顶堆）维护"当前已知距离"，每次弹出距离最小的点，正好实现这个贪心顺序。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>步骤</th><th>做什么</th></tr></thead>
+      <tbody>
+        <tr><td>初始化</td><td>起点距离设为 0，其余所有点距离设为 INF；把 (0, 起点) 放入优先队列</td></tr>
+        <tr><td>取出</td><td>每次从优先队列弹出"距离最小"的点 u</td></tr>
+        <tr><td>松弛</td><td>枚举 u 的所有邻居 v，如果"经过 u 到 v"比 v 当前记录的距离更短，就更新 v 的距离，并把新距离连同 v 一起push进队列</td></tr>
+        <tr><td>结束</td><td>优先队列为空时，所有能到达的点都已经算出最短距离</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="trace">③ 图解：从 A 出发，一步步确定每个点的最短距离</div>
+    <div class="section-body">
+      <p>还是 15.1、15.2 节的示例图（<code>A-B=4</code>，<code>A-C=1</code>，<code>B-C=2</code>，<code>B-D=5</code>，<code>C-D=8</code>），从 <code>A</code> 出发跑一遍 Dijkstra，全程追踪优先队列的弹出顺序：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">优先队列弹出顺序（dist(A)=0 为初始状态）</div>
+      <table class="pq-table">
+        <thead><tr><th>弹出</th><th>松弛了谁</th><th>dist[A]</th><th>dist[B]</th><th>dist[C]</th><th>dist[D]</th></tr></thead>
+        <tbody>
+          <tr><td>(0, A)</td><td>B：0+4=4；C：0+1=1</td><td class="upd">0</td><td class="upd">4</td><td class="upd">1</td><td>∞</td></tr>
+          <tr><td>(1, C)</td><td>B：1+2=3&lt;4；D：1+8=9&lt;∞</td><td>0</td><td class="upd">3</td><td>1</td><td class="upd">9</td></tr>
+          <tr><td>(3, B)</td><td>D：3+5=8&lt;9</td><td>0</td><td>3</td><td>1</td><td class="upd">8</td></tr>
+          <tr><td>(4, B)</td><td colspan="4" class="stale">过时记录，dist[B] 已经是 3，4&gt;3，直接跳过</td></tr>
+          <tr><td>(8, D)</td><td>无更优更新</td><td>0</td><td>3</td><td>1</td><td>8</td></tr>
+          <tr><td>(9, D)</td><td colspan="4" class="stale">过时记录，dist[D] 已经是 8，9&gt;8，直接跳过</td></tr>
+        </tbody>
+      </table>
+      <figcaption>最终 <code>dist[A]=0, dist[B]=3, dist[C]=1, dist[D]=8</code>——和 15.2 节 Floyd 算出的结果<strong>完全一致</strong>（Floyd 那一节最终矩阵的第一行正是 <code>0, 3, 1, 8</code>），说明两种算法确实是在求解同一个问题，只是思路和适用场景不同。表格里两行"过时记录"是因为 <code>B</code>、<code>D</code> 都被更新过不止一次：<code>(4,B)</code> 是第一次从 <code>A</code> 松弛时push进队列的，后来被经过 <code>C</code> 中转的更短路径 <code>(3,B)</code> 取代，但旧的 <code>(4,B)</code> 依然留在队列里，弹出时需要识别并跳过。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · Dijkstra 最短路</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">const</span> <span class="typ">int</span> INF = <span class="num">0x3f3f3f3f</span>;</td></tr>
+          <tr><td class="ln">2</td><td class="cd">vector&lt;pair&lt;<span class="typ">int</span>,<span class="typ">int</span>&gt;&gt; adj[MAXN];  <span class="cmt">// adj[u]：(邻居, 边权)，见 15.1 节邻接表</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> dist_[MAXN];</td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">void</span> <span class="fn">Dijkstra</span>(<span class="typ">int</span> s, <span class="typ">int</span> n)</td></tr>
+          <tr><td class="ln">6</td><td class="cd">{</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">fill</span>(dist_ + <span class="num">1</span>, dist_ + <span class="num">1</span> + n, INF);</td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">    dist_[s] = <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">9</td><td class="cd">    priority_queue&lt;pair&lt;<span class="typ">int</span>,<span class="typ">int</span>&gt;, vector&lt;pair&lt;<span class="typ">int</span>,<span class="typ">int</span>&gt;&gt;, greater&lt;&gt;&gt; pq;  <span class="cmt">// ★ greater&lt;&gt;：小顶堆，默认是大顶堆</span></td></tr>
+          <tr class="hl-ref"><td class="ln">10</td><td class="cd">    pq.push({<span class="num">0</span>, s});</td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">while</span> (!pq.empty())</td></tr>
+          <tr><td class="ln">13</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="kw">auto</span> [d, u] = pq.top(); pq.pop();  <span class="cmt">// ★ 每次弹出当前距离最小的点</span></td></tr>
+          <tr class="hl-warn"><td class="ln">15</td><td class="cd">        <span class="kw">if</span> (d &gt; dist_[u]) <span class="kw">continue</span>;  <span class="cmt">// 过时的队列项，跳过（和 14.4 节 A* 同样的技巧）</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">        <span class="kw">for</span> (<span class="kw">auto</span> [v, w] : adj[u])</td></tr>
+          <tr><td class="ln">17</td><td class="cd">        {</td></tr>
+          <tr class="hl"><td class="ln">18</td><td class="cd">            <span class="kw">if</span> (dist_[u] + w &lt; dist_[v])  <span class="cmt">// 松弛：经过 u 到 v 是否比目前记录的更短</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">            {</td></tr>
+          <tr><td class="ln">20</td><td class="cd">                dist_[v] = dist_[u] + w;</td></tr>
+          <tr><td class="ln">21</td><td class="cd">                pq.push({dist_[v], v});</td></tr>
+          <tr><td class="ln">22</td><td class="cd">            }</td></tr>
+          <tr><td class="ln">23</td><td class="cd">        }</td></tr>
+          <tr><td class="ln">24</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">25</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>和 A* 几乎是同一份代码：</b>对照 14.4 节的模板会发现，Dijkstra 就是把 A* 里"入队时额外加上 <code>H(v)</code>"这一步去掉——第 21 行 push 进队列的就是纯粹的 <code>dist_[v]</code>，没有加任何启发式估计。第 15 行"跳过过时记录"的技巧也是两者共用的，这正呼应了 ① 提到的"Dijkstra 是 A* 在 h=0 时的特例"。</div>
+    </div>
+
+    <div class="sub-title" id="complexity">⑤ 复杂度分析</div>
+    <div class="section-body">
+      <p>每条边最多会导致一次 <code>push</code>（松弛成功时），所以队列里总共最多有 <code>O(E)</code> 个元素；每次 <code>pop</code>、<code>push</code> 操作在优先队列上的代价是 <code>O(log E)</code>（约等于 <code>O(log V)</code>）。总时间复杂度是 <code>O((V+E) log V)</code>——比 Floyd 的 <code>O(V³)</code> 在稀疏图上快得多，能应对点数上万甚至更多的图。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>对比项</th><th>Floyd（15.2 节）</th><th>Dijkstra（本节）</th></tr></thead>
+      <tbody>
+        <tr><td>解决的问题</td><td>任意两点之间的最短距离</td><td>从一个固定起点到所有点的最短距离</td></tr>
+        <tr><td>时间复杂度</td><td>O(V³)</td><td>O((V+E) log V)</td></tr>
+        <tr><td>能否处理负权边</td><td>可以（只要没有负权环）</td><td><b>不能</b>（见 ⑥ 陷阱）</td></tr>
+        <tr><td>适合场景</td><td>点数较少，需要全源最短路</td><td>点数较多，只需要单源最短路</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="pitfall">⑥ 适用条件与常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>Dijkstra 不能处理负权边：</b>贪心策略成立的前提是"距离最小的点，它的最终距离已经不会再变小了"——但如果存在负权边，一个后弹出的、当前距离较大的点，仍然有可能通过一条包含负权边的路径，把已经"钉死"的点的距离再压得更低，贪心的前提被破坏。如果图中存在负权边（但没有负权环），需要改用 <strong>Bellman-Ford</strong> 或 <strong>SPFA</strong> 算法（本书未展开，可自行查阅）。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记 <code>greater&lt;&gt;</code>，优先队列默认是大顶堆：</b>C++ 的 <code>priority_queue</code> 不加额外模板参数时，默认每次弹出<strong>最大</strong>的元素——Dijkstra 需要每次拿到距离<strong>最小</strong>的点，必须显式传入 <code>greater&lt;&gt;</code> 改成小顶堆，或者把距离取相反数塞进默认的大顶堆（两种写法效果一样，前者更直观）。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>漏掉"跳过过时记录"的判断，程序不会出错但会变慢：</b>和 14.4 节 A* 的陷阱完全一样——同一个点可能因为被多次松弛而在队列里留下好几条记录，其中大部分已经过时。如果漏掉第 15 行的判断，程序依然能算出正确答案（因为对同一个点重复松弛不会破坏结果），但会白白多做很多次没有意义的松弛操作，实际运行时间明显变慢。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>15.2、15.3 节解决的都是"点到点"的最短路问题。15.4、15.5 节要换一个角度——不再关心"最短距离"，而是关心"用最少的边把所有点连通"（最小生成树，Kruskal 和 Prim 两种做法）以及"给一张有向无环图里的任务排出一个不违反依赖关系的执行顺序"（拓扑排序）。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十五 图论基础 · 15.3 Dijkstra 最短路</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A15_02_Floyd最短路.html">← 15.2 Floyd 最短路</a>
+      <a class="nav-btn" href="A15_04_Kruskal最小生成树.html">15.4 Kruskal 最小生成树 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>19.2 博弈论 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "19.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--coral-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--coral); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #f0c4ae; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+
+  /* 石堆卡片 */
+  .pile-row { display: flex; gap: 8px; }
+  .pile-cell { display: flex; flex-direction: column; align-items: center; min-width: 44px; flex-shrink: 0; }
+  .pile-label { font-size: 10px; color: #6C7086; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .pile-val {
+    width: 38px; height: 38px; border-radius: 6px; background: #2A2840;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: #A6ADC8;
+  }
+  .pile-val.pick { background: rgba(166,227,161,.2); border: 1.5px solid #A6E3A1; color: #A6E3A1; }
+
+  /* 通用追踪表 */
+  .g-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; width: 100%; }
+  .g-table th, .g-table td { padding: 8px 10px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .g-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11px; }
+  .g-table td.res { color: #A6E3A1; font-weight: 700; }
+  .g-table td.bad { color: #F38BA8; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="19.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十九 拓展专题</span>
+      <span class="eyebrow-sep">/</span>
+      <span>19.2 博弈论</span>
+    </div>
+    <h1 class="chapter-title">19.2　博弈论</h1>
+    <p class="chapter-desc">两个玩家轮流做决策，谁先无法操作谁就输——不需要真的把每一种走法都试一遍，几个简单的规律就能判断谁有必胜策略。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">什么是博弈论问题</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心概念：必胜态与必败态</a></li>
+      <li><span class="toc-num">③</span><a href="#nim">引例：Nim 游戏</a></li>
+      <li><span class="toc-num">④</span><a href="#sg">推广：SG 函数与 Sprague-Grundy 定理</a></li>
+      <li><span class="toc-num">⑤</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 什么是博弈论问题</div>
+    <div class="section-body">
+      <p>这里说的"博弈论"，特指一类<strong>组合游戏</strong>：两个玩家轮流操作，双方都采取<strong>最优策略</strong>（不会犯错），游戏没有随机成分（不像掷骰子），信息完全公开（双方都清楚当前局面）。这类问题通常问的是：<strong>先手还是后手有必胜策略？</strong>不需要真的模拟每一种可能的走法组合，往往能找到一个简单的判断规律。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心概念：必胜态与必败态</div>
+    <div class="section-body">
+      <p>把游戏的每一种局面分成两类：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>类别</th><th>定义</th></tr></thead>
+      <tbody>
+        <tr><td>必败态（P 态）</td><td>轮到你走的时候，你必输——要么已经无法操作（直接判负），要么不管怎么走，都会走到一个必胜态（留给对手一个好局面）</td></tr>
+        <tr><td>必胜态（N 态）</td><td>轮到你走的时候，你有必胜策略——至少存在一种走法，能走到一个必败态（把烂摊子丢给对手）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>两句话记住核心规律：</b>① 没有后续可走的局面是必败态；② 一个局面是必胜态，当且仅当<strong>存在</strong>一种走法能到达必败态；一个局面是必败态，当且仅当<strong>所有</strong>走法都只能到达必胜态。这是一个天然的递归定义，可以从"没有后续可走"的局面开始，反向推导出所有局面的胜负性质。</div>
+    </div>
+
+    <div class="sub-title" id="nim">③ 引例：Nim 游戏</div>
+    <div class="section-body">
+      <p><strong>Nim 游戏</strong>：有若干堆石子，两人轮流操作，每次可以选<strong>任意一堆</strong>，从中拿走<strong>任意数量</strong>（至少 1 个，可以拿走整堆）。轮到某个人时<strong>所有堆都是空的</strong>，这个人就输了。Nim 游戏有一个非常简洁的结论：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">Nim 游戏必胜定理</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#CBA6F7;margin:0">先手必胜　⟺　所有石堆数量的异或和（XOR）不等于 0</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12.5px;color:#A6ADC8;margin:10px 0 0">换句话说：如果所有堆的石子数异或起来结果是 <code style="color:#CBA6F7">0</code>，当前局面是必败态（轮到谁走谁输，只要对手不失误）；只要异或和不是 <code style="color:#CBA6F7">0</code>，当前局面就是必胜态。</p>
+    </div>
+
+    <div class="section-body">
+      <p>用两组石堆验证这个结论——<code>[1, 2, 3]</code> 和 <code>[1, 2, 4]</code>：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">局面一：石堆 [1, 2, 3]（必败态）</div>
+      <div class="pile-row">
+        <div class="pile-cell"><div class="pile-label">堆1</div><div class="pile-val">1</div></div>
+        <div class="pile-cell"><div class="pile-label">堆2</div><div class="pile-val">2</div></div>
+        <div class="pile-cell"><div class="pile-label">堆3</div><div class="pile-val">3</div></div>
+      </div>
+      <figcaption>异或和 <code>1 ⊕ 2 ⊕ 3 = 0</code>——先手无论怎么拿，都会把局面变成异或和不为 0 的状态（必胜态），留给对手；对手再用必胜策略把局面变回异或和为 0，如此反复，先手必输。</figcaption>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">局面二：石堆 [1, 2, 4]（必胜态，找到具体的必胜走法）</div>
+      <div class="pile-row">
+        <div class="pile-cell"><div class="pile-label">堆1</div><div class="pile-val">1</div></div>
+        <div class="pile-cell"><div class="pile-label">堆2</div><div class="pile-val">2</div></div>
+        <div class="pile-cell"><div class="pile-label">堆3</div><div class="pile-val pick">4 → 3</div></div>
+      </div>
+      <figcaption>异或和 <code>1 ⊕ 2 ⊕ 4 = 7 ≠ 0</code>，先手必胜。必胜走法：对每一堆 <code>i</code>，计算 <code>目标值 = 总异或和 ⊕ 该堆数量</code>，如果目标值<strong>小于</strong>该堆当前数量，就把这一堆拿到只剩目标值那么多。这里堆 3（数量 <code>4</code>）：目标值 <code>= 7 ⊕ 4 = 3</code>，<code>3 &lt; 4</code>，把堆 3 从 <code>4</code> 拿到 <code>3</code>（拿走 <code>1</code> 个）。拿完之后局面变成 <code>[1,2,3]</code>——正是上面验证过的必败态，先手把烂摊子丢给了对手！</figcaption>
+    </div>
+
+    <div class="sub-title" id="sg">④ 推广：SG 函数与 Sprague-Grundy 定理</div>
+    <div class="section-body">
+      <p>Nim 游戏只是众多组合游戏中的一种。<strong>SG 函数</strong>（Sprague-Grundy 函数）能把"必胜态/必败态"这套二元判断，推广成一个更精细的数值，从而处理更一般的游戏，甚至能把<strong>多个独立的子游戏组合在一起</strong>分析。</p>
+      <p>定义 <code>SG(state)</code>：从当前局面出发，能到达的所有下一个局面的 SG 值，取<strong>最小的没有出现过的非负整数</strong>（这个操作叫 <strong>mex</strong>，minimum excludant）。<code>SG(state)=0</code> 当且仅当 <code>state</code> 是必败态——这正好和 Nim 游戏"异或和为 0 是必败态"的结论吻合，因为单堆 Nim 游戏里 <code>SG(n) = n</code>（能拿到 <code>0~n-1</code> 中的任意数量，mex 就是 <code>n</code> 本身）。</p>
+    </div>
+
+    <div class="section-body">
+      <p>以"每次最多拿 <code>3</code> 个"的单堆取石子游戏为例（不能不拿，也不能一次拿超过 <code>3</code> 个），计算 <code>SG(0)</code> 到 <code>SG(4)</code>：</p>
+    </div>
+
+    <table class="g-table">
+      <thead><tr><th>n（剩余石子数）</th><th>能到达的局面</th><th>能到达局面的 SG 值</th><th>SG(n) = mex{...}</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>无（游戏结束）</td><td>{}</td><td class="bad">0</td></tr>
+        <tr><td>1</td><td>拿1→0</td><td>{0}</td><td>1</td></tr>
+        <tr><td>2</td><td>拿1→1，拿2→0</td><td>{1, 0}</td><td>2</td></tr>
+        <tr><td>3</td><td>拿1→2，拿2→1，拿3→0</td><td>{2, 1, 0}</td><td>3</td></tr>
+        <tr><td>4</td><td>拿1→3，拿2→2，拿3→1</td><td>{3, 2, 1}</td><td class="res">0</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><code>SG(4)=0</code>：能到达的局面是 <code>{3,2,1}</code>，这几个数里没有出现 <code>0</code>，所以 <code>mex=0</code>——这说明剩 <code>4</code> 个石子时，当前操作的人是<strong>必败</strong>的（不管拿1、2还是3个，都会把局面让给一个 SG 值不为 0 的必胜态）。规律是 <code>SG(n) = n mod 4</code>，之后会不断循环。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>Sprague-Grundy 定理：</b>如果一个复杂的游戏可以拆解成<strong>若干个互相独立</strong>的子游戏（每次操作只能选一个子游戏进行，子游戏之间互不影响），那么整个复杂游戏的 SG 值，等于所有子游戏 SG 值的<strong>异或</strong>。这正是 Nim 游戏结论的推广——普通 Nim 游戏的每一堆就是一个独立子游戏，每堆的 SG 值就是它自己的石子数，异或起来正好是 Nim 游戏的判断依据。</div>
+    </div>
+
+    <div class="sub-title" id="code">⑤ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · Nim 游戏判断 + 通用 SG 函数</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// Nim 游戏：直接异或所有堆，判断先手是否必胜</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">bool</span> <span class="fn">NimFirstWins</span>(<span class="kw">const</span> vector&lt;<span class="typ">int</span>&gt;&amp; piles)</td></tr>
+          <tr><td class="ln">3</td><td class="cd">{</td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">    <span class="typ">int</span> x = <span class="num">0</span>;</td></tr>
+          <tr class="hl-ref"><td class="ln">5</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> p : piles) x ^= p;  <span class="cmt">// ★ 全部异或起来</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="kw">return</span> x != <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">7</td><td class="cd">}</td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 通用 SG 函数：以"每次最多拿 k 个"的单堆游戏为例</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">int</span> sg[MAXN];</td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">void</span> <span class="fn">ComputeSG</span>(<span class="typ">int</span> n, <span class="typ">int</span> k)</td></tr>
+          <tr><td class="ln">12</td><td class="cd">{</td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">0</span>; i &lt;= n; i++)</td></tr>
+          <tr><td class="ln">14</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">15</td><td class="cd">        <span class="typ">bool</span> vis[MAXN] = {};  <span class="cmt">// 记录"能到达的局面"里出现过哪些 SG 值</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">        <span class="kw">for</span> (<span class="typ">int</span> take = <span class="num">1</span>; take &lt;= k &amp;&amp; take &lt;= i; take++)</td></tr>
+          <tr><td class="ln">17</td><td class="cd">            vis[ sg[i - take] ] = <span class="kw">true</span>;</td></tr>
+          <tr class="hl"><td class="ln">18</td><td class="cd">        <span class="typ">int</span> m = <span class="num">0</span>;</td></tr>
+          <tr class="hl"><td class="ln">19</td><td class="cd">        <span class="kw">while</span> (vis[m]) m++;  <span class="cmt">// ★ mex：找最小的没出现过的非负整数</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">        sg[i] = m;</td></tr>
+          <tr><td class="ln">21</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">22</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>多个独立子游戏的组合，直接异或各自的 SG 值：</b>算出每一堆（或每个子游戏）的 <code>sg[i]</code> 之后，如果整个游戏由多个独立部分组成，把它们的 <code>sg</code> 值异或起来，结果为 <code>0</code> 就是必败态，否则是必胜态——这一步和 <code>NimFirstWins</code> 里的异或操作是同一个原理，Nim 游戏只是"每堆的 SG 值等于堆里的石子数"这个特殊情形。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把"谁先无法操作谁赢"和"谁先无法操作谁输"搞反：</b>本节默认的是<strong>"无法操作判负"</strong>（标准游戏规则），但有些题目是反过来的（"无法操作判胜"，比如某些取石子游戏的变体）。规则不同，必胜必败的判断条件也会不同，做题前一定要看清楚题目具体怎么定义输赢。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>mex 的计算不是"最大值 + 1"，而是"最小缺失值"：</b>比如能到达的局面 SG 值是 <code>{0, 1, 3}</code>，mex 不是 <code>4</code>，而是 <code>2</code>（因为 <code>2</code> 没有出现过，是最小的缺失值）。跳过 <code>2</code> 直接从 <code>{0,1,3}</code> 推出 <code>mex=4</code> 是常见的计算错误。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把 SG 定理用在"非独立"的子游戏组合上：</b>Sprague-Grundy 定理要求各个子游戏之间<strong>完全独立</strong>（一次操作只能影响其中一个子游戏）。如果子游戏之间有关联（比如某个操作会同时影响两堆），就不能简单地把各自的 SG 值异或起来，需要重新分析整个复合游戏的状态转移。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>19.3 节的<strong>数论进阶</strong>会回到 1 模块数论基础的话题，补充扩展欧几里得算法和乘法逆元——这两个工具在涉及模运算的除法、同余方程求解时经常用到，也是数论类问题里常见的进阶技巧。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十九 拓展专题 · 19.2 博弈论</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A19_01_LCA最近公共祖先.html">← 19.1 LCA 最近公共祖先</a>
+      <a class="nav-btn" href="A19_03_数论进阶.html">19.3 数论进阶 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

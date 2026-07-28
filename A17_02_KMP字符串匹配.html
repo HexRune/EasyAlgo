@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>17.2 KMP 字符串匹配 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "17.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--accent-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--accent-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-mid); border-bottom: 1px solid #c9c4f5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-mid); background: var(--accent-light); white-space: nowrap; }
+
+  /* 字符卡片 */
+  .str-row { display: flex; gap: 6px; }
+  .str-cell { display: flex; flex-direction: column; align-items: center; min-width: 34px; flex-shrink: 0; }
+  .str-idx { font-size: 10px; color: #6C7086; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .str-ch {
+    width: 30px; height: 30px; border-radius: 6px; background: #2A2840;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #A6ADC8;
+  }
+  .str-ch.hi { background: rgba(166,227,161,.2); color: #A6E3A1; border: 1.5px solid #A6E3A1; }
+  .str-ch.hi2 { background: rgba(137,180,250,.18); color: #89B4FA; border: 1.5px solid #89B4FA; }
+
+  /* next 数组表 */
+  .nx-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; width: 100%; }
+  .nx-table th, .nx-table td { padding: 8px 10px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .nx-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11px; }
+  .nx-table td.hi { background: rgba(166,227,161,.2); color: #A6E3A1; font-weight: 700; }
+
+  /* 匹配过程追踪表 */
+  .match-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; width: 100%; }
+  .match-table th, .match-table td { padding: 7px 9px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .match-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 10.5px; }
+  .match-table td.ok { color: #A6E3A1; }
+  .match-table td.bad { color: #F38BA8; }
+  .match-table td.found { background: rgba(166,227,161,.2); color: #A6E3A1; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="17.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十七 字符串算法</span>
+      <span class="eyebrow-sep">/</span>
+      <span>17.2 KMP 字符串匹配</span>
+    </div>
+    <h1 class="chapter-title">17.2　KMP 字符串匹配</h1>
+    <p class="chapter-desc">在一段长文本里找一个模式串出现的所有位置——失配时不用从头重新比较，靠模式串自己的"前后缀信息"跳过注定失败的尝试。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要 KMP：朴素匹配的重复劳动</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：next 数组记录"最长相同前后缀"</a></li>
+      <li><span class="toc-num">③</span><a href="#nexttrace">图解：构建模式串的 next 数组</a></li>
+      <li><span class="toc-num">④</span><a href="#matchtrace">图解：利用 next 数组进行匹配</a></li>
+      <li><span class="toc-num">⑤</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要 KMP：朴素匹配的重复劳动</div>
+    <div class="section-body">
+      <p>在文本串 <code>s</code>（长度 <code>n</code>）里查找模式串 <code>p</code>（长度 <code>m</code>）出现的位置，最直接的办法是：从文本的每一个位置开始，逐字符和模式串比较，一旦某个位置失配，就挪到下一个起始位置<strong>重新从头比较</strong>。这种朴素做法最坏情况下要比较 <code>O(n×m)</code> 次——如果文本和模式串都很长，会非常慢。</p>
+      <p>朴素做法慢在哪？失配之后<strong>把已经比较过的信息全部扔掉</strong>，重新从模式串的第一个字符开始比较——但其实已经匹配的这一段字符里，往往藏着有用的信息："模式串自己的某一段前缀，恰好和已经匹配上的这段文本的某个后缀相同"，可以利用这一点，直接跳到一个更靠后、不会白费功夫的位置继续比较。<strong>KMP 算法</strong>（Knuth-Morris-Pratt）就是把这份信息预先算好，失配时查表就知道该跳到哪。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：next 数组记录"最长相同前后缀"</div>
+    <div class="section-body">
+      <p>KMP 的核心是给模式串 <code>p</code> 预处理一个 <code>next</code> 数组（也叫失配函数）：<code>next[i]</code> 表示 <code>p[1..i]</code> 这一段前缀里，<strong>最长的、同时也是后缀</strong>的"真前缀"长度（"真"指不能是整个 <code>p[1..i]</code> 自身）。这个信息只和模式串本身有关，和文本串无关，可以提前一次性算好。</p>
+    </div>
+
+    <div class="sub-title" id="nexttrace">③ 图解：构建模式串的 next 数组</div>
+    <div class="section-body">
+      <p>以模式串 <code>p = "abab"</code>（<code>m=4</code>）为例：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">模式串</div>
+      <div class="str-row">
+        <div class="str-cell"><div class="str-idx">1</div><div class="str-ch">a</div></div>
+        <div class="str-cell"><div class="str-idx">2</div><div class="str-ch">b</div></div>
+        <div class="str-cell"><div class="str-idx">3</div><div class="str-ch">a</div></div>
+        <div class="str-cell"><div class="str-idx">4</div><div class="str-ch">b</div></div>
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">next 数组：p[1..i] 的最长相同真前后缀长度</div>
+      <table class="nx-table">
+        <thead><tr><th>i</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead>
+        <tbody>
+          <tr><td>前缀 p[1..i]</td><td>a</td><td>ab</td><td>aba</td><td>abab</td></tr>
+          <tr><td>next[i]</td><td>0</td><td>0</td><td class="hi">1</td><td class="hi">2</td></tr>
+        </tbody>
+      </table>
+      <figcaption><code>next[3]=1</code>：前缀 <code>"aba"</code> 里，真前缀有 <code>"a"</code>、<code>"ab"</code>，真后缀有 <code>"a"</code>、<code>"ba"</code>，最长的共同部分是 <code>"a"</code>（长度 1）。<code>next[4]=2</code>：前缀 <code>"abab"</code> 里，真前缀 <code>"aba"</code> 和真后缀 <code>"bab"</code> 不同，但真前缀 <code>"ab"</code> 和真后缀 <code>"ab"</code> 相同（长度 2），这是能找到的最长匹配。</figcaption>
+    </div>
+
+    <div class="sub-title" id="matchtrace">④ 图解：利用 next 数组进行匹配</div>
+    <div class="section-body">
+      <p>在文本串 <code>s = "ababdabab"</code>（<code>n=9</code>）里查找模式串 <code>p = "abab"</code> 出现的所有位置。<code>i</code> 是文本指针，<code>j</code> 是模式串指针，两者都从 <code>1</code> 开始，<code>s[i]</code> 和 <code>p[j]</code> 相等就同时前进；失配时，如果 <code>j&gt;1</code>，就跳到 <code>j = next[j-1] + 1</code> 继续比较（不移动 <code>i</code>）；如果 <code>j=1</code> 还失配，只能移动 <code>i</code>：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">匹配过程逐步追踪</div>
+      <table class="match-table">
+        <thead><tr><th>i</th><th>j</th><th>s[i]</th><th>p[j]</th><th>结果</th><th>下一步</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>1</td><td>a</td><td>a</td><td class="ok">匹配</td><td>i=2, j=2</td></tr>
+          <tr><td>2</td><td>2</td><td>b</td><td>b</td><td class="ok">匹配</td><td>i=3, j=3</td></tr>
+          <tr><td>3</td><td>3</td><td>a</td><td>a</td><td class="ok">匹配</td><td>i=4, j=4</td></tr>
+          <tr><td>4</td><td>4</td><td>b</td><td>b</td><td class="ok">匹配</td><td>j 达到 m=4</td></tr>
+          <tr><td colspan="6" class="found">j 达到模式串长度 4 —— 在位置 i-m+1 = 1 处找到一次匹配！继续查找：j = next[4] = 2（不回退 i）</td></tr>
+          <tr><td>5</td><td>2</td><td>d</td><td>b</td><td class="bad">失配</td><td>j&gt;1，跳到 j = next[1]+1 = 1</td></tr>
+          <tr><td>5</td><td>1</td><td>d</td><td>a</td><td class="bad">失配</td><td>j=1，移动 i：i=6</td></tr>
+          <tr><td>6</td><td>1</td><td>a</td><td>a</td><td class="ok">匹配</td><td>i=7, j=2</td></tr>
+          <tr><td>7</td><td>2</td><td>b</td><td>b</td><td class="ok">匹配</td><td>i=8, j=3</td></tr>
+          <tr><td>8</td><td>3</td><td>a</td><td>a</td><td class="ok">匹配</td><td>i=9, j=4</td></tr>
+          <tr><td>9</td><td>4</td><td>b</td><td>b</td><td class="ok">匹配</td><td>j 达到 m=4</td></tr>
+          <tr><td colspan="6" class="found">j 再次达到 4 —— 在位置 i-m+1 = 6 处找到第二次匹配！</td></tr>
+        </tbody>
+      </table>
+      <figcaption>全程 <code>i</code> 只从 <code>1</code> 单调增加到 <code>9</code>，<strong>一次都没有回退</strong>——真正回退、重新比较的只有指针 <code>j</code>，而且 <code>j</code> 的回退是靠查 <code>next</code> 表直接跳到位，不需要逐个尝试。最终在文本的第 <code>1</code> 位和第 <code>6</code> 位各找到一次 <code>"abab"</code>。</figcaption>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么"跳到 <code>next[j-1]+1</code>"是安全的？</b>失配发生在 <code>j</code> 位置，说明 <code>s</code> 里已经匹配上的这一段，恰好等于模式串的前缀 <code>p[1..j-1]</code>。<code>next[j-1]</code> 告诉我们：<code>p[1..j-1]</code> 这段前缀本身，又恰好在结尾处重复了长度为 <code>next[j-1]</code> 的一段（既是前缀也是后缀）。也就是说，已经匹配上的文本末尾那一小段，天然就和模式串新的前缀 <code>p[1..next[j-1]]</code> 对得上，不需要再重新验证，直接从 <code>p[next[j-1]+1]</code> 继续比较就行，这正是省下重复比较的关键。</div>
+    </div>
+
+    <div class="sub-title" id="code">⑤ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · KMP 字符串匹配</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> nxt[MAXM];  <span class="cmt">// nxt[i]：p[1..i] 的最长相同真前后缀长度</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">void</span> <span class="fn">BuildNext</span>(<span class="kw">const</span> string&amp; p)  <span class="cmt">// p 下标从 0 开始，p[i-1] 对应第 i 个字符</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">{</td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">int</span> m = p.size();</td></tr>
+          <tr><td class="ln">6</td><td class="cd">    nxt[<span class="num">1</span>] = <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="typ">int</span> j = <span class="num">0</span>;  <span class="cmt">// j：当前已经匹配上的前后缀长度</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">2</span>; i &lt;= m; i++)</td></tr>
+          <tr><td class="ln">9</td><td class="cd">    {</td></tr>
+          <tr class="hl-warn"><td class="ln">10</td><td class="cd">        <span class="kw">while</span> (j &gt; <span class="num">0</span> &amp;&amp; p[i-<span class="num">1</span>] != p[j])  <span class="cmt">// ★ 失配就用 next 数组回退 j（自己给自己做 KMP）</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">            j = nxt[j];</td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="kw">if</span> (p[i-<span class="num">1</span>] == p[j]) j++;</td></tr>
+          <tr><td class="ln">13</td><td class="cd">        nxt[i] = j;</td></tr>
+          <tr><td class="ln">14</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">15</td><td class="cd">}</td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="typ">void</span> <span class="fn">KmpSearch</span>(<span class="kw">const</span> string&amp; s, <span class="kw">const</span> string&amp; p)</td></tr>
+          <tr><td class="ln">18</td><td class="cd">{</td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="typ">int</span> n = s.size(), m = p.size();</td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="fn">BuildNext</span>(p);</td></tr>
+          <tr><td class="ln">21</td><td class="cd">    <span class="typ">int</span> j = <span class="num">0</span>;  <span class="cmt">// j：模式串已经匹配到第几位</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++)</td></tr>
+          <tr><td class="ln">23</td><td class="cd">    {</td></tr>
+          <tr class="hl-warn"><td class="ln">24</td><td class="cd">        <span class="kw">while</span> (j &gt; <span class="num">0</span> &amp;&amp; s[i-<span class="num">1</span>] != p[j])  <span class="cmt">// ★ 失配，查 next 表跳转 j，i 不动</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">            j = nxt[j];</td></tr>
+          <tr><td class="ln">26</td><td class="cd">        <span class="kw">if</span> (s[i-<span class="num">1</span>] == p[j]) j++;</td></tr>
+          <tr class="hl-ref"><td class="ln">27</td><td class="cd">        <span class="kw">if</span> (j == m)  <span class="cmt">// j 达到模式串长度，说明匹配上了一次</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd">        {</td></tr>
+          <tr><td class="ln">29</td><td class="cd">            cout &lt;&lt; <span class="str">"匹配位置："</span> &lt;&lt; i - m + <span class="num">1</span> &lt;&lt; endl;</td></tr>
+          <tr class="hl-ref"><td class="ln">30</td><td class="cd">            j = nxt[j];  <span class="cmt">// 继续查找下一次匹配，不重置为 0</span></td></tr>
+          <tr><td class="ln">31</td><td class="cd">        }</td></tr>
+          <tr><td class="ln">32</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">33</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>构建 <code>next</code> 数组的代码，本质是"用 KMP 匹配自己"：</b>第 10～13 行的结构，和第 24～26 行匹配文本串的结构几乎一模一样——因为构建 <code>next</code> 数组，就是在拿模式串的每个前缀去匹配模式串自己。理解了下面 <code>KmpSearch</code> 的匹配逻辑，回头看 <code>BuildNext</code> 会发现它们是同一套代码的两种应用。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>next 数组的下标定义不统一，容易记混：</b>不同教材、不同代码对 <code>next</code> 数组的下标定义（是否从 0 开始、<code>next[i]</code> 到底对应"前 <code>i</code> 个字符"还是"前 <code>i-1</code> 个字符"）存在多种写法，直接照抄网上代码片段容易和自己使用的约定对不上。写代码前先明确自己用的是哪一种定义，前后保持一致。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>找到一次匹配后，把 j 重置为 0 重新开始：</b>第 30 行 <code>j = nxt[j]</code> 而不是直接 <code>j = 0</code>——重置为 0 虽然也能继续找到后续的匹配，但会丢弃"当前已匹配的这一段末尾，可能也是模式串前缀的一部分"这个信息，导致某些重叠的匹配被漏掉（比如模式串本身首尾有重复结构、多次匹配相互重叠的情况）。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把 KMP 的匹配指针 i 也去回退：</b>KMP 最核心的效率保证就是"文本指针 <code>i</code> 全程只增不减"，回退的只有模式串指针 <code>j</code>。如果实现中不小心让 <code>i</code> 也发生回退（比如照搬朴素匹配的框架又混入了 <code>next</code> 跳转），会失去 KMP <code>O(n+m)</code> 的复杂度保证，退化成接近朴素匹配的效率。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>KMP 解决的是"一个模式串在文本里出现的位置"，17.3 节的 <strong>Trie 字典树</strong>会换一个场景——如果需要同时处理<strong>很多个</strong>字符串的前缀信息（比如判断某个字符串是不是词典里某些单词的前缀），会用一种树形结构来高效组织，而不是逐个字符串分别处理。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十七 字符串算法 · 17.2 KMP 字符串匹配</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A17_01_字符串哈希.html">← 17.1 字符串哈希</a>
+      <a class="nav-btn" href="A17_03_Trie字典树.html">17.3 Trie 字典树 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>13.2 背包问题 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "13.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--amber-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--amber); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 20px 18px; margin: 18px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; letter-spacing: .02em; }
+
+  /* 物品清单卡片 */
+  .item-list { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+  .item-card {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-md);
+    padding: 10px 16px; min-width: 96px; text-align: center;
+  }
+  .item-name { font-size: 11.5px; color: #6C7086; margin-bottom: 6px; font-family: 'Noto Sans SC', sans-serif; }
+  .item-wv { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .item-wv .w { color: var(--blue); font-weight: 700; }
+  .item-wv .v { color: var(--teal); font-weight: 700; margin-left: 8px; }
+
+  /* 二维 dp 表（背包用） */
+  .kp-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .kp-table th, .kp-table td {
+    width: 40px; height: 38px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8;
+  }
+  .kp-table th { background: #1A1830; color: #89B4FA; font-weight: 700; }
+  .kp-table th.row-h { text-align: left; padding-left: 8px; font-size: 11px; color: #A6ADC8; width: auto; }
+  .kp-table td.z { color: #45475A; }
+  .kp-table td.cur { background: rgba(166,227,161,.2); color: #A6E3A1; font-weight: 700; box-shadow: inset 0 0 0 2px #A6E3A1; }
+
+  /* 一维滚动数组（左右箭头指示遍历方向） */
+  .dp-array-wrap { overflow-x: auto; padding-bottom: 4px; }
+  .dp-array { display: flex; gap: 7px; align-items: flex-end; }
+  .dp-cell { display: flex; flex-direction: column; align-items: center; min-width: 42px; flex-shrink: 0; }
+  .dp-idx { font-size: 10px; color: #6C7086; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .dp-val {
+    width: 38px; height: 38px; border-radius: 7px; background: #2A2840;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700;
+    color: #A6ADC8; border: 1.5px solid transparent;
+  }
+  .dp-val.pick { background: rgba(166,227,161,.2); border-color: #A6E3A1; color: #A6E3A1; }
+  .scan-dir { display: flex; align-items: center; gap: 6px; font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #F38BA8; margin-bottom: 10px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--amber-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--amber); border-bottom: 1px solid #F0D9A8; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--amber); background: var(--amber-light); white-space: nowrap; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="13.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十三 动态规划基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>13.2 背包问题</span>
+    </div>
+    <h1 class="chapter-title">13.2　背包问题</h1>
+    <p class="chapter-desc">背包容量有限，物品各有重量和价值——用同一个 dp 框架，解决"每件东西能不能选、能选几次"这三种变体。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">背包问题是什么：多了"容量"这一维</a></li>
+      <li><span class="toc-num">②</span><a href="#zo-def">01 背包：每个物品只能选一次</a></li>
+      <li><span class="toc-num">③</span><a href="#zo-fill">01 背包手动填表与完整代码</a></li>
+      <li><span class="toc-num">④</span><a href="#zo-opt">空间优化：压缩成一维数组，为什么要倒序</a></li>
+      <li><span class="toc-num">⑤</span><a href="#cp-def">完全背包：每个物品可以选无数次</a></li>
+      <li><span class="toc-num">⑥</span><a href="#cp-fill">完全背包手动填表与完整代码</a></li>
+      <li><span class="toc-num">⑦</span><a href="#mp-def">多重背包：每个物品有限定的数量</a></li>
+      <li><span class="toc-num">⑧</span><a href="#sum">三种背包对比与常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 背包问题是什么：多了"容量"这一维</div>
+    <div class="section-body">
+      <p>有一个容量为 <code>W</code> 的背包，有 <code>n</code> 件物品，每件物品有<strong>重量</strong>和<strong>价值</strong>。要在不超过背包容量的前提下，选一部分物品装进背包，使得装进去的物品<strong>总价值最大</strong>。这是"背包问题"最基本的描述——听起来和 13.1 节的 LIS、LCS 差别很大，但仍然可以用<strong>同一套 DP 框架</strong>解决，区别在于：这次的状态除了"考虑到第几件物品"，还要多一维<strong>"当前用掉了多少容量"</strong>。</p>
+      <p>本节统一用这组物品来演示三种背包的区别：</p>
+    </div>
+
+    <div class="item-list">
+      <div class="item-card"><div class="item-name">物品 1</div><div class="item-wv"><span class="w">w=2</span><span class="v">v=3</span></div></div>
+      <div class="item-card"><div class="item-name">物品 2</div><div class="item-wv"><span class="w">w=3</span><span class="v">v=4</span></div></div>
+      <div class="item-card"><div class="item-name">物品 3</div><div class="item-wv"><span class="w">w=4</span><span class="v">v=5</span></div></div>
+    </div>
+
+    <div class="sub-title" id="zo-def">② 01 背包：每个物品只能选一次</div>
+    <div class="section-body">
+      <p><strong>01 背包</strong>：每件物品要么选（1），要么不选（0），最多选一次。设 <code>dp[i][j]</code> 表示<strong>只考虑前 i 件物品</strong>、背包容量为 <code>j</code> 时能装下的最大价值。对第 <code>i</code> 件物品，只有两种选择：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">转移方程：第 i 件物品，选还是不选</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#89B4FA;margin:0 0 6px">不选第 i 件：　dp[i][j] = dp[i-1][j]</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12px;color:#A6ADC8;margin:0 0 14px">容量 <code style="color:#CBA6F7">j</code> 完全没动，答案直接沿用"只考虑前 <code style="color:#CBA6F7">i-1</code> 件物品"时的结果。</p>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A6E3A1;margin:0 0 6px">选第 i 件（前提 j ≥ w[i]）：　dp[i][j] = dp[i-1][j-w[i]] + v[i]</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12px;color:#A6ADC8;margin:0 0 14px">先"花掉" <code style="color:#CBA6F7">w[i]</code> 的容量装下第 <code style="color:#CBA6F7">i</code> 件物品，剩下 <code style="color:#CBA6F7">j-w[i]</code> 的容量交给前 <code style="color:#CBA6F7">i-1</code> 件物品去发挥，最后把这件物品的价值 <code style="color:#CBA6F7">v[i]</code> 加上。</p>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#CBA6F7;margin:0">两种选择都可行时，取价值更大的：　dp[i][j] = max( dp[i-1][j],&nbsp;&nbsp;dp[i-1][j-w[i]] + v[i] )</p>
+    </div>
+
+    <div class="sub-title" id="zo-fill">③ 01 背包手动填表与完整代码</div>
+    <div class="section-body">
+      <p>背包容量 <code>W = 5</code>，用①的三件物品填出完整的 dp 表（第 0 行是"一件物品都不考虑"的边界，全部是 0）：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">01 背包 dp 表（行：考虑到第几件物品，列：容量 0~5）</div>
+      <table class="kp-table">
+        <tr><th class="row-h"></th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+        <tr><th class="row-h">0 件</th><td class="z">0</td><td class="z">0</td><td class="z">0</td><td class="z">0</td><td class="z">0</td><td class="z">0</td></tr>
+        <tr><th class="row-h">1（w2v3）</th><td class="z">0</td><td class="z">0</td><td>3</td><td>3</td><td>3</td><td>3</td></tr>
+        <tr><th class="row-h">2（w3v4）</th><td class="z">0</td><td class="z">0</td><td>3</td><td>4</td><td>4</td><td>7</td></tr>
+        <tr><th class="row-h">3（w4v5）</th><td class="z">0</td><td class="z">0</td><td>3</td><td>4</td><td>5</td><td class="cur">7</td></tr>
+      </table>
+      <figcaption>右下角 <code>dp[3][5] = 7</code> 就是最终答案——<strong>选物品 1 和物品 2</strong>（重量 2+3=5 正好装满，价值 3+4=7）。第 3 行的 <code>dp[3][5] = 7</code> 和上一行的 <code>dp[2][5] = 7</code> 相同，说明加入物品 3 之后并没有更优的选法（物品 3 单独重量就是 4，装了它之后只剩 1 的容量，塞不下任何东西，<code>4+0=4</code>，不如已有的 7）。</figcaption>
+    </div>
+
+    <div class="section-body">
+      <p>拿 <code>dp[2][5]</code> 具体展开看：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>选择</th><th>算式</th><th>结果</th></tr></thead>
+      <tbody>
+        <tr><td>不选物品 2</td><td>dp[1][5]</td><td>3</td></tr>
+        <tr><td>选物品 2（容量够，5≥3）</td><td>dp[1][5-3] + 4 = dp[1][2] + 4 = 3 + 4</td><td><b style="color:var(--amber)">7</b>（最大）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 01 背包（二维 dp）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">w</span><span class="pnc">[</span><span class="num">105</span><span class="pnc">],</span> <span class="fn">v</span><span class="pnc">[</span><span class="num">105</span><span class="pnc">],</span> <span class="fn">dp</span><span class="pnc">[</span><span class="num">105</span><span class="pnc">][</span><span class="num">1005</span><span class="pnc">],</span> <span class="fn">n</span><span class="pnc">,</span> <span class="fn">W</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">ZeroOneKnapsack</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 物品从 1 到 n（下标 1 开始，方便对应第 0 行边界）</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;=</span> <span class="fn">W</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 容量从 0 到 W</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">            <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="op">-</span><span class="num">1</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">];</span>  <span class="cmt">// 默认：不选第 i 件</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">            <span class="kw">if</span> <span class="pnc">(</span><span class="fn">j</span> <span class="op">&gt;=</span> <span class="fn">w</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span>  <span class="cmt">// 容量够，才有"选第 i 件"这个选项</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">                <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">],</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="op">-</span><span class="num">1</span><span class="pnc">][</span><span class="fn">j</span><span class="op">-</span><span class="fn">w</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]]</span> <span class="op">+</span> <span class="fn">v</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]);</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="kw">return</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">n</span><span class="pnc">][</span><span class="fn">W</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="zo-opt">④ 空间优化：压缩成一维数组，为什么要倒序</div>
+    <div class="section-body">
+      <p>观察转移方程会发现：<code>dp[i][*]</code> 这一行只依赖<strong>上一行</strong> <code>dp[i-1][*]</code>，从来不会用到更早的行。既然每次只需要"上一行"，就没必要把 <code>n</code> 行全部存下来——用<strong>一个一维数组</strong> <code>dp[j]</code> 反复覆盖更新即可，能把空间从 <code>O(n×W)</code> 降到 <code>O(W)</code>。但压缩之后，<strong>容量 <code>j</code> 必须从大到小遍历</strong>：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="scan-dir">⟸ 必须从右往左（j 从 W 到 w[i]）</div>
+      <div class="dp-array-wrap">
+        <div class="dp-array">
+          <div class="dp-cell"><div class="dp-idx">j=0</div><div class="dp-val">0</div></div>
+          <div class="dp-cell"><div class="dp-idx">j=1</div><div class="dp-val">0</div></div>
+          <div class="dp-cell"><div class="dp-idx">j=2</div><div class="dp-val pick">3</div></div>
+          <div class="dp-cell"><div class="dp-idx">j=3</div><div class="dp-val pick">4</div></div>
+          <div class="dp-cell"><div class="dp-idx">j=4</div><div class="dp-val pick">4</div></div>
+          <div class="dp-cell"><div class="dp-idx">j=5</div><div class="dp-val pick">7</div></div>
+        </div>
+      </div>
+      <figcaption>更新 <code>dp[5]</code> 时用到的 <code>dp[5-3]=dp[2]</code>，此时 <code>dp[2]</code> 必须还是<strong>"上一件物品"</strong>算出的旧值。如果从左往右更新（<code>j</code> 从小到大），<code>dp[2]</code> 会在更新 <code>dp[5]</code> 之前<strong>就已经被同一件物品更新过一次</strong>，等于让同一件物品被用了两次——这正是 01 背包"只能选一次"这个限制被破坏的地方。从右往左更新，能保证用到的 <code>dp[j-w[i]]</code> 永远是"还没处理这件物品"时的旧值。</figcaption>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 01 背包（一维滚动数组）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">dp</span><span class="pnc">[</span><span class="num">1005</span><span class="pnc">];</span>  <span class="cmt">// 只保留一维，dp[j] 随物品的处理不断被覆盖</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">ZeroOneKnapsack1D</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="fn">W</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&gt;=</span> <span class="fn">w</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span> <span class="fn">j</span><span class="op">--</span><span class="pnc">)</span>  <span class="cmt">// ★ 倒序：从 W 往 w[i] 递减</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">            <span class="fn">dp</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">dp</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">],</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">j</span><span class="op">-</span><span class="fn">w</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]]</span> <span class="op">+</span> <span class="fn">v</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]);</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">return</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">W</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="sub-title" id="cp-def">⑤ 完全背包：每个物品可以选无数次</div>
+    <div class="section-body">
+      <p><strong>完全背包</strong>：每种物品的数量<strong>不限</strong>，只要容量够，可以一直重复选同一件。转移方程和 01 背包几乎一样，唯一的区别是"选第 i 件"之后，<strong>容量里剩下的部分仍然可以继续选第 i 件</strong>（而不是像 01 背包那样必须交给"上一件物品"）：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">完全背包 vs 01 背包：只差一个下标</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#F38BA8;margin:0 0 6px">01 背包：　dp[i][j] = max( dp[i-1][j],&nbsp;&nbsp;dp[<b>i-1</b>][j-w[i]] + v[i] )</p>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#A6E3A1;margin:0">完全背包：　dp[i][j] = max( dp[i-1][j],&nbsp;&nbsp;dp[<b>i</b>][j-w[i]] + v[i] )</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12px;color:#A6ADC8;margin:10px 0 0">"选第 i 件"之后，用的是 <code style="color:#CBA6F7">dp[i][j-w[i]]</code> 而不是 <code style="color:#CBA6F7">dp[i-1][j-w[i]]</code>——也就是说，剩下的容量<strong>仍然可以再选一次第 i 件</strong>，选几次都不限制，直到容量不够为止。</p>
+    </div>
+
+    <div class="sub-title" id="cp-fill">⑥ 完全背包手动填表与完整代码</div>
+    <div class="section-body">
+      <p>还是①的三件物品，把容量放大到 <code>W = 8</code>，感受一下"可以重复选"带来的差别：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">完全背包一维 dp 数组（W=8，正序遍历）</div>
+      <div class="scan-dir" style="color:#A6E3A1">⟹ 正序遍历（j 从 w[i] 到 W）</div>
+      <div class="dp-array-wrap">
+        <div class="dp-array">
+          <div class="dp-cell"><div class="dp-idx">0</div><div class="dp-val">0</div></div>
+          <div class="dp-cell"><div class="dp-idx">1</div><div class="dp-val">0</div></div>
+          <div class="dp-cell"><div class="dp-idx">2</div><div class="dp-val">3</div></div>
+          <div class="dp-cell"><div class="dp-idx">3</div><div class="dp-val">4</div></div>
+          <div class="dp-cell"><div class="dp-idx">4</div><div class="dp-val">6</div></div>
+          <div class="dp-cell"><div class="dp-idx">5</div><div class="dp-val">7</div></div>
+          <div class="dp-cell"><div class="dp-idx">6</div><div class="dp-val">9</div></div>
+          <div class="dp-cell"><div class="dp-idx">7</div><div class="dp-val">10</div></div>
+          <div class="dp-cell"><div class="dp-idx">8</div><div class="dp-val pick">12</div></div>
+        </div>
+      </div>
+      <figcaption>最终 <code>dp[8] = 12</code>——最优选法是<strong>把物品 1 选 4 次</strong>（重量 <code>2×4=8</code> 正好装满，价值 <code>3×4=12</code>），比 01 背包能达到的最优解（每种最多一件，容量 8 时最多凑出物品2+物品3＝<code>3+4=7</code> 的重量、<code>4+5=9</code> 的价值）要高得多。这正是"可以重复选"带来的优势，也是完全背包和 01 背包本质的区别。</figcaption>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 完全背包（一维滚动数组）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">dp</span><span class="pnc">[</span><span class="num">1005</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">CompleteKnapsack</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="fn">w</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span> <span class="fn">j</span> <span class="op">&lt;=</span> <span class="fn">W</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// ★ 正序：从 w[i] 往 W 递增，唯一和 01 背包不同的地方</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">            <span class="fn">dp</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">dp</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">],</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">j</span><span class="op">-</span><span class="fn">w</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]]</span> <span class="op">+</span> <span class="fn">v</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]);</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">return</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">W</span><span class="pnc">];</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>正序为什么能重复选？</b>更新 <code>dp[j]</code> 用到的 <code>dp[j-w[i]]</code>，如果 <code>j-w[i] &gt;= w[i]</code>，那么 <code>dp[j-w[i]]</code> 在正序遍历中<strong>已经被这一轮的物品 i 更新过</strong>——也就是说它已经包含了"再选一次物品 i"的可能性。这和 01 背包倒序遍历的目的正好相反：01 背包要<strong>避免</strong>用到"这一轮已经更新过"的值，完全背包恰恰要<strong>利用</strong>这一点来实现"重复选"。这一个遍历方向的差异，是初学者最容易搞混、也是最值得记住的细节。</div>
+    </div>
+
+    <div class="sub-title" id="mp-def">⑦ 多重背包：每个物品有限定的数量</div>
+    <div class="section-body">
+      <p><strong>多重背包</strong>介于两者之间：每种物品有一个<strong>确定的库存上限</strong> <code>c[i]</code>，最多只能选 <code>c[i]</code> 次，不能像完全背包那样无限选，也不像 01 背包那样只能选一次。</p>
+      <p>最直接的想法：把"数量为 <code>c[i]</code> 的第 <code>i</code> 件物品"拆成 <code>c[i]</code> 个<strong>完全相同、各自独立</strong>的物品，每个只能选一次——这样问题就变回了 01 背包，直接套用 ② 的代码即可：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 多重背包（朴素拆分成 01 背包）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 假设物品 i 的数量上限是 c[i]，拆成 c[i] 份，每份重量 w[i]、价值 v[i]，各自独立</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">k</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">k</span> <span class="op">&lt;=</span> <span class="fn">c</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span> <span class="fn">k</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 拆成 c[i] 份</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="fn">W</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&gt;=</span> <span class="fn">w</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">];</span> <span class="fn">j</span><span class="op">--</span><span class="pnc">)</span>  <span class="cmt">// 和 01 背包一样，倒序遍历</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">            <span class="fn">dp</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">dp</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">],</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">j</span><span class="op">-</span><span class="fn">w</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]]</span> <span class="op">+</span> <span class="fn">v</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]);</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>例如物品 1 限购 2 件、物品 2 限购 1 件、物品 3 限购 1 件，容量 <code>W = 8</code>：最优选法是<strong>物品 1 选 2 次 + 物品 3 选 1 次</strong>（重量 <code>2×2+4=8</code> 正好装满，价值 <code>3×2+5=11</code>），比完全背包的 12（物品 1 不限量选 4 次）要少，因为这里物品 1 最多只能选 2 次。</p>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>竞赛小贴士：</b>朴素拆分的复杂度是 <code>O(W × Σc[i])</code>——如果 <code>c[i]</code> 很大（比如上千），拆出来的物品数量会非常多，容易超时。存在一种<strong>二进制拆分</strong>的优化：把数量 <code>c[i]</code> 拆成 <code>1, 2, 4, 8, …</code> 这样的若干"打包物品"（每一份打包物品的重量、价值是原物品的若干倍），只需要 <code>O(log c[i])</code> 份打包物品，就能通过 01 背包的方式组合出 <code>0~c[i]</code> 之间任意的选取数量。这个技巧涉及"为什么二进制拆分能覆盖所有可能数量"的证明，超出本节范围，这里先了解"多重背包可以用 01 背包 + 二进制拆分做到更优复杂度"这个方向即可。</div>
+    </div>
+
+    <div class="sub-title" id="sum">⑧ 三种背包对比与常见陷阱</div>
+
+    <table class="api-table">
+      <thead><tr><th>类型</th><th>每种物品能选几次</th><th>一维数组遍历顺序</th></tr></thead>
+      <tbody>
+        <tr><td>01 背包</td><td>最多 1 次</td><td>容量 <b>倒序</b>（W → w[i]）</td></tr>
+        <tr><td>完全背包</td><td>不限次数</td><td>容量 <b>正序</b>（w[i] → W）</td></tr>
+        <tr><td>多重背包</td><td>最多 c[i] 次</td><td>拆分成 01 背包后倒序；或二进制拆分优化</td></tr>
+      </tbody>
+    </table>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>压缩成一维数组后，遍历顺序搞反：</b>这是背包问题最经典的陷阱——01 背包写成正序遍历，会让同一个物品在同一轮里被重复利用，相当于变成了完全背包，答案会偏大；完全背包写成倒序遍历，则会让本该能重复选的物品被限制成只能选一次，答案会偏小。看到"一维数组 + 遍历方向"，先问自己"这题里每个物品能选几次"。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>"求最大价值"和"恰好装满"混淆：</b>本节的写法（<code>dp</code> 全部初始化为 <code>0</code>）求的是"<strong>不超过容量</strong>、价值最大"，允许背包有剩余空间。如果题目要求"<strong>恰好装满</strong>容量 <code>W</code>"，初始化要改成：<code>dp[0] = 0</code>，其余 <code>dp[1..W]</code> 全部设为<strong>负无穷</strong>（表示"这个容量目前还凑不出来，不合法"），转移方程不变——这样最后 <code>dp[W]</code> 如果还是负无穷，说明根本凑不出"恰好装满"的方案。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>多重背包朴素拆分时，忘记内层的物品循环也要倒序：</b>拆分之后本质就是多件独立的 01 背包物品，②④ 节讲过的"倒序遍历"规则同样适用于每一份拆出来的物品——③行代码里 <code>k</code> 每增加一次（拆出一份新物品），对应的 <code>j</code> 循环仍然要从 <code>W</code> 倒序到 <code>w[i]</code>，不能偷懒只在最外层判断一次。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>模块小结：</b>13.1、13.2 两节走完了动态规划最核心的入门内容：线性 DP（状态沿一个方向推进）和背包 DP（状态多一维"容量"）。两节用的都是同一套框架——状态定义、转移方程、初始化、填表顺序——区别只在于"状态里要装几个维度"以及"转移时要不要考虑重复使用"。后续更进阶的动态规划专题（区间 DP、树形 DP、状态压缩 DP 等）都是在这套框架上继续加维度、加约束，原理是相通的。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十三 · 动态规划基础 · 13.2 背包问题</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A13_01_线性DP.html">← 13.1 线性 DP</a>
+      <a class="nav-btn" href="index.html">返回目录 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

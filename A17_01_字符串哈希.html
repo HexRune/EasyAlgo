@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>17.1 字符串哈希 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "17.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--accent-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--accent-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-mid); border-bottom: 1px solid #c9c4f5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-mid); background: var(--accent-light); white-space: nowrap; }
+
+  /* 字符串字符卡片 */
+  .str-row { display: flex; gap: 6px; }
+  .str-cell { display: flex; flex-direction: column; align-items: center; min-width: 36px; flex-shrink: 0; }
+  .str-idx { font-size: 10px; color: #6C7086; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .str-ch {
+    width: 32px; height: 32px; border-radius: 6px; background: #2A2840;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #A6ADC8;
+  }
+
+  /* 前缀哈希追踪表 */
+  .hs-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; width: 100%; }
+  .hs-table th, .hs-table td { padding: 8px 10px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .hs-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11px; }
+  .hs-table td.hi { background: rgba(166,227,161,.2); color: #A6E3A1; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="17.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十七 字符串算法</span>
+      <span class="eyebrow-sep">/</span>
+      <span>17.1 字符串哈希</span>
+    </div>
+    <h1 class="chapter-title">17.1　字符串哈希</h1>
+    <p class="chapter-desc">把一段字符串变成一个数字——预处理一次前缀哈希，之后任意子串是否相同，都能在 O(1) 时间内比较。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要字符串哈希</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：把字符串当成一个"进制数"</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：一个具体字符串的前缀哈希</a></li>
+      <li><span class="toc-num">④</span><a href="#formula">任意子串的哈希：一个减法公式</a></li>
+      <li><span class="toc-num">⑤</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要字符串哈希</div>
+    <div class="section-body">
+      <p>判断两个字符串是否相等，最直接的办法是逐个字符比较，时间复杂度 <code>O(长度)</code>。如果需要<strong>反复比较很多对子串</strong>是否相同（比如"字符串里有没有某个子串重复出现过"），每次比较都要 <code>O(长度)</code>，次数一多，总时间会很可观。</p>
+      <p><strong>字符串哈希</strong>的思路是：把每个字符串（或子串）都映射成一个数字，只要<strong>提前预处理好</strong>，之后比较两个子串是否相等，就只需要比较两个数字是否相等——<code>O(1)</code> 完成。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：把字符串当成一个"进制数"</div>
+    <div class="section-body">
+      <p>把字符串看成一个"很多位"的数字，每个字符的（ASCII）值当作这一位上的"数字"，选一个底数 <code>base</code>（类似十进制的 <code>10</code>，二进制的 <code>2</code>），字符串 <code>s[1..n]</code> 的哈希值定义为：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">多项式哈希公式</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#CBA6F7;margin:0 0 10px">hash(s) = ( s[1]×base<sup>n-1</sup> + s[2]×base<sup>n-2</sup> + ... + s[n]×base<sup>0</sup> ) mod M</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12.5px;color:#A6ADC8;margin:0">和十进制数 <code style="color:#CBA6F7">"123"</code> 等于 <code style="color:#CBA6F7">1×10²+2×10¹+3×10⁰</code> 是同一个道理，只是把"进制"从 10 换成了自定义的 <code style="color:#CBA6F7">base</code>，把"数字 0~9"换成了字符的值。为了让这个数字不会大到存不下，还要对一个较大的数 <code style="color:#CBA6F7">M</code> 取模。</p>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>关键性质：</b>只要两个字符串<strong>内容完全相同</strong>，按这个公式算出来的哈希值就<strong>一定相同</strong>；反过来，不同内容的字符串，哈希值<strong>绝大多数情况下</strong>不同（但不能 100% 保证，见 ⑥ 陷阱）。有了这条性质，判断两个子串是否相等，就能转换成判断两个数字是否相等。</div>
+    </div>
+
+    <div class="sub-title" id="trace">③ 图解：一个具体字符串的前缀哈希</div>
+    <div class="section-body">
+      <p>用字符串 <code>s = "abcab"</code> 演示（<code>a=1, b=2, c=3</code>，为了方便手算，这里取 <code>base=31</code>，<code>M=97</code>——实际竞赛代码会用大得多的质数作为 <code>M</code>，这里只是为了让计算过程看得清楚）：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">原字符串</div>
+      <div class="str-row">
+        <div class="str-cell"><div class="str-idx">1</div><div class="str-ch">a</div></div>
+        <div class="str-cell"><div class="str-idx">2</div><div class="str-ch">b</div></div>
+        <div class="str-cell"><div class="str-idx">3</div><div class="str-ch">c</div></div>
+        <div class="str-cell"><div class="str-idx">4</div><div class="str-ch">a</div></div>
+        <div class="str-cell"><div class="str-idx">5</div><div class="str-ch">b</div></div>
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">前缀哈希数组：h[i] = ( h[i-1]×base + s[i] ) mod M</div>
+      <table class="hs-table">
+        <thead><tr><th>i</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead>
+        <tbody>
+          <tr><td>h[i]</td><td>0</td><td>1</td><td>33</td><td>56</td><td>88</td><td>14</td></tr>
+        </tbody>
+      </table>
+      <figcaption><code>h[i]</code> 是"前 <code>i</code> 个字符"（也就是 <code>s[1..i]</code>）这段前缀的哈希值。比如 <code>h[2] = (h[1]×31 + s[2]) mod 97 = (1×31+2) mod 97 = 33</code>，对应前缀 <code>"ab"</code>。这个数组只需要正序扫一遍字符串，<code>O(n)</code> 就能预处理完。</figcaption>
+    </div>
+
+    <div class="sub-title" id="formula">④ 任意子串的哈希：一个减法公式</div>
+    <div class="section-body">
+      <p>有了前缀哈希数组，任意子串 <code>s[l..r]</code> 的哈希值可以 <code>O(1)</code> 算出来，不需要重新扫一遍：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">子串哈希公式</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#CBA6F7;margin:0 0 10px">hash(s[l..r]) = ( h[r] - h[l-1] × base<sup>r-l+1</sup> ) mod M</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12.5px;color:#A6ADC8;margin:0">直觉上，<code style="color:#CBA6F7">h[l-1]</code> 是"前 <code style="color:#CBA6F7">l-1</code> 个字符"的哈希，要先把它"移到和 <code style="color:#CBA6F7">h[r]</code> 同样的位数"（乘以 <code style="color:#CBA6F7">base</code> 的 <code style="color:#CBA6F7">r-l+1</code> 次方，相当于在末尾补上 <code style="color:#CBA6F7">r-l+1</code> 个 0），再用 <code style="color:#CBA6F7">h[r]</code> 减掉这部分"多余的前缀"，剩下的正是 <code style="color:#CBA6F7">s[l..r]</code> 这一段的贡献。</p>
+    </div>
+
+    <div class="section-body">
+      <p>拿 <code>s = "abcab"</code> 验证一下：<code>s[1..2] = "ab"</code> 和 <code>s[4..5] = "ab"</code> 内容相同，哈希值应该相等：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>子串</th><th>计算过程</th><th>结果</th></tr></thead>
+      <tbody>
+        <tr><td>s[1..2] = "ab"</td><td>h[2] - h[0]×base² = 33 - 0×88</td><td class="dt-tag" style="background:rgba(166,227,161,.2);color:var(--teal-mid)">33</td></tr>
+        <tr><td>s[4..5] = "ab"</td><td>h[5] - h[3]×base² = 14 - 56×88 = 14 - 78</td><td class="dt-tag" style="background:rgba(166,227,161,.2);color:var(--teal-mid)">33（对 97 取模后）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div>两次算出的哈希值<strong>都是 33</strong>，和 <code>"ab"</code> 这两处内容完全一致的事实吻合——不需要逐字符比较，只靠两个 <code>O(1)</code> 算出的数字，就能确认这两段子串相同。</div>
+    </div>
+
+    <div class="sub-title" id="code">⑤ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 字符串哈希</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">const</span> <span class="typ">int</span> BASE = <span class="num">131</span>;</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">const</span> <span class="typ">long long</span> MOD = <span class="num">1000000007</span>;</td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">long long</span> h[MAXN], pw[MAXN];  <span class="cmt">// h：前缀哈希；pw：base 的幂次表</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">void</span> <span class="fn">BuildHash</span>(<span class="kw">const</span> string&amp; s)</td></tr>
+          <tr><td class="ln">6</td><td class="cd">{</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="typ">int</span> n = s.size();</td></tr>
+          <tr><td class="ln">8</td><td class="cd">    h[<span class="num">0</span>] = <span class="num">0</span>; pw[<span class="num">0</span>] = <span class="num">1</span>;</td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++)</td></tr>
+          <tr><td class="ln">10</td><td class="cd">    {</td></tr>
+          <tr class="hl-ref"><td class="ln">11</td><td class="cd">        h[i] = (h[i-<span class="num">1</span>] * BASE + s[i-<span class="num">1</span>]) % MOD;  <span class="cmt">// ★ s 下标从 0 开始，s[i-1] 对应第 i 个字符</span></td></tr>
+          <tr class="hl-ref"><td class="ln">12</td><td class="cd">        pw[i] = pw[i-<span class="num">1</span>] * BASE % MOD;              <span class="cmt">// ★ 预处理幂次，Query 时直接查表</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">14</td><td class="cd">}</td></tr>
+          <tr><td class="ln">15</td><td class="cd"></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="cmt">// 查询 s[l..r] 的哈希值（l, r 从 1 开始，闭区间）</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="typ">long long</span> <span class="fn">GetHash</span>(<span class="typ">int</span> l, <span class="typ">int</span> r)</td></tr>
+          <tr><td class="ln">18</td><td class="cd">{</td></tr>
+          <tr class="hl"><td class="ln">19</td><td class="cd">    <span class="kw">return</span> ((h[r] - h[l-<span class="num">1</span>] * pw[r-l+<span class="num">1</span>]) % MOD + MOD) % MOD;  <span class="cmt">// ★ +MOD 防止负数，见 ⑥ 陷阱</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>预处理两个数组，之后每次查询都是 O(1)：</b><code>h[]</code> 是前缀哈希，<code>pw[]</code> 是提前算好的 <code>base</code> 幂次表——避免每次查询都重新用快速幂计算 <code>base</code> 的幂次（那样会让每次查询退化成 <code>O(log n)</code>）。<code>BuildHash</code> 跑一次 <code>O(n)</code>，之后 <code>GetHash</code> 每次都是常数时间。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>哈希冲突：不同的字符串，哈希值也可能凑巧相同：</b>字符串哈希不是 100% 可靠的——理论上存在两个内容不同的字符串，算出一样的哈希值（这叫哈希碰撞）。<code>MOD</code> 选得越大，碰撞概率越低，但永远无法完全消除。竞赛中如果需要更高的正确性保证，常用<strong>双哈希</strong>：同时用两组不同的 <code>(BASE, MOD)</code> 各算一遍，两组哈希值都相同才认为两个字符串相等，能把碰撞概率降到极低。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>减法之后可能出现负数：</b>第 19 行 <code>h[r] - h[l-1]*pw[...]</code> 在取模的世界里，结果可能是负数（C++ 里负数取模的结果也是负的），如果不做处理，后续比较哈希值时会出问题。代码里 <code>(... % MOD + MOD) % MOD</code> 这个写法，就是先加一个 <code>MOD</code> 再取模，确保结果落在 <code>[0, MOD)</code> 的正确范围内。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b><code>BASE</code> 和 <code>MOD</code> 选得不合适：</b><code>BASE</code> 通常选一个比字符集大小更大的质数（比如 <code>131</code>、<code>13331</code>），<code>MOD</code> 选一个大质数（比如 <code>10⁹+7</code>）。如果 <code>BASE</code> 太小或者和字符集大小有公因数、<code>MOD</code> 不是质数，都会提高哈希冲突的概率，在精心构造的测试数据面前更容易被"卡掉"。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>字符串哈希把"子串比较"变得飞快，但它解决不了"在一个大文本里找一个模式串出现的所有位置"这类问题——17.2 节的 <strong>KMP 算法</strong>会专门解决这种字符串匹配问题，思路和哈希完全不同。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十七 字符串算法 · 17.1 字符串哈希</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A16_03_线段树.html">← 16.3 线段树</a>
+      <a class="nav-btn" href="A17_02_KMP字符串匹配.html">17.2 KMP 字符串匹配 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

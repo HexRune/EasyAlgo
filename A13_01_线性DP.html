@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>13.1 线性 DP — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "13.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--amber-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--amber); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 22px 20px 18px; margin: 18px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; letter-spacing: .02em; }
+
+  /* 一维 dp 数组可视化（LIS 用） */
+  .dp-array-wrap { overflow-x: auto; padding-bottom: 4px; }
+  .dp-array { display: flex; gap: 7px; }
+  .dp-cell { display: flex; flex-direction: column; align-items: center; min-width: 44px; flex-shrink: 0; }
+  .dp-idx { font-size: 10px; color: #6C7086; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .dp-val {
+    width: 40px; height: 40px; border-radius: 7px; background: #2A2840;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700;
+    color: #A6ADC8; border: 1.5px solid transparent;
+  }
+  .dp-val.pick { background: rgba(137,180,250,.18); border-color: #89B4FA; color: #89B4FA; }
+  .dp-dp { margin-top: 5px; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: #6C7086; }
+  .dp-dp.pick { color: #A6E3A1; font-weight: 700; }
+
+  /* 二维 dp 表可视化（LCS 用） */
+  .lcs-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .lcs-table th, .lcs-table td {
+    width: 38px; height: 38px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8;
+  }
+  .lcs-table th { background: #1A1830; color: #89B4FA; font-weight: 700; }
+  .lcs-table td.z { color: #45475A; }
+  .lcs-table td.match { background: rgba(166,227,161,.2); color: #A6E3A1; font-weight: 700; }
+  .lcs-table td.cur { box-shadow: inset 0 0 0 2px #89B4FA; color: #89B4FA; font-weight: 700; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--amber-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--amber); border-bottom: 1px solid #F0D9A8; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--amber); background: var(--amber-light); white-space: nowrap; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="13.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十三 动态规划基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>13.1 线性 DP</span>
+    </div>
+    <h1 class="chapter-title">13.1　线性 DP</h1>
+    <p class="chapter-desc">不用递归，直接按顺序把每个子问题的答案填进一张表里——用两个经典问题（最长上升子序列、最长公共子序列）掌握动态规划最基本的写法。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">从"记忆化搜索"到"递推 DP"</a></li>
+      <li><span class="toc-num">②</span><a href="#lis-def">最长上升子序列（LIS）：问题与状态定义</a></li>
+      <li><span class="toc-num">③</span><a href="#lis-fill">手动填表：一步步算出 dp 数组</a></li>
+      <li><span class="toc-num">④</span><a href="#lis-code">LIS 完整代码与优化方向</a></li>
+      <li><span class="toc-num">⑤</span><a href="#lcs-def">最长公共子序列（LCS）：问题与状态定义</a></li>
+      <li><span class="toc-num">⑥</span><a href="#lcs-fill">手动填表：二维 dp 表</a></li>
+      <li><span class="toc-num">⑦</span><a href="#lcs-code">LCS 完整代码</a></li>
+      <li><span class="toc-num">⑧</span><a href="#sum">动态规划四要素与常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 从"记忆化搜索"到"递推 DP"</div>
+    <div class="section-body">
+      <p>12.4 节的记忆化搜索，本质上是<strong>自顶向下</strong>：从要求的大问题出发，递归拆成小问题，遇到算过的就查表。这一节要学的<strong>动态规划（递推式 DP）</strong>，做的是完全相反的事——<strong>自底向上</strong>：不用递归，先确定"从哪个最小的子问题开始"，按一个固定的顺序，把每个子问题的答案<strong>依次填进一张表（数组）里</strong>，后面的答案直接利用表里已经算好的前面的答案，一路推到最终想要的结果。</p>
+      <p>两种写法能解决的是<strong>同一类问题</strong>，效率也一样，区别只在于"用递归查表"还是"按顺序填表"。写递推式 DP，通常需要想清楚四件事，本节和 13.2 节都会反复用到这个框架：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>要素</th><th>要回答的问题</th></tr></thead>
+      <tbody>
+        <tr><td>状态定义</td><td>dp 数组的每一格，具体表示"什么问题的答案"？</td></tr>
+        <tr><td>转移方程</td><td>当前这一格的答案，怎么由前面已经算好的格子推出来？</td></tr>
+        <tr><td>初始化</td><td>最小的子问题（表的起点）答案是什么，需要手动设定？</td></tr>
+        <tr><td>填表顺序</td><td>按什么顺序遍历数组，才能保证算某一格时，它依赖的格子都已经算好了？</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="lis-def">② 最长上升子序列（LIS）：问题与状态定义</div>
+    <div class="section-body">
+      <p><strong>最长上升子序列</strong>（Longest Increasing Subsequence，简称 LIS）：给定一个数组，找出其中<strong>最长的一段子序列</strong>，使得这段子序列严格递增。这里的"子序列"不要求连续，只要求在原数组里的<strong>相对顺序不变</strong>——可以跳着选。</p>
+      <p>例如数组 <code>[3, 1, 4, 1, 5, 9, 2, 6]</code>，子序列 <code>1, 4, 5, 9</code>（下标 1、2、4、5）就是严格递增的，而且是这个数组里能找到的最长的一段——长度为 <code>4</code>。</p>
+      <p>状态定义：设 <code>dp[i]</code> 表示<strong>以 <code>a[i]</code> 结尾</strong>的最长上升子序列的长度（注意是"以 <code>a[i]</code> 结尾"，不是"前 <code>i</code> 个数里最长的"——这个区别很关键，见 ⑧ 的陷阱）。转移方程：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">转移方程：dp[i] 怎么从前面的 dp[j] 推出来</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:13.5px;color:#CBA6F7;margin:0 0 10px">dp[i] = max{ dp[j] + 1 }　，其中 0 ≤ j &lt; i 且 a[j] &lt; a[i]</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12.5px;color:#A6ADC8;margin:0">如果 <code style="color:#CBA6F7">a[i]</code> 前面找不到任何一个比它小的 <code style="color:#CBA6F7">a[j]</code>，说明 <code style="color:#CBA6F7">a[i]</code> 自己单独就是一段长度为 1 的上升子序列，<code style="color:#CBA6F7">dp[i] = 1</code>。含义是：枚举所有排在 <code style="color:#CBA6F7">i</code> 前面、且比 <code style="color:#CBA6F7">a[i]</code> 小的 <code style="color:#CBA6F7">a[j]</code>，把 <code style="color:#CBA6F7">a[i]</code> 接在"以 <code style="color:#CBA6F7">a[j]</code> 结尾的最长上升子序列"后面，取所有接法里最长的一种。</p>
+    </div>
+
+    <div class="sub-title" id="lis-fill">③ 手动填表：一步步算出 dp 数组</div>
+    <div class="section-body">
+      <p>以 <code>[3, 1, 4, 1, 5, 9, 2, 6]</code> 为例，按下标从 <code>0</code> 到 <code>7</code> 依次算出每个 <code>dp[i]</code>：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">原数组 a[i]（上）与算出的 dp[i]（下）</div>
+      <div class="dp-array-wrap">
+        <div class="dp-array">
+          <div class="dp-cell"><div class="dp-idx">a[0]</div><div class="dp-val pick">3</div><div class="dp-dp pick">1</div></div>
+          <div class="dp-cell"><div class="dp-idx">a[1]</div><div class="dp-val">1</div><div class="dp-dp">1</div></div>
+          <div class="dp-cell"><div class="dp-idx">a[2]</div><div class="dp-val pick">4</div><div class="dp-dp pick">2</div></div>
+          <div class="dp-cell"><div class="dp-idx">a[3]</div><div class="dp-val">1</div><div class="dp-dp">1</div></div>
+          <div class="dp-cell"><div class="dp-idx">a[4]</div><div class="dp-val pick">5</div><div class="dp-dp pick">3</div></div>
+          <div class="dp-cell"><div class="dp-idx">a[5]</div><div class="dp-val pick">9</div><div class="dp-dp pick">4</div></div>
+          <div class="dp-cell"><div class="dp-idx">a[6]</div><div class="dp-val">2</div><div class="dp-dp">2</div></div>
+          <div class="dp-cell"><div class="dp-idx">a[7]</div><div class="dp-val">6</div><div class="dp-dp">4</div></div>
+        </div>
+      </div>
+      <figcaption>高亮的 <code>3 → 4 → 5 → 9</code>（下标 0、2、4、5）就是一条长度为 <strong>4</strong> 的上升子序列，对应的 <code>dp</code> 值 <code>1,2,3,4</code> 逐级递增——每一步都是"接在前一个数后面，长度 +1"。<code>a[7]=6</code> 的 <code>dp[7]</code> 也是 <code>4</code>（比如接在 <code>3,4,5</code> 后面），说明最长上升子序列不止一条，但长度都是 <code>4</code>，也就是整个数组 <code>dp</code> 值里的最大值。</figcaption>
+    </div>
+
+    <div class="section-body">
+      <p>拿 <code>dp[5]</code>（对应 <code>a[5]=9</code>）具体展开看：需要检查下标 <code>0~4</code> 里所有比 <code>9</code> 小的数，取它们 <code>dp</code> 值中最大的那个，再 <code>+1</code>：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>j</th><th>a[j]</th><th>a[j] &lt; 9？</th><th>候选值 dp[j]+1</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>3</td><td>是</td><td>1+1=2</td></tr>
+        <tr><td>1</td><td>1</td><td>是</td><td>1+1=2</td></tr>
+        <tr><td>2</td><td>4</td><td>是</td><td>2+1=3</td></tr>
+        <tr><td>3</td><td>1</td><td>是</td><td>1+1=2</td></tr>
+        <tr><td>4</td><td>5</td><td>是</td><td>3+1=<b style="color:var(--amber)">4</b>（最大）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="lis-code">④ LIS 完整代码与优化方向</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · LIS（O(n²) 写法）</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">[</span><span class="num">1005</span><span class="pnc">],</span> <span class="fn">dp</span><span class="pnc">[</span><span class="num">1005</span><span class="pnc">],</span> <span class="fn">n</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">LIS</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">int</span> <span class="fn">ans</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 按顺序从 0 号填到 n-1 号</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">        <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 初始化：自己单独一个，长度至少是 1</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;</span> <span class="fn">i</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 回头看前面所有已经填好的 dp[j]</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">            <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">&lt;</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">                <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">],</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        <span class="fn">ans</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">ans</span><span class="pnc">,</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]);</span>  <span class="cmt">// 答案不一定是 dp[n-1]，取所有 dp[i] 里最大的</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="kw">return</span> <span class="fn">ans</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>对照四要素：</b>状态定义是"以 <code>a[i]</code> 结尾的最长上升子序列长度"；转移方程是第 11、12 行；初始化是第 8 行（每个数自己长度至少是 1）；填表顺序是"从下标 0 到 n-1 依次填"——因为算 <code>dp[i]</code> 要用到前面所有的 <code>dp[j]（j&lt;i)</code>，必须保证填 <code>i</code> 时，<code>0~i-1</code> 都已经填好了，从左到右填正好满足这个要求。</div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>竞赛小贴士：</b>这里的写法是双重循环，时间复杂度 O(n²)，数据量较大时（比如 n 达到 10⁵）会超时。存在一种更快的<strong>贪心 + 二分查找</strong>写法，能把复杂度优化到 O(n log n)：维护一个"结尾尽量小"的递增序列，每来一个新数就用二分查找决定它应该替换序列里的哪个位置。这种写法思路和本节的 dp 定义不同，涉及的贪心证明和二分技巧超出本节范围，这里先记住"存在这个优化方向"即可，可以在实战中查阅专门讲解这个技巧的资料。</div>
+    </div>
+
+    <div class="sub-title" id="lcs-def">⑤ 最长公共子序列（LCS）：问题与状态定义</div>
+    <div class="section-body">
+      <p><strong>最长公共子序列</strong>（Longest Common Subsequence，简称 LCS）：给定两个字符串 <code>X</code> 和 <code>Y</code>，找出同时是<strong>两者子序列</strong>的最长字符串。同样不要求连续，只要求在各自原串里的相对顺序不变。</p>
+      <p>例如 <code>X = "ABCD"</code>，<code>Y = "ACBD"</code>，最长公共子序列是 <code>"ABD"</code>（长度 3）：在 <code>X</code> 里是第 1、2、4 个字符，在 <code>Y</code> 里是第 1、3、4 个字符，两边的相对顺序都保持不变。</p>
+      <p>这个问题涉及<strong>两</strong>个字符串，状态自然需要<strong>两个维度</strong>：设 <code>dp[i][j]</code> 表示 <code>X</code> 的<strong>前 i 个字符</strong>和 <code>Y</code> 的<strong>前 j 个字符</strong>的最长公共子序列长度。转移方程分两种情况：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">转移方程：按 X[i] 和 Y[j] 是否相等分两种情况</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#A6E3A1;margin:0 0 6px">若 X[i] == Y[j]：　dp[i][j] = dp[i-1][j-1] + 1</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12px;color:#A6ADC8;margin:0 0 14px">两个字符匹配上了，公共子序列可以在此基础上延长一位——直接用"去掉这两个字符之前"的答案 <code style="color:#CBA6F7">dp[i-1][j-1]</code> 加 1。</p>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#89B4FA;margin:0 0 6px">若 X[i] != Y[j]：　dp[i][j] = max( dp[i-1][j], dp[i][j-1] )</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12px;color:#A6ADC8;margin:0">两个字符匹配不上，说明它们里至少有一个不出现在最终的公共子序列里——要么丢弃 <code style="color:#CBA6F7">X[i]</code>（答案等于 <code style="color:#CBA6F7">dp[i-1][j]</code>），要么丢弃 <code style="color:#CBA6F7">Y[j]</code>（答案等于 <code style="color:#CBA6F7">dp[i][j-1]</code>），取两者较大的一个。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>初始化：</b><code>dp[0][j]</code> 和 <code>dp[i][0]</code> 全部是 <code>0</code>——"其中一个字符串长度为 0"，公共子序列自然也是空的，长度 0。这一行、这一列就是整张表的边界起点。</div>
+    </div>
+
+    <div class="sub-title" id="lcs-fill">⑥ 手动填表：二维 dp 表</div>
+    <div class="section-body">
+      <p>把 <code>X = "ABCD"</code>、<code>Y = "ACBD"</code> 的完整 dp 表画出来（第 0 行、第 0 列是初始化的边界）：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">LCS dp 表（行：X，列：Y）</div>
+      <table class="lcs-table">
+        <tr><th></th><th></th><th>A</th><th>C</th><th>B</th><th>D</th></tr>
+        <tr><th></th><td class="z">0</td><td class="z">0</td><td class="z">0</td><td class="z">0</td><td class="z">0</td></tr>
+        <tr><th>A</th><td class="z">0</td><td class="match">1</td><td>1</td><td>1</td><td>1</td></tr>
+        <tr><th>B</th><td class="z">0</td><td>1</td><td>1</td><td class="match">2</td><td>2</td></tr>
+        <tr><th>C</th><td class="z">0</td><td>1</td><td class="match">2</td><td>2</td><td>2</td></tr>
+        <tr><th>D</th><td class="z">0</td><td>1</td><td>2</td><td>2</td><td class="match cur">3</td></tr>
+      </table>
+      <figcaption>绿色格子是 <b>X[i] == Y[j]</b>（匹配上了）触发 <code>dp[i-1][j-1]+1</code> 的位置，比如 <code>X</code> 的第 4 个字符 <code>D</code> 和 <code>Y</code> 的第 4 个字符 <code>D</code> 匹配，<code>dp[4][4] = dp[3][3] + 1 = 2 + 1 = 3</code>（右下角高亮格）。右下角 <code>dp[4][4] = 3</code> 就是最终答案：<code>X</code>、<code>Y</code> 的最长公共子序列长度是 <strong>3</strong>（对应 <code>"ABD"</code>）。其余没有高亮的格子，都是"两个字符不匹配"，取上边和左边中较大的那个抄下来。</figcaption>
+    </div>
+
+    <div class="sub-title" id="lcs-code">⑦ LCS 完整代码</div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · LCS</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">X</span><span class="pnc">,</span> <span class="fn">Y</span><span class="pnc">;</span>  <span class="cmt">// 下标从 0 开始，长度分别是 X.size()、Y.size()</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">dp</span><span class="pnc">[</span><span class="num">1005</span><span class="pnc">][</span><span class="num">1005</span><span class="pnc">];</span>  <span class="cmt">// dp[i][j]：X 前 i 个字符、Y 前 j 个字符的 LCS 长度</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">LCS</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="fn">X</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(),</span> <span class="fn">m</span> <span class="op">=</span> <span class="fn">Y</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">();</span>  <span class="cmt">// dp[0][*] 和 dp[*][0] 全局数组默认已经是 0，无需手动初始化</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// 行、列都从 1 开始，方便用 i-1、j-1 对应字符串下标 0</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">        <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">j</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">j</span> <span class="op">&lt;=</span> <span class="fn">m</span><span class="pnc">;</span> <span class="fn">j</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">            <span class="kw">if</span> <span class="pnc">(</span><span class="fn">X</span><span class="pnc">[</span><span class="fn">i</span><span class="op">-</span><span class="num">1</span><span class="pnc">]</span> <span class="op">==</span> <span class="fn">Y</span><span class="pnc">[</span><span class="fn">j</span><span class="op">-</span><span class="num">1</span><span class="pnc">])</span>  <span class="cmt">// X 的第 i 个字符是 X[i-1]（下标从 0 开始）</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">                <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="op">-</span><span class="num">1</span><span class="pnc">][</span><span class="fn">j</span><span class="op">-</span><span class="num">1</span><span class="pnc">]</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">            <span class="kw">else</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">                <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">max</span><span class="pnc">(</span><span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="op">-</span><span class="num">1</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">],</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="op">-</span><span class="num">1</span><span class="pnc">]);</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">        <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr class="hl-ref"><td class="ln">17</td><td class="cd">    <span class="kw">return</span> <span class="fn">dp</span><span class="pnc">[</span><span class="fn">n</span><span class="pnc">][</span><span class="fn">m</span><span class="pnc">];</span>  <span class="cmt">// 两个字符串"全部用上"的答案，就在表的右下角</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么下标要 +1？</b>第 7、9 行让 <code>i</code>、<code>j</code> 从 <code>1</code> 开始遍历到 <code>n</code>、<code>m</code>，是为了让 <code>dp[0][*]</code>、<code>dp[*][0]</code> 这一整行、一整列专门留给"空字符串"的边界情况（全局数组默认初始化为 <code>0</code>，正好符合"空字符串的 LCS 长度是 0"）。写 <code>X[i-1]</code> 而不是 <code>X[i]</code>，是因为字符串本身下标从 <code>0</code> 开始，而 dp 表的第 <code>i</code> 行对应的是"前 <code>i</code> 个字符"，第 <code>i</code> 个字符在字符串里的下标正是 <code>i-1</code>。这个"表下标从 1 开始、字符串下标减 1"的写法在字符串 DP 里很常见，需要多写几次才能熟练。</div>
+    </div>
+
+    <div class="sub-title" id="sum">⑧ 动态规划四要素与常见陷阱</div>
+    <div class="section-body">
+      <p>回顾一下 LIS 和 LCS 各自对应的四要素：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>要素</th><th>LIS</th><th>LCS</th></tr></thead>
+      <tbody>
+        <tr><td>状态定义</td><td>dp[i]：以 a[i] 结尾的最长上升子序列长度</td><td>dp[i][j]：X 前 i 个、Y 前 j 个字符的 LCS 长度</td></tr>
+        <tr><td>转移方程</td><td>dp[i] = max{dp[j]+1}（j&lt;i 且 a[j]&lt;a[i]）</td><td>匹配则 +1，不匹配则取相邻两格较大值</td></tr>
+        <tr><td>初始化</td><td>每个 dp[i] 起始为 1</td><td>dp[0][*]、dp[*][0] 全部为 0</td></tr>
+        <tr><td>填表顺序</td><td>下标从小到大</td><td>行从小到大，每行内列从小到大</td></tr>
+      </tbody>
+    </table>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把 LIS 的状态定义搞混——"以 a[i] 结尾"和"前 i 个数里最长"是两回事：</b>后者无法正确转移，因为"前 i 个数里最长的上升子序列"不一定包含 <code>a[i]</code>，没法说清楚下一个数能不能接上去。必须是"以 <code>a[i]</code> 结尾"，转移时才能明确知道"接在谁后面"。最终答案不是 <code>dp[n-1]</code>，而是<strong>所有 <code>dp[i]</code> 里的最大值</strong>（最长的子序列不一定以最后一个数结尾）。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>严格递增和非严格递增（可以相等）搞混：</b>本节的 LIS 要求"严格上升"，转移条件是 <code>a[j] &lt; a[i]</code>；如果题目允许"非递减"（可以有相等的数），转移条件要改成 <code>a[j] &lt;= a[i]</code>。做题前一定要看清楚题目要求的是哪一种。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>LCS 的两重循环顺序或数组下标搞反：</b><code>dp[i][j]</code> 依赖 <code>dp[i-1][j-1]</code>、<code>dp[i-1][j]</code>、<code>dp[i][j-1]</code>——都是"行更小或列更小"的格子，所以只要保证"从上到下、每行从左到右"填表，依赖的格子必然已经算好。如果把 <code>X[i-1]</code> 误写成 <code>X[i]</code>（或者忘记减 1），要么数组越界，要么对比的字符错位，算出来的答案会整体不对。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>本节的 LIS、LCS 都属于"一维/二维线性 DP"——状态只沿着一个方向（数组下标、字符串位置）推进。13.2 节要学的<strong>背包问题</strong>会引入一种新的思路：状态里除了"到第几个物品"，还要多一维"当前用掉了多少容量"，同时要特别注意 01 背包、完全背包在填表顺序上的关键区别。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十三 · 动态规划基础 · 13.1 线性 DP</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A12_04_记忆化搜索.html">← 12.4 记忆化搜索</a>
+      <a class="nav-btn" href="A13_02_背包问题.html">13.2 背包问题 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

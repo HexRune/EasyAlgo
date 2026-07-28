@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>16.3 线段树 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "16.3"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal-mid); border-bottom: 1px solid #a6ded0; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal-mid); background: var(--teal-light); white-space: nowrap; }
+
+  /* 线段树结构图 */
+  .seg-tree { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .seg-row { display: flex; gap: 8px; justify-content: center; flex-wrap: nowrap; }
+  .seg-node {
+    padding: 6px 8px; border-radius: 6px; background: #2A2840; color: #A6ADC8;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: center; line-height: 1.5;
+    border: 1.5px solid transparent; min-width: 44px; flex-shrink: 0;
+  }
+  .seg-node .rg { color: #6C7086; font-size: 9.5px; display: block; }
+  .seg-node .vv { color: #A6E3A1; font-weight: 700; font-size: 13px; }
+  .seg-node.path { border-color: #89B4FA; background: rgba(137,180,250,.15); }
+  .seg-node.path .vv { color: #89B4FA; }
+  .seg-node.in { border-color: #A6E3A1; background: rgba(166,227,161,.2); }
+  .seg-node.out { border-color: #F38BA8; background: rgba(243,139,168,.1); opacity: .55; }
+
+  /* Query 递归轨迹 */
+  .qry-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; width: 100%; }
+  .qry-table th, .qry-table td { padding: 8px 10px; text-align: left; border: 1px solid #2A2840; color: #A6ADC8; }
+  .qry-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11px; }
+  .qry-table td.res { color: #A6E3A1; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="16.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十六 树状数组与线段树</span>
+      <span class="eyebrow-sep">/</span>
+      <span>16.3 线段树</span>
+    </div>
+    <h1 class="chapter-title">16.3　线段树</h1>
+    <p class="chapter-desc">树状数组只擅长"和"这类可以拆分再合并的信息——线段树用一棵真正的二叉树，能维护区间最大值、最小值等更丰富的统计量。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要线段树：树状数组的局限</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：每个节点管辖一段区间</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：一棵具体数组的线段树结构</a></li>
+      <li><span class="toc-num">④</span><a href="#build">建树：递归地一分为二</a></li>
+      <li><span class="toc-num">⑤</span><a href="#query">区间查询：三种情况的递归</a></li>
+      <li><span class="toc-num">⑥</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑦</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要线段树：树状数组的局限</div>
+    <div class="section-body">
+      <p>16.2 节的树状数组能高效维护"区间和"，靠的是<code>Query(r) - Query(l-1)</code>这个前缀相减的技巧——但这个技巧只对"和"这类<strong>可以做减法还原</strong>的信息有效。如果要维护的是<strong>区间最大值</strong>，"前 <code>r</code> 个数的最大值"减去"前 <code>l-1</code> 个数的最大值"根本得不出"<code>[l,r]</code> 区间的最大值"——最大值没有"减法逆运算"这回事。树状数组这时候就不够用了。</p>
+      <p><strong>线段树</strong>（Segment Tree）用一棵更通用的二叉树结构，不管是区间和、区间最大值、区间最小值，只要"父节点的信息可以由左右孩子的信息合并得到"，都可以用线段树维护。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：每个节点管辖一段区间</div>
+    <div class="section-body">
+      <p>线段树是一棵二叉树：根节点管辖整个区间 <code>[1,n]</code>；每个节点如果管辖的区间长度大于 <code>1</code>，就从中点 <code>mid</code> 一分为二，左孩子管辖 <code>[l, mid]</code>，右孩子管辖 <code>[mid+1, r]</code>；管辖区间长度为 <code>1</code> 的节点是叶子节点，直接对应原数组的一个元素。每个节点存储它所管辖区间的统计信息（比如区间和），这个信息等于它左右孩子信息的合并（比如相加）。</p>
+    </div>
+
+    <div class="sub-title" id="trace">③ 图解：一棵具体数组的线段树结构</div>
+    <div class="section-body">
+      <p>还是 16.2 节的数组 <code>a = [3, 2, 5, 6, 1, 4, 7, 2]</code>（<code>n=8</code>），以维护"区间和"为例，画出完整的线段树：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">线段树结构（每个节点标注管辖区间与区间和）</div>
+      <div class="seg-tree">
+        <div class="seg-row">
+          <div class="seg-node"><span class="rg">[1,8]</span><span class="vv">30</span></div>
+        </div>
+        <div class="seg-row">
+          <div class="seg-node"><span class="rg">[1,4]</span><span class="vv">16</span></div>
+          <div class="seg-node"><span class="rg">[5,8]</span><span class="vv">14</span></div>
+        </div>
+        <div class="seg-row">
+          <div class="seg-node"><span class="rg">[1,2]</span><span class="vv">5</span></div>
+          <div class="seg-node"><span class="rg">[3,4]</span><span class="vv">11</span></div>
+          <div class="seg-node"><span class="rg">[5,6]</span><span class="vv">5</span></div>
+          <div class="seg-node"><span class="rg">[7,8]</span><span class="vv">9</span></div>
+        </div>
+        <div class="seg-row">
+          <div class="seg-node"><span class="rg">[1,1]</span><span class="vv">3</span></div>
+          <div class="seg-node"><span class="rg">[2,2]</span><span class="vv">2</span></div>
+          <div class="seg-node"><span class="rg">[3,3]</span><span class="vv">5</span></div>
+          <div class="seg-node"><span class="rg">[4,4]</span><span class="vv">6</span></div>
+          <div class="seg-node"><span class="rg">[5,5]</span><span class="vv">1</span></div>
+          <div class="seg-node"><span class="rg">[6,6]</span><span class="vv">4</span></div>
+          <div class="seg-node"><span class="rg">[7,7]</span><span class="vv">7</span></div>
+          <div class="seg-node"><span class="rg">[8,8]</span><span class="vv">2</span></div>
+        </div>
+      </div>
+      <figcaption>每一层的区间长度是上一层的一半，一共 <code>log₂8=3</code> 层再加叶子层，共 4 层。每个节点的值都等于它两个孩子值相加：<code>[1,4]=16</code> 正是 <code>[1,2]=5</code> 和 <code>[3,4]=11</code> 相加；根节点 <code>[1,8]=30</code> 正是整个数组的总和，和 16.2 节算出的 <code>tree[8]=30</code> 完全一致。</figcaption>
+    </div>
+
+    <div class="sub-title" id="build">④ 建树：递归地一分为二</div>
+    <div class="section-body">
+      <p>建树是一个递归过程：如果 <code>l==r</code>（区间只剩一个元素），这是叶子节点，直接赋值为 <code>a[l]</code>；否则取中点 <code>mid=(l+r)/2</code>，递归建好左右两半，再把当前节点的值设为左右孩子值的合并。</p>
+    </div>
+
+    <div class="sub-title" id="query">⑤ 区间查询：三种情况的递归</div>
+    <div class="section-body">
+      <p>查询区间 <code>[ql, qr]</code> 的和时，从根节点开始递归，每个节点管辖的区间 <code>[l,r]</code> 和查询区间 <code>[ql,qr]</code> 之间，只会是以下三种关系之一：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>关系</th><th>怎么处理</th></tr></thead>
+      <tbody>
+        <tr><td>[l,r] 完全在 [ql,qr] 之外</td><td>和答案完全无关，直接返回 0（不再往下递归）</td></tr>
+        <tr><td>[l,r] 完全被 [ql,qr] 包含</td><td>这个节点存的值就是答案的一部分，直接返回该节点的值（不用再往下拆）</td></tr>
+        <tr><td>[l,r] 和 [ql,qr] 部分重叠</td><td>拆成左右两个孩子分别递归查询，把两边的结果加起来</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-body">
+      <p>用 <code>Query(3, 6)</code>（查询 <code>a[3]+a[4]+a[5]+a[6]</code>）具体走一遍：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">Query(3,6) 的递归轨迹</div>
+      <table class="qry-table">
+        <thead><tr><th>当前节点</th><th>和 [3,6] 的关系</th><th>处理</th></tr></thead>
+        <tbody>
+          <tr><td>[1,8]</td><td>部分重叠</td><td>拆成 [1,4] 和 [5,8]，分别递归</td></tr>
+          <tr><td>├─ [1,4]</td><td>部分重叠（重叠部分是 [3,4]）</td><td>拆成 [1,2] 和 [3,4]</td></tr>
+          <tr><td>│&nbsp;&nbsp;├─ [1,2]</td><td>完全在 [3,6] 之外（2&lt;3）</td><td class="res">直接返回 0</td></tr>
+          <tr><td>│&nbsp;&nbsp;└─ [3,4]</td><td>完全被 [3,6] 包含</td><td class="res">直接返回该节点的值 11</td></tr>
+          <tr><td>├─ [5,8]</td><td>部分重叠（重叠部分是 [5,6]）</td><td>拆成 [5,6] 和 [7,8]</td></tr>
+          <tr><td>│&nbsp;&nbsp;├─ [5,6]</td><td>完全被 [3,6] 包含</td><td class="res">直接返回该节点的值 5</td></tr>
+          <tr><td>│&nbsp;&nbsp;└─ [7,8]</td><td>完全在 [3,6] 之外（7&gt;6）</td><td class="res">直接返回 0</td></tr>
+        </tbody>
+      </table>
+      <figcaption>最终结果 <code>0 + 11 + 5 + 0 = 16</code>，和直接计算 <code>a[3]+a[4]+a[5]+a[6] = 5+6+1+4 = 16</code> 一致。整个过程只碰到了 <code>[1,2]</code>、<code>[3,4]</code>、<code>[5,6]</code>、<code>[7,8]</code> 这几个节点，<strong>没有拆到叶子节点这么细</strong>——一旦某个节点的区间被查询区间"完整包含"，就不用再往下拆了，这正是线段树查询效率的关键。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">⑥ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 线段树（维护区间和）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> a[MAXN], tree[MAXN <span class="op">*</span> <span class="num">4</span>];  <span class="cmt">// tree 数组大小要开到 4 倍，见 ⑦ 陷阱</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">void</span> <span class="fn">Build</span>(<span class="typ">int</span> node, <span class="typ">int</span> l, <span class="typ">int</span> r)</td></tr>
+          <tr><td class="ln">4</td><td class="cd">{</td></tr>
+          <tr class="hl-warn"><td class="ln">5</td><td class="cd">    <span class="kw">if</span> (l == r) { tree[node] = a[l]; <span class="kw">return</span>; }  <span class="cmt">// 叶子节点，直接对应原数组</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">int</span> mid = (l + r) / <span class="num">2</span>;</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">Build</span>(node <span class="op">*</span> <span class="num">2</span>, l, mid);       <span class="cmt">// 左孩子管辖 [l, mid]</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">Build</span>(node <span class="op">*</span> <span class="num">2</span> + <span class="num">1</span>, mid + <span class="num">1</span>, r);  <span class="cmt">// 右孩子管辖 [mid+1, r]</span></td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">    tree[node] = tree[node <span class="op">*</span> <span class="num">2</span>] + tree[node <span class="op">*</span> <span class="num">2</span> + <span class="num">1</span>];  <span class="cmt">// ★ 合并：当前节点 = 左孩子 + 右孩子</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">}</td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="cmt">// node 管辖 [l,r]；查询目标区间是 [ql,qr]</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="typ">int</span> <span class="fn">Query</span>(<span class="typ">int</span> node, <span class="typ">int</span> l, <span class="typ">int</span> r, <span class="typ">int</span> ql, <span class="typ">int</span> qr)</td></tr>
+          <tr><td class="ln">14</td><td class="cd">{</td></tr>
+          <tr class="hl-warn"><td class="ln">15</td><td class="cd">    <span class="kw">if</span> (qr &lt; l || r &lt; ql) <span class="kw">return</span> <span class="num">0</span>;             <span class="cmt">// 情况一：完全在外面</span></td></tr>
+          <tr class="hl-ref"><td class="ln">16</td><td class="cd">    <span class="kw">if</span> (ql &lt;= l &amp;&amp; r &lt;= qr) <span class="kw">return</span> tree[node];   <span class="cmt">// 情况二：完全被包含</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="typ">int</span> mid = (l + r) / <span class="num">2</span>;                       <span class="cmt">// 情况三：部分重叠，拆成两半</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="kw">return</span> <span class="fn">Query</span>(node <span class="op">*</span> <span class="num">2</span>, l, mid, ql, qr)</td></tr>
+          <tr><td class="ln">19</td><td class="cd">         + <span class="fn">Query</span>(node <span class="op">*</span> <span class="num">2</span> + <span class="num">1</span>, mid + <span class="num">1</span>, r, ql, qr);</td></tr>
+          <tr><td class="ln">20</td><td class="cd">}</td></tr>
+          <tr><td class="ln">21</td><td class="cd"></td></tr>
+          <tr><td class="ln">22</td><td class="cd"><span class="typ">void</span> <span class="fn">Update</span>(<span class="typ">int</span> node, <span class="typ">int</span> l, <span class="typ">int</span> r, <span class="typ">int</span> pos, <span class="typ">int</span> val)  <span class="cmt">// 把 a[pos] 改成 val</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">{</td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="kw">if</span> (l == r) { tree[node] = val; <span class="kw">return</span>; }</td></tr>
+          <tr><td class="ln">25</td><td class="cd">    <span class="typ">int</span> mid = (l + r) / <span class="num">2</span>;</td></tr>
+          <tr><td class="ln">26</td><td class="cd">    <span class="kw">if</span> (pos &lt;= mid) <span class="fn">Update</span>(node <span class="op">*</span> <span class="num">2</span>, l, mid, pos, val);</td></tr>
+          <tr><td class="ln">27</td><td class="cd">    <span class="kw">else</span> <span class="fn">Update</span>(node <span class="op">*</span> <span class="num">2</span> + <span class="num">1</span>, mid + <span class="num">1</span>, r, pos, val);</td></tr>
+          <tr class="hl"><td class="ln">28</td><td class="cd">    tree[node] = tree[node <span class="op">*</span> <span class="num">2</span>] + tree[node <span class="op">*</span> <span class="num">2</span> + <span class="num">1</span>];  <span class="cmt">// 修改后，沿途重新合并更新</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>只维护"和"以外的信息，改的地方非常集中：</b>如果想让这棵线段树维护<strong>区间最大值</strong>而不是区间和，只需要把第 9、28 行的 <code>tree[node*2] + tree[node*2+1]</code> 换成 <code>max(tree[node*2], tree[node*2+1])</code>，第 15 行"完全在外面"的返回值从 <code>0</code> 换成一个足够小的数（比如 <code>-INF</code>，代表"不参与最大值比较"）——骨架完全不用变，这正是线段树比树状数组更通用的地方。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑦ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b><code>tree</code> 数组大小要开到原数组的 4 倍：</b>线段树用 <code>node*2</code>、<code>node*2+1</code> 表示左右孩子（类似二叉堆的存储方式），当 <code>n</code> 不是 2 的整数次幂时，树不是"满二叉树"，实际用到的下标可能超过 <code>2n</code>，为了绝对安全，通常直接把 <code>tree</code> 数组开到 <code>4×n</code>，这是竞赛中约定俗成的写法，不需要精确计算最坏情况下到底需要多少。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>Query 的三种情况判断顺序不能错：</b>必须先判断"完全在外面"（第 15 行），再判断"完全被包含"（第 16 行），最后才是"部分重叠"递归拆分。如果先判断"完全被包含"，在区间被查询区间部分重叠、但左端点恰好相等的边界情况下容易判断出错；按"由简单到复杂"的顺序（完全无关 → 完全包含 → 部分重叠再递归）思路最清晰，也最不容易出错。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>修改之后忘记沿途更新父节点：</b>第 28 行 <code>Update</code> 递归返回后，必须重新合并当前节点的值——如果漏掉这一行，只有叶子节点被改了，它的祖先节点（比如根节点）仍然保留着修改前的旧值，后续查询会算出错误的结果。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>模块小结：</b>16.1～16.3 节的三个工具经常搭配使用：数据值域太大先用 16.1 的离散化压缩到 <code>1~n</code>；只需要维护区间和，优先选 16.2 的树状数组（代码短、常数小）；需要维护最大值、最小值等更复杂的信息，或者需要区间修改（把一整段都加上某个值）这类树状数组不擅长的操作，就用本节的线段树。三者结合，构成了竞赛中处理"带修改的区间信息维护"问题的核心工具箱。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十六 树状数组与线段树 · 16.3 线段树</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A16_02_树状数组.html">← 16.2 树状数组</a>
+      <a class="nav-btn" href="index.html">返回目录 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

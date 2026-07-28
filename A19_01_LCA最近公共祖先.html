@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>19.1 LCA 最近公共祖先 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "19.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--accent-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--accent-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--accent-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-mid); border-bottom: 1px solid #c9c4f5; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-mid); background: var(--accent-light); white-space: nowrap; }
+
+  /* 树形结构图 */
+  .lca-tree { display: flex; flex-direction: column; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .lca-node {
+    padding: 7px 10px; border-radius: 7px; background: #2A2840; color: #A6ADC8;
+    border: 1.5px solid transparent; text-align: center; line-height: 1.5; min-width: 46px;
+  }
+  .lca-node .nm { font-size: 13px; font-weight: 700; color: #89B4FA; display: block; }
+  .lca-node .dp { font-size: 10px; color: #6C7086; }
+  .lca-node.mark { border-color: #A6E3A1; background: rgba(166,227,161,.18); }
+  .lca-node.mark .nm { color: #A6E3A1; }
+  .lca-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  .lca-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .lca-children { display: flex; gap: 16px; }
+
+  /* up数组表 */
+  .up-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; width: 100%; }
+  .up-table th, .up-table td { padding: 8px 10px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .up-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11px; }
+
+  /* 查询追踪表 */
+  .qry-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; width: 100%; }
+  .qry-table th, .qry-table td { padding: 8px 10px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .qry-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11px; }
+  .qry-table td.res { color: #A6E3A1; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="19.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十九 拓展专题</span>
+      <span class="eyebrow-sep">/</span>
+      <span>19.1 LCA 最近公共祖先</span>
+    </div>
+    <h1 class="chapter-title">19.1　LCA 最近公共祖先</h1>
+    <p class="chapter-desc">树上两个节点最近的共同祖先——朴素做法每次查询要 O(n)，倍增思想能把它压缩到 O(log n)。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">什么是 LCA</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：树上倍增</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：一棵具体树的完整查询过程</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#pitfall">复杂度与常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 什么是 LCA</div>
+    <div class="section-body">
+      <p>给定一棵有根树，<strong>最近公共祖先</strong>（Lowest Common Ancestor，简称 LCA）指的是：给定两个节点 <code>u</code>、<code>v</code>，同时是它们祖先（包括自身）的节点里，<strong>深度最大</strong>的那一个。</p>
+      <p>最直接的做法：把 <code>u</code>、<code>v</code> 中较深的那个先向上跳到和另一个同样的深度，然后两个节点<strong>一步一步同时往上跳</strong>，直到两者相遇，相遇的位置就是 LCA。这个朴素做法每次查询最坏要跳 <code>O(n)</code> 步——如果需要回答很多次 LCA 查询，会很慢。<strong>树上倍增</strong>能把每次查询优化到 <code>O(log n)</code>。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：树上倍增</div>
+    <div class="section-body">
+      <p>倍增的核心是预处理一个数组 <code>up[u][k]</code>，表示节点 <code>u</code> <strong>向上跳 <code>2^k</code> 步</strong>能到达的祖先。这个数组可以递推算出：<code>up[u][k] = up[ up[u][k-1] ][k-1]</code>——"跳 <code>2^k</code> 步"等于"先跳 <code>2^(k-1)</code> 步，再跳 <code>2^(k-1)</code> 步"。有了这张表，任何"向上跳 <code>x</code> 步"都能拆成若干个 <code>2</code> 的次方之和（二进制拆分），用倍增表拼出来，只需要 <code>O(log n)</code> 次跳跃。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>步骤</th><th>做什么</th></tr></thead>
+      <tbody>
+        <tr><td>① 预处理</td><td>DFS 一遍树，算出每个节点的深度 depth[u] 和直接父亲 up[u][0]；再递推出 up[u][k]（k=1,2,3...）</td></tr>
+        <tr><td>② 对齐深度</td><td>查询 LCA(u,v) 时，先把较深的那个节点向上跳，跳到和另一个节点同样的深度</td></tr>
+        <tr><td>③ 同时倍增上跳</td><td>从大到小枚举 k，如果 u、v 跳 2^k 步之后仍然不同，就把两者都跳上去（保证不会跳过 LCA）</td></tr>
+        <tr><td>④ 收尾</td><td>循环结束后，u、v 的直接父亲就是 LCA</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="trace">③ 图解：一棵具体树的完整查询过程</div>
+    <div class="section-body">
+      <p>用一棵 7 个节点的树演示，节点旁边标出深度：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">树结构（深度从根节点 0 开始）</div>
+      <div class="lca-tree">
+        <div class="lca-node"><span class="nm">1</span><span class="dp">depth=0</span></div>
+        <div class="lca-row">
+          <div class="lca-group">
+            <div class="lca-node"><span class="nm">2</span><span class="dp">depth=1</span></div>
+            <div class="lca-children">
+              <div class="lca-group">
+                <div class="lca-node mark"><span class="nm">4</span><span class="dp">depth=2</span></div>
+                <div class="lca-node"><span class="nm">7</span><span class="dp">depth=3</span></div>
+              </div>
+              <div class="lca-node"><span class="nm">5</span><span class="dp">depth=2</span></div>
+            </div>
+          </div>
+          <div class="lca-group">
+            <div class="lca-node"><span class="nm">3</span><span class="dp">depth=1</span></div>
+            <div class="lca-node mark"><span class="nm">6</span><span class="dp">depth=2</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">up 数组（预处理结果，0 表示"没有祖先"）</div>
+      <table class="up-table">
+        <thead><tr><th>u</th><th>up[u][0]（跳1步）</th><th>up[u][1]（跳2步）</th><th>up[u][2]（跳4步）</th></tr></thead>
+        <tbody>
+          <tr><td>4</td><td>2</td><td>1</td><td>0</td></tr>
+          <tr><td>6</td><td>3</td><td>1</td><td>0</td></tr>
+          <tr><td>7</td><td>4</td><td>2</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-body">
+      <p>查询 <code>LCA(7, 6)</code>：<code>depth[7]=3</code>，<code>depth[6]=2</code>，<code>7</code> 更深，先把 <code>7</code> 往上跳 <code>1</code> 步对齐深度：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">LCA(7, 6) 完整查询过程</div>
+      <table class="qry-table">
+        <thead><tr><th>步骤</th><th>操作</th><th>结果</th></tr></thead>
+        <tbody>
+          <tr><td>对齐深度</td><td>7 跳 2⁰=1 步：7 → up[7][0] = 4</td><td>u=4, v=6（同深度 2）</td></tr>
+          <tr><td>k=2（跳4步）</td><td>up[4][2]=0 与 up[6][2]=0 相同</td><td>不跳（跳了会越过 LCA）</td></tr>
+          <tr><td>k=1（跳2步）</td><td>up[4][1]=1 与 up[6][1]=1 相同</td><td>不跳</td></tr>
+          <tr><td>k=0（跳1步）</td><td>up[4][0]=2 与 up[6][0]=3 不同</td><td>都跳：u=2, v=3</td></tr>
+          <tr><td colspan="3" class="res">循环结束，u、v 已经是兄弟节点，答案 = up[2][0] = 1</td></tr>
+        </tbody>
+      </table>
+      <figcaption>结果 <code>LCA(7,6)=1</code>——验证一下：<code>7</code> 的祖先链是 <code>7→4→2→1</code>，<code>6</code> 的祖先链是 <code>6→3→1</code>，两条链唯一的公共节点就是 <code>1</code>，符合预期。<code>k=2</code>、<code>k=1</code> 时之所以"相同就不跳"，是因为如果这时候跳了，<code>u</code>、<code>v</code> 可能会一路跳到 <code>LCA</code> 的<strong>上面</strong>，跳过了真正的答案——只有在"跳了之后依然不同"时才安全地跳，这样循环结束时，<code>u</code>、<code>v</code> 一定是 LCA 的两个直接孩子（或者其中一个就是原来的 <code>u/v</code>，另一种边界情况见 ⑤）。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · LCA（树上倍增）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">const</span> <span class="typ">int</span> LOG = <span class="num">20</span>;  <span class="cmt">// 2^20 远大于常见的节点数，足够用</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd">vector&lt;<span class="typ">int</span>&gt; children[MAXN];</td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> up[MAXN][LOG], depth[MAXN];</td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">void</span> <span class="fn">DFS</span>(<span class="typ">int</span> u, <span class="typ">int</span> par)</td></tr>
+          <tr><td class="ln">6</td><td class="cd">{</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    up[u][<span class="num">0</span>] = par;</td></tr>
+          <tr class="hl-ref"><td class="ln">8</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> k = <span class="num">1</span>; k &lt; LOG; k++)</td></tr>
+          <tr class="hl-ref"><td class="ln">9</td><td class="cd">        up[u][k] = up[ up[u][k-<span class="num">1</span>] ][k-<span class="num">1</span>];  <span class="cmt">// ★ 跳 2^k 步 = 先跳 2^(k-1)，再跳 2^(k-1)</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> v : children[u])</td></tr>
+          <tr><td class="ln">11</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">12</td><td class="cd">        depth[v] = depth[u] + <span class="num">1</span>;</td></tr>
+          <tr><td class="ln">13</td><td class="cd">        <span class="fn">DFS</span>(v, u);</td></tr>
+          <tr><td class="ln">14</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">15</td><td class="cd">}</td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="typ">int</span> <span class="fn">LCA</span>(<span class="typ">int</span> u, <span class="typ">int</span> v)</td></tr>
+          <tr><td class="ln">18</td><td class="cd">{</td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="kw">if</span> (depth[u] &lt; depth[v]) swap(u, v);  <span class="cmt">// 保证 u 更深（或一样深）</span></td></tr>
+          <tr class="hl-warn"><td class="ln">20</td><td class="cd">    <span class="typ">int</span> diff = depth[u] - depth[v];</td></tr>
+          <tr class="hl-warn"><td class="ln">21</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> k = <span class="num">0</span>; k &lt; LOG; k++)</td></tr>
+          <tr class="hl-warn"><td class="ln">22</td><td class="cd">        <span class="kw">if</span> (diff &gt;&gt; k &amp; <span class="num">1</span>) u = up[u][k];  <span class="cmt">// ★ 把深度差 diff 按二进制拆分，跳到同一深度</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="kw">if</span> (u == v) <span class="kw">return</span> u;  <span class="cmt">// 对齐后 u、v 重合，说明 v 本来就是 u 的祖先</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd"></td></tr>
+          <tr class="hl"><td class="ln">25</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> k = LOG - <span class="num">1</span>; k &gt;= <span class="num">0</span>; k--)  <span class="cmt">// ★ 从大到小尝试跳，跳了之后不同才跳</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">        <span class="kw">if</span> (up[u][k] != up[v][k])</td></tr>
+          <tr><td class="ln">27</td><td class="cd">        {</td></tr>
+          <tr><td class="ln">28</td><td class="cd">            u = up[u][k];</td></tr>
+          <tr><td class="ln">29</td><td class="cd">            v = up[v][k];</td></tr>
+          <tr><td class="ln">30</td><td class="cd">        }</td></tr>
+          <tr><td class="ln">31</td><td class="cd">    <span class="kw">return</span> up[u][<span class="num">0</span>];  <span class="cmt">// 循环结束，u、v 是 LCA 的两个孩子，它们的父亲就是答案</span></td></tr>
+          <tr><td class="ln">32</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>第 21～22 行是"深度对齐"，用的是二进制拆分的思路：</b>假设深度差 <code>diff=5</code>（二进制 <code>101</code>），需要跳 <code>5</code> 步，会先判断第 <code>0</code> 位是 <code>1</code>（跳 <code>2⁰=1</code> 步），第 <code>2</code> 位是 <code>1</code>（跳 <code>2²=4</code> 步），总共跳了 <code>1+4=5</code> 步——用倍增表拼出任意步数，只需要 <code>O(log n)</code> 次跳跃，而不是跳 <code>5</code> 次单步。第 25～30 行"两个指针同时倍增"用的是同样的思路，只是判断条件从"深度差的某一位是不是 1"变成了"跳了之后 u、v 还相不相同"。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑤ 复杂度与常见陷阱</div>
+    <div class="section-body">
+      <p>预处理 <code>up</code> 数组需要 <code>O(n log n)</code>（每个节点算 <code>log n</code> 个倍增值）；每次查询只需要 <code>O(log n)</code>（对齐深度、同步跳跃各一次 <code>log n</code> 循环）。</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记处理"v 本来就是 u 的祖先"这种边界情况：</b>第 23 行 <code>if (u == v) return u;</code> 是必要的——对齐深度之后，如果两个节点已经重合，说明较浅的那个节点本来就是较深节点的祖先，直接返回即可，不需要再进入下面"同时跳跃"的循环（那个循环假设 <code>u ≠ v</code>，如果不加这个判断，跳跃过程可能会得出错误的结果或者浪费计算）。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>up 数组的 <code>LOG</code> 开得不够大：</b><code>LOG</code> 需要满足 <code>2^LOG ≥ n</code>（节点数），如果开小了，深度差较大的两个节点没法通过二进制拆分完全对齐深度，跳跃会出错。竞赛中通常直接取一个足够大的固定值（比如 <code>20</code>，对应节点数上限约 100 万），不需要精确计算。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>多组查询时，重复对同一棵树做 DFS 预处理：</b><code>up</code> 数组和 <code>depth</code> 数组只依赖树的结构本身，和具体查询哪两个节点无关——只需要在处理所有查询之前，对树做<strong>一次</strong> DFS 预处理，之后的每次 <code>LCA</code> 查询都直接复用这份预处理结果，不需要也不应该每次查询都重新 DFS 一遍。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>19.2 节的<strong>博弈论</strong>会换到一个完全不同的话题——两个玩家轮流做决策的游戏，怎么判断谁能获胜、怎么找到必胜策略，会用到和之前完全不同的分析工具。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十九 拓展专题 · 19.1 LCA 最近公共祖先</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A18_04_数位DP.html">← 18.4 数位 DP</a>
+      <a class="nav-btn" href="A19_02_博弈论.html">19.2 博弈论 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

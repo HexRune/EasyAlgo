@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15.2 Floyd 最短路 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "15.2"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--coral-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--coral); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; text-align: center; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; text-align: left; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 14px; text-align: left; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--coral-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--coral); border-bottom: 1px solid #f0c4ae; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--coral); background: var(--coral-light); white-space: nowrap; }
+
+  /* 邻接矩阵可视化（沿用 15.1 的风格） */
+  .mat-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .mat-table th, .mat-table td { width: 46px; height: 38px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .mat-table th { background: #1A1830; color: #89B4FA; font-weight: 700; }
+  .mat-table td.diag { color: #45475A; }
+  .mat-table td.chg { background: rgba(166,227,161,.22); color: #A6E3A1; font-weight: 700; box-shadow: inset 0 0 0 2px #A6E3A1; }
+  .mat-table th.k { background: rgba(249,226,175,.25); color: #F9E2AF; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="15.2">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十五 图论基础</span>
+      <span class="eyebrow-sep">/</span>
+      <span>15.2 Floyd 最短路</span>
+    </div>
+    <h1 class="chapter-title">15.2　Floyd 最短路</h1>
+    <p class="chapter-desc">一次性算出图中任意两点之间的最短距离——三重循环，本质上是一个动态规划，思路和 13 模块的框架完全相通。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要 Floyd：任意两点之间的最短路</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：这其实是一个动态规划</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：中转点一个个加入，矩阵逐步被更新</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#complexity">复杂度与适用场景</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要 Floyd：任意两点之间的最短路</div>
+    <div class="section-body">
+      <p>14.1、14.4 节的 BFS、A* 解决的都是"从<strong>一个</strong>起点出发，到某个终点（或所有点）的最短路"——这类问题统称<strong>单源最短路</strong>。但有些场景需要知道<strong>任意两点之间</strong>的最短距离（比如"任意两个城市之间开车最快多久能到"），如果对每个点都单独跑一次单源最短路，需要跑 <code>V</code> 次。<strong>Floyd 算法</strong>能用一次性的三重循环，直接算出<strong>所有点对</strong>之间的最短距离，代价是要求图的规模不能太大（见 ⑤）。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：这其实是一个动态规划</div>
+    <div class="section-body">
+      <p>Floyd 算法看起来只是三层 <code>for</code> 循环，但它的本质是一个动态规划——用的正是 13 模块讲过的那套框架。设 <code>dp[k][i][j]</code> 表示：<strong>只允许经过编号 1~k 的点作为中转站</strong>时，<code>i</code> 到 <code>j</code> 的最短距离。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>要素</th><th>Floyd 算法里对应什么</th></tr></thead>
+      <tbody>
+        <tr><td>状态定义</td><td>dp[k][i][j]：只允许经过 1~k 号点中转时，i 到 j 的最短距离</td></tr>
+        <tr><td>转移方程</td><td>dp[k][i][j] = min( dp[k-1][i][j]，　dp[k-1][i][k] + dp[k-1][k][j] )</td></tr>
+        <tr><td>初始化</td><td>dp[0][i][j] = 原图中 i、j 之间直接的边权（没有边就是 INF），dp[0][i][i]=0</td></tr>
+        <tr><td>填表顺序</td><td>k 从 1 到 n 依次增大（第几个中转点被"解锁"）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-body">
+      <p>转移方程的含义很直白：<code>i</code> 到 <code>j</code>，允许经过 <code>1~k</code> 号点中转时的最短距离，要么<strong>压根不经过 <code>k</code> 号点</strong>（沿用 <code>dp[k-1][i][j]</code>），要么<strong>经过 <code>k</code> 号点中转</strong>（先从 <code>i</code> 到 <code>k</code>，再从 <code>k</code> 到 <code>j</code>，两段都只用 <code>1~k-1</code> 号点中转），取两者较小的一个。</p>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么代码里看不到三维数组？</b>观察转移方程会发现，算 <code>dp[k][*][*]</code> 只需要用到 <code>dp[k-1][*][*]</code>——和 13.2 节背包问题"压缩成一维数组"是同样的道理，这里可以把"第几轮中转点"这一维<strong>原地滚动</strong>，直接在同一个二维数组 <code>dist[i][j]</code> 上更新，不需要真的开一个三维数组。这也是为什么 Floyd 算法最终代码看起来只是"三层循环 + 一行 <code>min</code>"，背后其实是省略了一维的动态规划。</div>
+    </div>
+
+    <div class="sub-title" id="trace">③ 图解：中转点一个个加入，矩阵逐步被更新</div>
+    <div class="section-body">
+      <p>沿用 15.1 节的示例图（顶点 <code>A B C D</code>，边 <code>A-B=4</code>，<code>A-C=1</code>，<code>B-C=2</code>，<code>B-D=5</code>，<code>C-D=8</code>），初始的邻接矩阵（<code>INF</code> 表示没有直接的边）：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">初始矩阵（只有直接相连的边）</div>
+      <table class="mat-table">
+        <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+        <tr><th>A</th><td class="diag">0</td><td>4</td><td>1</td><td>∞</td></tr>
+        <tr><th>B</th><td>4</td><td class="diag">0</td><td>2</td><td>5</td></tr>
+        <tr><th>C</th><td>1</td><td>2</td><td class="diag">0</td><td>8</td></tr>
+        <tr><th>D</th><td>∞</td><td>5</td><td>8</td><td class="diag">0</td></tr>
+      </table>
+      <figcaption><code>A、D</code> 之间没有直接的边，暂时是 <code>∞</code>（不可达）。接下来依次让 <code>A、B、C、D</code> 轮流当"中转点"，看看能不能借道缩短某些距离。</figcaption>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">以 B 为中转点后（k=B）</div>
+      <table class="mat-table">
+        <tr><th></th><th>A</th><th class="k">B</th><th>C</th><th>D</th></tr>
+        <tr><th>A</th><td class="diag">0</td><td>4</td><td>1</td><td class="chg">9</td></tr>
+        <tr><th class="k">B</th><td>4</td><td class="diag">0</td><td>2</td><td>5</td></tr>
+        <tr><th>C</th><td>1</td><td>2</td><td class="diag">0</td><td class="chg">7</td></tr>
+        <tr><th>D</th><td class="chg">9</td><td>5</td><td class="chg">7</td><td class="diag">0</td></tr>
+      </table>
+      <figcaption>检查"经过 B 中转"能不能缩短距离：<code>A→D</code> 原本是 <code>∞</code>，经过 B 中转 <code>A→B→D = 4+5 = 9</code>，比 <code>∞</code> 小，更新为 <strong>9</strong>；<code>C→D</code> 原本是 <code>8</code>，经过 B 中转 <code>C→B→D = 2+5 = 7</code>，比 <code>8</code> 小，更新为 <strong>7</strong>。</figcaption>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">再以 C 为中转点后（k=C，最终结果）</div>
+      <table class="mat-table">
+        <tr><th></th><th>A</th><th>B</th><th class="k">C</th><th>D</th></tr>
+        <tr><th>A</th><td class="diag">0</td><td class="chg">3</td><td>1</td><td class="chg">8</td></tr>
+        <tr><th>B</th><td class="chg">3</td><td class="diag">0</td><td>2</td><td>5</td></tr>
+        <tr><th class="k">C</th><td>1</td><td>2</td><td class="diag">0</td><td>7</td></tr>
+        <tr><th>D</th><td class="chg">8</td><td>5</td><td>7</td><td class="diag">0</td></tr>
+      </table>
+      <figcaption>再检查"经过 C 中转"：<code>A→B</code> 原本是 <code>4</code>，经过 C 中转 <code>A→C→B = 1+2 = 3</code>，更新为 <strong>3</strong>；<code>A→D</code> 上一轮刚更新成 <code>9</code>，这一轮经过 C 中转 <code>A→C→D = 1+7 = 8</code>（这里用的 <code>C→D=7</code> 是上一轮 B 中转之后的最新值），比 <code>9</code> 更小，再次更新为 <strong>8</strong>。之后再让 <code>A、D</code> 当中转点检查一遍，矩阵不再变化——最终 <code>A</code> 到 <code>D</code> 的最短距离是 <code>8</code>，对应路径 <code>A→C→B→D</code>（<code>1+2+5=8</code>）。</figcaption>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>注意 <code>A→D</code> 被更新了两次：</b>第一次借道 B 从"不可达"降到 <code>9</code>，第二次借道 C（这时候 <code>C→D</code> 已经是借道 B 优化过的 <code>7</code>）又降到 <code>8</code>。这正体现了动态规划"状态转移建立在之前已经算好的结果之上"——<code>dp[k][i][j]</code> 依赖的 <code>dp[k-1][i][k]</code>、<code>dp[k-1][k][j]</code>，本身也可能是前面几轮中转优化过的结果，中转点的效果会像滚雪球一样累积。</div>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · Floyd 最短路</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">const</span> <span class="typ">int</span> INF = <span class="num">0x3f3f3f3f</span>;</td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> dist[MAXN][MAXN], n;  <span class="cmt">// dist[i][j]：15.1 节邻接矩阵初始化后，就是 dp[0][i][j]</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">void</span> <span class="fn">Floyd</span>()</td></tr>
+          <tr><td class="ln">5</td><td class="cd">{</td></tr>
+          <tr class="hl-warn"><td class="ln">6</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> k = <span class="num">1</span>; k &lt;= n; k++)   <span class="cmt">// ★ k（中转点）必须放在最外层，见 ⑥ 陷阱</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++)</td></tr>
+          <tr><td class="ln">8</td><td class="cd">            <span class="kw">for</span> (<span class="typ">int</span> j = <span class="num">1</span>; j &lt;= n; j++)</td></tr>
+          <tr class="hl"><td class="ln">9</td><td class="cd">                dist[i][j] = <span class="fn">min</span>(dist[i][j], dist[i][k] + dist[k][j]);</td></tr>
+          <tr><td class="ln">10</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>代码只有三行，但每一行对应的含义都很明确：</b>第 6 行的 <code>k</code> 对应 dp 的"第几轮中转点"这一维（已经被压缩省略，直接原地滚动更新 <code>dist</code>）；第 7、8 行的 <code>i、j</code> 枚举所有点对；第 9 行就是转移方程本身——<code>dist[i][j]</code>（不经过 k）和 <code>dist[i][k] + dist[k][j]</code>（经过 k 中转）取较小值。循环结束后，<code>dist[i][j]</code> 就是 <code>i</code> 到 <code>j</code> 的最短距离。</div>
+    </div>
+
+    <div class="sub-title" id="complexity">⑤ 复杂度与适用场景</div>
+    <div class="section-body">
+      <p>三层循环，每层都是 <code>O(n)</code>，总时间复杂度 <code>O(n³)</code>；空间上只需要一个 <code>n×n</code> 的矩阵，<code>O(n²)</code>。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>点数 n</th><th>O(n³) 大致运算量</th><th>是否适合用 Floyd</th></tr></thead>
+      <tbody>
+        <tr><td>100</td><td>约 100 万</td><td>非常适合，毫秒级完成</td></tr>
+        <tr><td>1,000</td><td>约 10 亿</td><td>勉强可以，但接近超时边界</td></tr>
+        <tr><td>10,000</td><td>约 1 万亿</td><td>不适合，会严重超时</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>什么时候选 Floyd？</b>点数不多（一般在几百这个量级），并且确实需要<strong>任意两点</strong>之间的最短距离时，Floyd 代码最短、最不容易写错，是最优选择。如果点数较多、但只需要"从某一个点出发到所有点"的最短距离（单源最短路），应该用 15.3 节的 Dijkstra——复杂度更低，能应对大得多的图。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>三层循环的顺序写反，k 没有放在最外层：</b>这是 Floyd 最容易犯的错误——转移方程要求"算 <code>dp[k]</code> 这一轮时，<code>dp[k-1]</code> 必须已经完全算好"，也就是说必须先把 <code>k=1</code> 这一轮的所有 <code>i、j</code> 都更新完，再进入 <code>k=2</code>。如果把 <code>k</code> 放在最内层循环，会在"上一个中转点还没枚举完所有点对"的情况下就提前使用了还没更新完整的数据，算出来的最短路可能是错的（哪怕看起来数值上"差不多"，某些点对的结果会不正确）。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>用 0 表示"不可达"，和"距离恰好是 0"混淆：</b>和 15.1 节邻接矩阵的陷阱一样，初始化"没有边"要用足够大的 <code>INF</code>，不能用 <code>0</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>INF + INF 可能整数溢出：</b>第 9 行 <code>dist[i][k] + dist[k][j]</code>，如果 <code>i、k</code> 和 <code>k、j</code> 都不连通，两边都是 <code>INF</code>，相加会超过 <code>int</code> 能表示的范围，溢出后可能变成一个很小甚至负数的值，被误判成"更短的路径"。解决办法是把 <code>INF</code> 取一个"足够大，但加两次也不会溢出"的值（比如 <code>0x3f3f3f3f</code> 而不是 <code>INT_MAX</code>），这也是本节代码里 <code>INF</code> 取这个特定数值的原因。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>图中存在负权环时，Floyd 会算出错误的负数距离：</b>如果图里有一个总权值为负的环，理论上"最短路"可以无限绕环、无限变小，是没有意义的。Floyd 算法本身不会报错，但可以用来<strong>检测</strong>负环：算完之后检查对角线 <code>dist[i][i]</code>，如果某个 <code>dist[i][i] &lt; 0</code>，说明存在经过 <code>i</code> 的负权环。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>Floyd 解决的是"任意两点"的最短路，代价是 <code>O(n³)</code>、只能应付较小的图。15.3 节的 <strong>Dijkstra</strong> 会回到"单源最短路"这个更常见的问题，用贪心 + 优先队列把复杂度降到 <code>O((V+E) log V)</code>，能处理大得多的图。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十五 图论基础 · 15.2 Floyd 最短路</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A15_01_图的存储.html">← 15.1 图的存储</a>
+      <a class="nav-btn" href="A15_03_Dijkstra最短路.html">15.3 Dijkstra 最短路 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

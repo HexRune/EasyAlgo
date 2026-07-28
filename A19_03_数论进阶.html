@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>19.3 数论进阶 — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "19.3"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--teal-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--teal-mid); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--teal-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--teal-mid); border-bottom: 1px solid #a6ded0; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--teal-mid); background: var(--teal-light); white-space: nowrap; }
+
+  /* 递归追踪表 */
+  .exgcd-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; width: 100%; }
+  .exgcd-table th, .exgcd-table td { padding: 7px 9px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .exgcd-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 10.5px; }
+  .exgcd-table td.base { color: #A6E3A1; font-weight: 700; }
+  .exgcd-table td.res { color: #A6E3A1; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="19.3">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十九 拓展专题</span>
+      <span class="eyebrow-sep">/</span>
+      <span>19.3 数论进阶</span>
+    </div>
+    <h1 class="chapter-title">19.3　数论进阶</h1>
+    <p class="chapter-desc">模运算下没有现成的除法——扩展欧几里得算法能求出"模意义下的倒数"，把除法问题转换成乘法问题。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要扩展欧几里得</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：从 gcd(b, a%b) 反推 gcd(a, b)</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：手算 ExGCD(30, 18)</a></li>
+      <li><span class="toc-num">④</span><a href="#inverse">逆元：模运算下的"倒数"</a></li>
+      <li><span class="toc-num">⑤</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要扩展欧几里得</div>
+    <div class="section-body">
+      <p>1 模块讲过的欧几里得算法（辗转相除法）能求出 <code>gcd(a,b)</code>，但只告诉我们"最大公约数是多少"，没有告诉我们<strong>怎么用 <code>a</code>、<code>b</code> 凑出这个最大公约数</strong>。<strong>扩展欧几里得算法</strong>（Extended Euclidean Algorithm，简称 ExGCD）在求 <code>gcd(a,b)</code> 的同时，还能求出一组整数解 <code>x, y</code>，满足：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">裴蜀定理（贝祖定理）</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#CBA6F7;margin:0">a×x + b×y = gcd(a, b)</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12.5px;color:#A6ADC8;margin:10px 0 0">这样的整数解 <code style="color:#CBA6F7">x, y</code> 一定存在（这是数论里的裴蜀定理），扩展欧几里得算法能把它们具体求出来。这个结果是后面求<strong>逆元</strong>（本节 ④）、解线性同余方程等一系列数论问题的基础工具。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：从 gcd(b, a%b) 反推 gcd(a, b)</div>
+    <div class="section-body">
+      <p>回忆欧几里得算法的递归关系：<code>gcd(a,b) = gcd(b, a mod b)</code>，递归到 <code>b=0</code> 时，<code>gcd(a,0)=a</code>。扩展欧几里得在这个递归的基础上，多带一步"回溯"：假设已经递归算出了 <code>b×x₁ + (a mod b)×y₁ = gcd(b, a mod b)</code>，可以推出一组满足 <code>a×x + b×y = gcd(a,b)</code> 的 <code>x, y</code>——递归返回的过程中，把子问题的解"翻译"成当前问题的解。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>推导步骤</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>已知</td><td>b×x₁ + (a mod b)×y₁ = gcd(b, a mod b) = gcd(a, b)</td></tr>
+        <tr><td>代入 a mod b = a - (a/b)×b</td><td>b×x₁ + (a - (a/b)×b)×y₁ = gcd(a, b)</td></tr>
+        <tr><td>展开、按 a、b 重新归类</td><td>a×y₁ + b×(x₁ - (a/b)×y₁) = gcd(a, b)</td></tr>
+        <tr><td>对照 a×x+b×y=gcd(a,b)</td><td>x = y₁，y = x₁ - (a/b)×y₁</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="trace">③ 图解：手算 ExGCD(30, 18)</div>
+    <div class="section-body">
+      <p>递归求解 <code>ExGCD(30, 18)</code>，先一路递归到底（和普通欧几里得算法的过程一样），再逐层回溯计算 <code>x, y</code>：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">递归 + 回溯的完整过程</div>
+      <table class="exgcd-table">
+        <thead><tr><th>调用</th><th>a mod b</th><th>gcd</th><th>回溯算出的 x, y</th></tr></thead>
+        <tbody>
+          <tr><td>ExGCD(6, 0)</td><td>—（b=0，递归到底）</td><td class="base">6</td><td class="base">x=1, y=0</td></tr>
+          <tr><td>ExGCD(12, 6)</td><td>12 mod 6 = 0</td><td>6</td><td>x=y₁=0，y=x₁-(12/6)×y₁=1-2×0=1</td></tr>
+          <tr><td>ExGCD(18, 12)</td><td>18 mod 12 = 6</td><td>6</td><td>x=y₁=1，y=x₁-(18/12)×y₁=0-1×1=-1</td></tr>
+          <tr><td>ExGCD(30, 18)</td><td>30 mod 18 = 12</td><td>6</td><td class="res">x=y₁=-1，y=x₁-(30/18)×y₁=1-1×(-1)=2</td></tr>
+        </tbody>
+      </table>
+      <figcaption>最终解出 <code>x=-1</code>，<code>y=2</code>：验证一下 <code>30×(-1) + 18×2 = -30+36 = 6</code>，正好等于 <code>gcd(30,18)=6</code>。整个过程只在最底层（<code>b=0</code>）直接给出解 <code>(x=1,y=0)</code>，之后每一层回溯都只是套用②推导出的公式，不需要重新计算。</figcaption>
+    </div>
+
+    <div class="sub-title" id="inverse">④ 逆元：模运算下的"倒数"</div>
+    <div class="section-body">
+      <p>在普通实数运算里，<code>a</code> 除以 <code>b</code> 等于 <code>a</code> 乘以 <code>b</code> 的倒数 <code>1/b</code>。但在<strong>模运算</strong>的世界里没有"分数"这回事——如果需要在模 <code>m</code> 的意义下"除以 <code>a</code>"，就要找到 <code>a</code> 的<strong>逆元</strong> <code>a⁻¹</code>，满足：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">逆元的定义</div>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#CBA6F7;margin:0">a × a⁻¹ ≡ 1 (mod m)</p>
+      <p style="font-family:'Noto Sans SC',sans-serif;font-size:12.5px;color:#A6ADC8;margin:10px 0 0">求出 <code style="color:#CBA6F7">a⁻¹</code> 之后，"除以 <code style="color:#CBA6F7">a</code>"就可以换成"乘以 <code style="color:#CBA6F7">a⁻¹</code>"来处理——这在很多需要"对大数取模"的组合数学、概率类问题里非常常用（比如算出一个很大的分数结果，要求对 <code style="color:#CBA6F7">10⁹+7</code> 取模）。<strong>逆元存在的条件是 <code style="color:#CBA6F7">gcd(a, m) = 1</code></strong>（<code style="color:#CBA6F7">a</code> 和 <code style="color:#CBA6F7">m</code> 互质），否则逆元不存在。</p>
+    </div>
+
+    <div class="section-body">
+      <p>求逆元的方法：把 <code>a×a⁻¹ ≡ 1 (mod m)</code> 改写成 <code>a×x + m×y = 1</code>（这里 <code>gcd(a,m)=1</code>），用 ExGCD 求出的 <code>x</code> 就是答案（如果 <code>x</code> 是负数，加上 <code>m</code> 调整到 <code>[0, m)</code> 范围内）。以求 <code>3</code> 关于模 <code>7</code> 的逆元为例：<code>ExGCD(3, 7)</code> 算出 <code>x=-2</code>，<code>y=1</code>（验证：<code>3×(-2)+7×1=-6+7=1</code>），调整负数：<code>-2 mod 7 = 5</code>。验证 <code>3×5=15=14+1≡1 (mod 7)</code>，<strong><code>3</code> 关于模 <code>7</code> 的逆元是 <code>5</code></strong>。</p>
+    </div>
+
+    <div class="sub-title" id="code">⑤ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 扩展欧几里得与逆元</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 求 a、b 的最大公约数，同时算出满足 a*x+b*y=gcd(a,b) 的 x, y（引用传参带回结果）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">ExGCD</span>(<span class="typ">int</span> a, <span class="typ">int</span> b, <span class="typ">int</span>&amp; x, <span class="typ">int</span>&amp; y)</td></tr>
+          <tr><td class="ln">3</td><td class="cd">{</td></tr>
+          <tr class="hl-ref"><td class="ln">4</td><td class="cd">    <span class="kw">if</span> (b == <span class="num">0</span>) { x = <span class="num">1</span>; y = <span class="num">0</span>; <span class="kw">return</span> a; }  <span class="cmt">// ★ 递归到底：gcd(a,0)=a，此时 x=1,y=0</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">int</span> x1, y1;</td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">int</span> g = <span class="fn">ExGCD</span>(b, a % b, x1, y1);  <span class="cmt">// 先递归求子问题</span></td></tr>
+          <tr class="hl"><td class="ln">7</td><td class="cd">    x = y1;                     <span class="cmt">// ★ 回溯：套用②推导出的公式</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">    y = x1 - (a / b) * y1;</td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">return</span> g;</td></tr>
+          <tr><td class="ln">10</td><td class="cd">}</td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="cmt">// 求 a 关于模 m 的逆元；返回 -1 表示逆元不存在（a、m 不互质）</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="typ">int</span> <span class="fn">Inverse</span>(<span class="typ">int</span> a, <span class="typ">int</span> m)</td></tr>
+          <tr><td class="ln">14</td><td class="cd">{</td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="typ">int</span> x, y;</td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="typ">int</span> g = <span class="fn">ExGCD</span>(a, m, x, y);</td></tr>
+          <tr class="hl-warn"><td class="ln">17</td><td class="cd">    <span class="kw">if</span> (g != <span class="num">1</span>) <span class="kw">return</span> <span class="op">-</span><span class="num">1</span>;  <span class="cmt">// ★ 不互质，逆元不存在</span></td></tr>
+          <tr class="hl-ref"><td class="ln">18</td><td class="cd">    <span class="kw">return</span> ((x % m) + m) % m;  <span class="cmt">// ★ 调整到 [0, m) 范围内</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>还有一种更简单的求逆元方法——费马小定理：</b>如果模数 <code>m</code> 恰好是<strong>质数</strong>，可以证明 <code>a^(m-2) mod m</code> 就是 <code>a</code> 的逆元，用 1.7 节学过的<strong>快速幂</strong>就能求出来，代码比 ExGCD 更短。但这个方法要求 <code>m</code> 必须是质数；如果 <code>m</code> 不是质数（只要求 <code>gcd(a,m)=1</code>），就必须用本节的 ExGCD 方法，适用范围更广。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记检查 gcd(a,m) 是否等于 1 就直接用 ExGCD 求逆元：</b>如果 <code>a</code>、<code>m</code> 不互质，逆元根本不存在——<code>ExGCD</code> 依然会返回一组 <code>x,y</code>，但满足的是 <code>a×x+m×y=gcd(a,m)</code>（不是 <code>1</code>），直接拿这个 <code>x</code> 当逆元用会得到错误结果。必须先判断第 17 行的 <code>g==1</code>，再决定逆元是否存在。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>ExGCD 算出的 x 可能是负数，忘记调整：</b>直接返回的 <code>x</code>（比如本节例子里的 <code>-2</code>）在数学上是正确的解，但作为"模 <code>m</code> 意义下的逆元"，通常要求落在 <code>[0, m)</code> 这个范围内。第 18 行 <code>((x % m) + m) % m</code> 这个写法，和 17.1 节字符串哈希处理负数取模的技巧是同一个道理——先加一个 <code>m</code> 再取模，确保结果非负。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把"求逆元"和"求普通除法"混淆：</b>逆元只在<strong>模运算</strong>的语境下有意义——如果题目根本不涉及取模，就不需要求逆元，普通的整数除法或浮点数除法就够用了。逆元通常出现在"结果需要对某个数取模"（常见于组合数学、概率 DP 等场景）又同时涉及除法运算的题目里。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>全书回顾：</b>从最开始的变量、循环、数组，到本节的扩展欧几里得——这趟旅程走过了 C++ 语法的方方面面，也走过了从枚举、排序、贪心这些基础算法，到搜索、动态规划、图论、字符串、数据结构，一路到树上倍增和博弈论这些进阶专题。不同章节之间反复出现的"状态定义、转移方程"、"贪心选择"、"分治与递归"这些思路，比任何一道具体的题目都更值得留在脑子里——遇到新问题时，先想想它更像本书里学过的哪一类问题，往往就已经找到了解题的方向。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十九 拓展专题 · 19.3 数论进阶</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A19_02_博弈论.html">← 19.2 博弈论</a>
+      <a class="nav-btn" href="index.html">返回目录 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

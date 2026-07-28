@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>18.1 区间 DP — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "18.1"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--amber-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--amber); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--amber-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--amber); border-bottom: 1px solid #F0D9A8; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--amber); background: var(--amber-light); white-space: nowrap; }
+
+  /* 石堆卡片 */
+  .pile-row { display: flex; gap: 8px; }
+  .pile-cell { display: flex; flex-direction: column; align-items: center; min-width: 40px; flex-shrink: 0; }
+  .pile-idx { font-size: 10px; color: #6C7086; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .pile-val {
+    width: 36px; height: 36px; border-radius: 6px; background: #2A2840;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #A6ADC8;
+  }
+
+  /* 区间dp表 */
+  .itv-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .itv-table th, .itv-table td { width: 42px; height: 36px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .itv-table th { background: #1A1830; color: #89B4FA; font-weight: 700; }
+  .itv-table td.na { background: #16141F; color: #2A2840; }
+  .itv-table td.base { color: #6C7086; }
+  .itv-table td.cur { background: rgba(166,227,161,.22); color: #A6E3A1; font-weight: 700; box-shadow: inset 0 0 0 2px #A6E3A1; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="18.1">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十八 动态规划进阶</span>
+      <span class="eyebrow-sep">/</span>
+      <span>18.1 区间 DP</span>
+    </div>
+    <h1 class="chapter-title">18.1　区间 DP</h1>
+    <p class="chapter-desc">状态不再是"第几个数"，而是"一整段区间"——枚举一个分割点，把区间拆成两半分别求解，再合并起来。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">什么是区间 DP</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：枚举分割点，合并两个子区间</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：石子合并问题的完整填表过程</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#complexity">复杂度分析</a></li>
+      <li><span class="toc-num">⑥</span><a href="#pitfall">常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 什么是区间 DP</div>
+    <div class="section-body">
+      <p>13 模块讲过的线性 DP，状态通常是"到第 <code>i</code> 个位置为止"；<strong>区间 DP</strong> 的状态则是一整段<strong>区间</strong> <code>[l, r]</code>，常见于"把一段序列不断合并/分割，求最优代价"这类问题——比如把一排石子堆不断合并成一堆、把一个字符串通过插入字符变成回文串、给一串矩阵加括号求最少乘法次数。这类问题的共同点是：一段区间的最优解，可以通过<strong>枚举一个分割点</strong>，拆成两个更小的子区间分别求解，再合并起来。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：枚举分割点，合并两个子区间</div>
+    <div class="section-body">
+      <p>设 <code>dp[l][r]</code> 表示区间 <code>[l, r]</code> 的最优解。枚举一个分割点 <code>k</code>（<code>l ≤ k &lt; r</code>），把 <code>[l,r]</code> 拆成 <code>[l,k]</code> 和 <code>[k+1,r]</code> 两段，这两段各自的最优解是 <code>dp[l][k]</code> 和 <code>dp[k+1][r]</code>（已经算好），再加上"合并这两段"本身需要付出的代价，取所有分割点里最优的一种：</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>要素</th><th>区间 DP 里对应什么</th></tr></thead>
+      <tbody>
+        <tr><td>状态定义</td><td>dp[l][r]：区间 [l,r] 的最优解（具体含义因题目而异）</td></tr>
+        <tr><td>转移方程</td><td>dp[l][r] = min{ dp[l][k] + dp[k+1][r] + cost(l,r) }，枚举 k∈[l,r-1]</td></tr>
+        <tr><td>初始化</td><td>dp[i][i] = 0（区间只有一个元素，不需要合并，没有代价）</td></tr>
+        <tr><td>填表顺序</td><td><strong>按区间长度从小到大</strong>——先算长度为 2 的区间，再算长度为 3 的……（见 ⑥ 陷阱）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-title" id="trace">③ 图解：石子合并问题的完整填表过程</div>
+    <div class="section-body">
+      <p><strong>石子合并</strong>：有 <code>n</code> 堆石子排成一排，每次只能合并<strong>相邻</strong>的两堆，合并的代价等于这两堆石子数之和，合并后的新堆数量就是这两堆之和。反复合并直到只剩一堆，求<strong>最小的总代价</strong>。用 <code>a = [1, 3, 5, 2]</code>（4 堆）演示：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">原始石堆</div>
+      <div class="pile-row">
+        <div class="pile-cell"><div class="pile-idx">1</div><div class="pile-val">1</div></div>
+        <div class="pile-cell"><div class="pile-idx">2</div><div class="pile-val">3</div></div>
+        <div class="pile-cell"><div class="pile-idx">3</div><div class="pile-val">5</div></div>
+        <div class="pile-cell"><div class="pile-idx">4</div><div class="pile-val">2</div></div>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>这里的 <code>cost(l,r)</code>（合并 <code>[l,r]</code> 这一段最后一步的代价）就是这一段石子的<strong>总和</strong>——用 5.1 节的前缀和可以 <code>O(1)</code> 算出：<code>prefix = [0,1,4,9,11]</code>，<code>sum(l,r) = prefix[r]-prefix[l-1]</code>。</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">dp[l][r] 完整填表结果（按区间长度从小到大依次填）</div>
+      <table class="itv-table">
+        <tr><th></th><th>r=1</th><th>r=2</th><th>r=3</th><th>r=4</th></tr>
+        <tr><th>l=1</th><td class="base">0</td><td>4</td><td>13</td><td class="cur">22</td></tr>
+        <tr><th>l=2</th><td class="na"></td><td class="base">0</td><td>8</td><td>17</td></tr>
+        <tr><th>l=3</th><td class="na"></td><td class="na"></td><td class="base">0</td><td>7</td></tr>
+        <tr><th>l=4</th><td class="na"></td><td class="na"></td><td class="na"></td><td class="base">0</td></tr>
+      </table>
+      <figcaption>对角线 <code>dp[i][i]=0</code> 是初始化的起点。以 <code>dp[1][4]</code>（合并全部 4 堆的最小代价）为例，枚举分割点 <code>k=1,2,3</code>：<code>k=1</code>: <code>dp[1][1]+dp[2][4]+sum(1,4)=0+17+11=28</code>；<code>k=2</code>: <code>dp[1][2]+dp[3][4]+sum(1,4)=4+7+11=<strong>22</strong></code>；<code>k=3</code>: <code>dp[1][3]+dp[4][4]+sum(1,4)=13+0+11=24</code>。三者取最小，<code>dp[1][4]=22</code>，在 <code>k=2</code> 处取得。对应的实际合并方案是：先把 <code>[1,3,5,2]</code> 分成左边 <code>[1,3]</code> 和右边 <code>[5,2]</code> 两组，各自先合并成一堆（代价 <code>4</code> 和 <code>7</code>），再把这两堆合并（代价 <code>4+7=11</code>），总代价 <code>4+7+11=22</code>。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 石子合并（区间 DP）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> a[MAXN], prefix[MAXN], dp[MAXN][MAXN], n;</td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">Sum</span>(<span class="typ">int</span> l, <span class="typ">int</span> r) { <span class="kw">return</span> prefix[r] - prefix[l-<span class="num">1</span>]; }</td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">IntervalDP</span>()</td></tr>
+          <tr><td class="ln">6</td><td class="cd">{</td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> i = <span class="num">1</span>; i &lt;= n; i++) prefix[i] = prefix[i-<span class="num">1</span>] + a[i];</td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="cmt">// dp[i][i] = 0 全局数组默认已经是 0，不需要手动初始化</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr class="hl-warn"><td class="ln">10</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> len = <span class="num">2</span>; len &lt;= n; len++)      <span class="cmt">// ★ 按区间长度从小到大枚举</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    {</td></tr>
+          <tr><td class="ln">12</td><td class="cd">        <span class="kw">for</span> (<span class="typ">int</span> l = <span class="num">1</span>; l + len - <span class="num">1</span> &lt;= n; l++)</td></tr>
+          <tr><td class="ln">13</td><td class="cd">        {</td></tr>
+          <tr><td class="ln">14</td><td class="cd">            <span class="typ">int</span> r = l + len - <span class="num">1</span>;   <span class="cmt">// 由左端点 l 和长度 len 推出右端点 r</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">            dp[l][r] = <span class="num">1e9</span>;</td></tr>
+          <tr class="hl"><td class="ln">16</td><td class="cd">            <span class="kw">for</span> (<span class="typ">int</span> k = l; k &lt; r; k++)         <span class="cmt">// 枚举分割点</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">                dp[l][r] = min(dp[l][r], dp[l][k] + dp[k+<span class="num">1</span>][r] + <span class="fn">Sum</span>(l, r));</td></tr>
+          <tr><td class="ln">18</td><td class="cd">        }</td></tr>
+          <tr><td class="ln">19</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="kw">return</span> dp[<span class="num">1</span>][n];</td></tr>
+          <tr><td class="ln">21</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>三层循环，缺一不可：</b>最外层 <code>len</code> 决定"先算短区间、再算长区间"这个填表顺序；中间层 <code>l</code> 枚举这个长度下所有可能的起点（<code>r</code> 由 <code>l+len-1</code> 直接算出，不需要单独循环）；最内层 <code>k</code> 枚举分割点。<code>dp[l][k]</code> 和 <code>dp[k+1][r]</code> 的区间长度都严格小于 <code>len</code>，按外层循环的顺序，这两个值必然已经算好。</div>
+    </div>
+
+    <div class="sub-title" id="complexity">⑤ 复杂度分析</div>
+    <div class="section-body">
+      <p>状态数是 <code>O(n²)</code>（<code>l</code>、<code>r</code> 各 <code>n</code> 种取值），每个状态转移要枚举分割点 <code>k</code>，<code>O(n)</code>。整体时间复杂度 <code>O(n³)</code>——比线性 DP 慢一个数量级，<code>n</code> 通常不会太大（几百到一千出头比较常见）。</p>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑥ 常见陷阱</div>
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>填表顺序写反，直接按 l、r 从小到大双重循环：</b>这是区间 DP 最容易犯的错误——如果直接写 <code>for(l=1;l&lt;=n;l++) for(r=l;r&lt;=n;r++)</code>，在算 <code>dp[1][4]</code> 时可能 <code>dp[2][4]</code> 还没被算过（因为 <code>r</code> 的内层循环还没跑到需要的组合），导致用到了未初始化的脏数据。正确做法是<strong>按区间长度 <code>len</code> 从小到大</strong>作为最外层循环，确保用到的子区间一定是"更短的、已经算好的"。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记预处理前缀和，每次现算 cost(l,r)：</b>如果 <code>cost(l,r)</code> 本身需要 <code>O(n)</code> 现场累加（而不是像本节这样用前缀和 <code>O(1)</code> 查询），整体复杂度会从 <code>O(n³)</code> 恶化成 <code>O(n⁴)</code>，在数据规模稍大时就会超时。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>dp 初始值设置不当：</b>第 15 行 <code>dp[l][r] = 1e9</code> 是求最小值时的"正无穷"占位，如果题目求的是最大值，要改成一个足够小的负数；如果忘记初始化、或者初始化成 <code>0</code>，<code>min</code>／<code>max</code> 比较时会被这个错误的初始值污染，导致结果不正确。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>接下来：</b>18.2 节的<strong>状压 DP</strong>会引入完全不同的状态表示方式——用一个整数的二进制位，表示"一组物品分别选没选"这样的组合状态，适合物品数量不多（通常在 20 个以内）、但组合关系复杂的问题。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十八 动态规划进阶 · 18.1 区间 DP</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A17_03_Trie字典树.html">← 17.3 Trie 字典树</a>
+      <a class="nav-btn" href="A18_02_状压DP.html">18.2 状压 DP →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

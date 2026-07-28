@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>18.4 数位 DP — 算法文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  .chapter-header::before { content: "18.4"; font-size: 48px; }
+  .chapter-header { border-bottom-color: var(--amber-mid); }
+  .chapter-header .chapter-eyebrow a { color: var(--amber); }
+
+  .diagram-block { background: var(--code-bg); border-radius: var(--r-md); padding: 24px 20px 18px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,.18); overflow-x: auto; }
+  .diagram-block figcaption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.7; font-family: 'Noto Sans SC', sans-serif; border-top: 1px solid #2A2840; padding-top: 12px; }
+  .diagram-block figcaption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #CBA6F7; background: none; border: none; padding: 0; }
+  .diagram-block figcaption strong { color: #F2CDCD; font-weight: 700; }
+  .diagram-title { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin-bottom: 16px; }
+
+  .api-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .api-table thead tr { background: var(--amber-light); }
+  .api-table th { padding: 9px 13px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--amber); border-bottom: 1px solid #F0D9A8; }
+  .api-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; line-height: 1.6; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:nth-child(even) td { background: #FAFAF7; }
+  .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--amber); background: var(--amber-light); white-space: nowrap; }
+
+  /* 数字位卡片 */
+  .dig-row { display: flex; gap: 8px; }
+  .dig-cell { display: flex; flex-direction: column; align-items: center; min-width: 44px; flex-shrink: 0; }
+  .dig-label { font-size: 10px; color: #6C7086; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .dig-box {
+    width: 38px; height: 38px; border-radius: 6px; background: #2A2840;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 700; color: #89B4FA;
+  }
+
+  /* dp分支追踪表 */
+  .dig-table { border-collapse: collapse; margin: 4px auto; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; width: 100%; }
+  .dig-table th, .dig-table td { padding: 8px 10px; text-align: center; border: 1px solid #2A2840; color: #A6ADC8; }
+  .dig-table th { background: #1A1830; color: #89B4FA; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; font-size: 11px; }
+  .dig-table td.res { color: #A6E3A1; font-weight: 700; }
+
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+  .pitfall-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--coral-light); color: var(--coral); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="18.4">
+    <div class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>算法文档 · 模块十八 动态规划进阶</span>
+      <span class="eyebrow-sep">/</span>
+      <span>18.4 数位 DP</span>
+    </div>
+    <h1 class="chapter-title">18.4　数位 DP</h1>
+    <p class="chapter-desc">区间 [1,n] 里 n 可能大到 10¹⁸，没法逐个枚举——按数字的每一位逐位确定，配合记忆化搜索，直接统计满足条件的数有多少个。</p>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">本页目录</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">①</span><a href="#why">为什么需要数位 DP</a></li>
+      <li><span class="toc-num">②</span><a href="#idea">核心思想：逐位确定 + "是否贴着上界"</a></li>
+      <li><span class="toc-num">③</span><a href="#trace">图解：统计 1~23 中不含数字 4 的个数</a></li>
+      <li><span class="toc-num">④</span><a href="#code">完整代码</a></li>
+      <li><span class="toc-num">⑤</span><a href="#pitfall">复杂度与常见陷阱</a></li>
+    </ul>
+  </div>
+
+  <section class="section" id="s0">
+
+    <div class="sub-title" id="why">① 为什么需要数位 DP</div>
+    <div class="section-body">
+      <p>有一类问题：统计区间 <code>[1, n]</code> 里，有多少个数满足某种"数位上的条件"（比如"不包含数字 4"、"各位数字之和是 3 的倍数"）。如果 <code>n</code> 不大，直接从 <code>1</code> 枚举到 <code>n</code> 逐个检查就行；但如果 <code>n</code> 大到 <code>10¹⁸</code> 这种量级，逐个枚举根本不可能在合理时间内跑完。<strong>数位 DP</strong> 不去枚举每一个具体的数，而是<strong>按数字的每一位</strong>去构造，用动态规划统计出满足条件的数一共有多少个。</p>
+    </div>
+
+    <div class="sub-title" id="idea">② 核心思想：逐位确定 + "是否贴着上界"</div>
+    <div class="section-body">
+      <p>把 <code>n</code> 按十进制拆成一个数位数组（从最高位到最低位），从最高位开始，逐位决定当前这一位填哪个数字。核心在于一个叫 <code>tight</code>（"是否贴着上界"）的状态：如果前面已经填的每一位都和 <code>n</code> 对应位置<strong>完全相同</strong>，那么当前这一位最多只能填到 <code>n</code> 对应位置的数字（不能超过，否则拼出来的数会比 <code>n</code> 大）；只要前面某一位填得比 <code>n</code> 对应位置<strong>小</strong>，后面所有位就可以<strong>自由填 0~9</strong>（因为已经比 <code>n</code> 小了，后面无论怎么填都不会超过 <code>n</code>）。</p>
+    </div>
+
+    <table class="api-table">
+      <thead><tr><th>状态</th><th>含义</th><th>这一位能填的范围</th></tr></thead>
+      <tbody>
+        <tr><td>tight = true</td><td>前面每一位都和 n 对应位置一模一样</td><td>0 ~ n 当前这一位的数字（不能更大）</td></tr>
+        <tr><td>tight = false</td><td>前面已经有一位比 n 对应位置小</td><td>0 ~ 9（自由选择）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么 <code>tight=false</code> 之后的状态可以记忆化？</b>一旦 <code>tight</code> 变成 <code>false</code>，剩下要填的位数、以及每一位能自由选择的范围（0~9）就<strong>完全和 <code>n</code> 具体是多少无关</strong>了——只取决于"还剩几位没填"。这正是 12.4 节记忆化搜索的应用场景：只要"剩余位数"相同，<code>tight=false</code> 情况下能凑出的合法方案数一定相同，可以把结果缓存起来，不用重复计算。<code>tight=true</code> 的状态因为全程只有唯一一条路径（贴着 <code>n</code> 走），不会重复出现，不需要缓存。</div>
+    </div>
+
+    <div class="sub-title" id="trace">③ 图解：统计 1~23 中不含数字 4 的个数</div>
+    <div class="section-body">
+      <p>以"统计 <code>[1,23]</code> 中不包含数字 <code>4</code> 的数有多少个"为例。先转换成更容易处理的形式：设 <code>f(n)</code> 表示 <code>[0,n]</code> 中不含数字 <code>4</code> 的数的个数（把 <code>0</code> 也算进去，因为 <code>0</code> 本身不含 <code>4</code>，方便统一处理前导零），那么 <code>[1,n]</code> 里的答案就是 <code>f(n) - 1</code>（减掉多算的 <code>0</code>）。<code>n=23</code>，按位拆成 <code>[2, 3]</code>：</p>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">n = 23 的数位拆解</div>
+      <div class="dig-row">
+        <div class="dig-cell"><div class="dig-label">十位（pos=0）</div><div class="dig-box">2</div></div>
+        <div class="dig-cell"><div class="dig-label">个位（pos=1）</div><div class="dig-box">3</div></div>
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">第一位（十位）的三种选择</div>
+      <table class="dig-table">
+        <thead><tr><th>十位填</th><th>是否等于上界 2</th><th>下一状态</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>否（0&lt;2）</td><td>dp(pos=1, tight=false)</td></tr>
+          <tr><td>1</td><td>否（1&lt;2）</td><td>dp(pos=1, tight=false)</td></tr>
+          <tr><td>2</td><td>是（2=2）</td><td>dp(pos=1, tight=true)</td></tr>
+        </tbody>
+      </table>
+      <figcaption>十位不能填 <code>4</code>（超过上界 <code>2</code> 也不行），可选 <code>0、1、2</code> 三种，其中 <code>0、1</code> 都比上界小，之后个位可以自由填；只有填 <code>2</code>（贴着上界）时，个位仍然要受 <code>n</code> 的个位 <code>3</code> 限制。</figcaption>
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-title">两种子状态的计算</div>
+      <table class="dig-table">
+        <thead><tr><th>状态</th><th>个位能填的范围</th><th>排除数字 4</th><th>方案数</th></tr></thead>
+        <tbody>
+          <tr><td>dp(1, tight=false)</td><td>0~9（自由）</td><td>去掉 4，剩 9 种</td><td class="res">9</td></tr>
+          <tr><td>dp(1, tight=true)</td><td>0~3（贴着上界 3）</td><td>0,1,2,3 都不是 4</td><td class="res">4</td></tr>
+        </tbody>
+      </table>
+      <figcaption><code>dp(0,true) = 2 × dp(1,false) + dp(1,true) = 2×9 + 4 = 22</code>——十位填 <code>0</code> 或 <code>1</code> 各贡献 <code>9</code> 种方案（来自两条独立的 <code>tight=false</code> 分支，但因为状态相同，只需要真正计算一次，第二次直接查缓存），十位填 <code>2</code> 贡献 <code>4</code> 种方案。<code>f(23)=22</code>，最终 <code>[1,23]</code> 的答案是 <code>22-1=21</code>——和直接列出 <code>1~23</code>、数出"不含 4"的个数（排除掉 <code>4</code> 和 <code>14</code> 这两个数，<code>23-2=21</code>）完全一致。</figcaption>
+    </div>
+
+    <div class="sub-title" id="code">④ 完整代码</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span class="code-dot red"></span><span class="code-dot amber"></span><span class="code-dot green"></span></div>
+        <span class="code-lang">C++ · 数位 DP（统计不含数字 4 的个数）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> digits[<span class="num">20</span>], len;    <span class="cmt">// digits：n 按位拆解后的数组（从高位到低位）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">long long</span> memo[<span class="num">20</span>];    <span class="cmt">// memo[pos]：tight=false 时，从 pos 开始还能凑出多少种方案（-1 表示未算过）</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">long long</span> <span class="fn">DFS</span>(<span class="typ">int</span> pos, <span class="typ">bool</span> tight)</td></tr>
+          <tr><td class="ln">5</td><td class="cd">{</td></tr>
+          <tr class="hl-warn"><td class="ln">6</td><td class="cd">    <span class="kw">if</span> (pos == len) <span class="kw">return</span> <span class="num">1</span>;  <span class="cmt">// 所有位都填完了，凑出了一个合法的数</span></td></tr>
+          <tr class="hl-ref"><td class="ln">7</td><td class="cd">    <span class="kw">if</span> (!tight &amp;&amp; memo[pos] != <span class="op">-</span><span class="num">1</span>) <span class="kw">return</span> memo[pos];  <span class="cmt">// ★ 只有 tight=false 才查缓存</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="typ">int</span> upper = tight ? digits[pos] : <span class="num">9</span>;  <span class="cmt">// 贴着上界就只能填到 n 当前这一位；否则自由填到 9</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="typ">long long</span> res = <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="kw">for</span> (<span class="typ">int</span> d = <span class="num">0</span>; d &lt;= upper; d++)</td></tr>
+          <tr><td class="ln">12</td><td class="cd">    {</td></tr>
+          <tr class="hl-warn"><td class="ln">13</td><td class="cd">        <span class="kw">if</span> (d == <span class="num">4</span>) <span class="kw">continue</span>;  <span class="cmt">// 题目条件：不能出现数字 4</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">        res += <span class="fn">DFS</span>(pos + <span class="num">1</span>, tight &amp;&amp; (d == upper));  <span class="cmt">// 只有"贴着上界" 且 "填的正好是上界数字" 才继续贴着</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    }</td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr class="hl-ref"><td class="ln">17</td><td class="cd">    <span class="kw">if</span> (!tight) memo[pos] = res;  <span class="cmt">// ★ 只缓存 tight=false 的结果</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="kw">return</span> res;</td></tr>
+          <tr><td class="ln">19</td><td class="cd">}</td></tr>
+          <tr><td class="ln">20</td><td class="cd"></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="typ">long long</span> <span class="fn">CountNoFour</span>(<span class="typ">long long</span> n)  <span class="cmt">// 统计 [1,n] 中不含数字 4 的个数</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">{</td></tr>
+          <tr><td class="ln">23</td><td class="cd">    len = <span class="num">0</span>;</td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="kw">while</span> (n &gt; <span class="num">0</span>) { digits[len++] = n % <span class="num">10</span>; n /= <span class="num">10</span>; }</td></tr>
+          <tr><td class="ln">25</td><td class="cd">    reverse(digits, digits + len);  <span class="cmt">// 变成从高位到低位</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">    memset(memo, <span class="op">-</span><span class="num">1</span>, <span class="kw">sizeof</span>(memo));</td></tr>
+          <tr><td class="ln">27</td><td class="cd">    <span class="kw">return</span> <span class="fn">DFS</span>(<span class="num">0</span>, <span class="kw">true</span>) - <span class="num">1</span>;  <span class="cmt">// -1：减掉多算的数字 0</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd">}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>本质是 12.4 节记忆化搜索在"数位"这个特殊状态空间上的应用：</b>第 6 行的终止条件、第 7 行的查缓存、第 17 行的存缓存，和 12.4 节滑雪问题的写法结构完全一样，唯一的区别是这里的"状态"是 <code>(pos, tight)</code>，而且只有 <code>tight=false</code> 时才值得缓存（<code>tight=true</code> 的状态在整个递归过程中，对每个 <code>pos</code> 最多只会经过一次，缓存它没有意义）。</div>
+    </div>
+
+    <div class="sub-title" id="pitfall">⑤ 复杂度与常见陷阱</div>
+    <div class="section-body">
+      <p>状态数是 <code>O(位数)</code>（<code>tight=false</code> 时每个 <code>pos</code> 只算一次），每个状态枚举 <code>0~9</code> 共 <code>10</code> 种选择，整体复杂度大约是 <code>O(位数 × 10)</code>——即使 <code>n</code> 大到 <code>10¹⁸</code>（19 位），也只需要几百次计算，远比逐个枚举快得多。</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>把 tight=true 的状态也拿去查缓存：</b>如果不加区分，把 <code>tight=true</code> 的结果也存进 <code>memo[pos]</code>，会和 <code>tight=false</code> 的正确结果互相覆盖、污染——因为同一个 <code>pos</code>，<code>tight=true</code> 和 <code>tight=false</code> 对应的"能填的范围"通常不同，答案也不同，混在一起会导致后续查询用错缓存。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>忘记"求 [l,r] 用两次 [0,x] 相减"：</b>本节代码只处理了 <code>[1,n]</code> 这种从 <code>1</code> 开始的区间。如果题目要求的是任意区间 <code>[l,r]</code>，标准做法是分别计算 <code>CountNoFour(r)</code> 和 <code>CountNoFour(l-1)</code>，再相减——这一点和 5.1 节前缀和的思路是一致的：<code>[l,r]</code> 的答案 <code>= f(r) - f(l-1)</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">⚠</div>
+        <div class="pitfall-body"><b>题目涉及"数字和"、"相邻数字关系"等更复杂条件时，状态设计不够：</b>本节的例子只需要 <code>(pos, tight)</code> 就够了，因为"是否含 4"只看当前这一位本身。如果题目条件涉及"目前为止的数字和"、"上一位填的是什么数字"这类需要额外记忆的信息，状态要相应增加维度，比如 <code>dp[pos][tight][目前数字和]</code>，思路不变，但状态设计需要根据具体条件调整。</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🏆</span>
+      <div><b>模块小结：</b>18.1～18.4 节把动态规划的状态设计方式又拓展了几种：区间 DP 的状态是"一段区间"，状压 DP 的状态是"一个集合"，树形 DP 的状态挂在"树的节点"上，数位 DP 的状态是"数字的某一位，加上是否贴着上界"。四种问题表面上差异很大，但都遵循同一套动态规划的基本框架——状态定义、转移方程、初始化、正确的计算顺序（无论是填表还是递归），这套框架本身才是贯穿始终、真正值得掌握的核心。</div>
+    </div>
+
+  </section>
+
+  <footer class="doc-footer">
+    <p>算法文档 · 模块十八 动态规划进阶 · 18.4 数位 DP</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="A18_03_树形DP.html">← 18.3 树形 DP</a>
+      <a class="nav-btn" href="index.html">返回目录 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
