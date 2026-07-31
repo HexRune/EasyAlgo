@@ -232,6 +232,14 @@
     --grp-color: var(--coral-mid); --grp-color-mid: var(--coral-mid); --grp-color-light: var(--coral-light);
   }
   @media (max-width: 700px) { .ch6-flat-items { grid-template-columns: repeat(1, 1fr); } }
+
+  /* 第八章：3 个等大小卡片，不分组 */
+  .ch8-flat-items {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin-bottom: 18px;
+    --grp-color: var(--pink-dark); --grp-color-mid: var(--pink-mid); --grp-color-light: var(--pink-light);
+  }
+  @media (max-width: 700px) { .ch8-flat-items { grid-template-columns: repeat(1, 1fr); } }
   .card-num {
     flex-shrink: 0;
     width: 40px; height: 40px;
@@ -635,16 +643,32 @@
       <div class="card-arrow">→</div>
     </a>
 
-    <!-- 第八章 -->
-    <a class="chapter-card" href="08_函数.html">
-      <div class="card-num">08</div>
-      <div class="card-body">
-        <div class="card-chapter">第八章</div>
-        <div class="card-title">函数</div>
-        <div class="card-desc">定义与调用 · 递归 · 内联函数</div>
+    <!-- 第八章：整块大卡片，内部 3 个小节等大小展示，均可点击跳转 -->
+    <div class="stl-mega-card collapsed">
+
+      <div class="stl-mega-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <div class="card-num">08</div>
+        <div class="card-body">
+          <div class="card-chapter">第八章</div>
+          <div class="card-title">函数</div>
+          <div class="card-desc">定义与调用 · 参数详解 · 默认参数 · 函数重载 · 内联函数 —— 点击下方任意小节直达对应页面</div>
+        </div>
+        <span class="mega-collapse-badge"><span class="mcb-icon">⌄</span></span>
       </div>
-      <div class="card-arrow">→</div>
-    </a>
+
+      <div class="stl-groups">
+
+        <div class="ch8-flat-items">
+          <a class="stl-item" href="08_01_函数基础.html"><span class="si-name">8.1 函数基础</span><span class="si-desc">定义 · 调用 · 声明</span></a>
+          <a class="stl-item" href="08_02_函数参数详解.html"><span class="si-name">8.2 函数参数详解</span><span class="si-desc">值 / 引用 / 指针传递 · 默认参数</span></a>
+          <a class="stl-item" href="08_03_函数重载与内联函数.html"><span class="si-name">8.3 函数重载与内联函数</span><span class="si-desc">重载匹配 · inline</span></a>
+        </div>
+
+      </div>
+      <!-- /.stl-groups -->
+
+    </div>
+    <!-- /.stl-mega-card (ch8) -->
 
     <!-- 第九章 -->
     <a class="chapter-card" href="09_指针与引用.html">

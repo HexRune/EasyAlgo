@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8.2 函数参数详解 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "8.2"; }
+
+  /* ── 子导航组件（ch08 风格，粉色系） ── */
+  .ch08-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch08-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch08-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch08-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch08-nav-item:hover { border-color: var(--pink-mid); color: var(--pink-dark); }
+  .ch08-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch08-nav-item.active { background: var(--pink-dark); color: #fff; border-color: var(--pink-dark); }
+  .ch08-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* 值传递 vs 引用传递 vs 指针传递对比（网格布局；.pass-card 等已在公共样式） */
+  .pass-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0 }
+  .pass-result { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-top: 6px }
+  .val-result { background: var(--blue-light); color: var(--blue) }
+  .ref-result { background: var(--amber-light); color: var(--amber) }
+
+  /* 内存地址可视化（参数传递用） */
+  .mem-visual {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 20px 24px; margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    overflow-x: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+  .mv-title { font-size: 11px; color: #6C7086; margin-bottom: 14px; letter-spacing: .06em }
+  .mv-grid { display: flex; gap: 4px; align-items: stretch; flex-wrap: nowrap }
+  .mv-cell { display: flex; flex-direction: column; align-items: center; min-width: 78px; flex-shrink: 0 }
+  .mv-box { width: 100%; height: 52px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; border: 2px solid; flex-shrink: 0 }
+  .mv-box.var-a { background: rgba(250,179,135,.15); border-color: rgba(250,179,135,.5); color: var(--code-num) }
+  .mv-box.var-b { background: rgba(166,227,161,.15); border-color: rgba(166,227,161,.5); color: var(--code-str) }
+  .mv-box.ptr-p { background: rgba(137,180,250,.15); border-color: rgba(137,180,250,.5); color: var(--code-fn) }
+  .mv-box.shared { background: rgba(203,166,247,.18); border-color: rgba(203,166,247,.55); color: var(--code-kw) }
+  .mv-addr { font-size: 10.5px; color: #6C7086; margin-top: 5px; text-align: center }
+  .mv-name { font-size: 12px; color: var(--code-text); margin-bottom: 5px; text-align: center }
+  .mv-arrow { display: flex; align-items: center; gap: 0; align-self: center; padding: 0 4px; margin-top: 18px }
+  .mv-arrow-line { height: 2px; width: 28px; background: var(--code-op) }
+  .mv-arrow-head { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid var(--code-op) }
+  .mv-legend { display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap }
+  .mv-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #6C7086 }
+  .mv-legend-box { width: 14px; height: 14px; border-radius: 3px; border: 2px solid; flex-shrink: 0 }
+
+  /* 易错点列表（默认参数节使用） */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--pink-light); color: var(--pink-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="8.2">
+    <p class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第八章 · 函数</span>
+      <span class="eyebrow-sep">/</span>
+      <span>8.2 函数参数详解</span>
+    </p>
+    <h1 class="chapter-title">8.2　函数参数详解</h1>
+    <p class="chapter-desc">参数是函数与外界沟通的桥梁。本节讲清楚值传递、引用传递、指针传递这三种"数据怎么送进函数"的方式，以及能让调用更省事的默认参数。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch08-nav">
+    <div class="ch08-nav-label">第八章 · 函数</div>
+    <div class="ch08-nav-items">
+      <a class="ch08-nav-item" href="08_01_函数基础.html"><span class="cni-num">8.1</span><span class="cni-name">函数基础</span></a>
+      <a class="ch08-nav-item active" href="08_02_函数参数详解.html"><span class="cni-num">8.2</span><span class="cni-name">函数参数详解</span></a>
+      <a class="ch08-nav-item" href="08_03_函数重载与内联函数.html"><span class="cni-num">8.3</span><span class="cni-name">函数重载与内联函数</span></a>
+    </div>
+  </nav>
+
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">8.2.1</span>三种传递方式总览</a></li>
+      <li><a href="#s2"><span class="toc-num">8.2.2</span>值传递（Pass by Value）</a></li>
+      <li><a href="#s3"><span class="toc-num">8.2.3</span>引用传递（Pass by Reference）</a></li>
+      <li><a href="#s4"><span class="toc-num">8.2.4</span>指针传递（Pass by Pointer）</a></li>
+      <li><a href="#s5"><span class="toc-num">8.2.5</span>三种方式横向对比</a></li>
+      <li><a href="#s6"><span class="toc-num">8.2.6</span>默认参数</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 8.2.1 总览 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">8.2.1</p>
+    <h2 class="section-title">三种传递方式总览</h2>
+    <div class="section-body">
+      <p>C++ 中函数参数共有三种传递方式：<strong>值传递</strong>、<strong>引用传递</strong>和<strong>指针传递</strong>。三者的核心区别在于：函数内对参数的操作，是否能影响到调用方的原始变量。</p>
+    </div>
+
+    <div class="pass-compare" style="grid-template-columns: 1fr 1fr 1fr;">
+      <div class="pass-card">
+        <div class="pass-head val-h"><span class="pass-icon">📋</span><span class="pass-title">① 值传递</span></div>
+        <div class="pass-body">
+          传入原变量的<strong>拷贝副本</strong>，函数内的修改与原变量完全隔离。<br><br>
+          写法：<code>int x</code><br>
+          调用：<code>f(a)</code><br>
+          <span class="pass-result val-result">❌ 不影响原变量</span>
+        </div>
+      </div>
+      <div class="pass-card">
+        <div class="pass-head ref-h"><span class="pass-icon">🔗</span><span class="pass-title">② 引用传递</span></div>
+        <div class="pass-body">
+          传入原变量的<strong>别名</strong>，函数内操作参数就是操作原变量本身。<br><br>
+          写法：<code>int &amp;x</code><br>
+          调用：<code>f(a)</code>（同值传递，自动绑定）<br>
+          <span class="pass-result ref-result">✅ 直接修改原变量</span>
+        </div>
+      </div>
+      <div class="pass-card">
+        <div class="pass-head" style="background:rgba(203,166,247,.1)"><span class="pass-icon">📍</span><span class="pass-title" style="color:var(--accent)">③ 指针传递</span></div>
+        <div class="pass-body">
+          传入原变量的<strong>内存地址</strong>，函数内通过解引用 <code>*</code> 修改原变量。<br><br>
+          写法：<code>int *x</code><br>
+          调用：<code>f(&amp;a)</code>（需取地址）<br>
+          <span class="pass-result" style="background:var(--accent-light);color:var(--accent-dark)">✅ 可修改原变量</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.2.2 值传递 ═══ -->
+  <section class="section" id="s2">
+    <p class="section-label">8.2.2</p>
+    <h2 class="section-title">值传递（Pass by Value）</h2>
+    <div class="section-body">
+      <p>最常用的默认方式。调用时将实参的值<strong>复制一份</strong>传给形参，两者互不干扰。适合传递小型数据（int、double、char 等）且不需要修改原值的场景。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 值传递</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">void</span> <span class="fn">TryDouble</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span><span class="pnc">)</span>        <span class="cmt">// x 是副本</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="fn">x</span> <span class="op">=</span> <span class="fn">x</span> <span class="op">*</span> <span class="num">2</span><span class="pnc">;</span>               <span class="cmt">// 只改了副本</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数内 x = "</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span><span class="pnc">;</span> <span class="cmt">// 10</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">5</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">10</td><td class="cd">    <span class="fn">TryDouble</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">);</span>            <span class="cmt">// 传入 a 的副本</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数外 a = "</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">;</span> <span class="cmt">// 仍是 5，原变量未变</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 值传递内存可视化：两块独立内存，互不相干 -->
+    <div class="mem-visual">
+      <div class="mv-title">TryDouble(a) 调用瞬间 —— a 和 x 是两块完全独立的内存</div>
+      <div class="mv-grid">
+        <div class="mv-cell">
+          <div class="mv-name" style="color:var(--code-num)">a（main 里）</div>
+          <div class="mv-box var-a">5</div>
+          <div class="mv-addr">0x1000</div>
+        </div>
+        <div class="mv-cell" style="margin-left:20px">
+          <div class="mv-name" style="color:var(--code-fn)">x（函数里的副本）</div>
+          <div class="mv-box ptr-p">5 → 10</div>
+          <div class="mv-addr">0x2000（另一块地址）</div>
+        </div>
+      </div>
+      <div class="mv-legend">
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(250,179,135,.15);border-color:rgba(250,179,135,.5)"></div>a 的地址是 0x1000，从头到尾没变过</div>
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.5)"></div>x 是另一块地址 0x2000，被改成 10 也不会影响 a</div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>内存模型：</b>值传递会在栈上额外分配一块空间存放副本。对于 <code>int</code> 这样的小型类型开销极小；但若传递大型结构体或 <code>string</code>，拷贝成本较高，此时应改用引用传递。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.2.3 引用传递 ═══ -->
+  <section class="section" id="s3">
+    <p class="section-label">8.2.3</p>
+    <h2 class="section-title">引用传递（Pass by Reference）</h2>
+    <div class="section-body">
+      <p>在参数类型后加 <code>&amp;</code>，函数接收的是原变量的<strong>别名</strong>——形参和实参指向同一块内存，对形参的任何操作都直接作用于原变量。调用时写法和值传递完全相同，<code>&amp;</code> 只写在函数定义处。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 引用传递</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl-ref"><td class="ln">1</td><td class="cd"><span class="kw">void</span> <span class="fn">RealDouble</span><span class="pnc">(</span><span class="typ">int</span> <span class="op">&amp;</span><span class="fn">x</span><span class="pnc">)</span>     <span class="cmt">// &amp; 表示引用，x 就是原变量的别名</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-ref"><td class="ln">3</td><td class="cd">    <span class="fn">x</span> <span class="op">=</span> <span class="fn">x</span> <span class="op">*</span> <span class="num">2</span><span class="pnc">;</span>               <span class="cmt">// 直接修改原变量</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数内 x = "</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span><span class="pnc">;</span> <span class="cmt">// 10</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 经典用途：交换两个变量</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="kw">void</span> <span class="fn">Swap</span><span class="pnc">(</span><span class="typ">int</span> <span class="op">&amp;</span><span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="op">&amp;</span><span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="typ">int</span> <span class="fn">tmp</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">a</span> <span class="op">=</span> <span class="fn">b</span><span class="pnc">;</span> <span class="fn">b</span> <span class="op">=</span> <span class="fn">tmp</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">5</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd">    <span class="fn">RealDouble</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">);</span>           <span class="cmt">// 调用写法与值传递相同</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数外 a = "</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">;</span> <span class="cmt">// 10，原变量已修改</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="typ">int</span> <span class="fn">x</span> <span class="op">=</span> <span class="num">3</span><span class="pnc">,</span> <span class="fn">y</span> <span class="op">=</span> <span class="num">7</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">21</td><td class="cd">    <span class="fn">Swap</span><span class="pnc">(</span><span class="fn">x</span><span class="pnc">,</span> <span class="fn">y</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">y</span><span class="pnc">;</span>   <span class="cmt">// 7 3</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 引用传递内存可视化：a 和 x 是同一块内存的两个名字 -->
+    <div class="mem-visual">
+      <div class="mv-title">RealDouble(a) 调用瞬间 —— a 和 x 其实是同一块内存的两个名字</div>
+      <div class="mv-grid">
+        <div class="mv-cell">
+          <div class="mv-name" style="color:var(--code-kw)">a（main 里）/ x（引用形参）</div>
+          <div class="mv-box shared">5 → 10</div>
+          <div class="mv-addr">同一个地址 0x1000</div>
+        </div>
+      </div>
+      <div class="mv-legend">
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(203,166,247,.18);border-color:rgba(203,166,247,.55)"></div>只有一块内存，只是同时挂了 a、x 两个名字牌</div>
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(203,166,247,.18);border-color:rgba(203,166,247,.55)"></div>不管通过哪个名字改，改的都是同一个值</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>const 引用：只读不改</b><br>如果只想避免大对象拷贝、但不需要修改原值，可以用 <code>const int &amp;x</code>。编译器会阻止你在函数内修改 <code>x</code>，既安全又高效。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.2.4 指针传递 ═══ -->
+  <section class="section" id="s4">
+    <p class="section-label">8.2.4</p>
+    <h2 class="section-title">指针传递（Pass by Pointer）</h2>
+    <div class="section-body">
+      <p>将原变量的<strong>内存地址</strong>传入函数，形参是一个指针变量（<code>int *x</code>）。函数内需要用解引用运算符 <code>*x</code> 才能访问或修改原变量的值。调用时须用取地址运算符 <code>&amp;a</code> 传入地址。</p>
+      <p>指针传递与引用传递效果相同（都能修改原变量），但写法更繁琐。在 C++ 中<strong>优先使用引用传递</strong>；指针传递主要出现在与 C 语言兼容、或需要传递数组的场景。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 指针传递</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl"><td class="ln">1</td><td class="cd"><span class="kw">void</span> <span class="fn">PtrDouble</span><span class="pnc">(</span><span class="typ">int</span> <span class="op">*</span><span class="fn">x</span><span class="pnc">)</span>      <span class="cmt">// x 是指向 int 的指针</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="op">*</span><span class="fn">x</span> <span class="op">=</span> <span class="op">*</span><span class="fn">x</span> <span class="op">*</span> <span class="num">2</span><span class="pnc">;</span>            <span class="cmt">// 解引用：通过地址修改原变量</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数内 *x = "</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">x</span><span class="pnc">;</span> <span class="cmt">// 10</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 经典用途：指针版 Swap</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="kw">void</span> <span class="fn">PtrSwap</span><span class="pnc">(</span><span class="typ">int</span> <span class="op">*</span><span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="op">*</span><span class="fn">b</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="typ">int</span> <span class="fn">tmp</span> <span class="op">=</span> <span class="op">*</span><span class="fn">a</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="op">*</span><span class="fn">a</span> <span class="op">=</span> <span class="op">*</span><span class="fn">b</span><span class="pnc">;</span> <span class="op">*</span><span class="fn">b</span> <span class="op">=</span> <span class="fn">tmp</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">5</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">17</td><td class="cd">    <span class="fn">PtrDouble</span><span class="pnc">(</span><span class="op">&amp;</span><span class="fn">a</span><span class="pnc">);</span>           <span class="cmt">// 传地址：&amp;a</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"函数外 a = "</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span><span class="pnc">;</span> <span class="cmt">// 10，原变量已修改</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="typ">int</span> <span class="fn">x</span> <span class="op">=</span> <span class="num">3</span><span class="pnc">,</span> <span class="fn">y</span> <span class="op">=</span> <span class="num">7</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">21</td><td class="cd">    <span class="fn">PtrSwap</span><span class="pnc">(</span><span class="op">&amp;</span><span class="fn">x</span><span class="pnc">,</span> <span class="op">&amp;</span><span class="fn">y</span><span class="pnc">);</span>         <span class="cmt">// 注意：传 &amp;x 不是 x</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">x</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">y</span><span class="pnc">;</span>   <span class="cmt">// 7 3</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 指针传递内存可视化：x 存的是地址，箭头指向 a -->
+    <div class="mem-visual">
+      <div class="mv-title">PtrDouble(&amp;a) 调用瞬间 —— x 里存的不是数值，而是 a 的地址</div>
+      <div class="mv-grid">
+        <div class="mv-cell">
+          <div class="mv-name" style="color:var(--code-fn)">x（指针形参）</div>
+          <div class="mv-box ptr-p" style="font-size:12px">0x1000</div>
+          <div class="mv-addr">0x2000</div>
+        </div>
+        <div class="mv-arrow">
+          <div class="mv-arrow-line"></div>
+          <div class="mv-arrow-head"></div>
+        </div>
+        <div class="mv-cell">
+          <div class="mv-name" style="color:var(--code-num)">a（main 里）</div>
+          <div class="mv-box var-a">5 → 10</div>
+          <div class="mv-addr">0x1000</div>
+        </div>
+      </div>
+      <div class="mv-legend">
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.5)"></div>x 自己也占一块内存（0x2000），但存的内容是 a 的地址</div>
+        <div class="mv-legend-item"><div class="mv-legend-box" style="background:rgba(250,179,135,.15);border-color:rgba(250,179,135,.5)"></div>写 <code>*x</code> 就是"顺着箭头走过去"，操作箭头指向的 a</div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>指针 vs 引用的区别：</b>引用一旦绑定就不能改变指向，而指针可以指向不同变量，也可以为 <code>nullptr</code>（空指针）。因此指针比引用更灵活，但也更危险——解引用空指针会导致程序崩溃。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>本节只介绍参数传递中指针的基本用法。</b>指针的完整机制（指针运算、动态内存、多级指针等）将在 <a href="09_指针与引用.html" style="color:var(--accent);font-weight:600;">第九章「指针与引用」</a> 中系统讲解。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.2.5 对比 ═══ -->
+  <section class="section" id="s5">
+    <p class="section-label">8.2.5</p>
+    <h2 class="section-title">三种方式横向对比</h2>
+    <table class="advice-table">
+      <thead>
+        <tr><th>对比项</th><th>值传递</th><th>引用传递</th><th>指针传递</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>形参写法</td>
+          <td><code>int x</code></td>
+          <td><code>int &amp;x</code></td>
+          <td><code>int *x</code></td>
+        </tr>
+        <tr>
+          <td>调用写法</td>
+          <td><code>f(a)</code></td>
+          <td><code>f(a)</code></td>
+          <td><code>f(&amp;a)</code></td>
+        </tr>
+        <tr>
+          <td>函数内访问</td>
+          <td><code>x</code>（操作副本）</td>
+          <td><code>x</code>（操作原变量）</td>
+          <td><code>*x</code>（解引用操作原变量）</td>
+        </tr>
+        <tr>
+          <td>能否修改原变量</td>
+          <td>❌ 不能</td>
+          <td>✅ 能</td>
+          <td>✅ 能</td>
+        </tr>
+        <tr>
+          <td>是否产生拷贝</td>
+          <td>✅ 产生（开销大）</td>
+          <td>❌ 不产生</td>
+          <td>❌ 不产生（仅传地址）</td>
+        </tr>
+        <tr>
+          <td>可以为空</td>
+          <td>—</td>
+          <td>❌ 引用必须绑定有效变量</td>
+          <td>✅ 可以是 <code>nullptr</code></td>
+        </tr>
+        <tr>
+          <td>推荐使用场景</td>
+          <td>读取小型数据、不需修改原值</td>
+          <td>需修改原值，或传递大对象（加 const）</td>
+          <td>与 C 语言兼容、传递数组、动态内存</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>参数选择建议：</b><br>
+        · 只读小数据 → <b>值传递</b><br>
+        · 需要修改原值 / 传大对象 → <b>引用传递</b>（最常用）<br>
+        · 传大对象但不修改 → <b><code>const</code> 引用</b>（最优雅）<br>
+        · 传数组 / 与 C 风格库交互 → <b>指针传递</b>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.2.6 默认参数（新增） ═══ -->
+  <section class="section" id="s6">
+    <p class="section-label">8.2.6</p>
+    <h2 class="section-title">默认参数</h2>
+    <div class="section-body">
+      <p>有些参数在大多数情况下都传同一个值，只有极少数情况才需要改。C++ 允许在定义函数时，给形参预设一个<strong>默认值</strong>——调用时如果省略这个实参，就自动使用默认值；如果传了，就用传入的值覆盖默认值。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 默认参数基本用法</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl"><td class="ln">1</td><td class="cd"><span class="typ">void</span> <span class="fn">PrintLine</span><span class="pnc">(</span><span class="typ">string</span> <span class="fn">msg</span><span class="pnc">,</span> <span class="typ">char</span> <span class="fn">sep</span> <span class="op">=</span> <span class="str">'-'</span><span class="pnc">)</span>  <span class="cmt">// sep 有默认值 '-'</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">20</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span> <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">sep</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span> <span class="op">&lt;&lt;</span> <span class="fn">msg</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-ret"><td class="ln">9</td><td class="cd">    <span class="fn">PrintLine</span><span class="pnc">(</span><span class="str">"Hello"</span><span class="pnc">);</span>        <span class="cmt">// 省略 sep，自动用默认值 '-'</span></td></tr>
+          <tr class="hl-ret"><td class="ln">10</td><td class="cd">    <span class="fn">PrintLine</span><span class="pnc">(</span><span class="str">"World"</span><span class="pnc">,</span> <span class="str">'*'</span><span class="pnc">);</span>   <span class="cmt">// 传入 '*'，覆盖默认值</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>可以理解成"预填好的表格"：</b>默认参数就像一张已经帮你填好大部分内容的表格——大多数情况直接交上去就行（省略该实参），只有个别情况需要改一下再交（显式传入新值）。</div>
+    </div>
+
+    <h3 class="sub-title">规则一：默认参数必须从右往左连续设置</h3>
+    <div class="section-body">
+      <p>一旦某个参数有了默认值，它<strong>右边</strong>的所有参数也必须有默认值，不能中间空出一个没有默认值的参数——因为调用时省略的实参只能从右边开始省略，编译器没法猜中间空缺的是哪个。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 默认参数的顺序规则</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// ✅ 正确：默认参数从右往左连续</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">void</span> <span class="fn">F1</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">c</span> <span class="op">=</span> <span class="num">2</span><span class="pnc">);</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// ❌ 错误：a 有默认值，但右边的 b 没有——编译不通过</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">void</span> <span class="fn">F2</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">);</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title">规则二：默认值只能出现一次</h3>
+    <div class="section-body">
+      <p>如果函数既有声明又有定义（见 8.1.3 节），默认值只能写在<strong>其中一处</strong>，通常写在声明里，定义处不再重复写默认值——写两遍反而会导致编译错误。</p>
+    </div>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>调用时不能跳过中间参数：</b>只能从右往左省略实参，不能"只省略中间那个"。比如 <code>F1(int a, int b=1, int c=2)</code>，调用 <code>F1(5, , 10)</code> 是非法的，必须写全 <code>F1(5, 1, 10)</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>默认值别写重了：</b>声明处写了 <code>int b = 1</code>，定义处又写一遍 <code>int b = 1</code>，编译器会报"重复默认参数"错误——定义处直接写 <code>int b</code> 即可。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>默认参数 + 函数重载可能产生二义性：</b>如果同时存在 <code>void F(int a)</code> 和 <code>void F(int a, int b = 5)</code>，调用 <code>F(10)</code> 时两个函数都能满足调用，编译器不知道选哪个，会报错。下一节「函数重载」会详细展开这个陷阱。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第八章 函数 · 8.2 函数参数详解</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="08_01_函数基础.html">← 8.1 函数基础</a>
+      <a class="nav-btn" href="08_03_函数重载与内联函数.html">8.3 函数重载与内联函数 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

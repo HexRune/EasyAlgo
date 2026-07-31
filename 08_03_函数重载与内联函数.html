@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8.3 函数重载与内联函数 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "8.3"; }
+
+  /* ── 子导航组件（ch08 风格，粉色系） ── */
+  .ch08-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch08-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch08-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch08-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch08-nav-item:hover { border-color: var(--pink-mid); color: var(--pink-dark); }
+  .ch08-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch08-nav-item.active { background: var(--pink-dark); color: #fff; border-color: var(--pink-dark); }
+  .ch08-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* 重载函数集合卡片 */
+  .overload-set {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 18px 22px; margin: 18px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+  .os-title { font-size: 11px; color: #6C7086; margin-bottom: 12px; letter-spacing: .06em; font-family: 'Noto Sans SC', system-ui, sans-serif; }
+  .os-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .os-name { color: var(--code-fn); font-weight: 700; }
+  .os-note { color: #6C7086; font-size: 12px; font-family: 'Noto Sans SC', system-ui, sans-serif; margin-left: auto; }
+
+  /* 调用匹配过程可视化 */
+  .match-diagram {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 20px 24px; margin: 18px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    overflow-x: auto;
+  }
+  .md-call { color: var(--code-text); font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+  .md-call span { color: var(--code-num); }
+  .md-candidates { display: flex; flex-direction: column; gap: 8px; }
+  .md-cand { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1px solid; }
+  .md-cand.match { background: rgba(166,227,161,.12); border-color: rgba(166,227,161,.4); color: var(--code-str); }
+  .md-cand.dim { background: rgba(255,255,255,.02); border-color: #2A2840; color: #6C7086; }
+  .md-tag { font-size: 11px; font-family: 'Noto Sans SC', system-ui, sans-serif; padding: 1px 7px; border-radius: 4px; flex-shrink: 0; }
+  .md-cand.match .md-tag { background: rgba(166,227,161,.25); color: var(--code-str); }
+  .md-cand.dim .md-tag { background: #2A2840; color: #6C7086; }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--pink-light); color: var(--pink-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+
+  /* 内联函数：调用开销 vs 内联展开对比 */
+  .inline-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
+  .inline-card { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); }
+  .inline-head { padding: 10px 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+  .inline-head.before { background: var(--coral-light); color: var(--coral); }
+  .inline-head.after  { background: var(--teal-light); color: var(--teal); }
+  .inline-body { padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--code-bg); color: var(--code-text); line-height: 1.9; }
+  .inline-body .il-step { color: #6C7086; }
+  .inline-body .il-hl { color: var(--code-str); }
+  @media (max-width: 700px) { .inline-compare { grid-template-columns: 1fr; } }
+
+  /* 适用/不适用场景卡片 */
+  .fit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .fit-card { border-radius: var(--r-md); padding: 14px 16px; border: 1px solid; }
+  .fit-card.good { background: var(--teal-light); border-color: var(--teal-mid); }
+  .fit-card.bad  { background: var(--coral-light); border-color: var(--coral-mid); }
+  .fit-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+  .fit-card.good .fit-title { color: var(--teal); }
+  .fit-card.bad .fit-title { color: var(--coral); }
+  .fit-list { font-size: 13px; line-height: 1.8; }
+  .fit-card.good .fit-list { color: var(--teal); }
+  .fit-card.bad .fit-list { color: var(--coral); }
+  @media (max-width: 700px) { .fit-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="8.3">
+    <p class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第八章 · 函数</span>
+      <span class="eyebrow-sep">/</span>
+      <span>8.3 函数重载与内联函数</span>
+    </p>
+    <h1 class="chapter-title">8.3　函数重载与内联函数</h1>
+    <p class="chapter-desc">同一个函数名可以对应多种不同的参数组合吗？调用一个很小的函数，开销真的可以忽略不计吗？本节回答这两个问题——函数重载与内联函数。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch08-nav">
+    <div class="ch08-nav-label">第八章 · 函数</div>
+    <div class="ch08-nav-items">
+      <a class="ch08-nav-item" href="08_01_函数基础.html"><span class="cni-num">8.1</span><span class="cni-name">函数基础</span></a>
+      <a class="ch08-nav-item" href="08_02_函数参数详解.html"><span class="cni-num">8.2</span><span class="cni-name">函数参数详解</span></a>
+      <a class="ch08-nav-item active" href="08_03_函数重载与内联函数.html"><span class="cni-num">8.3</span><span class="cni-name">函数重载与内联函数</span></a>
+    </div>
+  </nav>
+
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">8.3.1</span>什么是函数重载</a></li>
+      <li><a href="#s2"><span class="toc-num">8.3.2</span>编译器怎么选中正确的那个</a></li>
+      <li><a href="#s3"><span class="toc-num">8.3.3</span>重载的易错点</a></li>
+      <li><a href="#s4"><span class="toc-num">8.3.4</span>内联函数</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 8.3.1 什么是函数重载 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">8.3.1</p>
+    <h2 class="section-title">什么是函数重载</h2>
+    <div class="section-body">
+      <p>假设你要写一个"求两个数中较大值"的函数，但数据类型可能是 <code>int</code>，也可能是 <code>double</code>，还可能需要比较三个数——总不能取名叫 <code>MaxInt</code>、<code>MaxDouble</code>、<code>MaxThreeInt</code> 这么多不同的名字吧？</p>
+      <p><strong>函数重载（Function Overloading）</strong>允许在同一作用域内定义多个<strong>同名</strong>函数，只要它们的<strong>参数列表不同</strong>（参数的类型、个数或顺序不同），编译器就能把它们区分开，调用时自动匹配最合适的那一个。</p>
+    </div>
+
+    <div class="overload-set">
+      <div class="os-title">同一个函数名 Max，三种不同的"版本"</div>
+      <div class="os-row"><span class="os-name">int Max(int a, int b)</span><span class="os-note">// 两个整数</span></div>
+      <div class="os-row"><span class="os-name">double Max(double a, double b)</span><span class="os-note">// 两个小数</span></div>
+      <div class="os-row"><span class="os-name">int Max(int a, int b, int c)</span><span class="os-note">// 三个整数</span></div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🍜</span>
+      <div><b>可以把它想象成点餐：</b>你在同一家店点"炒面"，但可以说"牛肉炒面"或"两份炒面"——服务员（编译器）会根据你说的<strong>具体内容</strong>（参数）判断你要哪一种，而不是靠"炒面"这个名字本身。函数名相同没关系，只要"点单内容"（参数列表）不同，编译器就分得清。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 函数重载示例</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl"><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Max</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="kw">return</span> <span class="fn">a</span> <span class="op">></span> <span class="fn">b</span> <span class="op">?</span> <span class="fn">a</span> <span class="op">:</span> <span class="fn">b</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="typ">double</span> <span class="fn">Max</span><span class="pnc">(</span><span class="typ">double</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">double</span> <span class="fn">b</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="kw">return</span> <span class="fn">a</span> <span class="op">></span> <span class="fn">b</span> <span class="op">?</span> <span class="fn">a</span> <span class="op">:</span> <span class="fn">b</span><span class="pnc">;</span> <span class="pnc">}</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="typ">int</span> <span class="fn">Max</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">c</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="kw">return</span> <span class="fn">Max</span><span class="pnc">(</span><span class="fn">Max</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">,</span><span class="fn">b</span><span class="pnc">),</span><span class="fn">c</span><span class="pnc">);</span> <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-ret"><td class="ln">7</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">Max</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">);</span>        <span class="cmt">// 调用①，结果 5</span></td></tr>
+          <tr class="hl-ret"><td class="ln">8</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">Max</span><span class="pnc">(</span><span class="num">3.5</span><span class="pnc">,</span> <span class="num">2.1</span><span class="pnc">);</span>    <span class="cmt">// 调用②，结果 3.5</span></td></tr>
+          <tr class="hl-ret"><td class="ln">9</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">Max</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">);</span>     <span class="cmt">// 调用③，结果 5</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🚫</span>
+      <div><b>只有返回类型不同，不构成重载！</b>下面这两个函数编译器认为是<strong>重复定义</strong>，会直接报错——因为函数调用时并不会指定"我要哪个返回类型"，编译器区分重载靠的<strong>只有参数列表</strong>，返回类型不参与判断。<br><code>int GetValue(int x);</code><br><code>double GetValue(int x);</code> <span style="color:var(--coral)">← ❌ 编译错误：重复定义</span></div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.3.2 编译器如何匹配 ═══ -->
+  <section class="section" id="s2">
+    <p class="section-label">8.3.2</p>
+    <h2 class="section-title">编译器怎么选中正确的那个</h2>
+    <div class="section-body">
+      <p>调用一个重载函数时，编译器会拿实参和每个候选函数的参数列表逐一比对，优先选择<strong>类型完全匹配</strong>的版本；如果没有完全匹配的，会尝试<strong>隐式类型转换</strong>（见 2.1 节）后再匹配。以调用 <code>Max(3, 5)</code> 为例：</p>
+    </div>
+
+    <div class="match-diagram">
+      <div class="md-call">调用：<span>Max(3, 5)</span> —— 两个实参都是 int</div>
+      <div class="md-candidates">
+        <div class="md-cand match"><span class="md-tag">✓ 选中</span>Max(int a, int b) —— 参数类型完全匹配，无需任何转换</div>
+        <div class="md-cand dim"><span class="md-tag">跳过</span>Max(double a, double b) —— int 可以转成 double，但不是精确匹配，优先级更低</div>
+        <div class="md-cand dim"><span class="md-tag">跳过</span>Max(int a, int b, int c) —— 只传了 2 个实参，参数个数不符，直接排除</div>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>如果编译器找不到任何一个"最合适"的版本——比如有两个候选函数经过转换后都同样匹配、难分高下——就会报<strong>调用二义性错误（ambiguous call）</strong>，程序无法编译通过。</p>
+    </div>
+  </section>
+
+  <!-- ═══ 8.3.3 易错点 ═══ -->
+  <section class="section" id="s3">
+    <p class="section-label">8.3.3</p>
+    <h2 class="section-title">重载的易错点</h2>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>参数类型 + 个数 + 顺序，缺一不构成区分：</b><code>void F(int a, double b)</code> 和 <code>void F(double a, int b)</code> 属于两个不同的重载（顺序不同），但和自己完全相同的签名再定义一遍就是重复定义。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>默认参数可能让重载产生二义性：</b>回到 8.2.6 节留下的例子——<code>void F(int a)</code> 与 <code>void F(int a, int b = 5)</code> 同时存在时，调用 <code>F(10)</code> 对编译器来说，两个函数都能满足（第二个函数省略 b 后就等于 F(10)），于是产生二义性错误，编译不通过。<strong>解决办法：</strong>要么去掉其中一个重载，要么调用时显式传够参数，避免两个候选同时"够格"。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>类型转换可能让调用意图变得模糊：</b>如果同时有 <code>F(int)</code> 和 <code>F(double)</code>，调用 <code>F('A')</code> 时 <code>char</code> 既能转成 <code>int</code> 也能转成 <code>double</code>，虽然 C++ 规定会优先转成更"接近"的 <code>int</code>，但这种场景容易让代码意图不清晰，建议调用时用强制转换明确写清楚要用哪个版本。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.3.4 内联函数 ═══ -->
+  <section class="section" id="s4">
+    <p class="section-label">8.3.4</p>
+    <h2 class="section-title">内联函数</h2>
+    <div class="section-body">
+      <p>每次调用一个普通函数，程序都要经历"跳转到函数所在的位置 → 执行 → 再跳转回来"这一整套流程，这个过程本身是有开销的（涉及压栈、跳转、返回地址记录等）。对于函数体只有一两行、但被<strong>频繁调用</strong>的小函数，这份开销占比会变得不可忽视。</p>
+      <p>在函数定义前加上关键字 <code>inline</code>，就是在告诉编译器：<strong>请把每一处调用这个函数的地方，直接替换成函数体本身的代码</strong>，省去"真正跳转过去再跳回来"的过程。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📝</span>
+      <div><b>打电话 vs 抄小纸条：</b>调用普通函数，就像每次需要计算时都<strong>打电话</strong>找人帮你算一下——要经过拨号、等待接通、说明问题、挂断这一整套流程。内联函数则像是直接把"怎么算"这几行小纸条<strong>抄在你自己的作业本上</strong>——不用打电话这道额外手续，抬头就能看到答案怎么来的，只是作业本（最终生成的程序）会因此变得长一点。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · inline 关键字用法</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl"><td class="ln">1</td><td class="cd"><span class="kw">inline</span> <span class="typ">int</span> <span class="fn">Square</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span><span class="pnc">)</span>   <span class="cmt">// inline 写在返回类型前面</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">return</span> <span class="fn">x</span> <span class="op">*</span> <span class="fn">x</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl-ret"><td class="ln">8</td><td class="cd">    <span class="typ">int</span> <span class="fn">y</span> <span class="op">=</span> <span class="fn">Square</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">)</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">;</span>  <span class="cmt">// 编译后可能直接变成 y = 5 * 5 + 1;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub-title">调用点发生了什么</h3>
+    <div class="inline-compare">
+      <div class="inline-card">
+        <div class="inline-head before">🔁 普通函数调用</div>
+        <div class="inline-body">
+          <div class="il-step">1. 保存现场，压栈</div>
+          <div class="il-step">2. 跳转到 Square 函数的位置</div>
+          <div class="il-step">3. 执行 return x * x;</div>
+          <div class="il-step">4. 带着结果跳转回调用处</div>
+          <div class="il-hl">y = <span style="color:var(--code-fn)">Square(5)</span> + 1;</div>
+        </div>
+      </div>
+      <div class="inline-card">
+        <div class="inline-head after">✂️ 内联展开后</div>
+        <div class="inline-body">
+          <div class="il-step">（没有跳转，编译期直接替换）</div>
+          <div class="il-hl">y = <span style="color:var(--code-num)">5 * 5</span> + 1;</div>
+          <div class="il-step" style="margin-top:8px">函数调用的痕迹在编译后的代码里消失了，直接变成了计算表达式。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fit-grid">
+      <div class="fit-card good">
+        <div class="fit-title">✅ 适合内联</div>
+        <div class="fit-list">· 函数体短小（一两行）<br>· 被非常频繁地调用<br>· 不含循环、不含递归<br>· 例如取最大值、简单的 getter/setter</div>
+      </div>
+      <div class="fit-card bad">
+        <div class="fit-title">❌ 不适合内联</div>
+        <div class="fit-list">· 函数体很长、逻辑复杂<br>· 内部包含循环<br>· 递归函数（无法真正展开）<br>· 调用次数很少的函数</div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>inline 只是"建议"，不是"命令"：</b>加上 <code>inline</code> 关键字，只是请求编译器尝试内联展开，编译器有最终决定权——如果函数体太大、包含循环或递归，编译器很可能会直接忽略这个建议，仍按普通函数处理。反过来，即使不写 <code>inline</code>，现代编译器也可能自动把简单的小函数做内联优化。因此 <code>inline</code> 更多是一种"性能提示"，而不是必须遵守的语法规则。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>竞赛建议：</b>竞赛编程中，编译器（尤其开启 <code>-O2</code> 优化）通常已经足够聪明，会自动内联合适的小函数，手动加 <code>inline</code> 关键字更多是一种"锦上添花"的提示，而不是必需操作。理解它的原理比死记写法更重要。</div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第八章 函数 · 8.3 函数重载与内联函数</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="08_02_函数参数详解.html">← 8.2 函数参数详解</a>
+      <a class="nav-btn" href="09_指针与引用.html">第九章：指针与引用 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
