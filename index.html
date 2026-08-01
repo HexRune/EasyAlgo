@@ -269,6 +269,13 @@
   }
   .chapter-card:hover .card-arrow { opacity: 1; transform: translateX(3px) }
 
+  /* 单页章节卡片的常驻提示（与多文件章节"点击下方任意小节…"的文案风格统一） */
+  .card-cta {
+    font-size: 12px; font-weight: 600; color: var(--accent-mid);
+    margin-top: 8px; display: flex; align-items: center; gap: 4px;
+  }
+  .chapter-card:hover .card-cta { color: var(--accent); }
+
   /* 附录卡片 */
   .appendix-card {
     background: var(--surface);
@@ -520,7 +527,6 @@
     margin-bottom: 6px;
   }
   .card-tag.must   { background: var(--teal-light);  color: var(--teal); }
-  .card-tag.tool   { background: var(--blue-light);  color: var(--blue); }
   .card-tag.bonus  { background: var(--amber-light); color: var(--amber); }
   .card-tag.hard   { background: var(--coral-light); color: var(--coral); }
 
@@ -597,13 +603,14 @@
   <div class="chapter-grid">
 
     <!-- 第一章 -->
-    <a class="chapter-card" href="01_基础框架.html">
+    <a class="chapter-card" href="01_BasicFramework.html">
       <div class="card-num">01</div>
       <div class="card-body">
         <div class="card-chapter">第一章</div>
         <span class="card-tag must">⭐ 必学</span>
         <div class="card-title">基础框架</div>
         <div class="card-desc">写出人生第一个程序：Hello World · 程序结构 · 编译过程四步骤</div>
+        <div class="card-cta">点击卡片开始学习 →</div>
       </div>
       <div class="card-arrow">→</div>
     </a>
@@ -625,12 +632,12 @@
       <div class="stl-groups">
 
         <div class="ch2-flat-items">
-          <a class="stl-item" href="02_00_变量与数据类型.html"><span class="si-name">2.0 变量基础</span><span class="si-desc">变量 · 命名 · 类型 · 赋值 · 运算</span></a>
-          <a class="stl-item" href="02_01_数据类型转换.html"><span class="si-name">2.1 数据类型转换</span><span class="si-desc">隐式 · 强制转换</span></a>
-          <a class="stl-item" href="02_02_ASCII编码.html"><span class="si-name">2.2 ASCII 编码</span><span class="si-desc">字符与整数映射</span></a>
-          <a class="stl-item" href="02_03_原码反码补码.html"><span class="si-name">2.3 原码反码补码</span><span class="si-desc">负数的二进制表示</span></a>
-          <a class="stl-item" href="02_04_cmath数学库.html"><span class="si-name">2.4 cmath 数学库</span><span class="si-desc">abs · pow · sqrt</span></a>
-          <a class="stl-item" href="02_05_常量.html"><span class="si-name">2.5 常量</span><span class="si-desc">const · #define</span></a>
+          <a class="stl-item" href="02_01_VariablesAndDataTypes.html"><span class="si-name">2.1 变量基础</span><span class="si-desc">变量 · 命名 · 类型 · 赋值 · 运算</span></a>
+          <a class="stl-item" href="02_02_TypeConversion.html"><span class="si-name">2.2 数据类型转换</span><span class="si-desc">隐式 · 强制转换</span></a>
+          <a class="stl-item" href="02_03_ASCIIEncoding.html"><span class="si-name">2.3 ASCII 编码</span><span class="si-desc">字符与整数映射</span></a>
+          <a class="stl-item" href="02_04_ComplementCodes.html"><span class="si-name">2.4 原码反码补码</span><span class="si-desc">负数的二进制表示</span></a>
+          <a class="stl-item" href="02_05_cmathLibrary.html"><span class="si-name">2.5 cmath 数学库</span><span class="si-desc">abs · pow · sqrt</span></a>
+          <a class="stl-item" href="02_06_Constants.html"><span class="si-name">2.6 常量</span><span class="si-desc">const · #define</span></a>
         </div>
 
       </div>
@@ -646,7 +653,7 @@
         <div class="card-num">03</div>
         <div class="card-body">
           <div class="card-chapter">第三章</div>
-          <span class="card-tag tool">🔧 工具章</span>
+          <span class="card-tag must">⭐ 必学</span>
           <div class="card-title">输入与输出</div>
           <div class="card-desc">cin / cout · scanf / printf · 文件读写 —— 点击下方任意小节直达对应页面</div>
         </div>
@@ -761,6 +768,7 @@
         <span class="card-tag bonus">🚀 竞赛加分项</span>
         <div class="card-title">位运算</div>
         <div class="card-desc">让程序飞起来：了解计算机底层的快速运算技巧</div>
+        <div class="card-cta">点击卡片开始学习 →</div>
       </div>
       <div class="card-arrow">→</div>
     </a>
@@ -801,6 +809,7 @@
         <span class="card-tag hard">🚀 进阶挑战</span>
         <div class="card-title">指针与引用</div>
         <div class="card-desc">指针基础 · 引用传参 · 动态内存</div>
+        <div class="card-cta">点击卡片开始学习 →</div>
       </div>
       <div class="card-arrow">→</div>
     </a>
@@ -813,6 +822,7 @@
         <span class="card-tag must">⭐ 必学</span>
         <div class="card-title">结构体</div>
         <div class="card-desc">struct 定义 · 嵌套结构 · 自定义排序</div>
+        <div class="card-cta">点击卡片开始学习 →</div>
       </div>
       <div class="card-arrow">→</div>
     </a>
@@ -1074,7 +1084,7 @@
           <span class="algo-group-num">01</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">数学基础</span>
-          <span class="algo-group-hint">数位、质数、约数与进制的基础工具</span>
+          <span class="algo-group-hint">判断质数、算最大公约数——数论类题目的地基工具</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A01_01_数位拆分.html"><span class="ai-name">数位拆分</span><span class="ai-desc">取出每一位数字</span></a>
@@ -1098,7 +1108,7 @@
           <span class="algo-group-num">02</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">基础算法思想</span>
-          <span class="algo-group-hint">枚举、标记、模拟的入门思路</span>
+          <span class="algo-group-hint">想不出巧办法时，先用"笨办法"把所有可能试一遍</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A02_01_枚举法.html"><span class="ai-name">枚举法</span><span class="ai-desc">逐一尝试所有可能</span></a>
@@ -1113,7 +1123,7 @@
           <span class="algo-group-num">03</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">简单排序</span>
-          <span class="algo-group-hint">用循环实现的经典排序方法</span>
+          <span class="algo-group-hint">从头搞懂"排序"到底是怎么排起来的</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A03_01_冒泡排序.html"><span class="ai-name">冒泡排序</span><span class="ai-desc">相邻交换冒泡</span></a>
@@ -1142,7 +1152,7 @@
           <span class="algo-group-num">05</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">区间处理技巧</span>
-          <span class="algo-group-hint">快速求区间和与区间修改</span>
+          <span class="algo-group-hint">反复问"这段区间加起来是多少"，不用每次重新累加</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A05_01_前缀和.html"><span class="ai-name">前缀和</span><span class="ai-desc">O(1) 查询区间和</span></a>
@@ -1157,7 +1167,7 @@
           <span class="algo-group-num">06</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">单调栈与单调队列</span>
-          <span class="algo-group-hint">维护单调性，省去重复比较</span>
+          <span class="algo-group-hint">解决"滑动窗口"类问题的利器</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A06_01_单调栈.html"><span class="ai-name">单调栈</span><span class="ai-desc">找最近更大/更小值</span></a>
@@ -1171,7 +1181,7 @@
           <span class="algo-group-num">07</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">双指针与二分查找</span>
-          <span class="algo-group-hint">在有序数据里快速定位</span>
+          <span class="algo-group-hint">在一堆数据里又快又准地找到目标</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A07_01_双指针.html"><span class="ai-name">双指针</span><span class="ai-desc">两个下标协同移动</span></a>
@@ -1185,7 +1195,7 @@
           <span class="algo-group-num">08</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">递推与递归</span>
-          <span class="algo-group-hint">从前一步推出下一步，或反过来拆解</span>
+          <span class="algo-group-hint">斐波那契数列、汉诺塔——用"小问题"解决"大问题"</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A08_01_递推.html"><span class="ai-name">递推</span><span class="ai-desc">用前一步推出下一步</span></a>
@@ -1199,7 +1209,7 @@
           <span class="algo-group-num">09</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">分治排序</span>
-          <span class="algo-group-hint">递归思想在排序中的实战</span>
+          <span class="algo-group-hint">比冒泡、选择更快的排序，竞赛与工程都在用</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A09_01_快速排序.html"><span class="ai-name">快速排序</span><span class="ai-desc">分治 + partition</span></a>
@@ -1213,7 +1223,7 @@
           <span class="algo-group-num">10</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">并查集</span>
-          <span class="algo-group-hint">管理元素分组与连通关系</span>
+          <span class="algo-group-hint">轻松管理朋友圈、连通网络等分组问题</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item wide" href="A10_01_并查集.html"><span class="ai-name">并查集</span><span class="ai-desc">Union-Find · 路径压缩</span></a>
@@ -1226,7 +1236,7 @@
           <span class="algo-group-num">11</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">树与二叉树</span>
-          <span class="algo-group-hint">节点间的层级结构与两种经典存储、遍历方式</span>
+          <span class="algo-group-hint">家谱、文件夹、组织架构——生活中处处都是"树"</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A11_01_树的基本概念.html"><span class="ai-name">树的基本概念</span><span class="ai-desc">节点、父子、深度与高度</span></a>
@@ -1242,7 +1252,7 @@
           <span class="algo-group-num">12</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">搜索基础</span>
-          <span class="algo-group-hint">用递归遍历所有可能的选择</span>
+          <span class="algo-group-hint">走迷宫、排列组合——把所有可能都试一遍</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A12_01_DFS.html"><span class="ai-name">DFS 深度优先搜索</span><span class="ai-desc">一条路走到底</span></a>
@@ -1258,7 +1268,7 @@
           <span class="algo-group-num">13</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">动态规划基础</span>
-          <span class="algo-group-hint">拆解子问题，避免重复计算</span>
+          <span class="algo-group-hint">学会"记笔记"式的优化计算方法，算过的不再算第二遍</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A13_01_线性DP.html"><span class="ai-name">线性 DP</span><span class="ai-desc">LIS · LCS</span></a>
@@ -1272,7 +1282,7 @@
           <span class="algo-group-num">14</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">搜索进阶</span>
-          <span class="algo-group-hint">按层扩展与双向夹击的搜索优化</span>
+          <span class="algo-group-hint">更聪明地走迷宫：不多走一步冤枉路</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A14_01_BFS.html"><span class="ai-name">BFS 广度优先搜索</span><span class="ai-desc">一层一层扩展</span></a>
@@ -1289,7 +1299,7 @@
           <span class="algo-group-num">15</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">图论基础</span>
-          <span class="algo-group-hint">图的存储、最短路与生成树</span>
+          <span class="algo-group-hint">地图导航、社交网络——研究"点"与"点"之间怎么连</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A15_01_图的存储.html"><span class="ai-name">图的存储</span><span class="ai-desc">邻接矩阵 · 邻接表</span></a>
@@ -1307,7 +1317,7 @@
           <span class="algo-group-num">16</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">树状数组与线段树</span>
-          <span class="algo-group-hint">高效维护区间信息的数据结构</span>
+          <span class="algo-group-hint">海量数据的区间查询与修改，做到又快又省</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A16_01_离散化.html"><span class="ai-name">离散化</span><span class="ai-desc">压缩数值范围</span></a>
@@ -1322,7 +1332,7 @@
           <span class="algo-group-num">17</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">字符串算法</span>
-          <span class="algo-group-hint">字符串匹配与前缀处理技巧</span>
+          <span class="algo-group-hint">在长文本里快速找到你要的那一句话</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A17_01_字符串哈希.html"><span class="ai-name">字符串哈希</span><span class="ai-desc">字符串转数字比较</span></a>
@@ -1337,7 +1347,7 @@
           <span class="algo-group-num">18</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">动态规划进阶</span>
-          <span class="algo-group-hint">区间、状态压缩与树上的 DP</span>
+          <span class="algo-group-hint">更复杂场景下的"记笔记"技巧：区间、状态压缩、树上</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A18_01_区间DP.html"><span class="ai-name">区间 DP</span><span class="ai-desc">在区间上转移</span></a>
@@ -1353,7 +1363,7 @@
           <span class="algo-group-num">19</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">拓展专题</span>
-          <span class="algo-group-hint">树上算法与博弈论的延伸内容</span>
+          <span class="algo-group-hint">竞赛冲刺内容：树上问题与博弈论</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item" href="A19_01_LCA最近公共祖先.html"><span class="ai-name">LCA 最近公共祖先</span><span class="ai-desc">树上倍增</span></a>

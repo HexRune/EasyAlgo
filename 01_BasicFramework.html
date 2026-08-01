@@ -105,15 +105,14 @@
   /* 编译流程图 */
   .flow-diagram {
     margin: 22px 0;
-    overflow-x: auto;
   }
   .flow-row {
     display: flex;
     align-items: center;
     gap: 0;
     justify-content: center;
-    flex-wrap: nowrap;
-    min-width: max-content;
+    flex-wrap: wrap;
+    row-gap: 14px;
     padding: 4px 0;
   }
   .flow-node {
@@ -143,11 +142,26 @@
   }
   .flow-col { display: flex; flex-direction: column; align-items: center; }
 
+  /* 流程图"拐弯"连接符：连接第一行与第二行 */
+  .flow-turn {
+    display: flex; flex-direction: column; align-items: center;
+    margin: 2px 0 10px; color: var(--border-md);
+  }
+  .flow-turn-line { width: 2px; height: 16px; background: var(--border-md); }
+  .flow-turn-arrow { font-size: 16px; line-height: 1; margin-top: -2px; }
+
   /* 代码行高亮（本章使用 .highlight-row，区别于公共的 .hl） */
   .highlight-row { background: rgba(74,63,191,.06) !important; }
 
   /* 首章导航栏只有"下一章"按钮，右对齐 */
   .chapter-nav { justify-content: flex-end; }
+
+  /* 拓展知识小栏目（章节末尾，非核心内容） */
+  .extra-note { margin: 32px 0; }
+  .extra-note-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--text-muted); margin-bottom: 10px;
+  }
 </style>
 </head>
 <body>
@@ -196,8 +210,8 @@
       </div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="str">&lt;iostream&gt;</span>              <span class="cmt">// ① 引入头文件（工具箱）</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="punc">;</span>            <span class="cmt">// ② 使用标准命名空间</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="str">&lt;iostream&gt;</span>              <span class="cmt">// ① 引入头文件（输入输出工具包）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="punc">;</span>            <span class="cmt">// ② 使用 std 这个"大仓库"</span></td></tr>
           <tr><td class="ln">3</td><td class="cd"></td></tr>
           <tr><td class="ln">4</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span>                      <span class="cmt">// ③ 主函数：程序从这里开始</span></td></tr>
           <tr><td class="ln">5</td><td class="cd"><span class="punc">{</span></td></tr>
@@ -206,11 +220,6 @@
           <tr><td class="ln">8</td><td class="cd"><span class="punc">}</span></td></tr>
         </table>
       </div>
-    </div>
-
-    <div class="callout tip">
-      <span class="callout-icon">💡</span>
-      <div><b>小技巧：</b>竞赛编程中可以用万能头文件 <code>#include &lt;bits/stdc++.h&gt;</code> 代替所有标准头文件。它只在 GCC 编译器下有效（大多数 OJ 平台支持），但不是 C++ 标准的一部分，工程项目中不建议使用。另外，它会增加编译时间，在部分严格限制编译时间的竞赛中需要留意。</div>
     </div>
   </section>
 
@@ -232,11 +241,11 @@
       <tbody>
         <tr>
           <td>#include&lt;iostream&gt;</td>
-          <td>加载输入输出流头文件，让程序能使用 <code>cout</code> / <code>cin</code> 等功能</td>
+          <td>加载"输入输出工具包"，这样程序才能在屏幕上显示文字（<code>cout</code>）、从键盘接收数据（<code>cin</code>）</td>
         </tr>
         <tr>
           <td>using namespace std;</td>
-          <td>声明使用标准命名空间，这样就不用每次都写 <code>std::</code> 前缀了</td>
+          <td>这些工具都放在一个叫 <code>std</code> 的"大仓库"里，这行代码让我们能直接取用，不用每次都写"从 <code>std</code> 仓库里拿"（即 <code>std::</code> 前缀）</td>
         </tr>
         <tr>
           <td>int main()</td>
@@ -260,6 +269,16 @@
     <div class="callout danger">
       <span class="callout-icon">⚠️</span>
       <div><b>注意：</b>每条 C++ 语句必须以分号 <code>;</code> 结尾，<b>忘记分号是初学者最常见的错误！</b></div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🆕</span>
+      <div>
+        <b>新手小贴士：头文件和命名空间到底是什么？</b><br><br>
+        <b><code>#include&lt;iostream&gt;</code></b>：可以理解成告诉计算机——"我们要用你内置的‘输入输出工具包’，这样才能在屏幕上显示文字，或者接收键盘输入。" 这个工具包里就装着 <code>cout</code>、<code>cin</code> 这些东西。<br><br>
+        <b><code>using namespace std;</code></b>：这个工具包（以及 C++ 标准库里其他的工具）都被统一放进了一个叫 <code>std</code> 的"大仓库"里。写这行代码，就是让我们能直接喊工具的名字（比如 <code>cout</code>），而不用每次都写"从 <code>std</code> 仓库里拿 <code>cout</code>"（也就是 <code>std::cout</code>）这么麻烦。<br><br>
+        现阶段这样理解就足够用了——头文件和命名空间背后还有更多细节，我们会在后面的章节里继续展开。
+      </div>
     </div>
   </section>
 
@@ -322,7 +341,8 @@
     <p class="section-label">1.4</p>
     <h2 class="section-title">C++ 程序的执行流程</h2>
     <div class="section-body">
-      <p>编写完成一个 C++ 程序后，想要运行起来，必须经过四个步骤：<b>预处理→编译→汇编→链接</b>。每个步骤都会生成对应的文件。</p>
+      <p>你可以把这个过程想象成一次"翻译 + 组装"的旅程：你写的源代码是"中文"，计算机只听得懂"机器语言"，中间需要经过一层层翻译，最后再把翻译好的各个零件组装成一个真正能运行的软件。</p>
+      <p>这段旅程一共分四步：<b>预处理 → 编译 → 汇编 → 链接</b>，每一步都会生成对应的文件。先看整体流程，再逐步展开细节。</p>
     </div>
 
     <!-- Flow Diagram -->
@@ -333,7 +353,7 @@
         </div>
         <span class="flow-arrow">→</span>
         <div class="flow-col">
-          <div class="flow-node process">预处理器<br><small style="font-size:11px">展开 #include / #define</small></div>
+          <div class="flow-node process">预处理器<br><small style="font-size:11px">核心任务：文本替换</small></div>
           <div class="flow-label">-E</div>
         </div>
         <span class="flow-arrow">→</span>
@@ -342,16 +362,23 @@
         </div>
         <span class="flow-arrow">→</span>
         <div class="flow-col">
-          <div class="flow-node process">编译器<br><small style="font-size:11px">语法/语义分析</small></div>
+          <div class="flow-node process">编译器<br><small style="font-size:11px">核心任务：检查语法并翻译成汇编</small></div>
           <div class="flow-label">-S</div>
         </div>
         <span class="flow-arrow">→</span>
         <div class="flow-col">
           <div class="flow-node file">汇编文件<br><small style="font-family:monospace;font-size:11px">main.s</small></div>
         </div>
-        <span class="flow-arrow">→</span>
+      </div>
+
+      <div class="flow-turn">
+        <span class="flow-turn-line"></span>
+        <span class="flow-turn-arrow">↓</span>
+      </div>
+
+      <div class="flow-row">
         <div class="flow-col">
-          <div class="flow-node process">汇编器<br><small style="font-size:11px">翻译成机器码</small></div>
+          <div class="flow-node process">汇编器<br><small style="font-size:11px">核心任务：变成机器码</small></div>
           <div class="flow-label">-c</div>
         </div>
         <span class="flow-arrow">→</span>
@@ -360,7 +387,7 @@
         </div>
         <span class="flow-arrow">→</span>
         <div class="flow-col">
-          <div class="flow-node process">链接器<br><small style="font-size:11px">合并 .o 填充地址</small></div>
+          <div class="flow-node process">链接器<br><small style="font-size:11px">核心任务：组装成最终程序</small></div>
         </div>
         <span class="flow-arrow">→</span>
         <div class="flow-col">
@@ -440,15 +467,32 @@
 
     <div class="callout info">
       <span class="callout-icon">🔧</span>
-      <div><b>日常使用不必担心：</b>在 IDE（如 Dev-C++、VS Code、CLion）或命令行编译时，这四个步骤是自动连续完成的，你只需点一下"运行"按钮或输入一条命令即可。但理解这四个步骤，能帮助你区分"编译错误"（语法问题，来自第二步）和"链接错误"（找不到函数实现，来自第四步）。</div>
+      <div>
+        <b>结论：</b>我们平时按一下"运行"按钮，计算机就自动帮我们连续完成了这四步，不需要手动操作。<br><br>
+        了解这四步最大的好处是：以后编译报错时，能大致判断问题出在哪一阶段——如果提示"语法错误""缺少分号"之类，通常是<b>编译阶段</b>出的问题；如果提示"找不到某个函数的定义""undefined reference"，通常是<b>链接阶段</b>出的问题（比如少写了某个 <code>.cpp</code> 文件）。知道方向，排错就会快很多。
+      </div>
     </div>
   </section>
+
+  <!-- ═══ 拓展知识（非核心内容，供感兴趣的同学了解） ═══ -->
+  <div class="extra-note">
+    <p class="extra-note-label">📎 拓展知识 · 竞赛小贴士</p>
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div>
+        <b>"万能头文件"是什么？</b><br>
+        在信息学竞赛（如 NOI 系列比赛）中，你可能会见到这样的写法：<code>#include &lt;bits/stdc++.h&gt;</code>——这个"万能头文件"能一次性引入几乎所有标准库头文件，图省事时很好用。<br><br>
+        但<b>初学阶段，尤其是学习基础语法时，更推荐使用标准的 <code>#include&lt;iostream&gt;</code></b>：一来能帮你更清楚地理解"用了什么工具就该引入什么头文件"这件事；二来 <code>bits/stdc++.h</code> 只在 GCC 编译器下有效（虽然大多数 OJ 平台支持），并不是 C++ 标准的一部分，还会拖慢编译速度——在部分限时竞赛中需要留意。<br><br>
+        简单说：<b>正式学语法的时候按标准写法来，等到刷题追求效率时再用这个技巧也不迟。</b>
+      </div>
+    </div>
+  </div>
 
   <!-- ═══ Footer ═══ -->
   <footer class="doc-footer">
     <p>C++ 编程语法 · 第一章 基础框架</p>
     <div class="chapter-nav">
-      <a class="nav-btn" href="02_00_变量与数据类型.html">下一章：变量与数据类型 →</a>
+      <a class="nav-btn" href="02_01_VariablesAndDataTypes.html">下一章：变量与数据类型 →</a>
     </div>
   </footer>
 
