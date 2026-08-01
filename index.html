@@ -383,7 +383,7 @@
   .stl-mega-card.collapsed, .algo-mega-card.collapsed { padding-bottom: 22px; }
 
   /* ═══ 算法文档：18 个模块，平铺展示（风格与 STL 分组一致，统一教学绿主题） ═══ */
-  * 算法先导课横条 */
+  /* 算法先导课横条 */
   .algo-intro-row { margin-bottom: 6px; padding-bottom: 12px; border-bottom: 1px dashed var(--border); }
   .algo-intro-item {
     display: flex; align-items: center; gap: 12px;
@@ -461,6 +461,88 @@
   .ai-name { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--text-primary); }
   .algo-item:hover .ai-name { color: var(--teal); }
   .ai-desc { font-size: 10.5px; color: var(--text-muted); }
+
+  /* ═══ Hero CTA 按钮 ═══ */
+  .hero-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 22px; border-radius: 999px;
+    background: var(--accent); color: #fff;
+    font-size: 14px; font-weight: 700; text-decoration: none;
+    box-shadow: 0 4px 14px rgba(74,63,191,.28);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .hero-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(74,63,191,.36); }
+  .hero-cta-arrow { transition: transform .15s; }
+  .hero-cta:hover .hero-cta-arrow { transform: translateX(3px); }
+
+  /* ═══ 学习路线图 ═══ */
+  .roadmap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+    padding: 22px 26px; margin-bottom: 40px;
+  }
+  .roadmap-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .roadmap-sub { font-size: 12.5px; color: var(--text-muted); margin-bottom: 20px; }
+  .roadmap-track { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
+  .rm-stage {
+    flex: 1; min-width: 150px;
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 14px 16px; border-radius: var(--radius-md);
+    border: 1px solid var(--border); background: var(--bg);
+    position: relative;
+  }
+  .rm-stage.rm-optional { background: var(--bg); border-style: dashed; opacity: .92; }
+  .rm-badge {
+    display: inline-flex; align-self: flex-start; align-items: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px; margin-bottom: 2px;
+  }
+  .rm-stage.rm-1 .rm-badge { background: var(--teal-light); color: var(--teal); }
+  .rm-stage.rm-2 .rm-badge { background: var(--blue-light); color: var(--blue); }
+  .rm-stage.rm-3 .rm-badge { background: var(--amber-light); color: var(--amber); }
+  .rm-stage.rm-optional .rm-badge { background: #EFEDE6; color: var(--text-muted); }
+  .rm-name { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
+  .rm-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.55; }
+  .rm-arrow {
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; width: 28px; color: var(--text-muted); font-size: 16px;
+  }
+  @media (max-width: 700px) {
+    .roadmap-track { flex-direction: column; }
+    .rm-arrow { transform: rotate(90deg); width: auto; height: 20px; align-self: center; }
+  }
+
+  /* ═══ 章节小标签（⭐必学 / 🔧工具章 / 🚀竞赛加分 / 🚀进阶挑战） ═══ */
+  .card-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px;
+    margin-bottom: 6px;
+  }
+  .card-tag.must   { background: var(--teal-light);  color: var(--teal); }
+  .card-tag.tool   { background: var(--blue-light);  color: var(--blue); }
+  .card-tag.bonus  { background: var(--amber-light); color: var(--amber); }
+  .card-tag.hard   { background: var(--coral-light); color: var(--coral); }
+
+  /* ═══ “更多内容”折叠区（进阶语法 + 算法进阶，默认收起，视觉降级） ═══ */
+  .more-toggle-wrap { display: flex; justify-content: center; margin: 8px 0 40px; }
+  .more-toggle-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 22px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-secondary); font-size: 13.5px; font-weight: 600;
+    cursor: pointer; transition: all .15s; user-select: none;
+  }
+  .more-toggle-btn:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .more-toggle-btn .mtb-icon { transition: transform .2s; font-size: 12px; }
+  .more-toggle-btn.expanded .mtb-icon { transform: rotate(180deg); }
+  .more-content { display: none; }
+  .more-content.expanded { display: block; }
+  .more-content .book-label-text { color: #A8A296; }
+  .more-content-hint {
+    text-align: center; font-size: 12px; color: var(--text-muted);
+    margin-bottom: 20px; line-height: 1.6;
+  }
 </style>
 </head>
 <body>
@@ -470,9 +552,41 @@
   <header class="hero">
     <h1 class="hero-title">C++ 编程语法完全指南</h1>
     <p class="hero-desc">
-      从零开始，系统学习 C++ 编程语法。
+      从零开始，系统学习 C++ 编程语法。不需要任何基础，跟着章节顺序一步步来就行。
     </p>
+    <a class="hero-cta" href="01_基础框架.html">开始学习 <span class="hero-cta-arrow">→</span></a>
   </header>
+
+  <!-- ═══ 学习路线图 ═══ -->
+  <div class="roadmap">
+    <div class="roadmap-title">🗺️ 学习路线</div>
+    <p class="roadmap-sub">不确定从哪里开始？照这个顺序学，每一步都踩得稳。</p>
+    <div class="roadmap-track">
+      <div class="rm-stage rm-1">
+        <span class="rm-badge">第 1~3 章</span>
+        <span class="rm-name">写出能跑的程序</span>
+        <span class="rm-desc">变量、数据类型，让程序能"读"和"说"</span>
+      </div>
+      <div class="rm-arrow">→</div>
+      <div class="rm-stage rm-2">
+        <span class="rm-badge">第 4~6 章</span>
+        <span class="rm-name">学会判断与重复</span>
+        <span class="rm-desc">分支、循环、数组——程序开始有"逻辑"</span>
+      </div>
+      <div class="rm-arrow">→</div>
+      <div class="rm-stage rm-3">
+        <span class="rm-badge">第 7~10 章</span>
+        <span class="rm-name">整理与封装代码</span>
+        <span class="rm-desc">函数、指针、结构体，代码开始变得像"工程"</span>
+      </div>
+      <div class="rm-arrow">→</div>
+      <div class="rm-stage rm-optional">
+        <span class="rm-badge">按需选学</span>
+        <span class="rm-name">进阶语法 / 算法专题</span>
+        <span class="rm-desc">基础打好后再来，不用一次学完</span>
+      </div>
+    </div>
+  </div>
 
   <!-- ═══ C++ 语法文档 ═══ -->
   <div class="book-label">
@@ -487,8 +601,9 @@
       <div class="card-num">01</div>
       <div class="card-body">
         <div class="card-chapter">第一章</div>
+        <span class="card-tag must">⭐ 必学</span>
         <div class="card-title">基础框架</div>
-        <div class="card-desc">Hello World · 程序结构 · 编译过程四步骤</div>
+        <div class="card-desc">写出人生第一个程序：Hello World · 程序结构 · 编译过程四步骤</div>
       </div>
       <div class="card-arrow">→</div>
     </a>
@@ -500,6 +615,7 @@
         <div class="card-num">02</div>
         <div class="card-body">
           <div class="card-chapter">第二章</div>
+          <span class="card-tag must">⭐ 必学</span>
           <div class="card-title">变量与数据类型</div>
           <div class="card-desc">数据类型 · 算术运算符 · 类型转换 · 数据编码 —— 点击下方任意小节直达对应页面</div>
         </div>
@@ -530,6 +646,7 @@
         <div class="card-num">03</div>
         <div class="card-body">
           <div class="card-chapter">第三章</div>
+          <span class="card-tag tool">🔧 工具章</span>
           <div class="card-title">输入与输出</div>
           <div class="card-desc">cin / cout · scanf / printf · 文件读写 —— 点击下方任意小节直达对应页面</div>
         </div>
@@ -557,6 +674,7 @@
         <div class="card-num">04</div>
         <div class="card-body">
           <div class="card-chapter">第四章</div>
+          <span class="card-tag must">⭐ 必学</span>
           <div class="card-title">分支结构</div>
           <div class="card-desc">运算符 · if / else · 三元运算符 · switch —— 点击下方任意小节直达对应页面</div>
         </div>
@@ -585,6 +703,7 @@
         <div class="card-num">05</div>
         <div class="card-body">
           <div class="card-chapter">第五章</div>
+          <span class="card-tag must">⭐ 必学</span>
           <div class="card-title">循环结构</div>
           <div class="card-desc">while · do-while · for · break & continue —— 点击下方任意小节直达对应页面</div>
         </div>
@@ -613,8 +732,9 @@
         <div class="card-num">06</div>
         <div class="card-body">
           <div class="card-chapter">第六章</div>
+          <span class="card-tag must">⭐ 必学</span>
           <div class="card-title">数组</div>
-          <div class="card-desc">一维数组 · 二维数组 · 字符数组 —— 点击下方任意小节直达对应页面</div>
+          <div class="card-desc">管理大量数据：用数组存储成绩、矩阵和单词 —— 点击下方任意小节直达对应页面</div>
         </div>
         <span class="mega-collapse-badge"><span class="mcb-icon">⌄</span></span>
       </div>
@@ -638,8 +758,9 @@
       <div class="card-num">07</div>
       <div class="card-body">
         <div class="card-chapter">第七章</div>
+        <span class="card-tag bonus">🚀 竞赛加分项</span>
         <div class="card-title">位运算</div>
-        <div class="card-desc">AND · OR · XOR · 移位 · 竞赛技巧</div>
+        <div class="card-desc">让程序飞起来：了解计算机底层的快速运算技巧</div>
       </div>
       <div class="card-arrow">→</div>
     </a>
@@ -651,6 +772,7 @@
         <div class="card-num">08</div>
         <div class="card-body">
           <div class="card-chapter">第八章</div>
+          <span class="card-tag must">⭐ 必学</span>
           <div class="card-title">函数</div>
           <div class="card-desc">定义与调用 · 参数详解 · 默认参数 · 函数重载 · 内联函数 —— 点击下方任意小节直达对应页面</div>
         </div>
@@ -676,6 +798,7 @@
       <div class="card-num">09</div>
       <div class="card-body">
         <div class="card-chapter">第九章</div>
+        <span class="card-tag hard">🚀 进阶挑战</span>
         <div class="card-title">指针与引用</div>
         <div class="card-desc">指针基础 · 引用传参 · 动态内存</div>
       </div>
@@ -687,6 +810,7 @@
       <div class="card-num">10</div>
       <div class="card-body">
         <div class="card-chapter">第十章</div>
+        <span class="card-tag must">⭐ 必学</span>
         <div class="card-title">结构体</div>
         <div class="card-desc">struct 定义 · 嵌套结构 · 自定义排序</div>
       </div>
@@ -694,6 +818,21 @@
     </a>
 
   </div>
+
+  <!-- ═══ 更多内容：进阶语法 + 算法进阶（默认收起，降低新手心理压力） ═══ -->
+  <div class="more-toggle-wrap" id="more-toggle-wrap">
+    <div class="more-toggle-btn" onclick="
+      document.getElementById('more-content').classList.toggle('expanded');
+      this.classList.toggle('expanded');
+      this.querySelector('.mtb-label').textContent = this.classList.contains('expanded') ? '收起进阶内容' : '基础学完了？看看更多内容';
+    ">
+      <span class="mtb-label">基础学完了？看看更多内容</span>
+      <span class="mtb-icon">⌄</span>
+    </div>
+  </div>
+
+  <div class="more-content" id="more-content">
+  <p class="more-content-hint">下面是 STL、面向对象和算法进阶内容，建议先打好第 1~10 章的基础再来探索 —— 不需要一次学完，用到什么再来查也可以。</p>
 
   <!-- ═══ 进阶语法 ═══ -->
   <div class="book-label">
@@ -898,9 +1037,9 @@
   </div>
   <!-- /.stl-mega-card (ch12) -->
 
-  <!-- ═══ 算法文档 ═══ -->
+  <!-- ═══ 算法进阶 ═══ -->
   <div class="book-label">
-    <span class="book-label-text">算法文档</span>
+    <span class="book-label-text">算法进阶</span>
     <div class="book-label-line"></div>
   </div>
 
@@ -908,8 +1047,8 @@
     <div class="algo-mega-head" onclick="this.parentElement.classList.toggle('collapsed')">
       <div class="card-num teal">A</div>
       <div class="card-body">
-        <div class="card-chapter">算法专题</div>
-        <div class="card-title">算法文档</div>
+        <div class="card-chapter">算法进阶</div>
+        <div class="card-title">算法专题文档</div>
         <div class="card-desc">从数学基础到动态规划、图论进阶 · 点击下方任意专题卡片直达对应页面</div>
       </div>
       <span class="mega-collapse-badge"><span class="mcb-icon">⌄</span></span>
@@ -990,7 +1129,7 @@
           <span class="algo-group-num">04</span>
           <span class="algo-group-dot"></span>
           <span class="algo-group-name">贪心算法</span>
-          <span class="algo-group-hint">每一步都选当前最优的策略</span>
+          <span class="algo-group-hint">学会"见好就收"的决策智慧：解决找零、活动安排等实际问题</span>
         </div>
         <div class="algo-group-items">
           <a class="algo-item wide" href="A04_01_贪心算法.html"><span class="ai-name">贪心算法</span><span class="ai-desc">区间调度 · 部分背包</span></a>
@@ -1228,6 +1367,9 @@
 
   </div>
   <!-- /.algo-mega-card -->
+
+  </div>
+  <!-- /.more-content -->
 
   <!-- ═══ 附录 ═══ -->
   <div class="book-label">
