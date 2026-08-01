@@ -211,7 +211,7 @@
       <div class="code-body">
         <table class="code-table">
           <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="str">&lt;iostream&gt;</span>              <span class="cmt">// ① 引入头文件（输入输出工具包）</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="punc">;</span>            <span class="cmt">// ② 使用 std 这个"大仓库"</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="kw">using namespace</span> <span class="fn">std</span><span class="punc">;</span>            <span class="cmt">// ② 使用 std 命名空间</span></td></tr>
           <tr><td class="ln">3</td><td class="cd"></td></tr>
           <tr><td class="ln">4</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span>                      <span class="cmt">// ③ 主函数：程序从这里开始</span></td></tr>
           <tr><td class="ln">5</td><td class="cd"><span class="punc">{</span></td></tr>
@@ -245,7 +245,7 @@
         </tr>
         <tr>
           <td>using namespace std;</td>
-          <td>这些工具都放在一个叫 <code>std</code> 的"大仓库"里，这行代码让我们能直接取用，不用每次都写"从 <code>std</code> 仓库里拿"（即 <code>std::</code> 前缀）</td>
+          <td>这些工具真正的代码住在标准库文件里，但它们都被归到一个叫 <code>std</code> 的"分类标签"（命名空间）下。这行代码让我们能省略这个标签直接取用，不用每次都写"贴着 <code>std</code> 标签的"（即 <code>std::</code> 前缀）</td>
         </tr>
         <tr>
           <td>int main()</td>
@@ -276,7 +276,7 @@
       <div>
         <b>新手小贴士：头文件和命名空间到底是什么？</b><br><br>
         <b><code>#include&lt;iostream&gt;</code></b>：可以理解成告诉计算机——"我们要用你内置的‘输入输出工具包’，这样才能在屏幕上显示文字，或者接收键盘输入。" 这个工具包里就装着 <code>cout</code>、<code>cin</code> 这些东西。<br><br>
-        <b><code>using namespace std;</code></b>：这个工具包（以及 C++ 标准库里其他的工具）都被统一放进了一个叫 <code>std</code> 的"大仓库"里。写这行代码，就是让我们能直接喊工具的名字（比如 <code>cout</code>），而不用每次都写"从 <code>std</code> 仓库里拿 <code>cout</code>"（也就是 <code>std::cout</code>）这么麻烦。<br><br>
+        <b><code>using namespace std;</code></b>：<code>cout</code> 这些工具的代码实际上还是放在标准库文件里，<b>并没有被真正"搬"到别的地方</b>。<code>std</code> 更像是贴在这些工具上的一个"分类标签"（专业说法叫<b>命名空间</b>），用来区分"这是标准库自带的工具"，避免和你自己写的、或者别的库里同名的东西搞混。工具的完整称呼其实是 <code>std::cout</code>，前面的 <code>std::</code> 就是这个标签。写了 <code>using namespace std;</code> 这行代码，就相当于告诉编译器"帮我省略这个标签"，之后直接喊 <code>cout</code> 就行，不用每次都写全 <code>std::cout</code>。<br><br>
         现阶段这样理解就足够用了——头文件和命名空间背后还有更多细节，我们会在后面的章节里继续展开。
       </div>
     </div>

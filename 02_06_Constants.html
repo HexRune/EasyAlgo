@@ -66,7 +66,7 @@
       <span class="eyebrow-sep">/</span>
       <span>2.5 常量</span>
     </div>
-    <h1 class="chapter-title">2.5　常量：const 与 #define</h1>
+    <h1 class="chapter-title">2.6　常量：const 与 #define</h1>
     <p class="chapter-desc">变量的值可以随时改变，但有些数据从一开始就不该被改动。本节介绍 C++ 中定义"不能被修改的数据"的两种写法，以及为什么其中一种明显更值得优先使用。</p>
   </header>
 
@@ -74,12 +74,12 @@
   <nav class="ch02-nav">
     <div class="ch02-nav-label">第二章 · 变量与数据类型</div>
     <div class="ch02-nav-items">
-      <a class="ch02-nav-item" href="02_00_变量与数据类型.html"><span class="cni-num">2.0</span><span class="cni-name">变量基础</span></a>
-      <a class="ch02-nav-item" href="02_01_数据类型转换.html"><span class="cni-num">2.1</span><span class="cni-name">数据类型转换</span></a>
-      <a class="ch02-nav-item" href="02_02_ASCII编码.html"><span class="cni-num">2.2</span><span class="cni-name">ASCII 编码</span></a>
-      <a class="ch02-nav-item" href="02_03_原码反码补码.html"><span class="cni-num">2.3</span><span class="cni-name">原码、反码与补码</span></a>
-      <a class="ch02-nav-item" href="02_04_cmath数学库.html"><span class="cni-num">2.4</span><span class="cni-name">cmath 数学库</span></a>
-      <a class="ch02-nav-item active" href="02_06_Constants.html"><span class="cni-num">2.5</span><span class="cni-name">常量</span></a>
+      <a class="ch02-nav-item" href="02_01_VariablesAndDataTypes.html"><span class="cni-num">2.1</span><span class="cni-name">变量基础</span></a>
+      <a class="ch02-nav-item" href="02_02_TypeConversion.html"><span class="cni-num">2.2</span><span class="cni-name">数据类型转换</span></a>
+      <a class="ch02-nav-item" href="02_03_ASCIIEncoding.html"><span class="cni-num">2.3</span><span class="cni-name">ASCII 编码</span></a>
+      <a class="ch02-nav-item" href="02_04_ComplementCodes.html"><span class="cni-num">2.4</span><span class="cni-name">原码、反码与补码</span></a>
+      <a class="ch02-nav-item active" href="02_05_cmathLibrary.html"><span class="cni-num">2.5</span><span class="cni-name">cmath 数学库</span></a>
+      <a class="ch02-nav-item" href="02_06_Constants.html"><span class="cni-num">2.6</span><span class="cni-name">常量</span></a>
     </div>
   </nav>
 
@@ -87,24 +87,24 @@
   <nav class="toc">
     <p class="toc-title">本页目录</p>
     <ul class="toc-list">
-      <li><a href="#sub1"><span class="toc-num">2.5.1</span>为什么需要常量</a></li>
-      <li><a href="#sub2"><span class="toc-num">2.5.2</span>写法一：const（推荐）</a></li>
-      <li><a href="#sub3"><span class="toc-num">2.5.3</span>写法二：#define（宏定义）</a></li>
-      <li><a href="#sub4"><span class="toc-num">2.5.4</span>两种写法怎么选</a></li>
+      <li><a href="#sub1"><span class="toc-num">2.6.1</span>为什么需要常量</a></li>
+      <li><a href="#sub2"><span class="toc-num">2.6.2</span>写法一：const（推荐）</a></li>
+      <li><a href="#sub3"><span class="toc-num">2.6.3</span>写法二：#define（宏定义）</a></li>
+      <li><a href="#sub4"><span class="toc-num">2.6.4</span>两种写法怎么选</a></li>
     </ul>
   </nav>
 
   <!-- ═══ 正文 ═══ -->
   <section class="section" id="s1">
-    <p class="section-label">2.5</p>
+    <p class="section-label">2.6</p>
     <h2 class="section-title">常量：const 与 #define</h2>
 
-    <h3 class="sub-title" id="sub1">2.5.1 为什么需要常量</h3>
+    <h3 class="sub-title" id="sub1">2.6.1 为什么需要常量</h3>
     <div class="section-body">
       <p>前面讲的变量，值是可以随时改变的。但有些数据从一开始就不应该被改变——比如圆周率 <code>3.14159</code>、一个数组的最大长度 <code>100</code>——这类"定义好之后就不允许再修改"的数据，就应该定义成<strong>常量</strong>。C++ 里定义常量主要有两种写法：<code>const</code> 关键字和 <code>#define</code> 宏定义。</p>
     </div>
 
-    <h3 class="sub-title" id="sub2">2.5.2 写法一：const（推荐）</h3>
+    <h3 class="sub-title" id="sub2">2.6.2 写法一：const（推荐）</h3>
     <div class="section-body">
       <p><code>const</code> 是 C++ 的关键字，加在类型前面，表示"这个变量的值一旦初始化就不能再修改"。语法是：<code>const 类型 常量名 = 值;</code></p>
     </div>
@@ -132,7 +132,7 @@
       <div><b>const 变量和普通变量一样有类型、有作用域：</b><code>PI</code> 是一个真正的 <code>double</code> 类型变量，只是多了"不能被修改"这条限制——编译器会检查类型是否匹配，调试时也能像普通变量一样在调试器里看到它的名字和值。这也是 <code>const</code> 相比下面 <code>#define</code> 的核心优势。</div>
     </div>
 
-    <h3 class="sub-title" id="sub3">2.5.3 写法二：#define（宏定义）</h3>
+    <h3 class="sub-title" id="sub3">2.6.3 写法二：#define（宏定义）</h3>
     <div class="section-body">
       <p><code>#define</code> 是<strong>预处理指令</strong>，不是 C++ 语句——它在程序真正编译之前，由预处理器进行一次<strong>纯文本替换</strong>：把代码里所有出现的"常量名"，原样替换成后面写的内容。语法是：<code>#define 常量名 值</code>（注意<strong>末尾不加分号</strong>）。</p>
     </div>
@@ -163,7 +163,7 @@
       <div><b>#define 只是"文本替换"，编译器根本不知道 PI、MAX_N 的存在：</b>预处理阶段结束后，代码里已经找不到 <code>PI</code> 这个名字了——它已经被替换成了 <code>3.14159</code> 本身。所以 <code>#define</code> 定义的"常量"<strong>没有类型</strong>，编译器也<strong>不会做任何类型检查</strong>；如果代码写错了，报错信息里也只会显示替换后的内容（比如一长串 <code>3.14159</code>），而不会提示"PI 这里有问题"，调试起来更麻烦。</div>
     </div>
 
-    <h3 class="sub-title" id="sub4">2.5.4 两种写法怎么选</h3>
+    <h3 class="sub-title" id="sub4">2.6.4 两种写法怎么选</h3>
 
     <table class="dt-table">
       <thead>
@@ -215,10 +215,10 @@
 
   <!-- ═══ Footer ═══ -->
   <footer class="doc-footer">
-    <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.5 常量</p>
+    <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.6 常量</p>
     <div class="chapter-nav">
-      <a class="nav-btn ghost" href="02_04_cmath数学库.html">← 2.4 cmath 数学库</a>
-      <a class="nav-btn" href="03_01_cin与cout.html">第三章：输入与输出 →</a>
+      <a class="nav-btn ghost" href="02_05_cmathLibrary.html">← 2.5 cmath 数学库</a>
+      <a class="nav-btn" href="03_01_cinAndCout.html">第三章：输入与输出 →</a>
     </div>
   </footer>
 

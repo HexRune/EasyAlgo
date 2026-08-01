@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2.4 cmath 数学库 — C++ 编程语法</title>
+<title>2.5 cmath 数学库 — C++ 编程语法</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="CSS/style.css">
 <style>
   /* 水印 */
-  .chapter-header::before { content: "2.4"; }
+  .chapter-header::before { content: "2.5"; }
 
   /* ── 子导航组件（ch02 风格，单卡片） ── */
   .ch02-nav {
@@ -96,15 +96,15 @@
 <div class="page-wrap">
 
   <!-- ═══ Chapter Header ═══ -->
-  <header class="chapter-header" data-ch="2.4">
+  <header class="chapter-header" data-ch="2.5">
     <div class="chapter-eyebrow">
       <a href="index.html">← 目录</a>
       <span class="eyebrow-sep">/</span>
       <span>第二章 · 变量与数据类型</span>
       <span class="eyebrow-sep">/</span>
-      <span>2.4 cmath 数学库</span>
+      <span>2.5 cmath 数学库</span>
     </div>
-    <h1 class="chapter-title">2.4　cmath 数学库</h1>
+    <h1 class="chapter-title">2.5　cmath 数学库</h1>
     <p class="chapter-desc"><code>&lt;cmath&gt;</code> 内置了许多常用的数学计算函数，覆盖取整、绝对值、幂运算和三角函数等竞赛常用场景。</p>
   </header>
 
@@ -112,12 +112,12 @@
   <nav class="ch02-nav">
     <div class="ch02-nav-label">第二章 · 变量与数据类型</div>
     <div class="ch02-nav-items">
-      <a class="ch02-nav-item" href="02_00_变量与数据类型.html"><span class="cni-num">2.0</span><span class="cni-name">变量基础</span></a>
-      <a class="ch02-nav-item" href="02_01_数据类型转换.html"><span class="cni-num">2.1</span><span class="cni-name">数据类型转换</span></a>
-      <a class="ch02-nav-item" href="02_02_ASCII编码.html"><span class="cni-num">2.2</span><span class="cni-name">ASCII 编码</span></a>
-      <a class="ch02-nav-item" href="02_03_原码反码补码.html"><span class="cni-num">2.3</span><span class="cni-name">原码、反码与补码</span></a>
-      <a class="ch02-nav-item active" href="02_04_cmath数学库.html"><span class="cni-num">2.4</span><span class="cni-name">cmath 数学库</span></a>
-      <a class="ch02-nav-item" href="02_05_常量.html"><span class="cni-num">2.5</span><span class="cni-name">常量</span></a>
+      <a class="ch02-nav-item" href="02_01_VariablesAndDataTypes.html"><span class="cni-num">2.1</span><span class="cni-name">变量基础</span></a>
+      <a class="ch02-nav-item" href="02_02_TypeConversion.html"><span class="cni-num">2.2</span><span class="cni-name">数据类型转换</span></a>
+      <a class="ch02-nav-item" href="02_03_ASCIIEncoding.html"><span class="cni-num">2.3</span><span class="cni-name">ASCII 编码</span></a>
+      <a class="ch02-nav-item" href="02_04_ComplementCodes.html"><span class="cni-num">2.4</span><span class="cni-name">原码、反码与补码</span></a>
+      <a class="ch02-nav-item active" href="02_05_cmathLibrary.html"><span class="cni-num">2.5</span><span class="cni-name">cmath 数学库</span></a>
+      <a class="ch02-nav-item" href="02_06_Constants.html"><span class="cni-num">2.6</span><span class="cni-name">常量</span></a>
     </div>
   </nav>
 
@@ -125,24 +125,24 @@
   <nav class="toc">
     <p class="toc-title">本页目录</p>
     <ul class="toc-list">
-      <li><a href="#sub1"><span class="toc-num">2.4.1</span>为什么需要数学函数库</a></li>
-      <li><a href="#sub2"><span class="toc-num">2.4.2</span>取整函数：floor · ceil · round</a></li>
-      <li><a href="#sub3"><span class="toc-num">2.4.3</span>绝对值与幂运算：abs · pow · sqrt</a></li>
-      <li><a href="#sub4"><span class="toc-num">2.4.4</span>三角函数：sin · cos · tan</a></li>
-      <li><a href="#sub5"><span class="toc-num">2.4.5</span>综合示例</a></li>
-      <li><a href="#sub6"><span class="toc-num">2.4.6</span>常见陷阱与易错点</a></li>
+      <li><a href="#sub1"><span class="toc-num">2.5.1</span>为什么需要数学函数库</a></li>
+      <li><a href="#sub2"><span class="toc-num">2.5.2</span>取整函数：floor · ceil · round</a></li>
+      <li><a href="#sub3"><span class="toc-num">2.5.3</span>绝对值与幂运算：abs · pow · sqrt</a></li>
+      <li><a href="#sub4"><span class="toc-num">2.5.4</span>三角函数：sin · cos · tan</a></li>
+      <li><a href="#sub5"><span class="toc-num">2.5.5</span>综合示例</a></li>
+      <li><a href="#sub6"><span class="toc-num">2.5.6</span>常见陷阱与易错点</a></li>
     </ul>
   </nav>
 
   <!-- ═══ 正文 ═══ -->
   <section class="section" id="s1">
-    <p class="section-label">2.4</p>
+    <p class="section-label">2.5</p>
     <h2 class="section-title">cmath 数学库</h2>
     <div class="section-body">
       <p><code>&lt;cmath&gt;</code> 内置了许多常用的数学计算函数，覆盖取整、绝对值、幂运算和三角函数等竞赛常用场景，使用前需要先引入头文件 <code>#include &lt;cmath&gt;</code>。</p>
     </div>
 
-    <h3 class="sub-title" id="sub1">2.4.1 为什么需要数学函数库</h3>
+    <h3 class="sub-title" id="sub1">2.5.1 为什么需要数学函数库</h3>
     <div class="section-body">
       <p>像"求平方根"这样的运算，如果没有现成的函数，自己写代码实现并不简单——你可能需要用二分查找或者牛顿迭代法一步步逼近答案，还要处理各种边界情况。<code>&lt;cmath&gt;</code> 把这些数学上成熟、经过反复优化的算法都封装成了现成的函数，你只需要"调用"，不需要"重新发明"。</p>
       <p>这就像箱子里已经有一把量角器和一把尺子，你不需要自己动手做——拿来用就好。养成"先想想标准库里有没有现成函数"的习惯，能省下大量调试时间。</p>
@@ -150,10 +150,10 @@
 
     <div class="callout info">
       <span class="callout-icon">📐</span>
-      <div><b>使用前提：</b>所有函数使用前都要在文件开头写上 <code>#include &lt;cmath&gt;</code>。绝大多数函数接收 <code>double</code> 类型的参数、返回 <code>double</code> 类型的结果，即使你传入的是整数，也会被隐式转换成 <code>double</code> 参与计算（见 2.1 节）。</div>
+      <div><b>使用前提：</b>所有函数使用前都要在文件开头写上 <code>#include &lt;cmath&gt;</code>。绝大多数函数接收 <code>double</code> 类型的参数、返回 <code>double</code> 类型的结果，即使你传入的是整数，也会被隐式转换成 <code>double</code> 参与计算（见 2.2 节）。</div>
     </div>
 
-    <h3 class="sub-title" id="sub2">2.4.2 取整函数：floor · ceil · round</h3>
+    <h3 class="sub-title" id="sub2">2.5.2 取整函数：floor · ceil · round</h3>
     <div class="section-body">
       <p>这三个函数都是把小数变成整数，但"往哪个方向靠"完全不同，是初学者最容易混淆的一组函数。可以把它们想象成三种不同性格的"取整方式"：</p>
     </div>
@@ -171,7 +171,7 @@
     <div class="dir-row">
       <span class="dir-fn">round(x)</span>
       <span class="dir-arrow">↕</span>
-      <span class="dir-desc"><b>四舍五入</b>——就近取整，小数部分正好是 0.5 时，朝"远离 0"的方向取整。</span>
+      <span class="dir-desc"><b>四舍五入</b>——就近取整，小数部分正好是 0.5 时，朝"远离 0"的方向取整（这是 C++11 起采用的标准行为，和某些语言或数学教材里的"银行家舍入"——四舍六入五成双——不是一回事，遇到不同语言表现不一致时不用意外）。</span>
     </div>
 
     <table class="func-table">
@@ -223,7 +223,7 @@
       <div><b>负数容易搞反：</b><code>floor(-1.5)</code> 得到 <code>-2</code> 而不是 <code>-1</code>，因为 <code>-2</code> 才是"更小"的那个数；<code>ceil(-1.5)</code> 得到 <code>-1</code> 而不是 <code>-2</code>，因为 <code>-1</code> 才是"更大"的那个数。记住口诀——<b>floor 永远变小，ceil 永远变大</b>，和正负号无关。</div>
     </div>
 
-    <h3 class="sub-title" id="sub3">2.4.3 绝对值与幂运算：abs · pow · sqrt</h3>
+    <h3 class="sub-title" id="sub3">2.5.3 绝对值与幂运算：abs · pow · sqrt</h3>
 
     <table class="func-table">
       <thead>
@@ -266,7 +266,7 @@
       <div><b>C++11 中 abs 的改进：</b>C++11 起，<code>&lt;cmath&gt;</code> 中的 <code>abs</code> 已针对 <code>double</code>、<code>float</code>、<code>long double</code> 做了重载，可以直接对浮点数使用 <code>abs()</code>，不再需要单独用 <code>fabs()</code>。绝大多数现代 OJ 平台支持 C++11，直接用 <code>abs</code> 即可。</div>
     </div>
 
-    <h3 class="sub-title" id="sub4">2.4.4 三角函数：sin · cos · tan</h3>
+    <h3 class="sub-title" id="sub4">2.5.4 三角函数：sin · cos · tan</h3>
     <div class="section-body">
       <p>C++ 的三角函数使用<b>弧度制</b>，不是我们日常习惯的<b>角度制</b>——这是初学者最容易踩的坑。弧度和角度的换算关系是：</p>
     </div>
@@ -308,7 +308,7 @@
       <div><b>竞赛小技巧：</b>C++ 标准并不保证一定提供 <code>M_PI</code> 这个 π 常量（它属于编译器扩展，不同平台表现不一致）。竞赛中更稳妥的做法是自己算一次：<code>const double PI = acos(-1.0);</code>——因为 <code>cos(π) = -1</code>，反过来 <code>acos(-1)</code> 就精确等于 π，不需要手写一长串小数。</div>
     </div>
 
-    <h3 class="sub-title" id="sub5">2.4.5 综合示例</h3>
+    <h3 class="sub-title" id="sub5">2.5.5 综合示例</h3>
 
     <div class="code-block">
       <div class="code-header">
@@ -341,7 +341,7 @@
       </div>
     </div>
 
-    <h3 class="sub-title" id="sub6">2.4.6 常见陷阱与易错点</h3>
+    <h3 class="sub-title" id="sub6">2.5.6 常见陷阱与易错点</h3>
     <div class="section-body">
       <p>把本节内容汇总成几条最容易踩坑的规则：</p>
     </div>
@@ -367,7 +367,7 @@
   </section>
 
   <footer class="doc-footer">
-    <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.4 cmath 数学库</p>
+    <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.5 cmath 数学库</p>
     <div class="chapter-nav">
       <a class="nav-btn ghost" href="02_04_ComplementCodes.html">← 2.4 原码、反码与补码</a>
       <a class="nav-btn" href="02_06_Constants.html">2.6 常量 →</a>

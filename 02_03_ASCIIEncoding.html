@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2.2 ASCII 编码 — C++ 编程语法</title>
+<title>2.3 ASCII 编码 — C++ 编程语法</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="CSS/style.css">
 <style>
   /* 水印 */
-  .chapter-header::before { content: "2.2"; }
+  .chapter-header::before { content: "2.3"; }
 
   /* ── 子导航组件（ch02 风格，单卡片） ── */
   .ch02-nav {
@@ -99,7 +99,7 @@
   .arange-tag.upper { background: var(--accent-light); color: var(--accent-dark); }
   .arange-tag.lower { background: var(--teal-light); color: var(--teal); }
 
-  /* ── 执行链条（呼应 2.1 节的 conv-chain 风格） ── */
+  /* ── 执行链条（呼应 2.2 节的 conv-chain 风格） ── */
   .ascii-chain {
     display: flex;
     align-items: center;
@@ -120,9 +120,9 @@
     color: var(--code-str);
   }
   .ac-arrow { color: #45475A; font-size: 18px; padding: 0 4px; }
-  .ac-label { font-size: 11px; color: #6C7086; padding: 2px 8px; margin-left: 8px; font-style: italic; }
+  .ac-label { font-size: 12.5px; color: #A6ADC8; padding: 2px 8px; margin-left: 8px; font-style: italic; line-height: 1.5; }
 
-  /* ── 易错点列表（呼应 2.1 节风格） ── */
+  /* ── 易错点列表（呼应 2.2 节风格） ── */
   .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
   .pitfall-item {
     display: flex; gap: 12px; align-items: flex-start;
@@ -143,15 +143,15 @@
 <div class="page-wrap">
 
   <!-- ═══ Chapter Header ═══ -->
-  <header class="chapter-header" data-ch="2.2">
+  <header class="chapter-header" data-ch="2.3">
     <div class="chapter-eyebrow">
       <a href="index.html">← 目录</a>
       <span class="eyebrow-sep">/</span>
       <span>第二章 · 变量与数据类型</span>
       <span class="eyebrow-sep">/</span>
-      <span>2.2 ASCII 编码</span>
+      <span>2.3 ASCII 编码</span>
     </div>
-    <h1 class="chapter-title">2.2　ASCII 编码</h1>
+    <h1 class="chapter-title">2.3　ASCII 编码</h1>
     <p class="chapter-desc">计算机底层只存储数字，字符本质上也是用整数来表示的——ASCII 就是这套字符与数字之间的映射规则。</p>
   </header>
 
@@ -159,12 +159,12 @@
   <nav class="ch02-nav">
     <div class="ch02-nav-label">第二章 · 变量与数据类型</div>
     <div class="ch02-nav-items">
-      <a class="ch02-nav-item" href="02_00_变量与数据类型.html"><span class="cni-num">2.0</span><span class="cni-name">变量基础</span></a>
-      <a class="ch02-nav-item" href="02_01_数据类型转换.html"><span class="cni-num">2.1</span><span class="cni-name">数据类型转换</span></a>
-      <a class="ch02-nav-item active" href="02_02_ASCII编码.html"><span class="cni-num">2.2</span><span class="cni-name">ASCII 编码</span></a>
-      <a class="ch02-nav-item" href="02_03_原码反码补码.html"><span class="cni-num">2.3</span><span class="cni-name">原码、反码与补码</span></a>
-      <a class="ch02-nav-item" href="02_04_cmath数学库.html"><span class="cni-num">2.4</span><span class="cni-name">cmath 数学库</span></a>
-      <a class="ch02-nav-item" href="02_05_常量.html"><span class="cni-num">2.5</span><span class="cni-name">常量</span></a>
+      <a class="ch02-nav-item" href="02_01_VariablesAndDataTypes.html"><span class="cni-num">2.1</span><span class="cni-name">变量基础</span></a>
+      <a class="ch02-nav-item" href="02_02_TypeConversion.html"><span class="cni-num">2.2</span><span class="cni-name">数据类型转换</span></a>
+      <a class="ch02-nav-item active" href="02_03_ASCIIEncoding.html"><span class="cni-num">2.3</span><span class="cni-name">ASCII 编码</span></a>
+      <a class="ch02-nav-item" href="02_04_ComplementCodes.html"><span class="cni-num">2.4</span><span class="cni-name">原码、反码与补码</span></a>
+      <a class="ch02-nav-item" href="02_05_cmathLibrary.html"><span class="cni-num">2.5</span><span class="cni-name">cmath 数学库</span></a>
+      <a class="ch02-nav-item" href="02_06_Constants.html"><span class="cni-num">2.6</span><span class="cni-name">常量</span></a>
     </div>
   </nav>
 
@@ -172,24 +172,24 @@
   <nav class="toc">
     <p class="toc-title">本页目录</p>
     <ul class="toc-list">
-      <li><a href="#sub1"><span class="toc-num">2.2.1</span>为什么字符也是数字</a></li>
-      <li><a href="#sub2"><span class="toc-num">2.2.2</span>ASCII 表结构总览</a></li>
-      <li><a href="#sub3"><span class="toc-num">2.2.3</span>常用 ASCII 值速查</a></li>
-      <li><a href="#sub4"><span class="toc-num">2.2.4</span>实用技巧与代码示例</a></li>
-      <li><a href="#sub5"><span class="toc-num">2.2.5</span>更专业的写法：cctype 函数库</a></li>
-      <li><a href="#sub6"><span class="toc-num">2.2.6</span>常见陷阱与易错点</a></li>
+      <li><a href="#sub1"><span class="toc-num">2.3.1</span>为什么字符也是数字</a></li>
+      <li><a href="#sub2"><span class="toc-num">2.3.2</span>ASCII 表结构总览</a></li>
+      <li><a href="#sub3"><span class="toc-num">2.3.3</span>常用 ASCII 值速查</a></li>
+      <li><a href="#sub4"><span class="toc-num">2.3.4</span>实用技巧与代码示例</a></li>
+      <li><a href="#sub5"><span class="toc-num">2.3.5</span>更专业的写法：cctype 函数库</a></li>
+      <li><a href="#sub6"><span class="toc-num">2.3.6</span>常见陷阱与易错点</a></li>
     </ul>
   </nav>
 
   <!-- ═══ 正文 ═══ -->
   <section class="section" id="s1">
-    <p class="section-label">2.2</p>
+    <p class="section-label">2.3</p>
     <h2 class="section-title">ASCII 编码</h2>
     <div class="section-body">
       <p>ASCII（美国信息交换标准代码）是一种将字符映射为数字的编码系统，最初于 1963 年发布。标准 ASCII 定义了 128 个字符（0~127），包括控制字符和可显示字符。计算机底层只存储数字，字符本质上也是用整数来表示的。</p>
     </div>
 
-    <h3 class="sub-title" id="sub1">2.2.1 为什么字符也是数字</h3>
+    <h3 class="sub-title" id="sub1">2.3.1 为什么字符也是数字</h3>
     <div class="section-body">
       <p>计算机的存储单元里只有 0 和 1，它<b>只会存数字，不认识"字符"这种东西</b>。那我们平时打的字母、标点、汉字是怎么显示出来的呢？答案是：人和计算机之间需要一份"翻译词典"——大家提前约定好，数字 <code>65</code> 就代表字母 <code>'A'</code>，数字 <code>97</code> 就代表 <code>'a'</code>。计算机内部只存这个数字，显示的时候再按词典"翻译"成人能看懂的字符。</p>
       <p>这份词典就是 <b>ASCII 编码表</b>。它把 128 个常用字符（英文字母、数字符号、标点、常见控制符）分别对应到 <code>0~127</code> 这 128 个整数上，成为几乎所有编程语言和计算机系统的共同基础。</p>
@@ -200,7 +200,7 @@
       <div><b>关键概念：</b>在 C++ 里，<code>char</code> 类型本质上<b>就是一个 1 字节的整数</b>。写 <code>char c = 'A';</code> 时，编译器实际存进去的是数字 <code>65</code>，只不过 <code>char</code> 在输出（如 <code>cout</code>）时会自动按 ASCII 表"翻译"成对应的字符显示出来。这也是为什么 <code>char</code> 可以像整数一样参与加减运算——它<b>本来就是整数</b>。</div>
     </div>
 
-    <h3 class="sub-title" id="sub2">2.2.2 ASCII 表结构总览</h3>
+    <h3 class="sub-title" id="sub2">2.3.2 ASCII 表结构总览</h3>
     <div class="section-body">
       <p>与其死记硬背 128 个数字，不如先记住 ASCII 表被分成了几大块，各块内部又是<b>连续排列</b>的——这比记住某个字符具体是第几号更有用：</p>
     </div>
@@ -268,7 +268,7 @@
       <div><b>记忆诀窍：</b>只要记住三个"锚点"—— <code>'0'</code> = 48，<code>'A'</code> = 65，<code>'a'</code> = 97——剩下的字符都可以通过"连续排列"和"相差 32"这两条规律直接推算出来，完全不需要死记整张表。</div>
     </div>
 
-    <h3 class="sub-title" id="sub3">2.2.3 常用 ASCII 值速查</h3>
+    <h3 class="sub-title" id="sub3">2.3.3 常用 ASCII 值速查</h3>
     <div class="ascii-grid">
       <div class="ascii-card">
         <div class="ascii-char ascii-space">SP</div>
@@ -300,7 +300,7 @@
       </div>
     </div>
 
-    <h3 class="sub-title" id="sub4">2.2.4 实用技巧与代码示例</h3>
+    <h3 class="sub-title" id="sub4">2.3.4 实用技巧与代码示例</h3>
     <div class="section-body">
       <p>正因为大写字母和小写字母在 ASCII 表里各自连续排列，且首字母恰好相差 32，数字字符 '0'~'9' 也连续排列，我们可以用简单的加减法在字符和数值之间转换，而不需要查表：</p>
     </div>
@@ -354,7 +354,7 @@
       <p>技巧 2、3 的道理完全一样：字符 <code>'5'</code> 本质是数字 <code>53</code>，减去字符 <code>'0'</code>（数字 <code>48</code>），得到 <code>53 - 48 = 5</code>，这才是我们真正想要的数值 <code>5</code>——而不是字符 <code>'5'</code> 本身的编码值。</p>
     </div>
 
-    <h3 class="sub-title" id="sub5">2.2.5 更专业的写法：cctype 函数库</h3>
+    <h3 class="sub-title" id="sub5">2.3.5 更专业的写法：cctype 函数库</h3>
     <div class="section-body">
       <p>手动加减 32 或 48 虽然直观，但每次使用前都要先确认"这确实是个字母/数字"，否则会算出无意义的结果。C++ 标准库 <code>&lt;cctype&gt;</code> 提供了一整套现成的字符判断和转换函数，更安全、更不容易出错，正式写代码时更推荐使用：</p>
     </div>
@@ -379,6 +379,58 @@
           <tr><td class="ln">9</td><td class="cd"><span class="fn">tolower</span><span class="punc">(</span><span class="fn">ch</span><span class="punc">)</span>   <span class="cmt">// 返回转换成小写后的字符</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <table class="advice-table">
+      <thead>
+        <tr>
+          <th>函数</th>
+          <th>返回值类型</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>isalpha(ch)</code></td>
+          <td>int（非 0 表示"是"，0 表示"否"）</td>
+          <td>判断 <code>ch</code> 是否为字母（大写或小写均可）</td>
+        </tr>
+        <tr>
+          <td><code>isdigit(ch)</code></td>
+          <td>int（非 0 表示"是"，0 表示"否"）</td>
+          <td>判断 <code>ch</code> 是否为数字字符 <code>'0'</code>~<code>'9'</code></td>
+        </tr>
+        <tr>
+          <td><code>isupper(ch)</code></td>
+          <td>int（非 0 表示"是"，0 表示"否"）</td>
+          <td>判断 <code>ch</code> 是否为大写字母</td>
+        </tr>
+        <tr>
+          <td><code>islower(ch)</code></td>
+          <td>int（非 0 表示"是"，0 表示"否"）</td>
+          <td>判断 <code>ch</code> 是否为小写字母</td>
+        </tr>
+        <tr>
+          <td><code>isspace(ch)</code></td>
+          <td>int（非 0 表示"是"，0 表示"否"）</td>
+          <td>判断 <code>ch</code> 是否为空白字符（空格、换行、制表符等）</td>
+        </tr>
+        <tr>
+          <td><code>toupper(ch)</code></td>
+          <td>int（转换后字符的编码）</td>
+          <td>返回 <code>ch</code> 转换成大写后的字符编码；不是字母则原样返回</td>
+        </tr>
+        <tr>
+          <td><code>tolower(ch)</code></td>
+          <td>int（转换后字符的编码）</td>
+          <td>返回 <code>ch</code> 转换成小写后的字符编码；不是字母则原样返回</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">🔍</span>
+      <div><b>为什么返回值是 int，不是 char/bool？</b>这是 <code>&lt;cctype&gt;</code> 从 C 语言继承下来的历史包袱——这些函数设计时 C++ 里还没有 <code>bool</code> 类型，所以判断类函数（<code>isalpha</code>、<code>isdigit</code> 等）用非 0/0 表示"是/否"；而转换类函数（<code>toupper</code>、<code>tolower</code>）返回的也是 <code>int</code> 而不是 <code>char</code>。这正是前面代码里要写 <code>char(tolower(c))</code> 手动转换一下的原因——直接把 <code>tolower(c)</code> 赋值给 <code>char</code> 变量虽然大多数情况下也能用，但显式转换能让代码意图更清楚。</div>
     </div>
 
     <div class="section-body">
@@ -409,7 +461,7 @@
       <div><b>竞赛建议：</b>手动加减 32/48 的技巧运算速度略快、代码更短，竞赛中很常见；但如果不确定输入是否一定是字母/数字（比如需要处理混合了符号的字符串），优先用 <code>&lt;cctype&gt;</code> 的判断函数打底，更不容易因为边界情况写出 bug。</div>
     </div>
 
-    <h3 class="sub-title" id="sub6">2.2.6 常见陷阱与易错点</h3>
+    <h3 class="sub-title" id="sub6">2.3.6 常见陷阱与易错点</h3>
     <div class="section-body">
       <p>把本节内容汇总成几条最容易踩坑的规则：</p>
     </div>

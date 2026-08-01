@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2.3 原码、反码与补码 — C++ 编程语法</title>
+<title>2.4 原码、反码与补码 — C++ 编程语法</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="CSS/style.css">
 <style>
   /* 水印 */
-  .chapter-header::before { content: "2.3"; }
+  .chapter-header::before { content: "2.4"; }
 
   /* ── 子导航组件（ch02 风格，单卡片） ── */
   .ch02-nav {
@@ -124,15 +124,15 @@
 <div class="page-wrap">
 
   <!-- ═══ Chapter Header ═══ -->
-  <header class="chapter-header" data-ch="2.3">
+  <header class="chapter-header" data-ch="2.4">
     <div class="chapter-eyebrow">
       <a href="index.html">← 目录</a>
       <span class="eyebrow-sep">/</span>
       <span>第二章 · 变量与数据类型</span>
       <span class="eyebrow-sep">/</span>
-      <span>2.3 原码、反码与补码</span>
+      <span>2.4 原码、反码与补码</span>
     </div>
-    <h1 class="chapter-title">2.3　原码、反码与补码</h1>
+    <h1 class="chapter-title">2.4　原码、反码与补码</h1>
     <p class="chapter-desc">计算机只认识 0 和 1，那它是如何表示负数的？科学家们为此设计了三种编码方案，依次改进，最终解决了这个问题。</p>
   </header>
 
@@ -140,12 +140,12 @@
   <nav class="ch02-nav">
     <div class="ch02-nav-label">第二章 · 变量与数据类型</div>
     <div class="ch02-nav-items">
-      <a class="ch02-nav-item" href="02_00_变量与数据类型.html"><span class="cni-num">2.0</span><span class="cni-name">变量基础</span></a>
-      <a class="ch02-nav-item" href="02_01_数据类型转换.html"><span class="cni-num">2.1</span><span class="cni-name">数据类型转换</span></a>
-      <a class="ch02-nav-item" href="02_02_ASCII编码.html"><span class="cni-num">2.2</span><span class="cni-name">ASCII 编码</span></a>
-      <a class="ch02-nav-item active" href="02_03_原码反码补码.html"><span class="cni-num">2.3</span><span class="cni-name">原码、反码与补码</span></a>
-      <a class="ch02-nav-item" href="02_04_cmath数学库.html"><span class="cni-num">2.4</span><span class="cni-name">cmath 数学库</span></a>
-      <a class="ch02-nav-item" href="02_05_常量.html"><span class="cni-num">2.5</span><span class="cni-name">常量</span></a>
+      <a class="ch02-nav-item" href="02_01_VariablesAndDataTypes.html"><span class="cni-num">2.1</span><span class="cni-name">变量基础</span></a>
+      <a class="ch02-nav-item" href="02_02_TypeConversion.html"><span class="cni-num">2.2</span><span class="cni-name">数据类型转换</span></a>
+      <a class="ch02-nav-item" href="02_03_ASCIIEncoding.html"><span class="cni-num">2.3</span><span class="cni-name">ASCII 编码</span></a>
+      <a class="ch02-nav-item active" href="02_04_ComplementCodes.html"><span class="cni-num">2.4</span><span class="cni-name">原码、反码与补码</span></a>
+      <a class="ch02-nav-item" href="02_05_cmathLibrary.html"><span class="cni-num">2.5</span><span class="cni-name">cmath 数学库</span></a>
+      <a class="ch02-nav-item" href="02_06_Constants.html"><span class="cni-num">2.6</span><span class="cni-name">常量</span></a>
     </div>
   </nav>
 
@@ -153,16 +153,16 @@
   <nav class="toc">
     <p class="toc-title">本页目录</p>
     <ul class="toc-list">
-      <li><a href="#sub1"><span class="toc-num">2.3.1</span>三种编码方案</a></li>
-      <li><a href="#sub2"><span class="toc-num">2.3.2</span>验证：5 + (−5)</a></li>
-      <li><a href="#sub3"><span class="toc-num">2.3.3</span>三种编码对照表</a></li>
-      <li><a href="#sub4"><span class="toc-num">2.3.4</span>多字节数据的内存布局：大端与小端</a></li>
+      <li><a href="#sub1"><span class="toc-num">2.4.1</span>三种编码方案</a></li>
+      <li><a href="#sub2"><span class="toc-num">2.4.2</span>验证：5 + (−5)</a></li>
+      <li><a href="#sub3"><span class="toc-num">2.4.3</span>三种编码对照表</a></li>
+      <li><a href="#sub4"><span class="toc-num">2.4.4</span>多字节数据的内存布局：大端与小端<span style="margin-left:6px; font-size:11px; color:var(--text-muted); font-style:italic;">（拓展）</span></a></li>
     </ul>
   </nav>
 
   <!-- ═══ 正文 ═══ -->
   <section class="section" id="s1">
-    <p class="section-label">2.3</p>
+    <p class="section-label">2.4</p>
     <h2 class="section-title">原码、反码与补码</h2>
     <div class="section-body">
       <p>计算机只认识 0 和 1，那它是如何表示负数的？科学家们为此设计了三种编码方案，依次改进，最终解决了这个问题。</p>
@@ -178,13 +178,13 @@
       </div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="num">0</span> <span class="fn">0000101</span>  <span class="cmt">→ +5（符号位为 0，表示正数）</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="type">1</span> <span class="fn">0000101</span>  <span class="cmt">→ -5（符号位为 1，表示负数）</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="num">0000</span> <span class="fn">0101</span>  <span class="cmt">→ +5（符号位为 0，表示正数）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="type">1000</span> <span class="fn">0101</span>  <span class="cmt">→ -5（符号位为 1，表示负数）</span></td></tr>
         </table>
       </div>
     </div>
 
-    <h3 class="sub-title" id="sub1">2.3.1 三种编码方案</h3>
+    <h3 class="sub-title" id="sub1">2.4.1 三种编码方案</h3>
 
     <!-- Three encoding cards -->
     <div class="encode-steps">
@@ -195,7 +195,7 @@
         </div>
         <div class="encode-card-body">
           <b>最直觉的写法：</b>符号位表示正负，其余位直接写数字的二进制。
-          <div class="encode-rule">+5 → 0 0000101<br>-5 → 1 0000101</div>
+          <div class="encode-rule">+5 → 0000 0101<br>-5 → 1000 0101</div>
           <div style="margin-top:10px; font-size:12.5px; color:#993C1D;">✗ 问题：加减法需要专门区分正负处理，电路复杂。</div>
         </div>
       </div>
@@ -206,7 +206,7 @@
         </div>
         <div class="encode-card-body">
           <b>规则：</b>正数不变；负数符号位不变，其余位全部取反。
-          <div class="encode-rule">-5 原码：1 0000101<br>-5 反码：1 1111010</div>
+          <div class="encode-rule">-5 原码：1000 0101<br>-5 反码：1111 1010</div>
           <div style="margin-top:10px; font-size:12.5px; color:#854F0B;">△ 问题：0 有两种表示（+0 和 -0），需额外处理。</div>
         </div>
       </div>
@@ -217,13 +217,13 @@
         </div>
         <div class="encode-card-body">
           <b>规则：</b>正数不变；负数 = 反码 + 1。现代计算机真正使用的方案。
-          <div class="encode-rule">-5 反码：1 1111010<br>-5 补码：1 1111011</div>
+          <div class="encode-rule">-5 反码：1111 1010<br>-5 补码：1111 1011</div>
           <div style="margin-top:10px; font-size:12.5px; color:#0F6E56;">✓ -0 被消灭，多出的编码用来表示 -128！</div>
         </div>
       </div>
     </div>
 
-    <h3 class="sub-title" id="sub2">2.3.2 验证：5 + (−5) 在三种编码下的结果</h3>
+    <h3 class="sub-title" id="sub2">2.4.2 验证：5 + (−5) 在三种编码下的结果</h3>
 
     <div class="code-block">
       <div class="code-header">
@@ -235,28 +235,28 @@
       <div class="code-body">
         <table class="code-table">
           <tr><td class="ln"></td><td class="cd" style="color:#6C7086; padding-bottom:0; font-size:11px; letter-spacing:.08em;">── 原码（错误）──────────────────</td></tr>
-          <tr><td class="ln"></td><td class="cd">  <span class="num">0 0000101</span>  <span class="cmt">（+5）</span></td></tr>
-          <tr><td class="ln"></td><td class="cd"><span class="op">+</span> <span class="type">1 0000101</span>  <span class="cmt">（-5）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="num">0000 0101</span>  <span class="cmt">（+5）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd"><span class="op">+</span> <span class="type">1000 0101</span>  <span class="cmt">（-5）</span></td></tr>
           <tr><td class="ln"></td><td class="cd">  <span class="cmt">──────────</span></td></tr>
-          <tr><td class="ln"></td><td class="cd">  <span class="type">1 0001010</span>  <span class="cmt">= -10，完全不对！✗</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="type">1000 1010</span>  <span class="cmt">= -10，完全不对！✗</span></td></tr>
           <tr><td class="ln"></td><td class="cd"></td></tr>
           <tr><td class="ln"></td><td class="cd" style="color:#6C7086; padding-bottom:0; font-size:11px; letter-spacing:.08em;">── 反码（接近但有瑕疵）───────────</td></tr>
-          <tr><td class="ln"></td><td class="cd">  <span class="num">0 0000101</span>  <span class="cmt">（+5 的反码）</span></td></tr>
-          <tr><td class="ln"></td><td class="cd"><span class="op">+</span> <span class="num">1 1111010</span>  <span class="cmt">（-5 的反码）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="num">0000 0101</span>  <span class="cmt">（+5 的反码）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd"><span class="op">+</span> <span class="num">1111 1010</span>  <span class="cmt">（-5 的反码）</span></td></tr>
           <tr><td class="ln"></td><td class="cd">  <span class="cmt">──────────</span></td></tr>
-          <tr><td class="ln"></td><td class="cd">  <span class="type">1 1111111</span>  <span class="cmt">= -0，还是不对 △</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="type">1111 1111</span>  <span class="cmt">= -0，还是不对 △</span></td></tr>
           <tr><td class="ln"></td><td class="cd"></td></tr>
           <tr><td class="ln"></td><td class="cd" style="color:#6C7086; padding-bottom:0; font-size:11px; letter-spacing:.08em;">── 补码（正确！）────────────────</td></tr>
-          <tr><td class="ln"></td><td class="cd">  <span class="num">0 0000101</span>  <span class="cmt">（+5 的补码）</span></td></tr>
-          <tr><td class="ln"></td><td class="cd"><span class="op">+</span> <span class="num">1 1111011</span>  <span class="cmt">（-5 的补码）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="num">0000 0101</span>  <span class="cmt">（+5 的补码）</span></td></tr>
+          <tr><td class="ln"></td><td class="cd"><span class="op">+</span> <span class="num">1111 1011</span>  <span class="cmt">（-5 的补码）</span></td></tr>
           <tr><td class="ln"></td><td class="cd">  <span class="cmt">──────────</span></td></tr>
-          <tr><td class="ln"></td><td class="cd"> <span class="str">1 0 0000000</span>  <span class="cmt">最高位进位溢出，自动丢弃</span></td></tr>
-          <tr><td class="ln"></td><td class="cd">  <span class="str">0 0000000</span>  <span class="cmt">= 0  完全正确！✓</span></td></tr>
+          <tr><td class="ln"></td><td class="cd"> <span class="str">1 0000 0000</span>  <span class="cmt">最高位进位溢出，自动丢弃</span></td></tr>
+          <tr><td class="ln"></td><td class="cd">  <span class="str">0000 0000</span>  <span class="cmt">= 0  完全正确！✓</span></td></tr>
         </table>
       </div>
     </div>
 
-    <h3 class="sub-title" id="sub3">2.3.3 三种编码对照表（8 位）</h3>
+    <h3 class="sub-title" id="sub3">2.4.3 三种编码对照表（8 位）</h3>
 
     <table class="comp-table">
       <thead>
@@ -323,8 +323,9 @@
       <div><b>扩展阅读：</b>C++20 标准正式强制要求有符号整数使用补码表示（此前是实现定义的）。补码不再是"可选方案"，而是所有 C++ 平台的统一标准。理解三种编码的演进历史，有助于真正体会补码设计的精妙之处。</div>
     </div>
 
-    <h3 class="sub-title" id="sub4">2.3.4 多字节数据的内存布局：大端与小端</h3>
+    <h3 class="sub-title" id="sub4">2.4.4 多字节数据的内存布局：大端与小端<span style="margin-left:2px; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700; font-style:normal; background:var(--amber-light); color:var(--amber); white-space:nowrap;">拓展知识</span></h3>
     <div class="section-body">
+      <p>理解了单字节的补码后，我们来看一个更进一步的底层细节：多字节数据在内存中是如何排列的。这部分内容有点"硬核"，如果现在觉得吃力，可以先跳过，之后回头再看也完全来得及。</p>
       <p>前面讨论的补码都是针对 <b>1 个字节（8 位）</b>展开的，但 <code>int</code> 占 4 个字节、<code>long long</code> 占 8 个字节——这些"大于 1 字节"的数据，在内存里到底是怎么摆放的？这就引出了两个新概念：<b>低位字节</b>与<b>高位字节</b>，以及数据摆放顺序的约定——<b>字节序（大端 / 小端）</b>。</p>
     </div>
 
@@ -414,7 +415,7 @@
   </section>
 
   <footer class="doc-footer">
-    <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.3 原码、反码与补码</p>
+    <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.4 原码、反码与补码</p>
     <div class="chapter-nav">
       <a class="nav-btn ghost" href="02_03_ASCIIEncoding.html">← 2.3 ASCII 编码</a>
       <a class="nav-btn" href="02_05_cmathLibrary.html">2.5 cmath 数学库 →</a>

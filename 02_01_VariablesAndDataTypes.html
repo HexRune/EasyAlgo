@@ -130,6 +130,19 @@
     padding: 6px 14px;
     border-bottom: 1px solid var(--border);
   }
+  /* 按优先级分组上色，让层级一眼可辨（仅本章局部生效，不影响第4/7章共用的 .op-pri/.op-sym） */
+  .op-group-header.grp-0 td { background: var(--accent-light) !important; color: var(--accent-dark); border-left: 4px solid var(--accent); }
+  .op-group-header.grp-1 td { background: var(--teal-light)   !important; color: var(--teal);       border-left: 4px solid var(--teal-mid); }
+  .op-group-header.grp-2 td { background: var(--amber-light)  !important; color: var(--amber);      border-left: 4px solid var(--amber-mid); }
+  .op-group-header.grp-3 td { background: var(--coral-light)  !important; color: var(--coral);      border-left: 4px solid var(--coral-mid); }
+  .op-row.grp-0 td:first-child { border-left: 4px solid var(--accent-light); }
+  .op-row.grp-1 td:first-child { border-left: 4px solid var(--teal-light); }
+  .op-row.grp-2 td:first-child { border-left: 4px solid var(--amber-light); }
+  .op-row.grp-3 td:first-child { border-left: 4px solid var(--coral-light); }
+  .op-pri.grp-0 { background: var(--accent-light); color: var(--accent-dark); }
+  .op-pri.grp-1 { background: var(--teal-light);   color: var(--teal); }
+  .op-pri.grp-2 { background: var(--amber-light);  color: var(--amber); }
+  .op-pri.grp-3 { background: var(--coral-light);  color: var(--coral); }
 
   /* 命名规则列表 */
   .rule-list {
@@ -377,6 +390,11 @@
       <div><b>平台差异说明：</b>表中数值基于 GCC/MSVC 在 32/64 位 x86 平台上的典型实现。C++ 标准只规定了最小范围，不规定确切大小。<code>sizeof</code> 的结果以字节为单位，<code>sizeof(char)</code> 始终为 1。另外，<code>aEb</code> 为科学计数法，表示 a × 10<sup>b</sup>。</div>
     </div>
 
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b><code>size_t</code> 现阶段可以先跳过：</b><code>size_t</code> 其实不算一种"独立"的基础数据类型，而是某种无符号整数的一个"别名"（专业说法是 <code>typedef</code>），专门用来表示"大小"或"长度"——比如数组的下标、容器的元素个数。你会在后面写数组、用 <code>sizeof()</code>、或者接触 STL 容器时经常遇到它。现在只需要知道它长这样、大致是个"数不会是负数的整数"就够了，不必深究它的具体范围。</div>
+    </div>
+
     <h3 class="sub-title">用 <code>sizeof()</code> 查看内存大小</h3>
     <div class="section-body">
       <p><code>sizeof()</code> 可以查看某个类型或变量占用了多少字节的内存，在调试和跨平台编程中很实用。</p>
@@ -452,7 +470,9 @@
     <p class="section-label">2.1.5</p>
     <h2 class="section-title">变量运算</h2>
     <div class="section-body">
-      <p>C++ 支持以下算术运算符，按优先级从高到低排列：</p>
+      <p>还记得数学课上学过的"先乘除后加减"吗？C++ 里的运算顺序规则和它基本一致——比如 <code>2 + 3 * 4</code>，会先算 <code>3 * 4 = 12</code>，再算 <code>2 + 12 = 14</code>，而不是从左到右挨个算。</p>
+      <p>如果想让加减法先算，就跟数学课上一样，用括号 <code>()</code> 把它括起来：<code>(2 + 3) * 4</code> 会先算括号里的 <code>2 + 3 = 5</code>，再乘以 4，结果是 <code>20</code>。</p>
+      <p>记住<b>"先乘除后加减，括号最优先"</b>这一条，日常写代码基本就够用了。下面这张表把所有运算符的优先级都列得很全，可以把它当成一本<b>"查阅手册"</b>——不用现在就背下来，遇到拿不准的时候回来查一下就行。</p>
     </div>
 
     <table class="op-table">
@@ -466,61 +486,61 @@
         </tr>
       </thead>
       <tbody>
-        <tr class="op-group-header"><td colspan="5">最高优先级</td></tr>
-        <tr>
-          <td><span class="op-pri">0</span></td>
+        <tr class="op-group-header grp-0"><td colspan="5">🥇 最高优先级</td></tr>
+        <tr class="op-row grp-0">
+          <td><span class="op-pri grp-0">0</span></td>
           <td><span class="op-sym">(  )</span></td>
           <td>提升优先级</td>
           <td class="op-example">(1+2) * 3</td>
           <td class="op-result">9</td>
         </tr>
-        <tr class="op-group-header"><td colspan="5">优先级 1 — 自增 / 自减</td></tr>
-        <tr>
-          <td><span class="op-pri">1</span></td>
+        <tr class="op-group-header grp-1"><td colspan="5">🥈 优先级 1 — 自增 / 自减</td></tr>
+        <tr class="op-row grp-1">
+          <td><span class="op-pri grp-1">1</span></td>
           <td><span class="op-sym">++</span></td>
           <td>自增（加 1）</td>
           <td class="op-example">int a=5; a++;</td>
           <td class="op-result">a 变为 6</td>
         </tr>
-        <tr>
-          <td><span class="op-pri">1</span></td>
+        <tr class="op-row grp-1">
+          <td><span class="op-pri grp-1">1</span></td>
           <td><span class="op-sym">--</span></td>
           <td>自减（减 1）</td>
           <td class="op-example">int a=5; a--;</td>
           <td class="op-result">a 变为 4</td>
         </tr>
-        <tr class="op-group-header"><td colspan="5">优先级 2 — 乘 / 除 / 取余</td></tr>
-        <tr>
-          <td><span class="op-pri">2</span></td>
+        <tr class="op-group-header grp-2"><td colspan="5">🥉 优先级 2 — 乘 / 除 / 取余</td></tr>
+        <tr class="op-row grp-2">
+          <td><span class="op-pri grp-2">2</span></td>
           <td><span class="op-sym">*</span></td>
           <td>乘</td>
           <td class="op-example">5 * 3</td>
           <td class="op-result">15</td>
         </tr>
-        <tr>
-          <td><span class="op-pri">2</span></td>
+        <tr class="op-row grp-2">
+          <td><span class="op-pri grp-2">2</span></td>
           <td><span class="op-sym">/</span></td>
           <td>除</td>
           <td class="op-example">5 / 2</td>
           <td class="op-result">2（整数截断！）</td>
         </tr>
-        <tr>
-          <td><span class="op-pri">2</span></td>
+        <tr class="op-row grp-2">
+          <td><span class="op-pri grp-2">2</span></td>
           <td><span class="op-sym">%</span></td>
           <td>取余（模）</td>
           <td class="op-example">5 % 3</td>
           <td class="op-result">2</td>
         </tr>
-        <tr class="op-group-header"><td colspan="5">优先级 3 — 加 / 减</td></tr>
-        <tr>
-          <td><span class="op-pri">3</span></td>
+        <tr class="op-group-header grp-3"><td colspan="5">🎖️ 优先级 3 — 加 / 减</td></tr>
+        <tr class="op-row grp-3">
+          <td><span class="op-pri grp-3">3</span></td>
           <td><span class="op-sym">+</span></td>
           <td>加</td>
           <td class="op-example">5 + 3</td>
           <td class="op-result">8</td>
         </tr>
-        <tr>
-          <td><span class="op-pri">3</span></td>
+        <tr class="op-row grp-3">
+          <td><span class="op-pri grp-3">3</span></td>
           <td><span class="op-sym">-</span></td>
           <td>减</td>
           <td class="op-example">5 - 3</td>
@@ -561,7 +581,7 @@
 
     <div class="callout info">
       <span class="callout-icon">🔍</span>
-      <div><b>前缀 vs 后缀：</b><code>++a</code>（前缀）是先加后用，<code>a++</code>（后缀）是先用后加。在单独的语句中两者效果相同，但在表达式中会有差异。例如 <code>b = a++</code> 和 <code>b = ++a</code> 会给 <code>b</code> 赋不同的值。</div>
+      <div><b>前缀 vs 后缀：</b><code>++a</code>（前缀）是先加后用，<code>a++</code>（后缀）是先用后加。在单独的语句中两者效果相同，但在表达式中会有差异。例如 <code>b = a++</code> 和 <code>b = ++a</code> 会给 <code>b</code> 赋不同的值。<br>最常见的使用场景是 <code>for</code> 循环的增量部分，比如 <code>for(int i=0; i&lt;10; i++)</code>——这里习惯写 <code>i++</code>，效果和 <code>++i</code> 完全一样，不必纠结用哪个。</div>
     </div>
   </section>
 
