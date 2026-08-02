@@ -122,9 +122,9 @@
   <nav class="ch03-nav">
     <div class="ch03-nav-label">第三章 · 输入与输出</div>
     <div class="ch03-nav-items">
-      <a class="ch03-nav-item active" href="03_01_cin与cout.html"><span class="cni-num">3.1</span><span class="cni-name">cin 与 cout</span></a>
-      <a class="ch03-nav-item" href="03_02_scanf与printf.html"><span class="cni-num">3.2</span><span class="cni-name">scanf 与 printf</span></a>
-      <a class="ch03-nav-item" href="03_03_文件读写.html"><span class="cni-num">3.3</span><span class="cni-name">文件读写</span></a>
+      <a class="ch03-nav-item active" href="03_01_cinAndCout.html"><span class="cni-num">3.1</span><span class="cni-name">cin 与 cout</span></a>
+      <a class="ch03-nav-item" href="03_02_scanfAndPrintf.html"><span class="cni-num">3.2</span><span class="cni-name">scanf 与 printf</span></a>
+      <a class="ch03-nav-item" href="03_03_FileIO.html"><span class="cni-num">3.3</span><span class="cni-name">文件读写</span></a>
     </div>
   </nav>
 
@@ -393,6 +393,30 @@
       </tbody>
     </table>
 
+    <div class="section-body">
+      <p>前面两张表列的是一个个单独的指令，实际写代码时往往需要把它们<strong>组合起来</strong>用。比如要把数字格式化成"看起来统一"的十六进制——大写字母、固定宽度、不足位数用 <code>0</code>补齐——就需要 <code>hex</code>、<code>uppercase</code>、<code>setfill</code>、<code>setw</code> 一起上阵：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 组合格式化：十六进制补零输出</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">hex</span> <span class="op">&lt;&lt;</span> <span class="fn">uppercase</span><span class="punc">;</span>  <span class="cmt">// 之后的整数都按十六进制、大写字母输出（持续有效）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">setfill</span><span class="punc">(</span><span class="str">'0'</span><span class="punc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">setw</span><span class="punc">(</span><span class="num">4</span><span class="punc">)</span> <span class="op">&lt;&lt;</span> <span class="num">255</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 输出 00FF</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">setfill</span><span class="punc">(</span><span class="str">'0'</span><span class="punc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">setw</span><span class="punc">(</span><span class="num">4</span><span class="punc">)</span> <span class="op">&lt;&lt;</span> <span class="num">10</span>  <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 输出 000A</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>为什么 setw 要每行都重新写一遍？</b>因为它是"一次性"的：第 3 行用完 <code>setw(4)</code> 后宽度就恢复默认了，所以第 4 行想要同样的效果，必须再写一次 <code>setw(4)</code>。而 <code>hex</code>、<code>uppercase</code>、<code>setfill('0')</code> 都是"持续有效"的，只要设置过一次，后面不写也会一直起作用——这正好呼应前面表格里强调的那条区别。</div>
+    </div>
+
     <h3 class="sub-title" id="sub6">3.1.6 常见陷阱与易错点</h3>
     <div class="section-body">
       <p>把本节内容汇总成几条最容易踩坑的规则：</p>
@@ -405,7 +429,7 @@
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">2</div>
-        <div class="pitfall-body"><b>cin 与 getline 混用会漏读：</b><code>cin &gt;&gt; n</code> 读取数字后，回车符会残留在输入缓冲区里，紧接着的 <code>getline(cin, str)</code> 会先读到这个残留的空行，导致 <code>str</code> 变成空字符串。混用前记得用 <code>cin.ignore()</code> 清掉残留的换行符。</div>
+        <div class="pitfall-body"><b>cin 与 getline 混用会漏读：</b><code>cin &gt;&gt; n</code> 读取数字后，回车符会残留在输入缓冲区里，紧接着的 <code>getline(cin, str)</code> 会先读到这个残留的空行，导致 <code>str</code> 变成空字符串。混用前记得用 <code>cin.ignore()</code> 清掉残留的换行符——通常写成 <code>cin.ignore();</code> 就够了，默认会忽略缓冲区里的下一个字符（正好就是那个残留的回车符）。</div>
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">3</div>
