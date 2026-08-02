@@ -124,9 +124,9 @@
   <nav class="ch03-nav">
     <div class="ch03-nav-label">第三章 · 输入与输出</div>
     <div class="ch03-nav-items">
-      <a class="ch03-nav-item" href="03_01_cinAndCout.html"><span class="cni-num">3.1</span><span class="cni-name">cin 与 cout</span></a>
-      <a class="ch03-nav-item active" href="03_02_scanfAndPrintf.html"><span class="cni-num">3.2</span><span class="cni-name">scanf 与 printf</span></a>
-      <a class="ch03-nav-item" href="03_03_FileIO.html"><span class="cni-num">3.3</span><span class="cni-name">文件读写</span></a>
+      <a class="ch03-nav-item" href="03_01_cin与cout.html"><span class="cni-num">3.1</span><span class="cni-name">cin 与 cout</span></a>
+      <a class="ch03-nav-item active" href="03_02_scanf与printf.html"><span class="cni-num">3.2</span><span class="cni-name">scanf 与 printf</span></a>
+      <a class="ch03-nav-item" href="03_03_文件读写.html"><span class="cni-num">3.3</span><span class="cni-name">文件读写</span></a>
     </div>
   </nav>
 
@@ -222,7 +222,7 @@
 
     <div class="callout danger">
       <span class="callout-icon">🚫</span>
-      <div><b>%f 和 %lf 不能混用：</b>这是 <code>scanf</code> 里最经典的坑——读取 <code>double</code> 变量<b>必须</b>用 <code>%lf</code>，如果写成 <code>%f</code>，由于 <code>scanf</code> 是按照格式符去内存里"按字节写入"的，%f 和 %lf 写入的字节数不一样，会导致数据错乱，得到完全无意义的结果，但编译器往往不会报错。这一点和 <code>printf</code> 不同——<code>printf</code> 里 <code>float</code> 和 <code>double</code> 都用 <code>%f</code> 就行（见 3.2.4 节），千万别把两边的规则记反。</div>
+      <div><b>%f 和 %lf 不能混用：</b>这是 <code>scanf</code> 里最经典的坑——读取 <code>double</code> 变量<b>必须</b>用 <code>%lf</code>，如果写成 <code>%f</code>，由于 <code>scanf</code> 是按照格式符去内存里"按字节写入"的，%f 和 %lf 写入的字节数不一样，会导致数据错乱，得到完全无意义的结果，但编译器往往不会报错。这一点和 <code>printf</code> 不同——<code>printf</code> 里 <code>float</code> 和 <code>double</code> 用 <code>%f</code>、<code>%lf</code> 都可以（见 3.2.4 节），但 <code>scanf</code> 这边 <code>%f</code>/<code>%lf</code> 绝对不能通用，千万别把两边的规则记反。</div>
     </div>
 
     <div class="callout info">
@@ -248,6 +248,11 @@
           <tr><td class="ln">4</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"成绩是%f分\n"</span><span class="punc">,</span> <span class="fn">score</span><span class="punc">);</span>  <span class="cmt">// %f 对应 float</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>这里的 %f 没有写错：</b>刚学完 <code>scanf</code> 读 <code>float</code> 用 <code>%f</code>、读 <code>double</code> 必须用 <code>%lf</code>，看到上面 <code>printf</code> 输出 <code>float</code> 变量 <code>score</code> 也用了 <code>%f</code>，可能会下意识怀疑是不是打错了。放心，这是对的——<code>printf</code> 输出 <code>double</code> 时其实 <code>%f</code>、<code>%lf</code> 写哪个都行，效果完全一样，只是习惯上大家更常写 <code>%f</code>。这一点和 <code>scanf</code> 的规则不一样，具体原因下一节会讲清楚。</div>
     </div>
 
     <h3 class="sub-title" id="sub4">3.2.4 数字位数与精度控制</h3>
@@ -277,7 +282,7 @@
         </tr>
         <tr class="sf-row-warn">
           <td>%.nf</td>
-          <td><b>double 也用 %f</b>（不是 %lf！），保留 n 位小数</td>
+          <td><b>double 用 %f</b>（也可以写 %lf，效果一样），保留 n 位小数</td>
           <td><span class="sf-ex">printf("%.5f", 3.14)</span></td>
           <td><span class="sf-out">3.14000</span></td>
         </tr>
@@ -294,7 +299,7 @@
           <tr><td class="ln">1</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"int指定宽度：%5d\n"</span><span class="punc">,</span> <span class="num">123</span><span class="punc">);</span>                <span class="cmt">// "  123"</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"int用零填充：%05d\n"</span><span class="punc">,</span> <span class="num">123</span><span class="punc">);</span>               <span class="cmt">// "00123"</span></td></tr>
           <tr><td class="ln">3</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"float保留3位小数：%.3f\n"</span><span class="punc">,</span> <span class="num">1.23456f</span><span class="punc">);</span>     <span class="cmt">// "1.235"</span></td></tr>
-          <tr><td class="ln">4</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"double保留3位小数：%.3f\n"</span><span class="punc">,</span> <span class="num">1.23456</span><span class="punc">);</span>     <span class="cmt">// "1.235"（double 用 %f，不是 %lf）</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">printf</span><span class="punc">(</span><span class="str">"double保留3位小数：%.3f\n"</span><span class="punc">,</span> <span class="num">1.23456</span><span class="punc">);</span>     <span class="cmt">// "1.235"（printf 里写 %lf 效果也一样，但习惯上用 %f）</span></td></tr>
         </table>
       </div>
     </div>
@@ -306,7 +311,7 @@
 
     <h3 class="sub-title" id="sub5">3.2.5 与 cin/cout 的效率对比与优化</h3>
     <div class="section-body">
-      <p>现在 <code>cin/cout</code> 和 <code>scanf/printf</code> 都学过了，可以真正比较一下：这是竞赛中<strong>极其重要</strong>的知识点，大量 I/O 时选错方式可能直接超时！</p>
+      <p>在学习完两种 I/O 方式后，我们来看一个在竞赛中至关重要的问题：<strong>速度</strong>。<code>cin/cout</code> 和 <code>scanf/printf</code> 用起来手感不一样，跑起来的速度也不一样——大量数据输入输出时，选错方式可能直接导致超时。</p>
     </div>
 
     <div class="perf-compare">
@@ -394,7 +399,7 @@
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">2</div>
-        <div class="pitfall-body"><b>scanf 读 double 要用 %lf，printf 输出 double 却用 %f：</b>这是两个函数里唯一"不对称"的地方，非常容易记混。可以这样记：<b>scanf 认真区分类型（分大小写字长），printf 一律用 %f 不区分 float/double</b>。</div>
+        <div class="pitfall-body"><b>scanf 读 double 要用 %lf，printf 输出 double 用 %f 或 %lf 都行：</b>这是两个函数里唯一"不对称"的地方，非常容易记混。可以这样记：<b>scanf 认真区分类型（必须分清 %f/%lf），printf 不区分（%f、%lf 写哪个都一样，习惯上写 %f）</b>。</div>
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">3</div>

@@ -143,10 +143,10 @@
   <nav class="ch05-nav">
     <div class="ch05-nav-label">第五章 · 循环结构</div>
     <div class="ch05-nav-items">
-      <a class="ch05-nav-item" href="05_01_while循环.html"><span class="cni-num">5.1</span><span class="cni-name">while 循环</span></a>
-      <a class="ch05-nav-item" href="05_02_do-while循环.html"><span class="cni-num">5.2</span><span class="cni-name">do-while 循环</span></a>
-      <a class="ch05-nav-item" href="05_03_for循环.html"><span class="cni-num">5.3</span><span class="cni-name">for 循环</span></a>
-      <a class="ch05-nav-item active" href="05_04_break与continue.html"><span class="cni-num">5.4</span><span class="cni-name">break 与 continue</span></a>
+      <a class="ch05-nav-item" href="05_01_WhileLoop.html"><span class="cni-num">5.1</span><span class="cni-name">while 循环</span></a>
+      <a class="ch05-nav-item" href="05_02_DoWhileLoop.html"><span class="cni-num">5.2</span><span class="cni-name">do-while 循环</span></a>
+      <a class="ch05-nav-item" href="05_03_ForLoop.html"><span class="cni-num">5.3</span><span class="cni-name">for 循环</span></a>
+      <a class="ch05-nav-item active" href="05_04_BreakAndContinue.html"><span class="cni-num">5.4</span><span class="cni-name">break 与 continue</span></a>
     </div>
   </nav>
 
@@ -306,7 +306,9 @@
       </div>
     </div>
 
-    <h3 class="sub-title" id="sub4">5.4.4 常见陷阱与易错点</h3>
+    <div class="section-body">
+      <p>这段代码的关键在第 9 行和第 2 行的配合：<code>break</code> 先跳出内层循环，但外层循环本身并不知道"已经找到了"——真正让外层停下来的，是外层 <code>for</code> 条件里的 <code>&& !found</code>。<code>found</code> 变成 <code>true</code> 后，<code>!found</code> 就变成 <code>false</code>，外层循环在<strong>下一轮开始判断条件时</strong>就会自动终止，不需要再跳一次。这是 C++ 里跳出多层循环的常用模式——原生语法没有"一次性跳出所有层"的关键字，只能靠标志变量 + 条件判断来实现。</p>
+    </div>
     <div class="section-body">
       <p>把本节内容汇总成几条最容易踩坑的规则：</p>
     </div>

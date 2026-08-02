@@ -198,10 +198,10 @@
   <nav class="ch05-nav">
     <div class="ch05-nav-label">第五章 · 循环结构</div>
     <div class="ch05-nav-items">
-      <a class="ch05-nav-item" href="05_01_while循环.html"><span class="cni-num">5.1</span><span class="cni-name">while 循环</span></a>
-      <a class="ch05-nav-item" href="05_02_do-while循环.html"><span class="cni-num">5.2</span><span class="cni-name">do-while 循环</span></a>
-      <a class="ch05-nav-item active" href="05_03_for循环.html"><span class="cni-num">5.3</span><span class="cni-name">for 循环</span></a>
-      <a class="ch05-nav-item" href="05_04_break与continue.html"><span class="cni-num">5.4</span><span class="cni-name">break 与 continue</span></a>
+      <a class="ch05-nav-item" href="05_01_WhileLoop.html"><span class="cni-num">5.1</span><span class="cni-name">while 循环</span></a>
+      <a class="ch05-nav-item" href="05_02_DoWhileLoop.html"><span class="cni-num">5.2</span><span class="cni-name">do-while 循环</span></a>
+      <a class="ch05-nav-item active" href="05_03_ForLoop.html"><span class="cni-num">5.3</span><span class="cni-name">for 循环</span></a>
+      <a class="ch05-nav-item" href="05_04_BreakAndContinue.html"><span class="cni-num">5.4</span><span class="cni-name">break 与 continue</span></a>
     </div>
   </nav>
 
@@ -333,7 +333,7 @@
 
     <div class="callout warn">
       <span class="callout-icon">📌</span>
-      <div><b>三部分均可省略：</b><code>for</code> 循环的初始化、条件、更新都可以省略。省略条件时，循环变成无限循环：<code>for (;;) { ... }</code>，与 <code>while (true)</code> 效果相同。需要搭配 <code>break</code> 才能退出。</div>
+      <div><b>三部分均可省略：</b><code>for</code> 循环的初始化、条件、更新都可以省略。省略条件时，循环变成无限循环：<code>for (;;) { ... }</code>，与 <code>while (true)</code> 效果相同。需要搭配 <code>break</code> 才能退出。这种写法在竞赛或底层代码中偶尔会出现，但日常编程中，为了清晰起见，更推荐直接写 <code>while (true)</code>——一眼就能看出"这是个无限循环"，不用先反应一下"哦，这里三个部分都是空的"。</div>
     </div>
 
     <h3 class="sub-title" id="sub3">5.3.3 灵活的写法</h3>
@@ -408,7 +408,7 @@
 
     <div class="callout info">
       <span class="callout-icon">📊</span>
-      <div><b>时间复杂度提醒：</b>嵌套循环的执行次数是各层循环次数的乘积。例如两层各循环 n 次，总共执行约 n² 次。在竞赛中，如果 n = 10⁵，两层嵌套（10¹⁰ 次）会直接超时，需要更优算法。</div>
+      <div><b>时间复杂度提醒：</b>嵌套循环的执行次数是各层循环次数的乘积。例如两层各循环 n 次，总共执行约 n² 次。在大多数 OJ（在线评测）平台上，题目通常要求程序在 1 秒内跑完，而 10⁸ 次以上的简单操作就可能超时。所以如果 n = 10⁵，两层嵌套就是 10¹⁰ 次，远远超过这条 1 秒能跑完的量级，会直接超时，需要更优算法。数据规模较大时，一定要警惕嵌套循环带来的性能问题。</div>
     </div>
 
     <div class="callout tip">
@@ -436,7 +436,7 @@
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">4</div>
-        <div class="pitfall-body"><b>嵌套层数过多导致超时：</b>嵌套循环的总执行次数是各层次数相乘，数据规模稍大就可能远超时间限制（见上方时间复杂度提醒）。写代码前先估算一下总执行次数，如果数量级达到 10⁸ 以上就要考虑换算法了。</div>
+        <div class="pitfall-body"><b>嵌套层数过多导致超时：</b>嵌套循环的总执行次数是各层次数相乘，数据规模稍大就可能远超时间限制（见上方时间复杂度提醒）。写代码前先估算一下总执行次数，如果数量级达到 10⁸ 以上就要考虑换算法了（具体阈值因题目时限和操作复杂度而异，但 10⁸ 是一个常用的参考线）。</div>
       </div>
     </div>
   </section>

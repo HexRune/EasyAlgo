@@ -111,10 +111,10 @@
   <nav class="ch05-nav">
     <div class="ch05-nav-label">第五章 · 循环结构</div>
     <div class="ch05-nav-items">
-      <a class="ch05-nav-item" href="05_01_while循环.html"><span class="cni-num">5.1</span><span class="cni-name">while 循环</span></a>
-      <a class="ch05-nav-item active" href="05_02_do-while循环.html"><span class="cni-num">5.2</span><span class="cni-name">do-while 循环</span></a>
-      <a class="ch05-nav-item" href="05_03_for循环.html"><span class="cni-num">5.3</span><span class="cni-name">for 循环</span></a>
-      <a class="ch05-nav-item" href="05_04_break与continue.html"><span class="cni-num">5.4</span><span class="cni-name">break 与 continue</span></a>
+      <a class="ch05-nav-item" href="05_01_WhileLoop.html"><span class="cni-num">5.1</span><span class="cni-name">while 循环</span></a>
+      <a class="ch05-nav-item active" href="05_02_DoWhileLoop.html"><span class="cni-num">5.2</span><span class="cni-name">do-while 循环</span></a>
+      <a class="ch05-nav-item" href="05_03_ForLoop.html"><span class="cni-num">5.3</span><span class="cni-name">for 循环</span></a>
+      <a class="ch05-nav-item" href="05_04_BreakAndContinue.html"><span class="cni-num">5.4</span><span class="cni-name">break 与 continue</span></a>
     </div>
   </nav>
 
@@ -262,7 +262,7 @@
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">3</div>
-        <div class="pitfall-body"><b>滥用 do-while 当普通 while 用：</b>如果并不需要"至少执行一次"这个特性，滥用 <code>do-while</code> 只会让代码在需要"先判断再执行"的直觉上显得别扭。没有特殊需求时，<code>while</code> 仍然是更常见、更符合直觉的默认选择。</div>
+        <div class="pitfall-body"><b>滥用 do-while 当普通 while 用：</b>如果并不需要"至少执行一次"这个特性，滥用 <code>do-while</code> 只会让代码在需要"先判断再执行"的直觉上显得别扭。没有特殊需求时，<code>while</code> 仍然是更常见、更符合直觉的默认选择。例如 <code>int i = 0; do { cout &lt;&lt; i; i++; } while (i &lt; 0);</code>——<code>i</code> 初始就是 0，条件 <code>i &lt; 0</code> 从一开始就是假的，但循环体依然会多跑一次、输出一次不该有的 0；同样的逻辑改用 <code>while (i &lt; 0) { cout &lt;&lt; i; i++; }</code> 写，条件为假时会一次都不执行，才是这里真正想要的行为。</div>
       </div>
     </div>
   </section>

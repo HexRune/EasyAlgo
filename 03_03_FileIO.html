@@ -109,16 +109,16 @@
       <span>3.3 文件读写</span>
     </div>
     <h1 class="chapter-title">3.3　文件读写</h1>
-    <p class="chapter-desc">除了和键盘、屏幕打交道，程序也可以直接读写磁盘上的文件。竞赛评测系统大多要求把输入输出重定向到文件，这是信息学竞赛的标配技能。</p>
+    <p class="chapter-desc">除了和控制台打交道，程序也可以直接读写磁盘上的文件。竞赛评测系统大多要求把输入输出重定向到文件，这是信息学竞赛的标配技能。</p>
   </header>
 
   <!-- ═══ 子章节导航 ═══ -->
   <nav class="ch03-nav">
     <div class="ch03-nav-label">第三章 · 输入与输出</div>
     <div class="ch03-nav-items">
-      <a class="ch03-nav-item" href="03_01_cinAndCout.html"><span class="cni-num">3.1</span><span class="cni-name">cin 与 cout</span></a>
-      <a class="ch03-nav-item" href="03_02_scanfAndPrintf.html"><span class="cni-num">3.2</span><span class="cni-name">scanf 与 printf</span></a>
-      <a class="ch03-nav-item active" href="03_03_FileIO.html"><span class="cni-num">3.3</span><span class="cni-name">文件读写</span></a>
+      <a class="ch03-nav-item" href="03_01_cin与cout.html"><span class="cni-num">3.1</span><span class="cni-name">cin 与 cout</span></a>
+      <a class="ch03-nav-item" href="03_02_scanf与printf.html"><span class="cni-num">3.2</span><span class="cni-name">scanf 与 printf</span></a>
+      <a class="ch03-nav-item active" href="03_03_文件读写.html"><span class="cni-num">3.3</span><span class="cni-name">文件读写</span></a>
     </div>
   </nav>
 
@@ -141,12 +141,12 @@
     <p class="section-label">3.3</p>
     <h2 class="section-title">文件读写</h2>
     <div class="section-body">
-      <p>前面两节的输入输出都是和"人"打交道——从键盘读、往屏幕写。但很多时候，程序需要直接和"文件"打交道：从磁盘上的一个文件里读数据，或者把结果写进另一个文件保存下来。</p>
+      <p>前面两节的输入输出都是和"人"打交道——运行程序后，在控制台（运行程序的这个窗口）里敲键盘输入、在控制台里看到输出。但很多时候，程序需要直接和"文件"打交道：从磁盘上的一个文件里读数据，或者把结果写进另一个文件保存下来。</p>
     </div>
 
     <h3 class="sub-title" id="sub1">3.3.1 为什么需要文件读写</h3>
     <div class="section-body">
-      <p>在信息学竞赛中，几乎所有正式比赛（NOIP、CSP-J 等）都不是让你手动在键盘上敲输入、盯着屏幕看输出的——评测系统会把预先准备好的输入数据放进一个文件，要求你的程序从这个文件里读取数据，再把结果写进另一个指定的文件，由评测系统自动比对。这种"以文件作为输入输出"的模式，就是本节要学的内容。</p>
+      <p>在信息学竞赛中，几乎所有正式比赛（NOIP、CSP-J 等）都不是让你在控制台里手动敲输入、盯着输出看的——评测系统会把预先准备好的输入数据放进一个文件，要求你的程序从这个文件里读取数据，再把结果写进另一个指定的文件，由评测系统自动比对。这种"以文件作为输入输出"的模式，就是本节要学的内容。</p>
       <p>C++ 提供了两种实现方式，各有各的适用场景：</p>
     </div>
 
@@ -169,7 +169,8 @@
 
     <h3 class="sub-title" id="sub2">3.3.2 freopen：竞赛标配的输入输出重定向</h3>
     <div class="section-body">
-      <p><code>freopen</code> 的思路很巧妙：它不改变你写 <code>cin</code>、<code>cout</code>、<code>scanf</code>、<code>printf</code> 的方式，而是在程序一开始，把"标准输入"和"标准输出"这两个默认通道，偷偷地"接上"两个文件。之后代码里所有的输入输出语句，实际读写的都是文件，而不是键盘和屏幕：</p>
+      <p><code>freopen</code> 的思路很巧妙：它不改变你写 <code>cin</code>、<code>cout</code>、<code>scanf</code>、<code>printf</code> 的方式，而是在程序一开始，把"标准输入"和"标准输出"这两个默认通道，偷偷地"接上"两个文件。之后代码里所有的输入输出语句，实际读写的都是文件，而不是控制台：</p>
+      <p>这里说的 <code>stdin</code> 和 <code>stdout</code>，其实就是 <code>cin</code> 和 <code>cout</code> 默认连接的那两条输入/输出通道——平时运行程序，<code>cin</code> 读到的是你在控制台里敲的字，是因为 <code>stdin</code> 默认接的就是控制台的输入；<code>cout</code> 的内容会显示在控制台里，是因为 <code>stdout</code> 默认接的就是控制台的输出。<code>freopen</code> 做的事，就是把这两条通道背后接的东西，从"控制台"悄悄换成"文件"。</p>
     </div>
 
     <div class="redir-visual">
@@ -203,8 +204,8 @@
           <tr class="hl-row"><td class="ln">7</td><td class="cd">    <span class="fn">freopen</span><span class="punc">(</span><span class="str">"data.out"</span><span class="punc">,</span> <span class="str">"w"</span><span class="punc">,</span> <span class="fn">stdout</span><span class="punc">);</span> <span class="cmt">// 把标准输出接到 data.out</span></td></tr>
           <tr><td class="ln">8</td><td class="cd"></td></tr>
           <tr><td class="ln">9</td><td class="cd">    <span class="type">int</span> <span class="fn">a</span><span class="punc">,</span> <span class="fn">b</span><span class="punc">;</span></td></tr>
-          <tr><td class="ln">10</td><td class="cd">    <span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">a</span> <span class="op">&gt;&gt;</span> <span class="fn">b</span><span class="punc">;</span>       <span class="cmt">// 实际是从 data.in 里读，不是键盘</span></td></tr>
-          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 实际是写进 data.out，不是屏幕</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">a</span> <span class="op">&gt;&gt;</span> <span class="fn">b</span><span class="punc">;</span>       <span class="cmt">// 实际是从 data.in 里读，不再是从控制台</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>  <span class="cmt">// 实际是写进 data.out，不再是控制台</span></td></tr>
           <tr><td class="ln">12</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
           <tr><td class="ln">13</td><td class="cd"><span class="punc">}</span></td></tr>
         </table>
@@ -217,7 +218,7 @@
 
     <div class="callout tip">
       <span class="callout-icon">🏆</span>
-      <div><b>竞赛习惯：</b>正式比赛通常会明确要求输入输出文件名，比如"从 <code>sort.in</code> 读入，输出到 <code>sort.out</code>"。这时只需要在 <code>main()</code> 开头加上两行 <code>freopen</code>，后面的代码可以和平时用键盘调试时完全一样，不需要做任何改动——这也是为什么 <code>freopen</code> 是竞赛中最常用的文件读写方式。</div>
+      <div><b>竞赛习惯：</b>正式比赛通常会明确要求输入输出文件名，比如"从 <code>sort.in</code> 读入，输出到 <code>sort.out</code>"。这时只需要在 <code>main()</code> 开头加上两行 <code>freopen</code>，后面的代码可以和平时在控制台里调试时完全一样，不需要做任何改动——这也是为什么 <code>freopen</code> 是竞赛中最常用的文件读写方式。</div>
     </div>
 
     <h3 class="sub-title" id="sub3">3.3.3 ifstream / ofstream：更通用的文件流</h3>
@@ -254,7 +255,7 @@
 
     <div class="callout info">
       <span class="callout-icon">📖</span>
-      <div><b>fin / fout 只是变量名：</b>和 <code>cin</code>、<code>cout</code> 不同，<code>ifstream</code>、<code>ofstream</code> 是"类型"，<code>fin</code>、<code>fout</code> 只是你自己起的变量名（换成别的名字也完全可以）。这意味着你可以同时打开好几个输入文件、好几个输出文件，分别用不同的名字操作，这是 <code>freopen</code> 做不到的。</div>
+      <div><b>fin / fout 只是变量名：</b>和 <code>cin</code>、<code>cout</code> 不同，<code>ifstream</code>、<code>ofstream</code> 是"类型"，<code>fin</code>、<code>fout</code> 只是你自己起的变量名（换成别的名字也完全可以）。这意味着你可以同时打开好几个输入文件、好几个输出文件，分别用不同的名字操作，这是 <code>freopen</code> 做不到的。在竞赛和工程代码里，<code>fin</code>/<code>fout</code>（file in / file out 的缩写）是非常通行的命名方式，不知道起什么名字时可以直接沿用。</div>
     </div>
 
     <h3 class="sub-title" id="sub4">3.3.4 判断文件是否成功打开</h3>
@@ -366,7 +367,7 @@
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">4</div>
-        <div class="pitfall-body"><b>用 freopen 调试时忘记切回键盘输入：</b>本地测试时如果用了 <code>freopen</code> 重定向到文件，提交到评测系统前，如果评测系统本身就是走标准输入输出（不需要 <code>freopen</code>），记得把这两行去掉或者根据比赛要求调整文件名，否则程序会因为找不到指定文件而运行失败。</div>
+        <div class="pitfall-body"><b>用 freopen 调试时忘记切回控制台输入输出：</b>不同比赛/评测系统对输入输出方式的要求不一样：有的题目明确要求文件读写（比如"从 <code>sort.in</code> 读入，输出到 <code>sort.out</code>"），这种就需要保留 <code>freopen</code>；有的题目走标准输入输出（直接在控制台里读、在控制台里输出），这种反而<b>不能</b>加 <code>freopen</code>，加了程序会因为找不到指定文件而运行失败。本地调试时为了方便加上的 <code>freopen</code>，提交前一定要对照题目具体要求，确认是保留、删除，还是改成比赛指定的文件名。</div>
       </div>
     </div>
   </section>

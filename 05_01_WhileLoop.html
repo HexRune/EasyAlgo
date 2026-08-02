@@ -115,10 +115,10 @@
   <nav class="ch05-nav">
     <div class="ch05-nav-label">第五章 · 循环结构</div>
     <div class="ch05-nav-items">
-      <a class="ch05-nav-item active" href="05_01_while循环.html"><span class="cni-num">5.1</span><span class="cni-name">while 循环</span></a>
-      <a class="ch05-nav-item" href="05_02_do-while循环.html"><span class="cni-num">5.2</span><span class="cni-name">do-while 循环</span></a>
-      <a class="ch05-nav-item" href="05_03_for循环.html"><span class="cni-num">5.3</span><span class="cni-name">for 循环</span></a>
-      <a class="ch05-nav-item" href="05_04_break与continue.html"><span class="cni-num">5.4</span><span class="cni-name">break 与 continue</span></a>
+      <a class="ch05-nav-item active" href="05_01_WhileLoop.html"><span class="cni-num">5.1</span><span class="cni-name">while 循环</span></a>
+      <a class="ch05-nav-item" href="05_02_DoWhileLoop.html"><span class="cni-num">5.2</span><span class="cni-name">do-while 循环</span></a>
+      <a class="ch05-nav-item" href="05_03_ForLoop.html"><span class="cni-num">5.3</span><span class="cni-name">for 循环</span></a>
+      <a class="ch05-nav-item" href="05_04_BreakAndContinue.html"><span class="cni-num">5.4</span><span class="cni-name">break 与 continue</span></a>
     </div>
   </nav>
 
@@ -253,6 +253,11 @@
       <div><b>避免死循环：</b>while 循环体中必须有能让条件最终变为 <code>false</code> 的操作（如 <code>i++</code>），否则程序会永远运行下去。死循环是初学者最常见的错误之一！</div>
     </div>
 
+    <div class="callout tip">
+      <span class="callout-icon">🆘</span>
+      <div><b>不小心运行了死循环怎么办：</b>如果程序卡住不动、一直没有输出，很可能就是陷入了死循环。在大多数集成开发环境（如 Dev-C++、VS Code、Visual Studio）里，可以按 <code>Ctrl+C</code>，或者点击工具栏上的"停止"/"终止"按钮，强制结束程序，不用担心，这不会对电脑造成任何损坏。</div>
+    </div>
+
     <div class="section-body">
       <p>有一种特殊写法值得了解——<code>while (true)</code> 搭配 <code>break</code>（见 5.4 节）使用，让循环的退出时机由内部逻辑决定，而不是写在 <code>while</code> 的条件里：</p>
     </div>
@@ -295,7 +300,7 @@
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">4</div>
-        <div class="pitfall-body"><b>该用 for 却用了 while：</b>如果循环次数在写代码时就已经确定（比如"循环10次"），用 <code>for</code> 能把初始化、条件、更新写在同一行，比 <code>while</code> 更紧凑、更不容易漏掉更新语句。<code>while</code> 更适合"不知道要循环几次，只知道什么时候停"的场景。</div>
+        <div class="pitfall-body"><b>该用 for 却用了 while：</b>如果循环次数在写代码时就已经确定（比如"循环10次"），用 <code>for</code> 能把初始化、条件、更新写在同一行（例如 <code>for (int i = 0; i &lt; 10; i++)</code>），比 <code>while</code> 更紧凑、更不容易漏掉更新语句。<code>while</code> 更适合"不知道要循环几次，只知道什么时候停"的场景。<code>for</code> 循环的完整用法会在 5.3 节详细介绍。</div>
       </div>
     </div>
   </section>

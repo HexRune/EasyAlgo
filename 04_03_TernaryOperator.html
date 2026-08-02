@@ -93,10 +93,10 @@
   <nav class="ch04-nav">
     <div class="ch04-nav-label">第四章 · 分支结构</div>
     <div class="ch04-nav-items">
-      <a class="ch04-nav-item" href="04_01_运算符.html"><span class="cni-num">4.1</span><span class="cni-name">运算符</span></a>
-      <a class="ch04-nav-item" href="04_02_if语句.html"><span class="cni-num">4.2</span><span class="cni-name">if 语句</span></a>
-      <a class="ch04-nav-item active" href="04_03_三元运算符.html"><span class="cni-num">4.3</span><span class="cni-name">三元运算符</span></a>
-      <a class="ch04-nav-item" href="04_04_switch语句.html"><span class="cni-num">4.4</span><span class="cni-name">switch 语句</span></a>
+      <a class="ch04-nav-item" href="04_01_Operators.html"><span class="cni-num">4.1</span><span class="cni-name">运算符</span></a>
+      <a class="ch04-nav-item" href="04_02_If.html"><span class="cni-num">4.2</span><span class="cni-name">if 语句</span></a>
+      <a class="ch04-nav-item active" href="04_03_TernaryOperator.html"><span class="cni-num">4.3</span><span class="cni-name">三元运算符</span></a>
+      <a class="ch04-nav-item" href="04_04_Switch.html"><span class="cni-num">4.4</span><span class="cni-name">switch 语句</span></a>
     </div>
   </nav>
 
@@ -158,6 +158,10 @@
     </div>
 
     <div class="section-body">
+      <p>这里 <code>maxVal</code> 那一行给条件部分加了括号——<code>(a &gt; b)</code>。根据 4.1 节学过的优先级，比较运算符本来就比赋值运算符先算，所以这个括号<b>并不是语法强制要求的</b>，去掉也完全能编译通过。加上它纯粹是为了让"这一段是条件"这件事看得更清楚，属于个人风格选择。</p>
+    </div>
+
+    <div class="section-body">
       <p>正因为三元运算符是一个"表达式"而不是"语句"，它还可以直接嵌在 <code>cout</code> 里，不需要先存进一个变量：</p>
     </div>
 
@@ -172,6 +176,11 @@
           <tr class="hl-row"><td class="ln">2</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">score</span> <span class="op">&gt;=</span> <span class="num">60</span> <span class="op">?</span> <span class="str">"及格"</span> <span class="op">:</span> <span class="str">"不及格"</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🚨</span>
+      <div><b>这里的括号是必须的，不能省略：</b>和前面 <code>maxVal</code> 例子里"括号只是为了好看"不同，这次 <code>(score &gt;= 60 ? "及格" : "不及格")</code> 外面的括号<b>不能去掉</b>。原因是 <code>&lt;&lt;</code> 的优先级比 <code>?:</code> 高，如果直接写成 <code>cout &lt;&lt; score &gt;= 60 ? "及格" : "不及格" &lt;&lt; endl;</code>，编译器会先算 <code>cout &lt;&lt; score</code>，再拿这个结果去判断 <code>&gt;= 60</code>，逻辑完全乱套，通常会直接编译报错。所以三元运算符写在 <code>cout</code> 里时，一定要把整个表达式 <code>条件 ? 值1 : 值2</code> 用括号整体括起来。</div>
     </div>
 
     <h3 class="sub-title" id="sub2">4.3.2 嵌套三元运算符</h3>
@@ -216,7 +225,7 @@
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">3</div>
-        <div class="pitfall-body"><b>两个分支的类型不一致：</b>三元运算符要求"值1"和"值2"的类型能统一成同一种类型，比如一个是 <code>int</code> 一个是 <code>double</code>，编译器会把结果统一转换成 <code>double</code>（见 2.1 节隐式转换），这有时会产生不易察觉的精度变化。如果两个分支类型差异较大（比如一个是数字一个是字符串），可能直接编译报错。</div>
+        <div class="pitfall-body"><b>两个分支的类型不一致：</b>三元运算符要求"值1"和"值2"的类型能统一成同一种类型，比如一个是 <code>int</code> 一个是 <code>double</code>（此时 <code>int</code> 会被隐式转换为 <code>double</code>，结果的类型是 <code>double</code>，见 2.2 节隐式转换），这有时会产生不易察觉的精度变化。如果两个分支类型差异较大（比如一个是数字一个是字符串），可能直接编译报错。</div>
       </div>
     </div>
   </section>

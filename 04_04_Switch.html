@@ -122,10 +122,10 @@
   <nav class="ch04-nav">
     <div class="ch04-nav-label">第四章 · 分支结构</div>
     <div class="ch04-nav-items">
-      <a class="ch04-nav-item" href="04_01_运算符.html"><span class="cni-num">4.1</span><span class="cni-name">运算符</span></a>
-      <a class="ch04-nav-item" href="04_02_if语句.html"><span class="cni-num">4.2</span><span class="cni-name">if 语句</span></a>
-      <a class="ch04-nav-item" href="04_03_三元运算符.html"><span class="cni-num">4.3</span><span class="cni-name">三元运算符</span></a>
-      <a class="ch04-nav-item active" href="04_04_switch语句.html"><span class="cni-num">4.4</span><span class="cni-name">switch 语句</span></a>
+      <a class="ch04-nav-item" href="04_01_Operators.html"><span class="cni-num">4.1</span><span class="cni-name">运算符</span></a>
+      <a class="ch04-nav-item" href="04_02_If.html"><span class="cni-num">4.2</span><span class="cni-name">if 语句</span></a>
+      <a class="ch04-nav-item" href="04_03_TernaryOperator.html"><span class="cni-num">4.3</span><span class="cni-name">三元运算符</span></a>
+      <a class="ch04-nav-item active" href="04_04_Switch.html"><span class="cni-num">4.4</span><span class="cni-name">switch 语句</span></a>
     </div>
   </nav>
 
@@ -188,7 +188,7 @@
 
     <div class="callout warn">
       <span class="callout-icon">📌</span>
-      <div><b>switch 的限制：</b>只支持整型（<code>int</code>、<code>char</code> 等）或枚举类型表达式，不能用 <code>float</code>、<code>double</code> 或 <code>string</code>。<code>case</code> 后面的值也必须是编译期就能确定的常量，不能是变量。</div>
+      <div><b>switch 的限制：</b>只支持整型（<code>int</code>、<code>char</code> 等）或枚举类型表达式，不能用 <code>float</code>、<code>double</code>（浮点数存在精度误差，无法精确判断是否相等，这也是 4.1 节"浮点数不要用 <code>==</code> 比较"那条陷阱的延续）或 <code>string</code>。<code>case</code> 后面的值也必须是编译期就能确定的常量，不能是变量。</div>
     </div>
 
     <h3 class="sub-title" id="sub2">4.4.2 break 与穿透陷阱</h3>
@@ -300,7 +300,7 @@
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">3</div>
-        <div class="pitfall-body"><b>忘记 default：</b>虽然 <code>default</code> 不是必需的，但省略它意味着"所有 case 都不匹配"时 <code>switch</code> 什么都不做，容易掩盖输入了预期之外数据的情况。养成写上 <code>default</code> 分支的习惯，即使只是打印一条错误提示。</div>
+        <div class="pitfall-body"><b>忘记 default：</b>虽然 <code>default</code> 不是必需的，但省略它意味着"所有 case 都不匹配"时 <code>switch</code> 什么都不做，容易掩盖输入了预期之外数据的情况。养成写上 <code>default</code> 分支的习惯，即使只是打印一条错误提示——尤其是在处理用户输入或外部数据时，这是一种基本的防御性编程习惯。</div>
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">4</div>
