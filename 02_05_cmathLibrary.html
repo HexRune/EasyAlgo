@@ -117,7 +117,7 @@
       <a class="ch02-nav-item" href="02_03_ASCIIEncoding.html"><span class="cni-num">2.3</span><span class="cni-name">ASCII 编码</span></a>
       <a class="ch02-nav-item" href="02_04_ComplementCodes.html"><span class="cni-num">2.4</span><span class="cni-name">原码、反码与补码</span></a>
       <a class="ch02-nav-item active" href="02_05_cmathLibrary.html"><span class="cni-num">2.5</span><span class="cni-name">cmath 数学库</span></a>
-      <a class="ch02-nav-item" href="02_06_Constants.html"><span class="cni-num">2.6</span><span class="cni-name">常量</span></a>
+      <a class="ch02-nav-item" href="02_06_Constants.html"><span class="cni-num">2.6</span><span class="cni-name">作用域与常量</span></a>
     </div>
   </nav>
 
@@ -361,7 +361,7 @@
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">4</div>
-        <div class="pitfall-body"><b>大数场景下 pow 可能不精确：</b><code>pow</code> 内部是按浮点数计算的，当指数很大、结果超出 <code>double</code> 能精确表示的整数范围（约 2⁵³）时，返回的结果可能有偏差。如果需要计算大整数的精确幂（尤其是配合取模的场景），应该自己手写"快速幂"，而不是依赖 <code>pow</code>。</div>
+        <div class="pitfall-body"><b>大数场景下 pow 可能不精确：</b><code>pow</code> 内部是按浮点数计算的，当指数很大、结果超出 <code>double</code> 能精确表示的整数范围（约 2⁵³）时，返回的结果可能有偏差。如果需要计算大整数的精确幂（尤其是配合取模的场景），应该自己手写"快速幂"，而不是依赖 <code>pow</code>。"快速幂"是后续章节会介绍的算法，这里只需要知道 <code>pow</code> 的这个局限性即可，不必现在就深究。</div>
       </div>
     </div>
   </section>
@@ -370,7 +370,7 @@
     <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.5 cmath 数学库</p>
     <div class="chapter-nav">
       <a class="nav-btn ghost" href="02_04_ComplementCodes.html">← 2.4 原码、反码与补码</a>
-      <a class="nav-btn" href="02_06_Constants.html">2.6 常量 →</a>
+      <a class="nav-btn" href="02_06_Constants.html">2.6 作用域与常量 →</a>
     </div>
   </footer>
 

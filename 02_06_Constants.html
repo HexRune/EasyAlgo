@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2.5 常量 — C++ 编程语法</title>
+<title>2.6 作用域与常量 — C++ 编程语法</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="CSS/style.css">
 <style>
   /* 水印 */
-  .chapter-header::before { content: "2.5"; }
+  .chapter-header::before { content: "2.6"; }
 
   /* 对比表（复用 2.0 的 dt-table 风格） */
   .dt-table {
@@ -27,6 +27,7 @@
   .dt-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
   .dt-table tr:last-child td { border-bottom: none; }
   .dt-table tr:nth-child(even) td { background: #FAFAF7; }
+  .dt-table th.code-th { text-transform: none; }
   .dt-tag { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-left: 4px; font-weight: 600; }
   .tag-popular { background: #AFA9EC; color: #26215C; }
 
@@ -52,22 +53,52 @@
   .ch02-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
   .ch02-nav-item.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   .ch02-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* ── 作用域嵌套示意图 ── */
+  .scope-diagram {
+    border: 2px dashed var(--accent-mid);
+    border-radius: 14px;
+    padding: 28px 22px 22px;
+    margin: 22px 0;
+    position: relative;
+    background: #FBFAFF;
+  }
+  .scope-diagram .scope-label {
+    position: absolute; top: -12px; left: 18px;
+    background: var(--surface); padding: 0 8px;
+    font-size: 12px; font-weight: 700; color: var(--accent-dark);
+  }
+  .scope-inner {
+    border: 2px dashed var(--teal-mid);
+    border-radius: 12px;
+    padding: 26px 18px 18px;
+    position: relative;
+    background: var(--surface);
+  }
+  .scope-inner .scope-label { color: var(--teal); }
+  .scope-vars { display: flex; gap: 10px; flex-wrap: wrap; }
+  .scope-var-pill {
+    font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+    padding: 4px 11px; border-radius: 6px;
+    background: var(--accent-light); color: var(--accent-dark);
+  }
+  .scope-var-pill.local { background: var(--teal-light); color: var(--teal); }
 </style>
 </head>
 <body>
 <div class="page-wrap">
 
   <!-- ═══ Chapter Header ═══ -->
-  <header class="chapter-header" data-ch="2.5">
+  <header class="chapter-header" data-ch="2.6">
     <div class="chapter-eyebrow">
       <a href="index.html">← 目录</a>
       <span class="eyebrow-sep">/</span>
       <span>第二章 · 变量与数据类型</span>
       <span class="eyebrow-sep">/</span>
-      <span>2.5 常量</span>
+      <span>2.6 作用域与常量</span>
     </div>
-    <h1 class="chapter-title">2.6　常量：const 与 #define</h1>
-    <p class="chapter-desc">变量的值可以随时改变，但有些数据从一开始就不该被改动。本节介绍 C++ 中定义"不能被修改的数据"的两种写法，以及为什么其中一种明显更值得优先使用。</p>
+    <h1 class="chapter-title">2.6　作用域与常量</h1>
+    <p class="chapter-desc">变量并不是在程序的任何地方都能被访问的——本节先讲清楚"作用域"这个概念，再介绍 C++ 中定义"不能被修改的数据"（常量）的两种写法，以及为什么其中一种明显更值得优先使用。</p>
   </header>
 
   <!-- ═══ 子章节导航 ═══ -->
@@ -78,8 +109,8 @@
       <a class="ch02-nav-item" href="02_02_TypeConversion.html"><span class="cni-num">2.2</span><span class="cni-name">数据类型转换</span></a>
       <a class="ch02-nav-item" href="02_03_ASCIIEncoding.html"><span class="cni-num">2.3</span><span class="cni-name">ASCII 编码</span></a>
       <a class="ch02-nav-item" href="02_04_ComplementCodes.html"><span class="cni-num">2.4</span><span class="cni-name">原码、反码与补码</span></a>
-      <a class="ch02-nav-item active" href="02_05_cmathLibrary.html"><span class="cni-num">2.5</span><span class="cni-name">cmath 数学库</span></a>
-      <a class="ch02-nav-item" href="02_06_Constants.html"><span class="cni-num">2.6</span><span class="cni-name">常量</span></a>
+      <a class="ch02-nav-item" href="02_05_cmathLibrary.html"><span class="cni-num">2.5</span><span class="cni-name">cmath 数学库</span></a>
+      <a class="ch02-nav-item active" href="02_06_Constants.html"><span class="cni-num">2.6</span><span class="cni-name">作用域与常量</span></a>
     </div>
   </nav>
 
@@ -87,24 +118,131 @@
   <nav class="toc">
     <p class="toc-title">本页目录</p>
     <ul class="toc-list">
-      <li><a href="#sub1"><span class="toc-num">2.6.1</span>为什么需要常量</a></li>
-      <li><a href="#sub2"><span class="toc-num">2.6.2</span>写法一：const（推荐）</a></li>
-      <li><a href="#sub3"><span class="toc-num">2.6.3</span>写法二：#define（宏定义）</a></li>
-      <li><a href="#sub4"><span class="toc-num">2.6.4</span>两种写法怎么选</a></li>
+      <li><a href="#sub1"><span class="toc-num">2.6.1</span>作用域（Scope）：变量的有效范围</a></li>
+      <li><a href="#sub2"><span class="toc-num">2.6.2</span>为什么需要常量</a></li>
+      <li><a href="#sub3"><span class="toc-num">2.6.3</span>写法一：const（推荐）</a></li>
+      <li><a href="#sub4"><span class="toc-num">2.6.4</span>写法二：#define（宏定义）</a></li>
+      <li><a href="#sub5"><span class="toc-num">2.6.5</span>两种写法怎么选</a></li>
     </ul>
   </nav>
 
   <!-- ═══ 正文 ═══ -->
   <section class="section" id="s1">
     <p class="section-label">2.6</p>
-    <h2 class="section-title">常量：const 与 #define</h2>
+    <h2 class="section-title">作用域与常量</h2>
 
-    <h3 class="sub-title" id="sub1">2.6.1 为什么需要常量</h3>
+    <h3 class="sub-title" id="sub1">2.6.1 作用域（Scope）：变量的有效范围</h3>
     <div class="section-body">
-      <p>前面讲的变量，值是可以随时改变的。但有些数据从一开始就不应该被改变——比如圆周率 <code>3.14159</code>、一个数组的最大长度 <code>100</code>——这类"定义好之后就不允许再修改"的数据，就应该定义成<strong>常量</strong>。C++ 里定义常量主要有两种写法：<code>const</code> 关键字和 <code>#define</code> 宏定义。</p>
+      <p>变量并不是在程序的任何地方都能被访问的——它有自己的<strong>可见范围</strong>，这就是<strong>作用域（Scope）</strong>。搞清楚一个变量"活在哪儿"，是理解后面很多报错信息的关键。</p>
     </div>
 
-    <h3 class="sub-title" id="sub2">2.6.2 写法一：const（推荐）</h3>
+    <div class="section-body">
+      <p><strong>局部作用域：</strong>在函数（比如 <code>main</code> 函数）或代码块 <code>{}</code> 内部定义的变量，只能在该函数或该代码块内部使用，一旦离开这对花括号，这个变量就"不存在"了。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">C++ · 局部作用域</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="punc">{</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">        <span class="type">int</span> <span class="fn">temp</span> <span class="op">=</span> <span class="num">10</span><span class="punc">;</span>       <span class="cmt">// temp 只在这对花括号内有效</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">temp</span><span class="punc">;</span>       <span class="cmt">// 正常，输出 10</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="punc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">temp</span><span class="punc">;</span>       <span class="cmt">// ✗ 编译报错：temp 已经超出作用域</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p><strong>全局作用域：</strong>在所有函数<strong>之外</strong>定义的变量，可以在整个程序文件中被访问，不局限于某一个函数内部。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">C++ · 全局作用域</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="type">int</span> <span class="fn">totalScore</span> <span class="op">=</span> <span class="num">0</span><span class="punc">;</span>   <span class="cmt">// 全局变量，定义在所有函数之外</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">totalScore</span> <span class="op">=</span> <span class="num">10</span><span class="punc">;</span>   <span class="cmt">// 函数内部可以直接访问、修改全局变量</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">totalScore</span><span class="punc">;</span>   <span class="cmt">// 输出 10</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>但要注意声明顺序：</b>C++ 代码是从上到下依次编译的，全局变量也必须<strong>先声明，再使用</strong>。如果把 <code>int totalScore = 0;</code> 写在 <code>main</code> 函数下面，编译器读到 <code>main</code> 里的 <code>totalScore</code> 时还不认识这个变量，同样会报错。以后学到"函数"章节会看到，即使是另一个函数（不只是 <code>main</code>），只要写在全局变量声明之后，同样可以直接访问和修改它，不需要额外传递。</div>
+    </div>
+
+    <div class="section-body">
+      <p><strong>作用域嵌套与优先级：</strong>如果局部变量和全局变量恰好同名，会发生什么？规则是：局部变量会<strong>暂时"遮蔽"（shadowing）</strong>同名的全局变量——在这个局部作用域范围内，所有对这个变量的访问，指的都是局部变量，直到这个作用域结束。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div>
+        </div>
+        <span class="code-lang">C++ · 同名变量的遮蔽</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="type">int</span> <span class="fn">score</span> <span class="op">=</span> <span class="num">100</span><span class="punc">;</span>   <span class="cmt">// 全局变量 score</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="type">int</span> <span class="fn">main</span><span class="punc">()</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="punc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">score</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>   <span class="cmt">// 输出 100，这里还没有同名局部变量</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="type">int</span> <span class="fn">score</span> <span class="op">=</span> <span class="num">60</span><span class="punc">;</span>   <span class="cmt">// 局部变量 score，"遮蔽"了全局的 score</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">score</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="punc">;</span>   <span class="cmt">// 输出 60，局部变量优先</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="punc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="scope-diagram">
+      <span class="scope-label">全局作用域（整个文件）</span>
+      <div class="scope-vars" style="margin-bottom: 16px;">
+        <span class="scope-var-pill">score = 100</span>
+      </div>
+      <div class="scope-inner">
+        <span class="scope-label">局部作用域（main 函数内部）</span>
+        <div class="scope-vars">
+          <span class="scope-var-pill local">score = 60（遮蔽了外层的 score）</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div><b>（拓展，可以先跳过）static 关键字：</b><code>static</code> 可以用来改变变量的"生命周期"或"链接属性"——比如让一个局部变量的值在多次调用之间被保留下来，或者让一个全局变量只能在当前文件内访问。这是一个进阶话题，现在只需要知道有这么个关键字存在就够了，之后用到时我们会再详细介绍。</div>
+    </div>
+
+    <h3 class="sub-title" id="sub2">2.6.2 为什么需要常量</h3>
+    <div class="section-body">
+      <p>前面讲的变量，值是可以随时改变的，作用域决定了它"在哪里能被访问"。但有些数据，不仅需要在某个作用域内有效，而且它们的值<strong>从头到尾都不应该被改变</strong>——比如圆周率 <code>3.14159</code>、一个数组的最大长度 <code>100</code>——这类"定义好之后就不允许再修改"的数据，就应该定义成<strong>常量</strong>。C++ 里定义常量主要有两种写法：<code>const</code> 关键字和 <code>#define</code> 宏定义。</p>
+    </div>
+
+    <h3 class="sub-title" id="sub3">2.6.3 写法一：const（推荐）</h3>
     <div class="section-body">
       <p><code>const</code> 是 C++ 的关键字，加在类型前面，表示"这个变量的值一旦初始化就不能再修改"。语法是：<code>const 类型 常量名 = 值;</code></p>
     </div>
@@ -132,8 +270,9 @@
       <div><b>const 变量和普通变量一样有类型、有作用域：</b><code>PI</code> 是一个真正的 <code>double</code> 类型变量，只是多了"不能被修改"这条限制——编译器会检查类型是否匹配，调试时也能像普通变量一样在调试器里看到它的名字和值。这也是 <code>const</code> 相比下面 <code>#define</code> 的核心优势。</div>
     </div>
 
-    <h3 class="sub-title" id="sub3">2.6.3 写法二：#define（宏定义）</h3>
+    <h3 class="sub-title" id="sub4">2.6.4 写法二：#define（宏定义）</h3>
     <div class="section-body">
+      <p>虽然现代 C++ 强烈推荐使用 <code>const</code>，但 <code>#define</code> 在旧代码、竞赛题解或某些配置文件中仍然非常常见，因此了解它的工作原理和缺点，对于阅读和理解别人的代码很有必要。</p>
       <p><code>#define</code> 是<strong>预处理指令</strong>，不是 C++ 语句——它在程序真正编译之前，由预处理器进行一次<strong>纯文本替换</strong>：把代码里所有出现的"常量名"，原样替换成后面写的内容。语法是：<code>#define 常量名 值</code>（注意<strong>末尾不加分号</strong>）。</p>
     </div>
 
@@ -163,14 +302,14 @@
       <div><b>#define 只是"文本替换"，编译器根本不知道 PI、MAX_N 的存在：</b>预处理阶段结束后，代码里已经找不到 <code>PI</code> 这个名字了——它已经被替换成了 <code>3.14159</code> 本身。所以 <code>#define</code> 定义的"常量"<strong>没有类型</strong>，编译器也<strong>不会做任何类型检查</strong>；如果代码写错了，报错信息里也只会显示替换后的内容（比如一长串 <code>3.14159</code>），而不会提示"PI 这里有问题"，调试起来更麻烦。</div>
     </div>
 
-    <h3 class="sub-title" id="sub4">2.6.4 两种写法怎么选</h3>
+    <h3 class="sub-title" id="sub5">2.6.5 两种写法怎么选</h3>
 
     <table class="dt-table">
       <thead>
         <tr>
           <th>对比项</th>
-          <th>const</th>
-          <th>#define</th>
+          <th class="code-th">const</th>
+          <th class="code-th">#define</th>
         </tr>
       </thead>
       <tbody>
@@ -215,7 +354,7 @@
 
   <!-- ═══ Footer ═══ -->
   <footer class="doc-footer">
-    <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.6 常量</p>
+    <p>C++ 编程语法 · 第二章 · 变量与数据类型 · 2.6 作用域与常量</p>
     <div class="chapter-nav">
       <a class="nav-btn ghost" href="02_05_cmathLibrary.html">← 2.5 cmath 数学库</a>
       <a class="nav-btn" href="03_01_cinAndCout.html">第三章：输入与输出 →</a>
