@@ -120,9 +120,9 @@
   <nav class="ch06-nav">
     <div class="ch06-nav-label">第六章 · 数组</div>
     <div class="ch06-nav-items">
-      <a class="ch06-nav-item" href="06_01_一维数组.html"><span class="cni-num">6.1</span><span class="cni-name">一维数组</span></a>
-      <a class="ch06-nav-item" href="06_02_二维数组.html"><span class="cni-num">6.2</span><span class="cni-name">二维数组</span></a>
-      <a class="ch06-nav-item active" href="06_03_字符数组.html"><span class="cni-num">6.3</span><span class="cni-name">字符数组</span></a>
+      <a class="ch06-nav-item" href="06_01_OneDimensionalArray.html"><span class="cni-num">6.1</span><span class="cni-name">一维数组</span></a>
+      <a class="ch06-nav-item" href="06_02_TwoDimensionalArray.html"><span class="cni-num">6.2</span><span class="cni-name">二维数组</span></a>
+      <a class="ch06-nav-item active" href="06_03_CharArray.html"><span class="cni-num">6.3</span><span class="cni-name">字符数组</span></a>
     </div>
   </nav>
 
@@ -199,7 +199,7 @@
           <tr><td class="ln">11</td><td class="cd"></td></tr>
           <tr><td class="ln">12</td><td class="cd"><span class="cmt">// 混用 cin 和 getline 时需先清空缓冲区</span></td></tr>
           <tr><td class="ln">13</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">;</span> <span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">a</span><span class="pnc">;</span></td></tr>
-          <tr class="hl"><td class="ln">14</td><td class="cd"><span class="fn">cin</span><span class="pnc">.</span><span class="fn">sync</span><span class="pnc">();</span>                 <span class="cmt">// 清空缓冲区残留的换行符</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd"><span class="fn">cin</span><span class="pnc">.</span><span class="fn">ignore</span><span class="pnc">();</span>                 <span class="cmt">// 忽略缓冲区里残留的换行符</span></td></tr>
           <tr><td class="ln">15</td><td class="cd"><span class="fn">cin</span><span class="pnc">.</span><span class="fn">getline</span><span class="pnc">(</span><span class="fn">sentence</span><span class="pnc">,</span> <span class="num">100</span><span class="pnc">);</span></td></tr>
         </table>
       </div>
@@ -207,7 +207,7 @@
 
     <div class="callout warn">
       <span class="callout-icon">📌</span>
-      <div><b>getline 注意事项：</b>长度参数不能超过数组长度；只能读取字符类型；默认以换行符作为结束符。使用 <code>cin</code> 读取整数后调用 <code>cin.sync()</code> 清空缓冲区，否则 <code>getline</code> 会直接读到残留的换行符。</div>
+      <div><b>getline 注意事项：</b>长度参数不能超过数组长度；只能读取字符类型；默认以换行符作为结束符。使用 <code>cin</code> 读取整数后，缓冲区里会残留一个换行符，更稳妥的做法是用 <code>cin.ignore();</code> 忽略掉它（默认忽略 1 个字符，正好是这个残留的换行符），否则 <code>getline</code> 会直接读到这个换行符，得到一个空字符串。有些资料会用 <code>cin.sync()</code> 来做这件事，但 <code>sync()</code> 本意是"同步输入流"，具体行为在不同编译器下并不保证一致，不如 <code>cin.ignore()</code> 可靠，不建议依赖它清空缓冲区。</div>
     </div>
 
     <h3 class="sub-title" id="s2">6.3.2 常用转义字符</h3>
@@ -249,8 +249,6 @@
         <tr class="ref-group"><td colspan="3">修改类</td></tr>
         <tr><td>strcpy(dest, src)</td><td>将 src 复制到 dest</td><td><span class="ref-ex">strcpy(b, a)</span></td></tr>
         <tr><td>strcat(s1, s2)</td><td>将 s2 拼接到 s1 末尾</td><td><span class="ref-ex">strcat(s, " World")</span></td></tr>
-        <tr><td>strlwr(s)</td><td>将字符串转为全小写</td><td><span class="ref-ex">strlwr("HELLO") → "hello"</span></td></tr>
-        <tr><td>strupr(s)</td><td>将字符串转为全大写</td><td><span class="ref-ex">strupr("hello") → "HELLO"</span></td></tr>
         <tr class="ref-group"><td colspan="3">转换类</td></tr>
         <tr><td>atoi(s)</td><td>字符串转整数（非数字返回 0）</td><td><span class="ref-ex">atoi("123") → 123</span></td></tr>
         <tr><td>atof(s)</td><td>字符串转 double（非数字返回 0.0）</td><td><span class="ref-ex">atof("3.14") → 3.14</span></td></tr>
@@ -264,7 +262,22 @@
 
     <div class="callout tip">
       <span class="callout-icon">🔤</span>
-      <div><b>字符分类与大小写转换：</b>判断一个字符是不是字母/数字，或者做大小写转换，用 <code>&lt;cctype&gt;</code> 提供的 <code>isalpha</code>、<code>isdigit</code>、<code>toupper</code>、<code>tolower</code> 等函数即可，已在 2.2 节详细介绍过，这里不再重复。</div>
+      <div><b>字符串的大小写转换，不能靠 strlwr/strupr：</b>有些资料里会提到 <code>strlwr(s)</code>、<code>strupr(s)</code> 这两个"转大小写"的函数，但它们<b>并不是</b> C/C++ 标准库的一部分，只是 Borland C++、旧版 Visual C++ 等个别编译器提供的非标准扩展——在 GCC、Clang 等主流编译器（包括大多数 OJ 和竞赛评测系统）下根本无法使用，写了会直接编译报错，属于不可移植的写法，不建议使用。正确的做法是用 <code>&lt;cctype&gt;</code> 提供的 <code>toupper</code>、<code>tolower</code>，对字符串里的<b>每一个字符</b>逐个转换（已在 2.3 节 cctype 函数库部分详细介绍过）：</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · 逐字符转换大小写（标准、可移植）</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">char</span> <span class="fn">s</span><span class="pnc">[] = </span><span class="str">"Hello"</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">s</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">!=</span> <span class="str">'\0'</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="fn">s</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">tolower</span><span class="pnc">(</span><span class="fn">s</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]);</span>  <span class="cmt">// 逐字符转小写</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// 结果：s = "hello"</span></td></tr>
+        </table>
+      </div>
     </div>
 
     <h3 class="sub-title" id="s4">6.3.4 常见陷阱与易错点</h3>
@@ -275,7 +288,7 @@
     <div class="pitfall-list">
       <div class="pitfall-item">
         <div class="pitfall-num">1</div>
-        <div class="pitfall-body"><b>忘记为 \0 预留空间：</b>定义字符数组时，大小必须至少是"字符个数 + 1"，多出来的这一个位置留给 <code>\0</code>。<code>char s[5] = "hello"</code> 会因为 5 个字符正好占满数组、没有位置放 <code>\0</code> 而出错，正确写法是 <code>char s[6]</code> 或直接省略大小让编译器自动推断。</div>
+        <div class="pitfall-body"><b>忘记为 \0 预留空间：</b>定义字符数组时，大小必须至少是"字符个数 + 1"，多出来的这一个位置留给 <code>\0</code>。<code>char s[5] = "hello"</code> 会因为 5 个字符正好占满数组、没有位置放 <code>\0</code> 而出错，正确写法是 <code>char s[6]</code> 或直接省略大小让编译器自动推断。为了避免这类错误，一个安全的原则是：定义字符数组时把大小定为"最大预期字符数 + 1"，或者干脆直接写 <code>char s[] = "hello";</code>，让编译器自动算出刚好够用（且留了 <code>\0</code> 位置）的大小。</div>
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">2</div>

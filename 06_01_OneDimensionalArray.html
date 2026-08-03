@@ -137,9 +137,9 @@
   <nav class="ch06-nav">
     <div class="ch06-nav-label">第六章 · 数组</div>
     <div class="ch06-nav-items">
-      <a class="ch06-nav-item active" href="06_01_一维数组.html"><span class="cni-num">6.1</span><span class="cni-name">一维数组</span></a>
-      <a class="ch06-nav-item" href="06_02_二维数组.html"><span class="cni-num">6.2</span><span class="cni-name">二维数组</span></a>
-      <a class="ch06-nav-item" href="06_03_字符数组.html"><span class="cni-num">6.3</span><span class="cni-name">字符数组</span></a>
+      <a class="ch06-nav-item active" href="06_01_OneDimensionalArray.html"><span class="cni-num">6.1</span><span class="cni-name">一维数组</span></a>
+      <a class="ch06-nav-item" href="06_02_TwoDimensionalArray.html"><span class="cni-num">6.2</span><span class="cni-name">二维数组</span></a>
+      <a class="ch06-nav-item" href="06_03_CharArray.html"><span class="cni-num">6.3</span><span class="cni-name">字符数组</span></a>
     </div>
   </nav>
 
@@ -235,7 +235,7 @@
       <div class="code-body">
         <table class="code-table">
           <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 语法：类型 数组名[大小];</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">[</span><span class="num">5</span><span class="pnc">];</span>                          <span class="cmt">// 定义可存 5 个整数的数组（未初始化）</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span><span class="pnc">[</span><span class="num">5</span><span class="pnc">];</span>                          <span class="cmt">// 定义可存 5 个整数的数组（未初始化，元素值是随机的垃圾值，使用前务必赋值）</span></td></tr>
           <tr><td class="ln">3</td><td class="cd"></td></tr>
           <tr class="hl"><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">b</span><span class="pnc">[</span><span class="num">5</span><span class="pnc">] = {</span><span class="num">90</span><span class="pnc">,</span> <span class="num">85</span><span class="pnc">,</span> <span class="num">78</span><span class="pnc">,</span> <span class="num">92</span><span class="pnc">,</span> <span class="num">88</span><span class="pnc">};</span>   <span class="cmt">// 完整初始化</span></td></tr>
           <tr class="hl"><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">c</span><span class="pnc">[] = {</span><span class="num">90</span><span class="pnc">,</span> <span class="num">85</span><span class="pnc">,</span> <span class="num">78</span><span class="pnc">,</span> <span class="num">92</span><span class="pnc">,</span> <span class="num">88</span><span class="pnc">};</span>    <span class="cmt">// 省略大小，自动推断为 5</span></td></tr>
@@ -313,7 +313,7 @@
 
     <div class="callout danger">
       <span class="callout-icon">💥</span>
-      <div><b>下标越界！</b>C++ 不会检查下标是否合法。访问 <code>a[5]</code>（越界）不会报错，但会读写到相邻内存，造成程序崩溃或数据错误，是极危险的隐藏 bug。始终确保下标在 <code>[0, 大小-1]</code> 范围内。</div>
+      <div><b>下标越界！</b>C++ 不会检查下标是否合法。访问 <code>a[5]</code>（越界）不会报错，但会读写到相邻内存，造成程序崩溃或数据错误，是极危险的隐藏 bug。始终确保下标在 <code>[0, 大小-1]</code> 范围内。如果程序出现莫名其妙的数据错乱，或者运行时突然崩溃，可以优先检查一下是不是发生了数组下标越界——这是排查这类"诡异"问题时最值得先怀疑的对象。</div>
     </div>
   </section>
 
@@ -506,6 +506,11 @@
     <div class="callout tip">
       <span class="callout-icon">💡</span>
       <div><b>sort 的参数含义：</b><code>sort(a, a + n)</code> 中的 <code>a</code> 是数组首地址，<code>a + n</code> 是"最后一个有效元素之后"的地址（左闭右开区间），这是 C++ 标准库的通用约定，后续学习 STL 容器时会反复见到同样的写法。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>greater&lt;int&gt;() 是什么：</b>它不是什么魔法写法，而是 C++ 标准库提供的一个现成的"比较规则"（专业说法是<b>函数对象</b>），作用就是告诉 <code>sort</code>"按降序排列"。<code>sort</code> 默认使用的是"升序"规则，写 <code>greater&lt;int&gt;()</code> 相当于把这个默认规则换成了反过来的"降序"规则。现在只需要记住这个固定写法就够了，等后面学到 STL 章节会讲清楚它具体是怎么工作的。</div>
     </div>
   </section>
 

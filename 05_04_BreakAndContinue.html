@@ -105,6 +105,7 @@
   .sv-row { color: var(--accent-dark); font-size: 13px; margin-bottom: 4px; }
   .sv-inner-row { color: var(--coral); font-size: 12.5px; }
   .sv-break-note { color: var(--coral); font-weight: 700; font-size: 12px; margin-top: 6px; }
+  .sv-outer-note { color: var(--accent-dark); font-weight: 700; font-size: 12px; margin-top: 10px; }
 
   /* 易错点列表 */
   .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
@@ -253,9 +254,9 @@
         <div class="sv-inner">
           <span class="sv-inner-label">内层循环 — break 只在这里生效</span>
           <div class="sv-inner-row">for (int j = 1; j &lt;= 3; j++)</div>
-          <div class="sv-inner-row" style="margin-top:6px;">if (j == 2) break;  // 只跳出内层这一层</div>
-          <div class="sv-break-note">↓ 跳到这里（内层循环结束），外层 i 继续下一轮</div>
+          <div class="sv-inner-row" style="margin-top:6px; margin-left:20px;">if (j == 2) break;  // 只跳出内层这一层</div>
         </div>
+        <div class="sv-outer-note">↓ 跳到这里（内层循环结束），外层 i 继续下一轮</div>
       </div>
     </div>
 
@@ -309,6 +310,8 @@
     <div class="section-body">
       <p>这段代码的关键在第 9 行和第 2 行的配合：<code>break</code> 先跳出内层循环，但外层循环本身并不知道"已经找到了"——真正让外层停下来的，是外层 <code>for</code> 条件里的 <code>&& !found</code>。<code>found</code> 变成 <code>true</code> 后，<code>!found</code> 就变成 <code>false</code>，外层循环在<strong>下一轮开始判断条件时</strong>就会自动终止，不需要再跳一次。这是 C++ 里跳出多层循环的常用模式——原生语法没有"一次性跳出所有层"的关键字，只能靠标志变量 + 条件判断来实现。</p>
     </div>
+
+    <h3 class="sub-title" id="sub4">5.4.4 常见陷阱与易错点</h3>
     <div class="section-body">
       <p>把本节内容汇总成几条最容易踩坑的规则：</p>
     </div>
@@ -326,6 +329,10 @@
         <div class="pitfall-num">3</div>
         <div class="pitfall-body"><b>在 switch 里的 break 和循环里的 break 搞混：</b>如果 <code>switch</code> 语句嵌套在循环内部，<code>switch</code> 里的 <code>break</code> 只会跳出 <code>switch</code> 本身，并不会影响外层的循环，这一点容易和"break 跳出循环"的直觉混淆。</div>
       </div>
+    </div>
+
+    <div class="section-body">
+      <p>先看陷阱 2：<code>continue</code> 跳过更新语句导致死循环，具体会踩坑到什么程度？下面这段代码就是一个真实的反面例子——</p>
     </div>
 
     <div class="code-block">
@@ -349,9 +356,41 @@
       </div>
     </div>
 
+    <div class="section-body">
+      <p>逐行走一遍：<code>i</code> 从 0 开始，<code>i % 2 == 0</code> 成立，直接 <code>continue</code>——回到第 2 行重新判断条件，第 9 行的 <code>i++</code> 完全没机会执行。于是 <code>i</code> 永远停在 0，条件 <code>i &lt; 10</code> 永远为真，程序卡死在这个循环里出不来。</p>
+    </div>
+
     <div class="callout danger">
       <span class="callout-icon">🚫</span>
       <div><b>修复方法：</b>在 <code>while</code>/<code>do-while</code> 循环中使用 <code>continue</code> 时，一定要确保更新语句在 <code>continue</code> 触发<b>之前</b>就已经执行，或者把更新语句挪到 <code>continue</code> 判断的前面。这也是为什么"循环次数已知"的场景更推荐用 <code>for</code>——更新语句在结构上独立出来，天然不会被 <code>continue</code> 波及。</div>
+    </div>
+
+    <div class="section-body">
+      <p>再看陷阱 3：<code>switch</code> 嵌套在循环里时，<code>switch</code> 自己的 <code>break</code> 到底管到哪一层？</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div>
+        <span class="code-lang">C++ · switch 里的 break 管不到外层循环</span>
+      </div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="num">5</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="kw">switch</span> <span class="pnc">(</span><span class="fn">i</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">        <span class="kw">case</span> <span class="num">2</span><span class="pnc">:</span></td></tr>
+          <tr class="hl-break"><td class="ln">6</td><td class="cd">            <span class="kw">break</span><span class="pnc">;</span>  <span class="cmt">// 只跳出 switch，不影响外层 for</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">i</span><span class="pnc">;</span>  <span class="cmt">// i=2 这一轮同样会执行到这里，输出 0 1 2 3 4</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p><code>i == 2</code> 那一轮，<code>case 2</code> 匹配上，执行到第 6 行的 <code>break</code>——但这个 <code>break</code> 只是让程序跳出 <code>switch</code> 这对花括号，回到 <code>for</code> 循环体里 <code>switch</code> 之后的位置，继续往下执行第 8 行的 <code>cout</code>，然后正常进入下一轮 <code>i++</code>。整个 <code>for</code> 循环完全没有被提前终止，最终会正常输出 <code>0 1 2 3 4</code>。</p>
     </div>
   </section>
 

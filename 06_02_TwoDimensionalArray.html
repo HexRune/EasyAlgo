@@ -90,9 +90,9 @@
   <nav class="ch06-nav">
     <div class="ch06-nav-label">第六章 · 数组</div>
     <div class="ch06-nav-items">
-      <a class="ch06-nav-item" href="06_01_一维数组.html"><span class="cni-num">6.1</span><span class="cni-name">一维数组</span></a>
-      <a class="ch06-nav-item active" href="06_02_二维数组.html"><span class="cni-num">6.2</span><span class="cni-name">二维数组</span></a>
-      <a class="ch06-nav-item" href="06_03_字符数组.html"><span class="cni-num">6.3</span><span class="cni-name">字符数组</span></a>
+      <a class="ch06-nav-item" href="06_01_OneDimensionalArray.html"><span class="cni-num">6.1</span><span class="cni-name">一维数组</span></a>
+      <a class="ch06-nav-item active" href="06_02_TwoDimensionalArray.html"><span class="cni-num">6.2</span><span class="cni-name">二维数组</span></a>
+      <a class="ch06-nav-item" href="06_03_CharArray.html"><span class="cni-num">6.3</span><span class="cni-name">字符数组</span></a>
     </div>
   </nav>
 
@@ -186,6 +186,11 @@
       </div>
     </div>
 
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>更好的编程习惯：别把行数、列数写死在循环里：</b>上面例子里的 <code>i &lt; 2</code>、<code>j &lt; 3</code> 直接把数字硬编码进了循环条件，如果以后 <code>matrix</code> 的大小改了，这些数字都要跟着手动改，容易漏改。更稳妥的做法是用常量代替，比如 <code>const int ROWS = 2, COLS = 3;</code>，定义数组和写循环条件时都用 <code>ROWS</code>、<code>COLS</code>；或者用 <code>sizeof(matrix) / sizeof(matrix[0])</code> 自动算出行数（对二维数组，<code>sizeof(matrix[0]) / sizeof(matrix[0][0])</code> 能算出列数）。这样以后调整数组大小时，只需要改一个地方。</div>
+    </div>
+
     <h3 class="sub-title" id="sub2">6.2.2 初始化方式</h3>
     <div class="section-body">
       <p>二维数组的初始化和一维数组类似，但有一条容易被忽视的规则：<b>第一维（行数）可以省略，第二维（列数）不能省略</b>。</p>
@@ -217,6 +222,11 @@
       <div><b>为什么第二维不能省略？</b>回忆 6.1 节的地址计算公式——数组访问依赖"每一行占多少个元素"这个信息来定位。行数只影响"总共分配多大空间"，而列数决定了"从第几行开始数"，编译器必须知道列数才能正确计算 <code>matrix[i][j]</code> 对应的内存位置，所以列数是不可或缺的。</div>
     </div>
 
+    <div class="callout info">
+      <span class="callout-icon">☝️</span>
+      <div><b>行数能省略是有前提的：</b>只有在<b>定义的同时进行初始化</b>时，编译器才能通过数一数初始化列表里有几组花括号，自动推断出行数——就像上面 <code>b[][3]</code> 的例子。如果只是声明、暂不赋初值（比如 <code>int e[][3];</code>），编译器根本无法知道你打算存几行数据，这种写法是不合法的，行数在这种情况下同样不能省略。</div>
+    </div>
+
     <h3 class="sub-title" id="sub3">6.2.3 常见应用：矩阵求和与转置</h3>
     <div class="section-body">
       <p>二维数组最常见的两个基础操作：把所有元素累加求和，以及把矩阵"转置"（行列互换，<code>matrix[i][j]</code> 变成 <code>matrix[j][i]</code>）。</p>
@@ -244,6 +254,11 @@
           <tr class="hl"><td class="ln">13</td><td class="cd">        <span class="fn">b</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">][</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">=</span> <span class="fn">a</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">][</span><span class="fn">j</span><span class="pnc">];</span>  <span class="cmt">// 行列下标互换写入</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📏</span>
+      <div><b>注意目标数组的形状：</b>转置的本质是"行列互换"，所以存放结果的数组，行数和列数也要跟着互换——原数组是 <code>a[2][3]</code>（2行3列），转置结果就必须存进 <code>b[3][2]</code>（3行2列），而不能沿用原来的 <code>[2][3]</code>，否则会越界或者装不下。如果 <code>a</code> 恰好是<b>方阵</b>（行数等于列数，比如 <code>a[3][3]</code>），转置前后大小不变，就不需要改变数组大小了。</div>
     </div>
 
     <h3 class="sub-title" id="sub4">6.2.4 常见陷阱与易错点</h3>

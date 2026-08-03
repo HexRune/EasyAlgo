@@ -274,6 +274,8 @@
       <p>下面是按位与最常见的四个用法。前两个是"读取"——只是看某一位是什么，不修改数据；后两个是"写入"——真正去修改数据的某些位。</p>
     </div>
 
+    
+
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 按位与常见用途</span></div>
       <div class="code-body">
@@ -293,7 +295,10 @@
         </table>
       </div>
     </div>
-
+    <div class="callout tip">
+      <span class="callout-icon">🧰</span>
+      <div><b>把 (1&lt;&lt;k)-1 和 ~(1&lt;&lt;k) 当成"整体"记住：</b>用途③、④里出现的这两个表达式，第一次看到可能需要一点时间反应过来，但不需要每次都重新推导——把它们当成两个已经造好、可以直接拿来用的"工具"就行：<code>(1&lt;&lt;k)-1</code> 整体表示"低 k 位全是 1 的掩码"，<code>~(1&lt;&lt;k)</code> 整体表示"除了第 k 位是 0、其余全是 1 的掩码"。记住这两个整体的作用，比每次都从头逐位推导要高效得多。</div>
+    </div>
     <div class="callout info">
       <span class="callout-icon">🔑</span>
       <div><b>"掩码"（mask）这个概念：</b>上面用途③、④里的 <code>(1&lt;&lt;k)-1</code> 和 <code>~(1&lt;&lt;k)</code> 都属于"掩码"——一个专门构造出来、用来跟原数据做位运算的数字，作用就像一张"镂空的纸"：盖在原数据上，想保留的位置镂空露出来，不想要的位置盖住变成 0。之后处理"状态压缩"类问题时，构造合适的掩码是最核心的技巧。</div>
@@ -515,9 +520,9 @@
       <div class="code-body">
         <table class="code-table">
           <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 用途① 不用临时变量交换两个数</span></td></tr>
-          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="fn">a</span> <span class="op">^=</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// a 变成 a^b</span></td></tr>
-          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="fn">b</span> <span class="op">^=</span> <span class="fn">a</span><span class="pnc">;</span>  <span class="cmt">// b 变成 b^(a^b) = a（原来的 a）</span></td></tr>
-          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="fn">a</span> <span class="op">^=</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// a 变成 (a^b)^a = b（原来的 b），三行后两数互换</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="fn">a</span> <span class="op">^=</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// 设初始值为 a0、b0，此时 a = a0^b0</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="fn">b</span> <span class="op">^=</span> <span class="fn">a</span><span class="pnc">;</span>  <span class="cmt">// b = b0^(a0^b0) = a0^(b0^b0) = a0^0 = a0（交换律+ b0^b0=0）</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="fn">a</span> <span class="op">^=</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// a = (a0^b0)^a0 = b0^(a0^a0) = b0^0 = b0，三行后两数互换</span></td></tr>
           <tr><td class="ln">5</td><td class="cd"></td></tr>
           <tr><td class="ln">6</td><td class="cd"><span class="cmt">// 用途② 找出数组中唯一出现奇数次的数</span></td></tr>
           <tr><td class="ln">7</td><td class="cd"><span class="cmt">// 前提：其余每个数都恰好出现偶数次</span></td></tr>
@@ -788,6 +793,11 @@
         </tr>
       </tbody>
     </table>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>注意 0 这个边界情况：</b><code>__builtin_clz(0)</code> 和 <code>__builtin_ctz(0)</code> 的结果是<b>未定义行为</b>——这两个函数的原理都依赖"从某一端数到第一个 1"，而 <code>0</code> 根本没有任何一位是 1，所以结果因编译器、优化选项而异，不能假设它一定是 <code>32</code> 或某个固定值。实际使用中，调用前应该先手动判断一下 <code>x == 0</code> 的情况，单独处理，避免直接对 <code>0</code> 调用这两个函数。</div>
+    </div>
 
     <div class="callout tip">
       <span class="callout-icon">🏆</span>
