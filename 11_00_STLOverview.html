@@ -260,6 +260,28 @@
       </div>
     </div>
 
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 迭代器的基本用法</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">v</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">10</span><span class="pnc">,</span> <span class="num">20</span><span class="pnc">,</span> <span class="num">30</span><span class="pnc">};</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">();</span>  <span class="cmt">// it 指向第一个元素（10）</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">it</span><span class="pnc">;</span>       <span class="cmt">// *it 解引用，访问 it 指向的值，输出 10</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="op">++</span><span class="fn">it</span><span class="pnc">;</span>            <span class="cmt">// it 往后移动一位，现在指向 20</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">it</span><span class="pnc">;</span>       <span class="cmt">// 输出 20</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>整个过程就像伸出一只"智能手"，先用 <code>begin()</code> 把它放到容器的第一个元素上，用 <code>*it</code>（解引用）看一眼手指着的值，再用 <code>++it</code> 把手往后挪一位，指向下一个元素——这只"手"知道该怎么在你选的这种容器里移动，不用你自己操心底层是怎么存储的。</p>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚙️</span>
+      <div><b>auto 需要 C++11 才支持：</b>示例里 <code>auto it = v.begin();</code> 这种"让编译器自动推断类型"的写法，是 C++11 才引入的语法。有些编辑器（比如老版本的 Dev-C++、Code::Blocks）默认使用的还是更早的 C++98 标准，直接写 <code>auto</code> 会编译报错，需要手动在编译选项里加上 <code>-std=c++11</code>（或更新的 <code>-std=c++14</code>/<code>c++17</code> 等）才能启用。如果一时半会儿改不了编译设置，也可以老老实实写出完整的迭代器类型来代替 <code>auto</code>，比如下面要讲到的 <code>vector&lt;int&gt;::iterator it = v.begin();</code>——这种写法从 C++98 起就一直支持，不受标准版本限制。</div>
+    </div>
+
     <div class="sub-title">所有容器的"通用技能"</div>
     <div class="section-body">
       <p>好消息是，几乎所有 STL 容器都共享一套相同的操作。就像一个工具箱里的所有工具都有"拿起来"和"放下去"这两个动作一样，无论你用 <code>vector</code> 还是 <code>list</code>，下面这些操作你都能用：</p>
@@ -283,6 +305,11 @@
     <div class="callout tip">
       <span class="callout-icon">📌</span>
       <div>注意：<code>front()</code> / <code>back()</code> 在 <code>stack</code>、<code>queue</code> 等容器适配器中会有所限制（比如 <code>stack</code> 没有 <code>front()</code>），具体细节会在对应章节里说明。这张表概括的是<strong>大多数序列容器和关联容器</strong>共有的接口。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">❓</span>
+      <div><b>::iterator 是什么？</b><code>::</code> 叫作用域解析符，现阶段可以暂时把 <code>容器类型::iterator</code> 整体理解为"这个容器专属的迭代器标记类型"——每一种容器都有自己配套的迭代器类型，写代码时要用哪个容器，就配哪个容器的 <code>::iterator</code>。之后会经常看到类似 <code>vector&lt;int&gt;::iterator it;</code> 这样的写法，它和前面代码里用 <code>auto it = v.begin();</code> 效果完全一样，只是 <code>auto</code> 让编译器自动推断出这个较长的类型名，写代码时更省事，因此更常用。</div>
     </div>
 
     <div class="sub-title">接下来要学什么</div>

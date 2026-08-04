@@ -124,9 +124,9 @@
   <nav class="ch08-nav">
     <div class="ch08-nav-label">第八章 · 函数</div>
     <div class="ch08-nav-items">
-      <a class="ch08-nav-item" href="08_01_函数基础.html"><span class="cni-num">8.1</span><span class="cni-name">函数基础</span></a>
-      <a class="ch08-nav-item" href="08_02_函数参数详解.html"><span class="cni-num">8.2</span><span class="cni-name">函数参数详解</span></a>
-      <a class="ch08-nav-item active" href="08_03_函数重载与内联函数.html"><span class="cni-num">8.3</span><span class="cni-name">函数重载与内联函数</span></a>
+      <a class="ch08-nav-item" href="08_01_FunctionBasics.html"><span class="cni-num">8.1</span><span class="cni-name">函数基础</span></a>
+      <a class="ch08-nav-item" href="08_02_FunctionParametersDetailed.html"><span class="cni-num">8.2</span><span class="cni-name">函数参数详解</span></a>
+      <a class="ch08-nav-item active" href="08_03_FunctionOverloadingAndInline.html"><span class="cni-num">8.3</span><span class="cni-name">函数重载与内联函数</span></a>
     </div>
   </nav>
 
@@ -191,7 +191,10 @@
     <p class="section-label">8.3.2</p>
     <h2 class="section-title">编译器怎么选中正确的那个</h2>
     <div class="section-body">
-      <p>调用一个重载函数时，编译器会拿实参和每个候选函数的参数列表逐一比对，优先选择<strong>类型完全匹配</strong>的版本；如果没有完全匹配的，会尝试<strong>隐式类型转换</strong>（见 2.1 节）后再匹配。以调用 <code>Max(3, 5)</code> 为例：</p>
+      <p>编译器选择重载版本的过程，可以拆成清晰的两步：</p>
+      <p><b>第一步——找出所有"可行函数"：</b>先看参数<strong>数量</strong>和<strong>类型</strong>，筛出所有"有可能匹配"的候选版本（数量不对的直接排除，类型能精确匹配或者能通过类型转换匹配上的，都算可行）。</p>
+      <p><b>第二步——从可行函数里选出"最佳匹配"：</b>在这些可行函数中，选择参数类型最贴近实参、需要的类型转换最少的那一个。如果隐式类型转换（见 2.2 节）还是没法让某个版本精确匹配，会优先选择转换幅度更小的版本。如果筛到最后，有两个或更多候选"一样好"、分不出谁更优，就会产生二义性错误。</p>
+      <p>以调用 <code>Max(3, 5)</code> 为例：</p>
     </div>
 
     <div class="match-diagram">
@@ -204,7 +207,7 @@
     </div>
 
     <div class="section-body">
-      <p>如果编译器找不到任何一个"最合适"的版本——比如有两个候选函数经过转换后都同样匹配、难分高下——就会报<strong>调用二义性错误（ambiguous call）</strong>，程序无法编译通过。</p>
+      <p>对照上面两步来看：<code>Max(double, double)</code> 和 <code>Max(int, int)</code> 因为参数数量都对得上，都算"可行函数"；但 <code>Max(int, int, int)</code> 参数个数不对，第一步就被淘汰了。剩下两个可行函数里，<code>Max(int, int)</code> 不需要任何类型转换就能精确匹配，是"最佳匹配"，因此被选中。如果编译器找不到任何一个"最合适"的版本——比如有两个候选函数经过转换后都同样匹配、难分高下——就会报<strong>调用二义性错误（ambiguous call）</strong>，程序无法编译通过。</p>
     </div>
   </section>
 
@@ -224,7 +227,7 @@
       </div>
       <div class="pitfall-item">
         <div class="pitfall-num">3</div>
-        <div class="pitfall-body"><b>类型转换可能让调用意图变得模糊：</b>如果同时有 <code>F(int)</code> 和 <code>F(double)</code>，调用 <code>F('A')</code> 时 <code>char</code> 既能转成 <code>int</code> 也能转成 <code>double</code>，虽然 C++ 规定会优先转成更"接近"的 <code>int</code>，但这种场景容易让代码意图不清晰，建议调用时用强制转换明确写清楚要用哪个版本。</div>
+        <div class="pitfall-body"><b>类型转换可能让调用意图变得模糊：</b>如果同时有 <code>F(int)</code> 和 <code>F(double)</code>，调用 <code>F('A')</code> 时 <code>char</code> 既能转成 <code>int</code> 也能转成 <code>double</code>。（进阶细节：当实参类型没有精确匹配任何一个重载版本时，编译器会依据一套比较复杂的类型提升规则去挑选"更接近"的版本——比如这里会优先转成 <code>int</code>——这套规则不总是符合直觉，容易导致调用结果出乎意料。）最稳妥的做法是：调用时尽量保证实参类型能精确匹配某个重载版本，拿不准就用强制类型转换把意图写清楚。</div>
       </div>
     </div>
   </section>
@@ -302,6 +305,11 @@
     <div class="callout tip">
       <span class="callout-icon">💡</span>
       <div><b>竞赛建议：</b>竞赛编程中，编译器（尤其开启 <code>-O2</code> 优化）通常已经足够聪明，会自动内联合适的小函数，手动加 <code>inline</code> 关键字更多是一种"锦上添花"的提示，而不是必需操作。理解它的原理比死记写法更重要。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">🛠️</span>
+      <div><b>工程视角：inline 真正的一个重要用途</b>——允许把小函数直接定义在头文件里。正常情况下，如果一个非 <code>inline</code> 的函数在多个 <code>.cpp</code> 文件里都 <code>#include</code> 了同一个定义了它的头文件，链接时会报"重复定义"的错误；而 <code>inline</code> 函数被特许可以在多个文件里重复出现相同的定义而不报错，这也是为什么很多小型工具函数会写成 <code>inline</code> 并直接放在头文件中。这是一个更偏工程实践的知识点，竞赛中通常用不到（竞赛一般只有一个文件），了解即可。</div>
     </div>
   </section>
 

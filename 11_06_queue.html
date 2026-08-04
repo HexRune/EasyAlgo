@@ -242,6 +242,11 @@
       </div>
     </div>
 
+    <div class="callout info">
+      <span class="callout-icon">🧱</span>
+      <div><b>也可以自己指定底层容器：</b>与 <code>stack</code> 类似，<code>queue</code> 默认底层也是用 <code>deque</code> 实现的，同样可以手动指定别的底层容器，比如 <code>queue&lt;int, list&lt;int&gt;&gt; q;</code> 会改用 <code>list</code> 存储。日常写代码用默认的 <code>deque</code> 完全够用，不必特意指定。</div>
+    </div>
+
     <div class="sub-title" id="s2">11.6.2　常用操作</div>
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · push / front / back / pop</span></div>
@@ -330,7 +335,7 @@
 
     <div class="callout tip">
       <span class="callout-icon">🎯</span>
-      <div><b>什么时候用 queue？</b>BFS（广度优先搜索）几乎离不开它——每次从队首取出当前节点，把它的邻居依次压入队尾。模拟排队、任务调度等"先来先服务"的场景也是 <code>queue</code> 的典型用法。</div>
+      <div><b>什么时候用 queue？</b>BFS（广度优先搜索）几乎离不开它——每次从队首取出当前节点，把它的邻居依次压入队尾。模拟排队、任务调度等"先来先服务"的场景也是 <code>queue</code> 的典型用法。简单记忆：<strong>后进先出（LIFO）用 stack，先进先出（FIFO）用 queue</strong>。</div>
     </div>
   </section>
 

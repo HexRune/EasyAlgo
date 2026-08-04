@@ -250,6 +250,11 @@
       </div>
     </div>
 
+    <div class="callout info">
+      <span class="callout-icon">🧱</span>
+      <div><b>也可以自己指定底层容器：</b>前面提到 <code>stack</code> 默认借用 <code>deque</code> 存储数据，但这个底层容器其实是可以手动指定的，比如 <code>stack&lt;int, vector&lt;int&gt;&gt; s;</code> 就会改用 <code>vector</code> 存储。这通常用在需要控制内存布局或性能特征的场景（比如明确知道数据量不大、想避免 <code>deque</code> 分段存储的额外开销），日常写代码用默认的 <code>deque</code> 完全够用，不必特意指定。</div>
+    </div>
+
     <div class="sub-title" id="s2">11.5.2　常用操作</div>
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · push / top / pop</span></div>
@@ -278,6 +283,11 @@
       </div>
     </div>
 
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>emplace 什么时候真正更高效？</b>对于 <code>stack&lt;int&gt;</code> 这种存储简单类型的场景，<code>emplace</code> 和 <code>push</code> 的差异微乎其微，几乎感觉不出来。<code>emplace</code> 真正的优势场景是存储<strong>复杂类型</strong>（比如结构体、<code>string</code>、<code>pair</code>）的时候——<code>push</code> 需要先在栈外构造出一个临时对象，再把它拷贝（或移动）进去，而 <code>emplace</code> 能直接在栈顶原地构造，省去了这个临时对象和额外拷贝的开销。</div>
+    </div>
+
     <div class="sub-title" id="s3">11.5.3　🔥 经典陷阱</div>
 
     <p style="font-size:14.5px;color:var(--text-secondary);margin-bottom:10px;"><strong>陷阱一：pop() 不返回被删除的值！</strong></p>
@@ -300,7 +310,7 @@
 
     <div class="callout danger">
       <span class="callout-icon">🔥</span>
-      <div><b>为什么会这样？</b><code>pop()</code> 的设计哲学是"删除"和"读取"分开：<code>pop()</code> 只负责删除，返回类型是 <code>void</code>；要读取栈顶的值，必须先调用 <code>top()</code>。这和很多人直觉里"弹出并返回"的想法不一样，是 STL 容器适配器里最容易踩的坑之一。</div>
+      <div><b>为什么会这样？</b><code>pop()</code> 的设计哲学是"删除"和"读取"分开：<code>pop()</code> 只负责删除，返回类型是 <code>void</code>；要读取栈顶的值，必须先调用 <code>top()</code>。这和很多人直觉里"弹出并返回"的想法不一样，是 STL 容器适配器里最容易踩的坑之一。这种设计还有一个好处：如果元素本身拷贝或移动的开销很大（比如一个很大的结构体），"弹出并返回"就得在 <code>pop()</code> 内部先把这个大对象拷贝一份出来才能返回，白白多花一份开销；而"删除"和"读取"分开后，需要读取时用 <code>top()</code> 拿一份引用去看一眼就行，不需要的话（比如只是想扔掉栈顶）直接调用 <code>pop()</code>，完全不会产生这份多余的拷贝。</div>
     </div>
 
     <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>陷阱二：空栈调用 top() 或 pop() 是危险操作</strong></p>

@@ -17,7 +17,7 @@
   /* 内存分区表 */
   .mem-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 16px 0; font-size: 13px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden }
   .mem-table thead tr { background: #1E1C2E }
-  .mem-table th { padding: 9px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #6C7086; border-bottom: 1px solid #2A2840 }
+  .mem-table th { padding: 9px 13px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: #A6ADC8; border-bottom: 1px solid #2A2840 }
   .mem-table th:first-child { color: var(--code-text) }
   .mem-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle }
   .mem-table tr:last-child td { border-bottom: none }
@@ -28,8 +28,8 @@
   .mem-table tr.data  td:first-child { color: var(--code-kw) }
   .mem-table tr.text  td:first-child { color: var(--code-op) }
   .mem-badge { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 4px; font-weight: 600; margin-left: 6px }
-  .badge-focus  { background: rgba(137,180,250,.2); color: var(--blue) }
-  .badge-manual { background: rgba(166,227,161,.2); color: var(--teal) }
+  .badge-focus  { background: rgba(137,180,250,.18); color: var(--code-fn); border: 1px solid rgba(137,180,250,.4) }
+  .badge-manual { background: rgba(166,227,161,.18); color: var(--code-str); border: 1px solid rgba(166,227,161,.4) }
 
   /* 内存地址可视化 */
   .mem-visual {
@@ -213,6 +213,9 @@
     </div>
 
     <h3 class="sub-title">程序内存分区</h3>
+    <div class="section-body">
+      <p>刚才说的"一排储物柜"其实是简化过的画面——真实的内存并不是一整片毫无区别的柜子，而是被划分成了好几个功能不同的"区域"，不同用途的数据会被分别安排到对应的区域里存放。下表列出了最常见的几个分区：</p>
+    </div>
     <table class="mem-table">
       <thead><tr><th>内存区域</th><th>说明</th></tr></thead>
       <tbody>
@@ -235,12 +238,12 @@
     <p class="section-label">9.2</p>
     <h2 class="section-title">指针变量</h2>
     <div class="section-body">
-      <p>指针变量存储的是另一个变量的<strong>内存地址</strong>。通过指针，可以间接访问和修改它所指向的变量。</p>
+      <p>还记得 9.1 节"储物柜"的比喻吗？指针变量本身也是一个柜子，只不过这个柜子里存放的不是普通数据，而是<strong>另一个柜子的编号</strong>（地址）。指针变量存储的是另一个变量的<strong>内存地址</strong>。通过指针，可以间接访问和修改它所指向的变量。</p>
     </div>
 
     <div class="callout tip">
       <span class="callout-icon">🎒</span>
-      <div><b>为什么需要指针？</b>假设你和同桌要共用一本很厚的字典。与其把整本字典搬来搬去，不如直接告诉同桌"字典在我书包第二层"——同桌凭这句话就能自己找到并翻阅，不用真的把字典搬一次。这句"东西放在哪里"的话，对应的就是指针里存的<b>地址</b>：指针本身很小（不管指向多大的数据，指针的大小都固定），但通过它能找到并操作任意大小的数据。第八章讲的"指针传递"用的正是这个思路——传的是"字典在哪"，而不是字典本身。</div>
+      <div><b>为什么需要指针？</b>想象你和同桌合用一本很厚的字典。每次要查字典，如果都把整本字典搬到对方桌上，既费力气又占地方；更省事的做法是直接告诉同桌一句"字典放在我书包第二层"——同桌听了这句话，自己就能找到并翻阅，根本不需要你把字典搬过去。这句"东西放在哪里"的话，对应的就是指针里存的<b>地址</b>：指针本身很小（不管指向多大的数据，指针的大小都固定），但通过它能找到并操作任意大小的数据。第八章讲的"指针传递"用的正是这个思路——传的是"字典在哪"，而不是字典本身。</div>
     </div>
 
     <!-- Pointer visual: p → a -->
@@ -399,7 +402,7 @@
 
     <div class="callout warn">
       <span class="callout-icon">⚠️</span>
-      <div><b>指针偏移注意：</b><code>p + 1</code> 并不是将地址加 1，而是偏移一个<strong>元素的大小</strong>（如 <code>int</code> 指针偏移 4 字节）。解引用前务必确保指针指向有效的数组范围，越界访问是未定义行为。</div>
+      <div><b>指针偏移注意：</b><code>p + 1</code> 并不是将地址加 1，而是偏移一个<strong>元素的大小</strong>（如 <code>int</code> 指针偏移 4 字节）。这是因为指针 <code>p</code> 在声明时就带着类型信息，"知道"自己指向的是 <code>int</code>，所以 <code>+1</code> 会自动前进 <code>sizeof(int)</code> 个字节，正好落在数组里紧挨着的下一个 <code>int</code> 元素上——这种"按元素大小移动"的设计，正是指针能够自然地在数组里挨个移动、逐一访问每个元素的关键。解引用前务必确保指针指向有效的数组范围，越界访问是未定义行为。</div>
     </div>
   </section>
 
@@ -413,7 +416,7 @@
 
     <div class="callout info">
       <span class="callout-icon">🏷️</span>
-      <div><b>"别名"是什么意思？</b>就像班里有个同学大家都叫他"外号"，外号和学籍册上的本名说的是<b>同一个人</b>——喊外号或喊本名，答应的都是他，成绩单上记的也是同一份成绩。<code>int &amp;ref = a;</code> 之后，<code>ref</code> 和 <code>a</code> 就是同一块内存的两个名字，不存在"复制了一份"，改 <code>ref</code> 就是改 <code>a</code> 本身。这一点和 9.2 节的指针不同：指针 <code>p</code> 是另外找了一个柜子存"a 的编号"，而引用<b>压根没有新柜子</b>，只是给已有的柜子多贴了一张名字标签。</div>
+      <div><b>"别名"是什么意思？</b>就像班里有个同学大家都叫他"外号"，外号和学籍册上的本名说的是<b>同一个人</b>——喊外号或喊本名，答应的都是他，成绩单上记的也是同一份成绩。<code>int &amp;ref = a;</code> 之后，<code>ref</code> 和 <code>a</code> 就是同一块内存的两个名字，不存在"复制了一份"，改 <code>ref</code> 就是改 <code>a</code> 本身。这一点和 9.2 节的指针不同：指针 <code>p</code> 是另外找了一个柜子存"a 的编号"，而引用<b>压根没有新柜子</b>，只是给已有的柜子多贴了一张名字标签。（在大多数编译器的实现中，引用本身<strong>不占用额外的内存空间</strong>，它只是原变量在编译器层面的一个别名，编译后的代码里通常直接被替换成对原变量的访问；这一点和指针变量不同——指针变量本身也是一块实实在在的内存，需要占用空间来存储地址。）</div>
     </div>
 
     <!-- Reference visual -->

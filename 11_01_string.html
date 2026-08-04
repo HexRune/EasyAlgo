@@ -224,7 +224,7 @@
           <tr><td class="ln">8</td><td class="cd">    <span class="fn">string</span> <span class="fn">s2</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="pnc">;</span>      <span class="cmt">// 从 C 风格字符串初始化</span></td></tr>
           <tr><td class="ln">9</td><td class="cd">    <span class="fn">string</span> <span class="fn">s3</span><span class="pnc">(</span><span class="fn">s2</span><span class="pnc">);</span>             <span class="cmt">// 拷贝构造</span></td></tr>
           <tr><td class="ln">10</td><td class="cd">    <span class="fn">string</span> <span class="fn">s4</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">,</span> <span class="str">'a'</span><span class="pnc">);</span>          <span class="cmt">// "aaaaa"——5 个字符 'a'</span></td></tr>
-          <tr><td class="ln">11</td><td class="cd">    <span class="fn">string s5 = "Hello"s; <span class="cmt">// C++14 字面量语法，需 using namespace std::string_literals;</span></span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">string</span> <span class="fn">s5</span> <span class="op">=</span> <span class="str">"Hello"s</span><span class="pnc">;</span>       <span class="cmt">// （C++14 起）字面量语法，需 using namespace std::string_literals;</span></td></tr>
           <tr><td class="ln">12</td><td class="cd"></td></tr>
           <tr><td class="ln">13</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">14</td><td class="cd"><span class="pnc">}</span></td></tr>
@@ -237,7 +237,8 @@
       <div>
         <b>注意：</b><br>
         · 未初始化的 <code>string</code> 默认为空字符串（长度为 0），不会像字符数组那样出现乱码。<br>
-        · 虽然 <code>string</code> 支持通过下标 <code>[]</code> 访问字符，但<strong>不能给还不存在的位置赋值</strong>。
+        · 虽然 <code>string</code> 支持通过下标 <code>[]</code> 访问字符，但<strong>不能给还不存在的位置赋值</strong>。<br>
+        · <code>"Hello"s</code> 这种带 <code>s</code> 后缀的写法是 C++14 才引入的语法，需要额外写 <code>using namespace std::string_literals;</code> 才能用。如果不确定自己的编译器是否支持，可以暂时忽略这种写法——前面几种初始化方式已经完全够日常使用了。
       </div>
     </div>
 
@@ -369,7 +370,7 @@
           <tr><td class="ln">3</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="str">'!'</span><span class="pnc">);</span>      <span class="cmt">// "Hello World!"——在末尾追加一个字符</span></td></tr>
           <tr><td class="ln">4</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">pop_back</span><span class="pnc">();</span>           <span class="cmt">// "Hello World"——删除最后一个字符</span></td></tr>
           <tr><td class="ln">5</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">,</span> <span class="str">" C++"</span><span class="pnc">);</span>   <span class="cmt">// "Hello C++ World"——在下标 5 处插入</span></td></tr>
-          <tr><td class="ln">6</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">);</span>         <span class="cmt">// 删除从下标 2 开始的 3 个字符</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">);</span>         <span class="cmt">// 删除从下标 2 开始的 3 个字符（若省略长度，如 s.erase(2)，则删除从下标 2 到末尾的所有字符）</span></td></tr>
           <tr><td class="ln">7</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">replace</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="str">"Hi"</span><span class="pnc">);</span> <span class="cmt">// 把下标 0 起的 5 个字符替换为 "Hi"</span></td></tr>
           <tr><td class="ln">8</td><td class="cd"><span class="fn">s1</span><span class="pnc">.</span><span class="fn">swap</span><span class="pnc">(</span><span class="fn">s2</span><span class="pnc">);</span>            <span class="cmt">// 交换两个字符串的全部内容（速度极快）</span></td></tr>
         </table>
@@ -412,6 +413,11 @@
           <tr><td class="ln">7</td><td class="cd"><span class="typ">double</span> <span class="fn">d</span> <span class="op">=</span> <span class="fn">stod</span><span class="pnc">(</span><span class="str">"3.14159"</span><span class="pnc">);</span> <span class="cmt">// 字符串 → 小数：3.14159</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>注意：</b><code>stoi</code>/<code>stod</code> 在转换失败时（比如传入的字符串根本不是数字，像 <code>stoi("abc")</code>）会<strong>抛出异常</strong>，如果程序没有处理这个异常，会直接崩溃退出。在竞赛中，如果题目保证输入格式一定合法，可以放心直接使用；但如果输入内容可能不合法（比如处理用户输入或格式不确定的外部数据），就需要额外用 <code>try-catch</code> 处理异常，或者改用更稳健的解析方式（比如 <code>stringstream</code>）。</div>
     </div>
 
     <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>🔄 迭代器遍历</strong></p>
@@ -460,7 +466,7 @@
         <tr><td>s.append(t)</td><td>修改</td><td>在末尾追加字符串</td></tr>
         <tr><td>s.push_back(c) / s.pop_back()</td><td>修改</td><td>末尾追加 / 删除一个字符</td></tr>
         <tr><td>s.insert(pos, t)</td><td>修改</td><td>在 pos 处插入字符串</td></tr>
-        <tr><td>s.erase(pos, len)</td><td>修改</td><td>删除 pos 起的 len 个字符</td></tr>
+        <tr><td>s.erase(pos, len)</td><td>修改</td><td>删除 pos 起的 len 个字符（省略 len 则删到末尾）</td></tr>
         <tr><td>s.replace(pos, len, t)</td><td>修改</td><td>替换 pos 起的 len 个字符为 t</td></tr>
         <tr><td>s.find(t)</td><td>查找</td><td>查找 t 首次出现的位置，找不到返回 string::npos</td></tr>
         <tr><td>s.rfind(t)</td><td>查找</td><td>从后往前查找 t 最后一次出现的位置</td></tr>

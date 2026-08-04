@@ -219,7 +219,7 @@
   <!-- ═══ 正文 ═══ -->
   <section class="section" id="s0">
     <div class="section-body">
-      <p><code>list</code> 是一个<strong>双向链表</strong>。链表不像数组那样所有元素挤在一块连续的内存里，而是每个元素各住各的，彼此用"指针"串起来。这带来的好处是：在任意位置插入或删除元素都是 O(1)，快到飞起。代价是：不能用下标直接跳到第 n 个元素，只能顺着链条一个一个找。使用前需引入 <code>&lt;list&gt;</code> 头文件。</p>
+      <p><code>list</code> 是一个<strong>双向链表</strong>。链表不像数组那样所有元素挤在一块连续的内存里，而是每个元素各住各的，彼此用"指针"串起来。这带来的好处是：在任意位置插入或删除元素都是 O(1)（前提是已经通过迭代器找到了要操作的位置——查找这个位置本身可能要从头顺着链条一个一个找，耗时不是 O(1)），快到飞起。代价是：不能用下标直接跳到第 n 个元素，只能顺着链条一个一个找。使用前需引入 <code>&lt;list&gt;</code> 头文件。</p>
     </div>
 
     <div class="list-mem-visual">
@@ -331,6 +331,11 @@
           <tr><td class="ln">13</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🔗</span>
+      <div><b>和 vector 的初始化方式一模一样：</b>与 <code>vector</code> 类似，<code>list&lt;int&gt; l2(5)</code> 会创建 5 个元素，并自动初始化为 0；<code>list&lt;int&gt; l3(5, 7)</code> 会创建 5 个元素，全部初始化为 7。上一节学过的 <code>vector</code> 初始化方式，这里几乎原样搬过来就能用——STL 里的容器在很多常用接口上都遵循相似的设计，这是它们好学、好记的原因之一。</div>
     </div>
 
     <div class="sub-title" id="s2">11.3.2　常用操作</div>
@@ -445,7 +450,7 @@
         <tr><td>l.front() / l.back()</td><td>访问</td><td>第一个 / 最后一个元素</td></tr>
         <tr><td>l.push_front(x) / l.pop_front()</td><td>修改</td><td>头部插入 / 删除，O(1)（vector 没有）</td></tr>
         <tr><td>l.push_back(x) / l.pop_back()</td><td>修改</td><td>尾部插入 / 删除，O(1)</td></tr>
-        <tr><td>l.insert(it, x)</td><td>修改</td><td>在 it 前插入元素，O(1)</td></tr>
+        <tr><td>l.insert(it, x)</td><td>修改</td><td>在 it 前插入元素，O(1)（不含查找 it 的时间）</td></tr>
         <tr><td>l.erase(it)</td><td>修改</td><td>删除 it 指向的元素，返回下一个有效迭代器</td></tr>
         <tr><td>l1.swap(l2)</td><td>修改</td><td>交换两个链表的全部内容</td></tr>
         <tr><td>l.begin() / l.end()</td><td>遍历</td><td>正向迭代器范围（只支持 ++ / --，不支持跳转）</td></tr>

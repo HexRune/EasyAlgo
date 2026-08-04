@@ -266,6 +266,9 @@
     </div>
 
     <div class="sub-title" id="s1">11.7.1　定义与初始化</div>
+    <div class="section-body">
+      <p>默认情况下，<code>priority_queue&lt;int&gt;</code> 创建的就是一个<strong>大顶堆</strong>——也就是说，不管元素以什么顺序 <code>push</code> 进去，每次调用 <code>top()</code> 拿到的都是当前<strong>最大</strong>的那个元素。</p>
+    </div>
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · priority_queue 的定义方式</span></div>
       <div class="code-body">
@@ -351,6 +354,11 @@
       </tbody>
     </table>
 
+    <div class="callout info">
+      <span class="callout-icon">📎</span>
+      <div><b>greater&lt;int&gt; 需要的头文件：</b><code>greater&lt;int&gt;</code> 这个比较规则定义在 <code>&lt;functional&gt;</code> 头文件里。大多数编译器的 <code>&lt;queue&gt;</code> 内部已经间接包含了它，所以上面的代码通常不加也能编译通过；但依赖这种"间接包含"并不是一个稳妥的习惯，显式加上 <code>#include &lt;functional&gt;</code> 更安全，也能让代码的依赖关系一目了然。</div>
+    </div>
+
     <div class="sub-title" id="s4">11.7.4　完整使用示例</div>
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · priority_queue 综合示例</span></div>
@@ -405,7 +413,7 @@
 
     <div class="callout tip">
       <span class="callout-icon">🎯</span>
-      <div><b>什么时候用 priority_queue？</b>Dijkstra 最短路算法、堆排序、Top-K 问题（找最大/最小的 K 个数）、任务调度（按优先级处理）……任何"每次都要拿当前最大/最小值"的场景，<code>priority_queue</code> 都比每次重新排序快得多。</div>
+      <div><b>什么时候用 priority_queue？</b>Dijkstra 最短路算法、堆排序、Top-K 问题（找最大/最小的 K 个数）、任务调度（按优先级处理）……任何"每次都要拿当前最大/最小值"的场景，<code>priority_queue</code> 都比每次重新排序快得多。特别适合处理<strong>动态数据流</strong>的场景：数据不是一次性给好、排一次序就完事，而是不断有新数据陆续加入，你需要随时能拿到"当前"的最大值或最小值——这正是 <code>priority_queue</code> 能够一直保持高效（插入和取极值都是 O(log n)）而重新排序做不到的地方。</div>
     </div>
   </section>
 

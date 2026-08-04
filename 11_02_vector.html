@@ -233,7 +233,8 @@
         <b>注意事项：</b><br>
         · <code>vector&lt;int&gt; v(n)</code> 创建的 n 个元素会被自动初始化为 0，<strong>不会</strong>像局部数组那样留下"脏数据"。<br>
         · <code>vector&lt;int&gt; v(n, val)</code> 创建的 n 个元素会被初始化为指定的 <code>val</code>。<br>
-        · 初始化列表 <code>{...}</code> 是 C++11 引入的语法，简洁直观，优先使用。
+        · 初始化列表 <code>{...}</code> 是 C++11 引入的语法，简洁直观，优先使用。<br>
+        · 注意 <code>vector&lt;vector&lt;int&gt;&gt;</code> 里连续两个 <code>&gt;</code> 之间的空格：C++11 之前，编译器会把 <code>&gt;&gt;</code> 误认成右移运算符，必须手动加空格写成 <code>vector&lt;vector&lt;int&gt; &gt;</code>；C++11 起编译器能正确识别嵌套的模板尖括号，不加空格也没问题，现代编译器已经不需要再关心这个细节了。
       </div>
     </div>
 
@@ -265,9 +266,14 @@
           <tr class="hl"><td class="ln">6</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">resize</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">);</span>          <span class="cmt">// 把大小调整为 5，多出来的位置填 0</span></td></tr>
           <tr class="hl"><td class="ln">7</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">resize</span><span class="pnc">(</span><span class="num">10</span><span class="pnc">,</span> <span class="op">-</span><span class="num">1</span><span class="pnc">);</span>    <span class="cmt">// 把大小调整为 10，多出来的位置填 -1</span></td></tr>
           <tr class="hl-g"><td class="ln">8</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">reserve</span><span class="pnc">(</span><span class="num">1000</span><span class="pnc">);</span>     <span class="cmt">// 提前预留 1000 个位置的空间</span></td></tr>
-          <tr><td class="ln">9</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">shrink_to_fit</span><span class="pnc">();</span>  <span class="cmt">// 把多余的内存释放掉</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">shrink_to_fit</span><span class="pnc">();</span>  <span class="cmt">// 请求把多余的内存释放掉（是"请求"，不保证一定执行）</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>注意：</b><code>shrink_to_fit()</code> 只是向标准库发出一个"请求"，并<strong>不保证</strong>一定会真正释放内存——具体要不要执行，由标准库的实现决定。如果需要更可靠地把多余内存彻底释放掉，可以用一个经典技巧：<code>vector&lt;int&gt;().swap(v);</code>——用一个临时的空 <code>vector</code> 和 <code>v</code> 交换内容，交换后 <code>v</code> 变成了那个空的临时对象（没有多余容量），而占用了大内存的旧数据则被装进了这个临时对象里，函数结束时自动被销毁、内存被彻底释放。</div>
     </div>
 
     <div class="callout perf">
@@ -324,6 +330,11 @@
           <tr class="hl-g"><td class="ln">7</td><td class="cd"><span class="fn">v</span><span class="pnc">.</span><span class="fn">emplace_back</span><span class="pnc">(</span><span class="num">10</span><span class="pnc">,</span> <span class="str">'a'</span><span class="pnc">);</span>   <span class="cmt">// 在末尾原地构造元素（比 push_back 更高效）</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🎯</span>
+      <div><b>为什么 begin() 可以直接 +1？</b><code>vector</code> 的迭代器支持 <code>+</code>、<code>-</code> 这样的运算（比如 <code>v.begin() + 1</code> 直接跳到第 2 个元素），是因为 <code>vector</code> 提供的是<strong>随机访问迭代器</strong>——底层数据连续存储，跳到任意位置的开销都一样小。这并不是所有容器迭代器的通用能力，后面会学到的 <code>list</code> 等容器，迭代器只能用 <code>++</code>/<code>--</code> 一步步挪动，不支持直接加减一个数字。</div>
     </div>
 
     <div class="callout tip">
@@ -414,7 +425,7 @@
         <tr><td>v.clear()</td><td>容量</td><td>清空元素（size 变 0，内存不释放）</td></tr>
         <tr><td>v.resize(n) / v.resize(n, val)</td><td>容量</td><td>调整大小，多出的位置填 0 或 val</td></tr>
         <tr><td>v.reserve(n)</td><td>容量</td><td>提前预留 n 个位置，避免反复扩容</td></tr>
-        <tr><td>v.shrink_to_fit()</td><td>容量</td><td>释放多余内存</td></tr>
+        <tr><td>v.shrink_to_fit()</td><td>容量</td><td>请求释放多余内存（不保证一定执行）</td></tr>
         <tr><td>v[i]</td><td>访问</td><td>下标访问，不检查越界，速度快</td></tr>
         <tr><td>v.at(i)</td><td>访问</td><td>下标访问，越界抛异常，更安全</td></tr>
         <tr><td>v.front() / v.back()</td><td>访问</td><td>第一个 / 最后一个元素</td></tr>

@@ -130,9 +130,9 @@
   <nav class="ch08-nav">
     <div class="ch08-nav-label">第八章 · 函数</div>
     <div class="ch08-nav-items">
-      <a class="ch08-nav-item active" href="08_01_函数基础.html"><span class="cni-num">8.1</span><span class="cni-name">函数基础</span></a>
-      <a class="ch08-nav-item" href="08_02_函数参数详解.html"><span class="cni-num">8.2</span><span class="cni-name">函数参数详解</span></a>
-      <a class="ch08-nav-item" href="08_03_函数重载与内联函数.html"><span class="cni-num">8.3</span><span class="cni-name">函数重载与内联函数</span></a>
+      <a class="ch08-nav-item active" href="08_01_FunctionBasics.html"><span class="cni-num">8.1</span><span class="cni-name">函数基础</span></a>
+      <a class="ch08-nav-item" href="08_02_FunctionParametersDetailed.html"><span class="cni-num">8.2</span><span class="cni-name">函数参数详解</span></a>
+      <a class="ch08-nav-item" href="08_03_FunctionOverloadingAndInline.html"><span class="cni-num">8.3</span><span class="cni-name">函数重载与内联函数</span></a>
     </div>
   </nav>
 
@@ -204,6 +204,11 @@
       </div>
     </div>
 
+    <div class="callout info">
+      <span class="callout-icon">↩️</span>
+      <div><b>void 函数里能不能写 return？</b>可以。<code>void</code> 函数虽然不需要"返回值"，但仍然可以写 <code>return;</code>（不跟任何值）——作用是提前结束这个函数、不再往下执行，这和"省略 return，让函数自然执行到最后一行结束"效果是一样的，只是多了一个"随时提前退出"的选择。比如在 <code>Greet</code> 函数里，如果发现 <code>name</code> 是空字符串，就可以写 <code>if (name.empty()) return;</code> 提前退出，不再继续打印问候语。</div>
+    </div>
+
     <div class="callout tip">
       <span class="callout-icon">💡</span>
       <div><b>命名建议：</b>函数名应见名知义，用动词或动词短语描述其功能（如 <code>Add</code>、<code>GetMax</code>、<code>PrintResult</code>）。多个参数即使类型相同也不能省略类型声明，必须写 <code>int a, int b</code>，不能写 <code>int a, b</code>。</div>
@@ -241,6 +246,10 @@
         <span class="cd-badge cd-fn">Greet("小明")</span>
         <span class="cd-note" style="margin-left:8px">// void 函数：作为独立语句调用</span>
       </div>
+    </div>
+
+    <div class="section-body">
+      <p>三种调用方式看起来不太一样，但本质是同一件事：<strong>暂时离开当前执行位置，跳转去执行函数体里的代码，执行完毕后（如果有返回值）带着结果回到原来的位置，紧接着刚才暂停的地方继续往下执行</strong>。第一种和第二种调用因为有返回值，"回来"的时候手里带着一个值，可以存起来或者直接参与运算；第三种是 <code>void</code> 函数，"回来"的时候两手空空，只是单纯地把控制权交还给 <code>main</code>。</p>
     </div>
 
     <h3 class="sub-title">形参与实参</h3>
@@ -312,6 +321,11 @@
           <tr><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">✍️</span>
+      <div><b>参数名要不要省略：</b>虽然语法上声明里的参数名可以省略（<code>int Add(int, int);</code> 完全合法），但为了代码的可读性，通常还是<strong>建议保留参数名</strong>，尤其是参数比较多、或者光看类型猜不出用途的时候——比如 <code>int Add(int a, int b);</code> 一眼就能看出两个参数分别是什么，比只写类型的 <code>int Add(int, int);</code> 更容易让别人（包括未来的自己）看懂这个函数是干什么用的。</div>
     </div>
 
     <div class="callout info">

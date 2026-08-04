@@ -269,6 +269,11 @@
       </div>
     </div>
 
+    <div class="callout info">
+      <span class="callout-icon">↩️</span>
+      <div><b>insert 的返回值：</b><code>insert</code> 其实会返回一个 <code>pair&lt;iterator, bool&gt;</code>——<code>bool</code> 表示"这次是不是真的插入了一个新元素"（键已存在就是 <code>false</code>，插入成功是 <code>true</code>），<code>iterator</code> 则指向这个键（不管是新插入的还是本来就存在的）对应的位置。可以用这个返回值判断键是否已经存在，比如：<code>if (m.insert({"Bob", 92}).second) cout &lt;&lt; "插入成功";</code>。日常写法里经常只是调用 <code>insert(...)</code> 而不关心返回值，但了解它的存在，遇到需要判断"插入是否成功"的场景时就用得上。</div>
+    </div>
+
     <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>🔍 查找与访问</strong></p>
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · []、at()、find()、count() 四种查找方式</span></div>
@@ -344,7 +349,7 @@
 
     <div class="callout danger">
       <span class="callout-icon">🔥</span>
-      <div>记住：<code>[]</code> 会强制覆盖（或自动插入默认值 0），<code>insert</code> 不会覆盖已存在的键。如果只是想检查 key 是否存在，用 <code>count()</code> 或 <code>find()</code>：<code>if (m.count("Alice")) cout &lt;&lt; m["Alice"];</code></div>
+      <div>记住：<code>[]</code> 会强制覆盖（或自动插入默认值 0），<code>insert</code> 不会覆盖已存在的键。如果只是想检查 key 是否存在，用 <code>count()</code> 或 <code>find()</code>：<code>if (m.count("Alice")) cout &lt;&lt; m["Alice"];</code> 像上面例子里那样，如果 <code>map</code> 中原本没有 <code>"Alice"</code>，仅仅是"看一眼" <code>m["Alice"]</code> 这行代码，就会意外地往 <code>map</code> 里增加一个键值对——如果后面代码依赖"这个键存不存在"或者"<code>map</code> 里到底有多少个元素"来做判断，就可能因为这个意外插入而产生难以察觉的逻辑错误。</div>
     </div>
 
     <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>陷阱二：insert 和 [] 的行为不同</strong></p>
@@ -381,7 +386,7 @@
           <tr><td class="ln">13</td><td class="cd">    <span class="fn">scores</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">({</span><span class="str">"David"</span><span class="pnc">,</span> <span class="num">88</span><span class="pnc">});</span></td></tr>
           <tr><td class="ln">14</td><td class="cd"></td></tr>
           <tr><td class="ln">15</td><td class="cd">    <span class="cmt">// 覆盖（Alice 的成绩被更新）</span></td></tr>
-          <tr><td class="ln">16</td><td class="cd">    <span class="fn">scores</span><span class="pnc">[</span><span class="str">"Alice"</span><span class="pnc">]</span> <span class="op">=</span> <span class="num">90</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="fn">scores</span><span class="pnc">[</span><span class="str">"Alice"</span><span class="pnc">]</span> <span class="op">=</span> <span class="num">90</span><span class="pnc">;</span>   <span class="cmt">// [] 会覆盖已有键的值；若改用 insert({"Alice", 90})，则不会更新已存在的 Alice</span></td></tr>
           <tr><td class="ln">17</td><td class="cd"></td></tr>
           <tr><td class="ln">18</td><td class="cd">    <span class="cmt">// 查找</span></td></tr>
           <tr><td class="ln">19</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">scores</span><span class="pnc">.</span><span class="fn">count</span><span class="pnc">(</span><span class="str">"Bob"</span><span class="pnc">))</span> <span class="pnc">{</span></td></tr>
