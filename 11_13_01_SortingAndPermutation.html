@@ -189,7 +189,7 @@
           <span class="ch11-group-count">6</span>
         </div>
         <div class="ch11-items">
-          <a class="ch11-item" href="11_13_01_SortingAndPermutation.html">排序与排列</a>
+          <a class="ch11-item active" href="11_13_01_SortingAndPermutation.html">排序与排列</a>
           <a class="ch11-item" href="11_13_02_SearchingAndCounting.html">查找与计数</a>
           <a class="ch11-item" href="11_13_03_CopyReplaceAndMove.html">复制替换移动</a>
           <a class="ch11-item" href="11_13_04_NumericOperations.html">数值运算</a>
@@ -265,6 +265,16 @@
           <tr><td class="ln">26</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
       </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">λ</span>
+      <div><b>[](int a, int b) {...} 是什么？</b>这是一个 <strong>lambda 表达式</strong>（匿名函数）——可以把它理解为"临时定义的一个比较规则"，作用和单独写一个 <code>bool cmp(int a, int b) { return abs(a) < abs(b); }</code> 函数、再把 <code>cmp</code> 传给 <code>sort</code> 完全等价，只是不需要在别处专门定义一个函数、起个名字，直接写在调用的地方，用完就扔。<code>[]</code> 是它的标志性开头，里面的 <code>(int a, int b)</code> 是参数列表，跟普通函数一模一样，<code>{...}</code> 里面就是函数体。目前只需要知道"这里放一个比较规则"就够用，lambda 的完整语法后面会有专门的介绍。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🎯</span>
+      <div><b>v.begin() + 5 为什么能这样写？</b>这依赖于 11.0 节提到的<strong>随机访问迭代器</strong>——<code>vector</code> 的迭代器支持 <code>+</code>、<code>-</code> 运算，所以 <code>v.begin() + 5</code> 能直接跳到第 6 个元素，不需要一步步移动。如果换成 <code>list</code> 这种只支持 <code>++</code>/<code>--</code> 的迭代器，就不能这样直接加 5，只能用 <code>advance()</code> 之类的函数间接实现。</div>
     </div>
 
     <div class="arr-visual">
@@ -346,6 +356,11 @@
     <div class="callout warn">
       <span class="callout-icon">⚠️</span>
       <div><b>注意：</b><code>next_permutation</code> 要求序列<strong>初始为升序</strong>才能生成全部排列。如果初始不是最小的排列，会漏掉前面的排列。<code>prev_permutation</code> 是它的"反向版本"，生成字典序的上一个排列（这种情况初始序列要是降序才能枚举全部）。</div>
+    </div>
+
+    <div class="callout perf">
+      <span class="callout-icon">⏱️</span>
+      <div><b>复杂度：</b>单次调用 <code>next_permutation</code> 生成"下一个排列"的均摊复杂度是 <code>O(1)</code>，很快；但如果要像上面例子那样用 <code>do...while</code> 枚举<strong>全部</strong>排列，一共有 <code>n!</code> 种排列，总的复杂度就是 <code>O(n!)</code>——这是一个增长极快的数字（<code>10! ≈ 362 万</code>，<code>15!</code> 已经超过万亿），只适合 <code>n</code> 比较小的场景（比如 <code>n ≤ 10</code>），<code>n</code> 稍微大一点就会严重超时。</div>
     </div>
 
     <div class="sub-title" id="reverse">④ reverse —— 反转</div>

@@ -250,6 +250,9 @@
     </div>
 
     <div class="sub-title" id="s1">11.12.1　定义与初始化</div>
+    <div class="section-body">
+      <p><code>bitset&lt;N&gt;</code> 里的模板参数 <code>N</code> 决定了这个 <code>bitset</code> 总共有多少位——比如 <code>bitset&lt;8&gt;</code> 就是固定 8 位，不多不少。用整数给它赋初值时，会取这个整数二进制表示的<strong>低 N 位</strong>；如果整数的二进制位数比 <code>N</code> 少，前面自动补 0（就像下面 <code>b3(10)</code> 这个例子）。</p>
+    </div>
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · bitset 的几种创建方式</span></div>
       <div class="code-body">
@@ -295,9 +298,14 @@
         <tr><td>.none()</td><td>是否全部位都是 0</td><td>bool</td></tr>
         <tr><td>.size()</td><td>返回 bitset 的总位数（即 N）</td><td>size_t</td></tr>
         <tr><td>.to_string()</td><td>转换成字符串</td><td>string</td></tr>
-        <tr><td>.to_ulong()</td><td>转换成 unsigned long</td><td>unsigned long</td></tr>
+        <tr><td>.to_ulong()</td><td>转换成 unsigned long（位数超出范围会抛异常）</td><td>unsigned long</td></tr>
       </tbody>
     </table>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>to_ulong() / to_ullong() 的溢出风险：</b>如果 <code>bitset</code> 的位数超过了 <code>unsigned long</code>（通常 32 或 64 位，取决于平台）或 <code>unsigned long long</code>（通常 64 位）能表示的范围，调用 <code>to_ulong()</code> 或 <code>to_ullong()</code> 会抛出 <code>std::overflow_error</code> 异常，程序如果没有处理这个异常就会直接崩溃。位数比较大的 <code>bitset</code>（比如 <code>bitset&lt;1000&gt;</code>），要转换成普通整数前，最好先确认一下它有效位数不会超界，或者干脆改用 <code>.to_string()</code> 更安全。</div>
+    </div>
 
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 查询与修改单个 bit</span></div>
@@ -431,7 +439,7 @@
 
     <div class="callout tip">
       <span class="callout-icon">🎯</span>
-      <div><b>什么时候用 bitset？</b>需要大量、高频做位运算的场景：状态压缩 DP（用每一位表示一个状态是否被选中）、筛素数时标记合数、用位运算加速集合的交并差运算等。如果只是存几个布尔开关，普通 <code>bool</code> 变量或数组反而更直观。</div>
+      <div><b>什么时候用 bitset？</b>需要大量、高频做位运算的场景：状态压缩 DP、筛素数时标记合数、用位运算加速集合的交并差运算等。例如在状态压缩 DP 中，可以用一个 <code>bitset</code> 的每一位表示"某个元素是否已被选中"（第 <code>i</code> 位是 1 就代表第 <code>i</code> 个元素已选），配合位运算（<code>&amp;</code>、<code>|</code>、<code>^</code>）可以快速判断状态之间的包含关系、合并状态、做状态转移，比一个个元素单独判断快得多。如果只是存几个布尔开关，普通 <code>bool</code> 变量或数组反而更直观。</div>
     </div>
   </section>
 

@@ -277,6 +277,11 @@
       <div><b>为什么要先 <code>resize</code>？</b>这三个集合运算函数都是把结果<strong>写入</strong>到 <code>result.begin()</code> 开始的位置，而不是自动 <code>push_back</code>——如果 <code>result</code> 本身空间不够，会越界。并集结果最多有 <code>a.size() + b.size()</code> 个元素，所以按这个上限先分配空间最安全，多余的部分用 <code>erase</code> 删掉。</div>
     </div>
 
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div><b>更简洁的写法：back_inserter</b>——如果不喜欢手动 <code>resize</code> + <code>erase</code> 这一套，也可以直接用 <code>back_inserter(result)</code> 当目标迭代器：<code>set_union(a.begin(), a.end(), b.begin(), b.end(), back_inserter(result));</code>。它会自动帮你调用 <code>result.push_back(...)</code>，不需要预先分配空间，也不需要事后 <code>erase</code> 多余的部分——<code>set_intersection</code>、<code>set_difference</code> 同理，把最后一个参数换成 <code>back_inserter(result)</code> 就行。使用前记得 <code>#include &lt;iterator&gt;</code>。</div>
+    </div>
+
     <div class="sub-title" id="set_intersection">② set_intersection —— 交集</div>
     <div class="section-body">
       <p>只保留<strong>两个序列都出现过</strong>的元素。</p>
@@ -320,7 +325,7 @@
 
     <div class="callout warn">
       <span class="callout-icon">⚠️</span>
-      <div><b>别忘了排序：</b>这三个函数<strong>都要求输入序列已经有序</strong>，否则结果是未定义的。如果数据本身没排序，要先各自 <code>sort</code> 一遍。如果你存的本身就是 <code>set</code> 或者 <code>map</code>（天然有序），可以直接拿 <code>begin()</code> / <code>end()</code> 用，不需要再排序。</div>
+      <div><b>别忘了排序：</b>这三个函数<strong>都要求输入序列已经有序</strong>，否则结果是未定义的。如果数据本身没排序，要先各自 <code>sort</code> 一遍。如果你存的本身就是 <code>set</code> 或者 <code>map</code>（天然有序），可以直接拿 <code>begin()</code> / <code>end()</code> 用，不需要再排序。这里的"有序"默认指按<strong>升序</strong>排列（也就是 <code>sort</code> 不传第三个参数时的默认结果）。如果两个序列用的是自定义排序规则（比如都按降序排的），必须保证两边用的是<strong>同一套排序规则</strong>，并且要把这个比较函数作为<strong>第五个参数</strong>传给 <code>set_union</code>/<code>set_intersection</code>/<code>set_difference</code>，告诉它们"按这个规则来判断顺序"，否则同样会得到未定义的结果。</div>
     </div>
 
     <div class="callout perf">

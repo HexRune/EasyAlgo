@@ -275,6 +275,11 @@
       <div><code>cout</code> 输出 <code>bool</code> 类型时会显示 <code>1</code>（true）或 <code>0</code>（false），而不是文字"true"/"false"——这是 C++ 的默认行为，想显示文字可以用 <code>cout &lt;&lt; boolalpha</code>。</div>
     </div>
 
+    <div class="callout perf">
+      <span class="callout-icon">⚡</span>
+      <div><b>短路特性：</b>这三个函数都会"见好就收"，不会傻乎乎地把整个区间都扫一遍——<code>all_of</code> 一旦遇到第一个不满足条件的元素，立刻停止检查并返回 <code>false</code>；<code>any_of</code> 一旦遇到第一个满足条件的元素，立刻停止检查并返回 <code>true</code>；<code>none_of</code> 同理，一旦遇到第一个满足条件的元素就立刻停止并返回 <code>false</code>。也就是说，最坏情况下才会扫描整个区间（比如 <code>all_of</code> 恰好所有元素都满足条件），大多数"提前能判断出结果"的场景下，实际检查的元素个数会少很多，处理大规模数据时能省下不少不必要的计算。</div>
+    </div>
+
     <div class="sub-title" id="for_each">② for_each —— 对每个元素执行操作</div>
     <div class="section-body">
       <p>对区间内的<strong>每一个元素</strong>依次执行同一个操作（通常是一个 lambda）。如果想修改元素本身，lambda 的参数要用<strong>引用</strong>接收。</p>

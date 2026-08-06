@@ -88,7 +88,7 @@
           <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+          <a class="ch12-item" href="12_00_ClassesAndOOP.html">概述</a>
         </div>
       </div>
 
@@ -99,11 +99,11 @@
           <span class="ch12-group-count">5</span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
-          <a class="ch12-item active" href="12_02_类的定义与对象.html">类的定义与对象</a>
-          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
-          <a class="ch12-item" href="12_04_构造与析构函数.html">构造与析构函数</a>
-          <a class="ch12-item" href="12_05_运算符重载.html">运算符重载</a>
+          <a class="ch12-item" href="12_01_FromStructToClass.html">从 struct 到 class</a>
+          <a class="ch12-item active" href="12_02_ClassDefinitionAndObjects.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_EncapsulationAndAccessControl.html">封装与访问控制</a>
+          <a class="ch12-item" href="12_04_ConstructorsAndDestructors.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_05_OperatorOverloading.html">运算符重载</a>
         </div>
       </div>
 
@@ -115,11 +115,11 @@
           <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
-          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
-          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
-          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
-          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+          <a class="ch12-item" href="12_05_OperatorOverloading.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_StaticMembers.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_InheritanceBasics.html">继承基础</a>
+          <a class="ch12-item" href="12_09_VirtualFunctionsAndPolymorphism.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_AbstractClassesAndPureVirtualFunctions.html">抽象类与纯虚函数</a>
         </div>
       </div>
 
@@ -252,6 +252,11 @@
     <div class="callout tip">
       <span class="callout-icon">💡</span>
       <div><b>类比记忆：</b><code>Student s1</code> 就像 <code>int x</code>——只不过类型从内置的 <code>int</code> 换成了你自己定义的 <code>Student</code>。用 <code>.</code> 访问成员，就像用 <code>[]</code> 访问数组元素一样自然。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📍</span>
+      <div><b>这个对象存在哪儿？</b>像 <code>Student s1;</code> 这样直接创建的对象，和普通的局部变量（比如 <code>int x;</code>）一样，都是分配在<strong>栈（Stack）</strong>上的——离开它所在的作用域（比如函数结束）时，会自动被销毁，不需要手动管理内存。这和第九章学过的内存分区知识是一致的：局部变量、对象，只要不是用 <code>new</code> 创建出来的，都遵循同一套"栈上分配、自动释放"的规则。</div>
     </div>
 
     <!-- ── 12.2.3 多个对象互相独立 ── -->
@@ -401,6 +406,11 @@
       </div>
     </div>
 
+    <div class="callout warn">
+      <span class="callout-icon">🔍</span>
+      <div><b>为什么会这样？</b>这其实是第 2.6 节学过的<strong>作用域遮蔽</strong>规则在起作用：在成员函数内部，参数（局部变量）和成员变量恰好同名时，局部作用域里的参数会"遮蔽"同名的成员变量——所以第 7 行的 <code>score = score;</code>，等号两边的 <code>score</code> 其实都指的是参数本身，跟成员变量毫无关系，写了等于没写。要访问被遮蔽的成员变量，就得用 <code>this-&gt;score</code> 明确指出"我要的是成员变量，不是参数"。</div>
+    </div>
+
     <div class="callout tip">
       <span class="callout-icon">📌</span>
       <div><b>习惯做法：</b>为了避免这类混淆，很多人会给成员变量加前缀（如 <code>m_score</code>）或后缀（如 <code>score_</code>），这样参数名和成员名就不会冲突，就不需要 <code>this-&gt;</code> 了。在竞赛里，用 <code>this-&gt;</code> 或者换个参数名都完全没问题。</div>
@@ -410,6 +420,7 @@
     <div class="sub-title" id="s5">12.2.5　在类外定义成员函数</div>
     <div class="section-body">
       <p>当成员函数的代码比较长时，可以把<strong>声明</strong>写在类里，<strong>实现</strong>写在类外，用 <code>类名::</code> 来说明这个函数属于哪个类。</p>
+      <p>这里的 <code>::</code> 叫<strong>作用域解析运算符</strong>，其实并不陌生——用 <code>std::cout</code>、<code>std::string</code> 的时候已经见过它了（虽然写了 <code>using namespace std;</code> 之后大多数时候省略掉了）。它的作用是"指明某个名字属于哪个范围"：<code>std::cout</code> 表示 <code>cout</code> 属于 <code>std</code> 这个命名空间；<code>Student::Print</code> 同理，表示这个 <code>Print</code> 函数属于 <code>Student</code> 这个类，而不是随便哪个同名的函数。</p>
     </div>
 
     <div class="code-block">

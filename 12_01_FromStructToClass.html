@@ -309,6 +309,16 @@
       </div>
     </div>
 
+    <div class="callout tip">
+      <span class="callout-icon">✍️</span>
+      <div><b>为什么要写出 private: ？</b>虽然 <code>class</code> 成员默认就是 <code>private</code>，即使不写 <code>private:</code> 这一行，<code>name</code>、<code>score</code> 依然是私有的——但显式写出来能让代码的意图更清楚，一眼就能看出"这部分是私有的，那部分是公开的"，不需要读者去记"默认规则是什么"。推荐始终明确标注访问权限，而不是依赖默认值，这是一个良好的编程习惯。</div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🔒</span>
+      <div><b>进阶预告：const 成员函数</b>——像 <code>GetScore</code> 这种只读取数据、不修改任何成员变量的函数，可以声明成 <code>int GetScore() const { return score; }</code>，在参数列表后面加一个 <code>const</code>。这向编译器（也向读代码的人）承诺"这个函数不会修改对象的状态"，编译器会帮忙检查，一旦函数体里不小心改了成员变量就会报错。这是一个比较进阶的写法，目前了解即可，后面用到 <code>const</code> 对象时会更有体会。</div>
+    </div>
+
     <div class="sub-title">访问控制图解</div>
 
     <div class="diagram-block">
@@ -445,8 +455,7 @@
     <div class="callout tip">
       <span class="callout-icon">🏆</span>
       <div>
-        <b>竞赛惯例：</b>在 CSP-J / NOIP 中，如果只是把几个数据绑在一起（例如存边的起点、终点、权重），用 <code>struct</code> 即可，代码更简洁。需要封装行为、保护数据时再用 <code>class</code>。两者混用也完全没问题——选更自然的那个就行。
-      </div>
+        <b>竞赛惯例：</b>在 CSP-J / NOIP 中，如果只是把几个数据绑在一起（例如存边的起点、终点、权重），用 <code>struct</code> 即可，代码更简洁。需要封装行为、保护数据时再用 <code>class</code>。两者混用也完全没问题——选更自然的那个就行。这并不是强制规定（编译器不会因为你"选错"而报错），而是一种被广泛接受的风格指南，遵循它能让代码意图一目了然，也方便和别人协作时快速看懂彼此的代码。</div>
     </div>
 
     <div class="sub-title" id="s5">12.1.5　用售货机理解 class</div>

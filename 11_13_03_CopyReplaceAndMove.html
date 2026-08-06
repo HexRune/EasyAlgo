@@ -239,6 +239,11 @@
       <div>如果 <code>dst</code> 是一个空的 <code>vector</code>（没有预分配空间），直接 <code>copy</code> 会越界访问、导致未定义行为。正确做法是先 <code>dst.resize(src.size())</code> 或者在定义时就给够大小，就像例子里 <code>vector&lt;int&gt; dst(5)</code> 那样。</div>
     </div>
 
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>另一种做法：back_inserter</b>——不想手动算好要 <code>resize</code> 多大，可以用 <code>back_inserter</code>：<code>copy(src.begin(), src.end(), back_inserter(dst));</code>。它会在每次需要写入元素时，自动帮你调用 <code>dst.push_back(...)</code>，不需要提前分配任何空间，<code>dst</code> 甚至可以是空的。使用前需要 <code>#include &lt;iterator&gt;</code>。</div>
+    </div>
+
     <div class="sub-title" id="fill">② fill —— 填充</div>
     <div class="section-body">
       <p>把指定区间内的全部元素都设为同一个值，可以填充整个容器，也可以只填充一部分。</p>
@@ -261,7 +266,7 @@
 
     <div class="callout tip">
       <span class="callout-icon">📌</span>
-      <div>给一个数组/<code>vector</code> 整体清零或者初始化成某个固定值时，<code>fill</code> 比手写 <code>for</code> 循环更简洁。如果只需要清零，<code>memset</code>（C 风格）也能做到，但 <code>fill</code> 对任意类型都适用，更通用、更安全。</div>
+      <div>给一个数组/<code>vector</code> 整体清零或者初始化成某个固定值时，<code>fill</code> 比手写 <code>for</code> 循环更简洁。如果只需要清零，<code>memset</code>（C 风格）也能做到，看起来速度上更占优势，但两者的适用范围不一样：<code>fill</code> 可以安全地用在<strong>任何类型</strong>的对象上（包括 <code>string</code>、结构体这类"非平凡"类型），而 <code>memset</code> 只能安全地用在 <strong>POD 类型</strong>（可以简单理解为"纯数据、没有额外逻辑"的类型，比如 <code>int</code>、<code>double</code>、由这些基础类型组成的简单结构体）上——对 <code>string</code>、<code>vector</code> 这类内部管理着动态内存的类型用 <code>memset</code>，会破坏它们内部的状态，是未定义行为，非常容易崩溃。拿不准的时候，优先用 <code>fill</code>，更通用也更安全。</div>
     </div>
 
     <div class="sub-title" id="replace">③ replace —— 替换</div>
@@ -283,6 +288,11 @@
     <div class="callout info">
       <span class="callout-icon">💡</span>
       <div>如果只想替换<strong>满足某个条件</strong>（而不是精确等于某个值）的元素，可以用 <code>replace_if</code>，第三个参数换成一个返回 <code>bool</code> 的判断函数，比如 <code>replace_if(v.begin(), v.end(), [](int x){ return x &lt; 0; }, 0)</code> 把所有负数替换成 0。</div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">🚫</span>
+      <div><b>适用范围：</b><code>fill</code>、<code>replace</code> 这类"批量写入"的算法，适用于 <code>vector</code>、<code>list</code>、<code>deque</code> 等<strong>序列容器</strong>，因为这些容器里的元素本身是可以随便改的。但对于 <code>set</code>、<code>map</code> 这类<strong>关联容器</strong>就通常用不了——<code>set</code> 的元素本身就是"键"，<code>map</code> 的键也不能直接改（会破坏内部排序结构），强行对它们用 <code>fill</code>/<code>replace</code> 要么编译不通过，要么产生未定义行为。</div>
     </div>
 
     <div class="sub-title" id="unique">④ unique —— 去重（需先排序）</div>

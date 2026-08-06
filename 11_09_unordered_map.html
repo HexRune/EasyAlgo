@@ -275,7 +275,7 @@
 
     <div class="callout info">
       <span class="callout-icon">💡</span>
-      <div><b>好消息：</b><code>unordered_map</code> 的接口和 <code>map</code> 几乎完全一样——<code>[]</code>、<code>at()</code>、<code>insert()</code>、<code>erase()</code>、<code>find()</code>、<code>count()</code> 全都能直接照搬，11.8 节学的所有陷阱（<code>[]</code> 自动插入、<code>insert</code> 不覆盖）在这里同样适用。唯一的本质区别是：<strong>没有顺序</strong>。</div>
+      <div><b>好消息：</b><code>unordered_map</code> 的接口和 <code>map</code> 几乎完全一样——<code>[]</code>、<code>at()</code>、<code>insert()</code>、<code>erase()</code>、<code>find()</code>、<code>count()</code> 全都能直接照搬，11.8 节学的所有陷阱（<code>[]</code> 自动插入、<code>insert</code> 不覆盖）在这里同样适用。唯一的本质区别是：<strong>没有顺序</strong>。<br><br>注意：<code>unordered_map</code> 的头文件是 <code>&lt;unordered_map&gt;</code>，和 <code>map</code> 的 <code>&lt;map&gt;</code> 不一样，两个头文件名字很像，容易写错、写混，一定要看清楚。</div>
     </div>
 
     <div class="sub-title" id="s2">11.9.2　常用操作</div>
@@ -318,6 +318,11 @@
         <tr><td>典型场景</td><td>需要顺序、范围查询</td><td>只要快速查找，不关心顺序</td></tr>
       </tbody>
     </table>
+
+    <div class="callout tip">
+      <span class="callout-icon">🔑</span>
+      <div><b>"支持哈希和 =="是什么意思？</b>对于 <code>int</code>、<code>string</code> 这些内置类型，标准库已经提前写好了默认的哈希函数，可以直接拿来当 <code>unordered_map</code> 的键使用，不用自己操心。只有当键是<strong>自定义类型</strong>（比如自己写的结构体）时，才需要额外自己定义一个哈希函数，告诉编译器"这种类型该怎么算哈希值"——这是比较进阶的用法，目前只需要知道内置类型可以直接用就够了。</div>
+    </div>
 
     <div class="sub-title" id="s3">11.9.3　完整使用示例</div>
     <div class="code-block">
@@ -374,7 +379,7 @@
 
     <div class="callout tip">
       <span class="callout-icon">🎯</span>
-      <div><b>什么时候用 unordered_map？</b>统计词频、去重计数、缓存（cache）、任何"只关心能不能查到、不关心顺序"的场景。如果数据量很大且查找是性能瓶颈，<code>unordered_map</code> 通常比 <code>map</code> 快不少。但如果键的哈希冲突很多，最坏情况会退化到 O(n)，竞赛中要留意这一点。</div>
+      <div><b>什么时候用 unordered_map？</b>统计词频、去重计数、缓存（cache）、任何"只关心能不能查到、不关心顺序"的场景。如果数据量很大且查找是性能瓶颈，<code>unordered_map</code> 通常比 <code>map</code> 快不少。但如果键的哈希冲突很多，最坏情况会退化到 O(n)，竞赛中要留意这一点。简而言之：需要按键的顺序遍历、或者要做范围查询（比如"找出所有大于某个键的元素"），用 <code>map</code>；只关心按键精确查找、不在乎顺序，用 <code>unordered_map</code>。</div>
     </div>
   </section>
 

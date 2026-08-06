@@ -304,7 +304,7 @@
 
     <div class="callout info">
       <span class="callout-icon">💡</span>
-      <div><b>解引用迭代器拿到的是元素本身：</b><code>set</code> 没有 <code>first</code>/<code>second</code>（那是 <code>map</code> 的 <code>pair</code>），<code>*it</code> 直接就是存进去的值。同样，<code>set</code> 也不支持 <code>[]</code> 访问——毕竟"键"本身就是"值"，用下标访问没有意义。</div>
+      <div><b>解引用迭代器拿到的是元素本身：</b><code>set</code> 没有 <code>first</code>/<code>second</code>（那是 <code>map</code> 的 <code>pair</code>），<code>*it</code> 直接就是存进去的值。同样，<code>set</code> 也不支持 <code>[]</code> 访问——毕竟"键"本身就是"值"，用下标访问没有意义。另外，对于 <code>set</code>，<code>count(x)</code> 只可能返回 <code>0</code> 或 <code>1</code>，因为 <code>set</code> 里的元素本来就不允许重复——这一点和 <code>map</code> 的 <code>count</code> 行为是一致的（<code>map</code> 的键同样不能重复）。</div>
     </div>
 
     <table class="lite-compare-table">
@@ -316,6 +316,11 @@
         <tr><td>无序版本</td><td>unordered_map</td><td>unordered_set（用法同理，平均 O(1)）</td></tr>
       </tbody>
     </table>
+
+    <div class="callout warn">
+      <span class="callout-icon">🔒</span>
+      <div><b>set 里的元素不能直接修改：</b><code>map</code> 可以通过 <code>it-&gt;second</code> 修改键对应的值（因为"值"是独立于"键"存在的），但 <code>set</code> 里存的元素本身<strong>就是键</strong>，如果允许随便改，改完之后这个元素在树里的排序位置就可能不对了，所以 <code>set</code> 的元素通过迭代器访问时是 <code>const</code> 的，不能直接修改。如果确实需要"修改"某个元素的值，正确做法是先 <code>erase</code> 掉旧值，再 <code>insert</code> 一个新值进去，让 <code>set</code> 重新把它排到正确的位置。</div>
+    </div>
 
     <div class="sub-title" id="s3">11.10.3　完整使用示例</div>
     <div class="code-block">
@@ -379,7 +384,7 @@
 
     <div class="callout tip">
       <span class="callout-icon">🎯</span>
-      <div><b>什么时候用 set？</b>需要去重、需要保持有序、需要频繁判断"某个元素是否出现过"的场景：去重统计不同元素个数、维护一个动态变化的有序数列、配合 <code>lower_bound</code> 做有序范围查询等。如果只要去重和快速查找、不关心顺序，<code>unordered_set</code> 更快。</div>
+      <div><b>什么时候用 set？</b>需要去重、需要保持有序、需要频繁判断"某个元素是否出现过"的场景：去重统计不同元素个数、维护一个动态变化的有序数列、配合 <code>lower_bound</code> 做有序范围查询等。如果只要去重和快速查找、不关心顺序，<code>unordered_set</code> 更快。<code>set</code> 真正的独特价值在于：当数据集合需要<strong>动态变化</strong>（频繁插入、删除），同时又需要<strong>始终保持有序</strong>、能随时按顺序访问时，<code>set</code> 会自动维护好这个顺序，比每次改动后手动重新排序要高效得多。</div>
     </div>
   </section>
 

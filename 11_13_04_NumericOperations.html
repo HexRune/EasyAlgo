@@ -237,7 +237,7 @@
 
     <div class="callout warn">
       <span class="callout-icon">⚠️</span>
-      <div><b>小技巧：</b>对于大数求和，初始值写 <code>0LL</code> 而不是 <code>0</code>，否则结果可能溢出 <code>int</code>。这是因为 <code>accumulate</code> 的返回类型是根据<strong>初始值的类型</strong>推导的——写 <code>0</code> 就是按 <code>int</code> 一路累加（容易溢出），写 <code>0LL</code> 就是按 <code>long long</code> 累加。</div>
+      <div><b>小技巧：</b>对于大数求和，初始值写 <code>0LL</code> 而不是 <code>0</code>，否则结果可能溢出 <code>int</code>。这是因为 <code>accumulate</code> 的返回类型是根据<strong>初始值的类型</strong>推导的——写 <code>0</code> 就是按 <code>int</code> 一路累加（容易溢出），写 <code>0LL</code> 就是按 <code>long long</code> 累加。同理，如果需要按浮点数累加（比如数组里存的是 <code>double</code>），初始值可以写 <code>0.0</code>，这样 <code>accumulate</code> 就会按 <code>double</code> 类型进行求和——如果这时候误写成 <code>0</code>（整数），累加过程会被强制按 <code>int</code> 计算，小数部分会被直接截断丢失。</div>
     </div>
 
     <div class="sub-title" id="partial_sum">② partial_sum —— 前缀和</div>
@@ -274,6 +274,11 @@
       </div>
     </div>
 
+    <div class="callout tip">
+      <span class="callout-icon">📌</span>
+      <div>与前面的 <code>copy</code> 类似，<code>partial_sum</code> 也不会自动帮目标容器扩容——写入之前，目标容器必须已经有足够的空间（像例子里 <code>vector&lt;int&gt; pre(v.size())</code> 那样预先分配好），否则会越界访问。如果不想手动算大小，同样可以用 <code>back_inserter(pre)</code> 代替 <code>pre.begin()</code>。</div>
+    </div>
+
     <div class="sub-title" id="iota">③ iota —— 递增赋值</div>
     <div class="section-body">
       <p>把区间内的元素依次填充成<strong>从某个起始值开始、每次加 1</strong> 的连续整数。常用于快速生成"下标数组"（比如配合 <code>sort</code> 间接排序时用到的索引序列）。</p>
@@ -296,6 +301,26 @@
     <div class="callout tip">
       <span class="callout-icon">📌</span>
       <div><b>典型用法——间接排序：</b>想按某个数组的值排序，但又想知道排序后每个值原本的下标，可以先用 <code>iota</code> 生成 <code>{0, 1, 2, ...}</code> 的下标数组，再用自定义比较函数对下标数组 <code>sort</code>，排序依据是 <code>v[下标]</code> 的大小。这样原数组不被破坏，还能拿到排序后的下标顺序。</div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · iota + sort 实现间接排序</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">data</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">5</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">int</span><span class="pnc">&gt;</span> <span class="fn">idx</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">);</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="fn">iota</span><span class="pnc">(</span><span class="fn">idx</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">idx</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="num">0</span><span class="pnc">);</span>   <span class="cmt">// idx = {0, 1, 2, 3, 4}</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd"><span class="fn">sort</span><span class="pnc">(</span><span class="fn">idx</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">idx</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span> <span class="pnc">[&amp;](</span><span class="typ">int</span> <span class="fn">i</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">j</span><span class="pnc">)</span> <span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">return</span> <span class="fn">data</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;</span> <span class="fn">data</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">];</span>   <span class="cmt">// 排序依据是 data[下标] 的大小，而不是下标本身</span></td></tr>
+          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="pnc">});</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="cmt">// idx 变成 {1, 3, 4, 2, 0} —— data 中元素从小到大排列时，对应的原始下标</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>注意 lambda 前面的 <code>[&amp;]</code>——它表示"捕获外部变量 <code>data</code>，按引用使用"，这样比较函数内部才能访问到外面的 <code>data</code> 数组。<code>data</code> 本身自始至终没有被排序或修改，改变顺序的只有 <code>idx</code>。</div>
     </div>
   </section>
 

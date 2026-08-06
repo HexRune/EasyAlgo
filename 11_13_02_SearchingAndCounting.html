@@ -190,7 +190,7 @@
         </div>
         <div class="ch11-items">
           <a class="ch11-item" href="11_13_01_SortingAndPermutation.html">排序与排列</a>
-          <a class="ch11-item" href="11_13_02_SearchingAndCounting.html">查找与计数</a>
+          <a class="ch11-item active" href="11_13_02_SearchingAndCounting.html">查找与计数</a>
           <a class="ch11-item" href="11_13_03_CopyReplaceAndMove.html">复制替换移动</a>
           <a class="ch11-item" href="11_13_04_NumericOperations.html">数值运算</a>
           <a class="ch11-item" href="11_13_05_SetOperations.html">集合运算</a>
@@ -266,6 +266,11 @@
       </div>
     </div>
 
+    <div class="callout warn">
+      <span class="callout-icon">🚀</span>
+      <div><b>对于 set / map，优先用它们自己的成员函数：</b>上面的 <code>find</code>、<code>count</code> 是<strong>通用算法</strong>，对任何容器都适用，但代价是只能"逐个遍历比较"，时间复杂度 O(n)。<code>set</code>、<code>map</code> 这类关联容器内部是有序结构（红黑树），自带了效率更高的成员函数 <code>.find()</code>、<code>.count()</code>，时间复杂度是 O(log n)。也就是说，<code>find(s.begin(), s.end(), x)</code> 和 <code>s.find(x)</code> 效果一样，但后者快得多——用 <code>set</code>/<code>map</code> 时，永远优先用它们自己的成员函数，而不是这里的通用算法。</div>
+    </div>
+
     <div class="sub-title" id="minmax">③ max_element / min_element —— 找最大/最小值的位置</div>
     <div class="section-body">
       <p>注意这两个函数<strong>返回的是迭代器</strong>（位置），不是值本身——需要解引用 <code>*it</code> 才能拿到具体的值。</p>
@@ -294,7 +299,7 @@
 
     <div class="sub-title" id="binary_search">④ binary_search —— 二分查找</div>
     <div class="section-body">
-      <p><strong>只能在已排序的序列上使用</strong>，时间复杂度 O(log n)。它只告诉你"有没有"，返回一个 <code>bool</code>，不会告诉你具体在哪个位置——如果需要位置，要用下面的 <code>lower_bound</code>。</p>
+      <p>与前面的 <code>find</code>（O(n)，逐个遍历比较）不同，<code>binary_search</code> 系列算法要求数据<strong>已经排好序</strong>，但作为交换条件，能以 <code>O(log n)</code> 的速度完成查找——数据量大的时候，这个速度差距会非常明显（比如 n=100万 时，O(n) 要比较约 100 万次，O(log n) 只需要约 20 次）。它只告诉你"有没有"，返回一个 <code>bool</code>，不会告诉你具体在哪个位置——如果需要位置，要用下面的 <code>lower_bound</code>。</p>
     </div>
 
     <div class="code-block">
@@ -365,6 +370,11 @@
     <div class="callout perf">
       <span class="callout-icon">🎯</span>
       <div>竞赛中 <code>lower_bound</code> 比 <code>find</code> 常用得多——对于<strong>有序数组</strong>，O(log n) 比 O(n) 快太多。<code>map</code>、<code>set</code> 这些关联容器也有自己的成员函数版本 <code>.lower_bound()</code>，效果一样但效率更高（不需要重新排序）。</div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">⚠️</span>
+      <div><b>注意 end() 这个边界情况：</b>如果要查找的 <code>target</code> 比序列里<strong>所有</strong>元素都大，<code>lower_bound</code>（以及 <code>upper_bound</code>）会返回 <code>end()</code>——这代表"没有任何元素满足条件"。<code>end()</code> 并不指向一个真实存在的元素，在计算下标或者用 <code>*it</code> 解引用之前，一定要先判断 <code>it != v.end()</code>，否则解引用 <code>end()</code> 是未定义行为，很容易导致程序崩溃或者读到一堆垃圾值。</div>
     </div>
   </section>
 

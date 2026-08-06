@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8.4 Lambda 表达式 — C++ 编程语法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="CSS/style.css">
+<style>
+  /* 水印 */
+  .chapter-header::before { content: "8.4"; }
+
+  /* ── 子导航组件（ch08 风格，粉色系） ── */
+  .ch08-nav {
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface); padding: 14px 16px;
+    margin-bottom: 28px;
+  }
+  .ch08-nav-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--text-muted); margin-bottom: 10px;
+  }
+  .ch08-nav-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ch08-nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    color: var(--text-secondary); background: #FAFAF7;
+    border: 1px solid var(--border); transition: all .12s; white-space: nowrap;
+  }
+  .ch08-nav-item:hover { border-color: var(--pink-mid); color: var(--pink-dark); }
+  .ch08-nav-item .cni-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  .ch08-nav-item.active { background: var(--pink-dark); color: #fff; border-color: var(--pink-dark); }
+  .ch08-nav-item.active .cni-num { color: rgba(255,255,255,.75); }
+
+  /* 具名函数 vs lambda 对比 */
+  .named-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
+  .nc-card { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); }
+  .nc-head { padding: 10px 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+  .nc-head.before { background: var(--coral-light); color: var(--coral); }
+  .nc-head.after  { background: var(--teal-light); color: var(--teal); }
+  .nc-body { padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--code-bg); color: var(--code-text); line-height: 1.75; overflow-x: auto; }
+  @media (max-width: 700px) { .named-compare { grid-template-columns: 1fr; } }
+
+  /* lambda 结构解剖可视化 */
+  .lambda-anatomy {
+    background: var(--code-bg); border-radius: var(--r-md);
+    padding: 22px 26px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    overflow-x: auto;
+  }
+  .la-line { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 0; line-height: 1.8; font-size: 14px; }
+  .la-part { display: inline-flex; flex-direction: column; align-items: center; position: relative; }
+  .la-text { padding: 3px 6px; border-radius: 5px; font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .la-capture { background: rgba(212,83,126,.16); color: var(--pink-mid); }
+  .la-params  { background: rgba(250,179,135,.12); color: var(--code-num); }
+  .la-ret     { background: rgba(243,139,168,.15); color: var(--code-type); }
+  .la-body    { background: rgba(166,227,161,.1);  color: var(--code-str); }
+  .la-pnc { color: var(--code-punc); font-size: 14px; padding: 3px 2px; }
+  .la-labels {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 16px; padding-top: 14px;
+    border-top: 1px solid #2A2840; font-size: 12px;
+  }
+  .la-lbl { display: flex; align-items: center; gap: 6px; }
+  .la-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* 值捕获 vs 引用捕获对比 */
+  .cap-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
+  .cap-card { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); }
+  .cap-head { padding: 10px 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+  .cap-head.val { background: var(--blue-light); color: var(--blue); }
+  .cap-head.ref { background: var(--pink-light); color: var(--pink-dark); }
+  .cap-body { padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--code-bg); color: var(--code-text); line-height: 1.85; }
+  .cap-body .cs { color: #6C7086; }
+  .cap-body .ch { color: var(--code-str); }
+  .cap-foot { padding: 10px 14px; font-size: 12.5px; line-height: 1.6; color: var(--text-secondary); border-top: 1px solid var(--border); background: var(--surface); }
+  @media (max-width: 700px) { .cap-compare { grid-template-columns: 1fr; } }
+
+  /* 捕获符号速查表覆盖（粉色系表头） */
+  .comp-table.cap-ref thead tr { background: var(--pink-light); }
+  .comp-table.cap-ref th { color: var(--pink-dark); }
+  .comp-table.cap-ref td:first-child { color: var(--pink-dark); font-family: 'JetBrains Mono', monospace; font-weight: 700; background: #FCF3F6; }
+
+  /* 适用/不适用场景卡片 */
+  .fit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .fit-card { border-radius: var(--r-md); padding: 14px 16px; border: 1px solid; }
+  .fit-card.good { background: var(--teal-light); border-color: var(--teal-mid); }
+  .fit-card.bad  { background: var(--coral-light); border-color: var(--coral-mid); }
+  .fit-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+  .fit-card.good .fit-title { color: var(--teal); }
+  .fit-card.bad .fit-title { color: var(--coral); }
+  .fit-list { font-size: 13px; line-height: 1.8; }
+  .fit-card.good .fit-list { color: var(--teal); }
+  .fit-card.bad .fit-list { color: var(--coral); }
+  @media (max-width: 700px) { .fit-grid { grid-template-columns: 1fr; } }
+
+  /* 易错点列表 */
+  .pitfall-list { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+  .pitfall-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--r-md);
+    background: var(--surface);
+  }
+  .pitfall-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--pink-light); color: var(--pink-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .pitfall-body { font-size: 13.5px; line-height: 1.65; color: var(--text-secondary); }
+  .pitfall-body b { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header class="chapter-header" data-ch="8.4">
+    <p class="chapter-eyebrow">
+      <a href="index.html">← 目录</a>
+      <span class="eyebrow-sep">/</span>
+      <span>第八章 · 函数</span>
+      <span class="eyebrow-sep">/</span>
+      <span>8.4 Lambda 表达式</span>
+    </p>
+    <h1 class="chapter-title">8.4　Lambda 表达式</h1>
+    <p class="chapter-desc">有些函数只会在一个地方用一次，专门给它取个名字、写在别处，反而显得麻烦。本节介绍一种可以"就地"写出来、不需要名字的函数——lambda 表达式。</p>
+  </header>
+
+  <!-- ═══ 子章节导航 ═══ -->
+  <nav class="ch08-nav">
+    <div class="ch08-nav-label">第八章 · 函数</div>
+    <div class="ch08-nav-items">
+      <a class="ch08-nav-item" href="08_01_FunctionBasics.html"><span class="cni-num">8.1</span><span class="cni-name">函数基础</span></a>
+      <a class="ch08-nav-item" href="08_02_FunctionParametersDetailed.html"><span class="cni-num">8.2</span><span class="cni-name">函数参数详解</span></a>
+      <a class="ch08-nav-item" href="08_03_FunctionOverloadingAndInline.html"><span class="cni-num">8.3</span><span class="cni-name">函数重载与内联函数</span></a>
+      <a class="ch08-nav-item active" href="08_04_LambdaExpressions.html"><span class="cni-num">8.4</span><span class="cni-name">Lambda 表达式</span></a>
+    </div>
+  </nav>
+
+  <nav class="toc">
+    <p class="toc-title">本页目录</p>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">8.4.1</span>为什么需要 lambda 表达式</a></li>
+      <li><a href="#s2"><span class="toc-num">8.4.2</span>lambda 的语法结构</a></li>
+      <li><a href="#s3"><span class="toc-num">8.4.3</span>捕获列表详解</a></li>
+      <li><a href="#s4"><span class="toc-num">8.4.4</span>lambda 与算法结合使用</a></li>
+      <li><a href="#s5"><span class="toc-num">8.4.5</span>易错点</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══ 8.4.1 为什么需要 lambda 表达式 ═══ -->
+  <section class="section" id="s1">
+    <p class="section-label">8.4.1</p>
+    <h2 class="section-title">为什么需要 lambda 表达式</h2>
+    <div class="section-body">
+      <p>还记得 11.13.1 节里，给 <code>sort</code> 传第三个参数来自定义排序规则吗？如果想按<strong>降序</strong>排序，一种办法是专门写一个具名函数：</p>
+    </div>
+
+    <div class="named-compare">
+      <div class="nc-card">
+        <div class="nc-head before">🏷️ 专门取名字、写在外面</div>
+        <div class="nc-body">
+bool Cmp(int a, int b)<br>
+{<br>
+&nbsp;&nbsp;return a &gt; b;<br>
+}<br>
+<br>
+sort(v.begin(), v.end(), Cmp);
+        </div>
+      </div>
+      <div class="nc-card">
+        <div class="nc-head after">✏️ 就地写一个 lambda</div>
+        <div class="nc-body">
+sort(v.begin(), v.end(),<br>
+&nbsp;&nbsp;[](int a, int b) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return a &gt; b;<br>
+&nbsp;&nbsp;});
+        </div>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p><code>Cmp</code> 这个函数只在这一次 <code>sort</code> 调用里用得上，别的地方根本不会再调用它。为它专门取一个名字、写在主函数外面，读代码的人还得跳过去才能看懂它是干什么的——有点"杀鸡用牛刀"。</p>
+      <p><strong>Lambda 表达式（Lambda Expression）</strong>就是 C++11 引入的"匿名函数"写法：不需要取名字，可以直接写在使用它的地方，逻辑和调用挨在一起，一眼就能看懂。</p>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📝</span>
+      <div><b>便签条 vs 正式文件：</b>具名函数像是把一份说明<strong>正式归档</strong>——起标题、放进文件夹，方便以后反复查阅。Lambda 表达式则像是在需要的时候随手写一张<strong>便签条</strong>，写完就贴在当场用，不需要标题，也不打算留着以后用。两种方式都有用，关键是看这段逻辑要不要被"反复使用/单独查阅"。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.4.2 lambda 的语法结构 ═══ -->
+  <section class="section" id="s2">
+    <p class="section-label">8.4.2</p>
+    <h2 class="section-title">lambda 的语法结构</h2>
+    <div class="section-body">
+      <p>Lambda 表达式看起来和普通函数不太一样，但拆开来看，组成部分是相通的：</p>
+    </div>
+
+    <div class="lambda-anatomy">
+      <div class="la-line">
+        <span class="la-part"><span class="la-text la-capture">[a, &amp;b]</span></span>
+        <span class="la-part"><span class="la-text la-params">(int x)</span></span>
+        <span class="la-pnc">&nbsp;-&gt;&nbsp;</span>
+        <span class="la-part"><span class="la-text la-ret">int</span></span>
+        <span class="la-pnc">&nbsp;</span>
+        <span class="la-part"><span class="la-text la-body">{ return a + b + x; }</span></span>
+      </div>
+      <div class="la-labels">
+        <div class="la-lbl"><span class="la-dot" style="background:var(--pink-mid)"></span><span style="color:#6C7086">捕获列表 — 允许这个 lambda 使用外部的哪些变量</span></div>
+        <div class="la-lbl"><span class="la-dot" style="background:var(--code-num)"></span><span style="color:#6C7086">参数列表 — 和普通函数参数完全一样</span></div>
+        <div class="la-lbl"><span class="la-dot" style="background:var(--code-type)"></span><span style="color:#6C7086">返回类型 — 可省略，编译器会自动推断</span></div>
+        <div class="la-lbl"><span class="la-dot" style="background:var(--code-str)"></span><span style="color:#6C7086">函数体 — 和普通函数体写法完全一样</span></div>
+      </div>
+    </div>
+
+    <table class="comp-table">
+      <thead><tr><th>组成部分</th><th>说明</th><th>是否必须</th></tr></thead>
+      <tbody>
+        <tr><td>捕获列表 <code>[ ]</code></td><td>决定这个 lambda 能不能、以及怎样使用外部（lambda 所在函数里）的变量，详见 8.4.3</td><td><span class="must-badge must">✅ 必需</span>（不需要用外部变量时写 <code>[]</code>）</td></tr>
+        <tr><td>参数列表 <code>( )</code></td><td>和普通函数的参数列表写法完全一样，调用时传入的数据</td><td><span class="must-badge opt">可选</span>（无参数时可以省略括号里的内容，甚至连括号也可以省略）</td></tr>
+        <tr><td>返回类型 <code>-&gt; 类型</code></td><td>函数体只有一条 <code>return</code> 语句时，编译器能自动推断出返回类型，通常可以省略；逻辑复杂、有多条不同类型的 <code>return</code> 时才需要手动写明</td><td><span class="must-badge opt">通常可省略</span></td></tr>
+        <tr><td>函数体 <code>{ }</code></td><td>花括号内要执行的具体代码，写法和普通函数体完全一样</td><td><span class="must-badge must">✅ 必需</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · lambda 基础写法</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd">    <span class="kw">auto</span> <span class="fn">add</span> <span class="op">=</span> <span class="pnc">[](</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="kw">return</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span><span class="pnc">;</span> <span class="pnc">};</span>  <span class="cmt">// 把 lambda 存进变量 add</span></td></tr>
+          <tr class="hl-ret"><td class="ln">4</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">add</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">);</span>  <span class="cmt">// 像调用普通函数一样调用，输出 7</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">🎯</span>
+      <div><b>为什么存 lambda 的变量要用 <code>auto</code>？</b>每一个 lambda 表达式，编译器背地里都会为它生成一个<strong>独一无二、没有名字的类型</strong>，你没办法把这个类型显式地写出来。<code>auto</code>（见 2.1 节）能让编译器自动帮你推断出这个类型，这也是存储 lambda 时几乎总是搭配 <code>auto</code> 使用的原因。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.4.3 捕获列表详解 ═══ -->
+  <section class="section" id="s3">
+    <p class="section-label">8.4.3</p>
+    <h2 class="section-title">捕获列表详解</h2>
+    <div class="section-body">
+      <p>普通函数写在其他函数外面，本来就看不到别的函数里的局部变量，这一点很容易理解（见 2.6 节作用域）。但 lambda 表达式比较特殊：它是<strong>写在另一个函数内部</strong>的，按理说应该能"顺手"看到周围的变量——但 C++ 出于安全考虑，要求你必须在<strong>捕获列表</strong> <code>[ ]</code> 里明确写出"我要用外面的哪个变量"，没有写的变量，lambda 内部一律看不到。</p>
+    </div>
+
+    <table class="comp-table cap-ref">
+      <thead><tr><th>写法</th><th>含义</th></tr></thead>
+      <tbody>
+        <tr><td>[ ]</td><td>不捕获任何外部变量，lambda 内部只能用自己的参数和局部变量</td></tr>
+        <tr><td>[x]</td><td>按<strong>值</strong>捕获变量 x（拷贝一份快照进来，见下方对比）</td></tr>
+        <tr><td>[&amp;x]</td><td>按<strong>引用</strong>捕获变量 x（和外部的 x 是同一份数据）</td></tr>
+        <tr><td>[=]</td><td>用到的外部变量全部按值捕获，不用逐个列出来</td></tr>
+        <tr><td>[&amp;]</td><td>用到的外部变量全部按引用捕获，不用逐个列出来</td></tr>
+        <tr><td>[x, &amp;y]</td><td>混合写法：x 按值捕获，y 按引用捕获</td></tr>
+        <tr><td>[this]</td><td>捕获当前对象（12 章学到类之后，在成员函数里写 lambda 时会用到）</td></tr>
+      </tbody>
+    </table>
+
+    <div class="cap-compare">
+      <div class="cap-card">
+        <div class="cap-head val">📦 按值捕获 [x]</div>
+        <div class="cap-body">
+<span class="cs">int</span> x = <span class="ch">10</span>;<br>
+<span class="cs">auto</span> f = [x]() { <span class="cs">return</span> x; };<br>
+x = <span class="ch">99</span>;  <span class="cs">// 修改外部 x</span><br>
+f();  <span class="cs">// 结果仍是 10</span>
+        </div>
+        <div class="cap-foot">lambda <strong>创建那一刻</strong>就把 x 的值拷贝了一份"快照"进来，之后外部 x 再怎么变，都不影响 lambda 内部这份独立的拷贝。</div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-head ref">🔗 按引用捕获 [&x]</div>
+        <div class="cap-body">
+<span class="cs">int</span> x = <span class="ch">10</span>;<br>
+<span class="cs">auto</span> f = [&amp;x]() { <span class="cs">return</span> x; };<br>
+x = <span class="ch">99</span>;  <span class="cs">// 修改外部 x</span><br>
+f();  <span class="cs">// 结果变成 99</span>
+        </div>
+        <div class="cap-foot">lambda 内部的 x 和外部的 x 是<strong>同一份数据</strong>，没有任何拷贝，外部改了、里面读到的也跟着变。</div>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">🚫</span>
+      <div><b>引用捕获的高危场景——悬空引用：</b>如果一个函数<strong>把 lambda 作为返回值返回出去</strong>，而这个 lambda 又按引用捕获了该函数内部的局部变量，那么函数一返回，这些局部变量就已经被销毁了（本质和 9 章要讲的"指针指向已释放内存"是同一类陷阱）——之后再调用这个 lambda，读到的就是已经不存在的数据，属于未定义行为。<strong>经验法则：</strong>如果 lambda 的生命周期可能比它捕获的变量更长，优先用按值捕获 <code>[x]</code>，更安全。</div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>进阶：想在 lambda 内部修改按值捕获的变量？</b>默认情况下，按值捕获进来的变量在 lambda 内部是<strong>只读</strong>的（相当于自带 const），直接赋值会编译报错。如果确实需要修改这份内部拷贝（注意：改的只是 lambda 内部的副本，不会影响外部原变量），需要在参数列表后面加上 <code>mutable</code> 关键字：<code>[x]() mutable { x++; return x; }</code>。竞赛中较少用到，了解即可。</div>
+    </div>
+  </section>
+
+  <!-- ═══ 8.4.4 lambda 与算法结合使用 ═══ -->
+  <section class="section" id="s4">
+    <p class="section-label">8.4.4</p>
+    <h2 class="section-title">lambda 与算法结合使用</h2>
+    <div class="section-body">
+      <p>Lambda 表达式最常见的用途，就是给 STL 算法函数<strong>临时提供一条规则</strong>——大多数场景根本用不到复杂的捕获，一个 <code>[]</code> 就够了：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 降序排序</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr class="hl"><td class="ln">1</td><td class="cd"><span class="fn">sort</span><span class="pnc">(</span><span class="fn">v</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">v</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd">    <span class="pnc">[](</span><span class="typ">int</span> <span class="fn">a</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">b</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="kw">return</span> <span class="fn">a</span> <span class="op">&gt;</span> <span class="fn">b</span><span class="pnc">;</span> <span class="pnc">});</span> <span class="cmt">// 从大到小</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>有些场景排序规则要参考<strong>另一个数组</strong>，这时捕获列表就派上用场了——正是 11.13.4 节"间接排序"用到的手法：</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 按 data 的值对下标数组 idx 排序</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">vector</span><span class="op">&lt;</span><span class="typ">int</span><span class="op">&gt;</span> <span class="fn">data</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">40</span><span class="pnc">,</span> <span class="num">10</span><span class="pnc">,</span> <span class="num">30</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">vector</span><span class="op">&lt;</span><span class="typ">int</span><span class="op">&gt;</span> <span class="fn">idx</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">0</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">};</span>  <span class="cmt">// 待排序的是下标，不是 data 本身</span></td></tr>
+          <tr class="hl"><td class="ln">3</td><td class="cd"><span class="fn">sort</span><span class="pnc">(</span><span class="fn">idx</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(),</span> <span class="fn">idx</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(),</span></td></tr>
+          <tr class="hl-ret"><td class="ln">4</td><td class="cd">    <span class="pnc">[&amp;</span><span class="pnc">](</span><span class="typ">int</span> <span class="fn">i</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">j</span><span class="pnc">)</span> <span class="pnc">{</span> <span class="kw">return</span> <span class="fn">data</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;</span> <span class="fn">data</span><span class="pnc">[</span><span class="fn">j</span><span class="pnc">];</span> <span class="pnc">});</span> <span class="cmt">// 引用捕获 data</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// 排序后 idx = {1, 2, 0}，因为 data[1]=10 &lt; data[2]=30 &lt; data[0]=40</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>这里必须用 <code>[&amp;]</code> 引用捕获 <code>data</code>：如果按值捕获，lambda 内部会拷贝一份 <code>data</code> 的副本，虽然结果依然正确，但对于较大的数组来说是一笔不必要的开销；引用捕获则直接复用外部的 <code>data</code>，不产生额外拷贝。</p>
+      <p>类似地，<code>priority_queue</code>（见 11.7 节）自定义比较规则、<code>unordered_map</code> 自定义 <code>find_if</code> 查找条件等场景，都是 lambda 大展身手的地方——它们的共同点是：<strong>逻辑简单、只用一次</strong>，不值得专门写一个具名函数。</p>
+    </div>
+  </section>
+
+  <!-- ═══ 8.4.5 易错点 ═══ -->
+  <section class="section" id="s5">
+    <p class="section-label">8.4.5</p>
+    <h2 class="section-title">易错点</h2>
+
+    <div class="pitfall-list">
+      <div class="pitfall-item">
+        <div class="pitfall-num">1</div>
+        <div class="pitfall-body"><b>忘记把外部变量写进捕获列表：</b>写了 <code>[]</code>（或者压根没写捕获列表里想用的变量），却在函数体里直接用了外面的变量，编译器会直接报错——提示这个变量"没有被捕获"。解决办法很直接：把它加进 <code>[ ]</code> 里，或者偷懒用 <code>[=]</code> / <code>[&amp;]</code> 一次性捕获所有用到的变量。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">2</div>
+        <div class="pitfall-body"><b>误以为按值捕获会"实时同步"：</b>按值捕获 <code>[x]</code> 拷贝的是<strong>创建 lambda 那一刻</strong>的值，之后外部 x 再变化，lambda 内部看到的还是旧值（见 8.4.3 的对比示例）。如果需要 lambda 始终读到最新值，要改用引用捕获 <code>[&amp;x]</code>。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">3</div>
+        <div class="pitfall-body"><b>返回按引用捕获局部变量的 lambda：</b>函数返回后，函数内的局部变量已经被销毁，被引用捕获的 lambda 再被调用就是在读已经不存在的数据（8.4.3 节的悬空引用警告）。函数内部使用的 lambda 引用捕获很安全，但如果要把 lambda 作为返回值传出函数，优先用按值捕获。</div>
+      </div>
+      <div class="pitfall-item">
+        <div class="pitfall-num">4</div>
+        <div class="pitfall-body"><b>想显式声明 lambda 变量的类型，却不知道该写什么：</b>lambda 的类型是编译器生成的匿名类型，写不出来，只能用 <code>auto</code>。（进阶：如果确实需要把 lambda 存成类的成员、或者作为函数参数类型传递，可以用标准库提供的 <code>std::function&lt;返回类型(参数类型...)&gt;</code> 包装它，需要 <code>&lt;functional&gt;</code> 头文件——竞赛中较少用到，了解即可。）</div>
+      </div>
+    </div>
+
+    <div class="fit-grid">
+      <div class="fit-card good">
+        <div class="fit-title">✅ 适合用 lambda</div>
+        <div class="fit-list">· 逻辑简短，只在一处使用<br>· 给 sort / priority_queue 等提供临时规则<br>· 需要顺手用到周围的局部变量</div>
+      </div>
+      <div class="fit-card bad">
+        <div class="fit-title">❌ 更适合具名函数</div>
+        <div class="fit-list">· 同一段逻辑要在多处反复调用<br>· 逻辑复杂、写出来很长，写在调用处反而影响阅读<br>· 需要在多个文件之间共享</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>C++ 编程语法 · 第八章 函数 · 8.4 Lambda 表达式</p>
+    <div class="chapter-nav">
+      <a class="nav-btn ghost" href="08_03_FunctionOverloadingAndInline.html">← 8.3 函数重载与内联函数</a>
+      <a class="nav-btn" href="09_PointersAndReferences.html">第九章：指针与引用 →</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
