@@ -49,10 +49,10 @@
   .sym-not-t { color: var(--code-op) }
   .sym-shl-t { color: var(--code-num) }
   .sym-shr-t { color: #FAD89B }
-  .bin-op-rule { font-size: 12px; color: #6C7086; margin-left: auto }
+  .bin-op-rule { font-size: 12px; color: #A6ADC8; margin-left: auto }
 
   .bin-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px }
-  .bin-label { font-size: 12px; color: #6C7086; min-width: 24px; text-align: right; flex-shrink: 0 }
+  .bin-label { font-size: 12px; color: #A6ADC8; min-width: 24px; text-align: right; flex-shrink: 0 }
   .bin-digits { display: flex; gap: 3px }
   .bd { width: 22px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0 }
   .bd.z    { background: #16141F; color: #45475A }
@@ -63,7 +63,7 @@
   .bd.hi-n { background: rgba(245,194,231,.3); color: var(--code-op); border: 1px solid rgba(245,194,231,.5) }
   .bd.hi-s { background: rgba(250,179,135,.3); color: var(--code-num); border: 1px solid rgba(250,179,135,.5) }
   .bin-sep { height: 1px; background: #2A2840; margin: 8px 0 8px 32px }
-  .bin-decimal { font-size: 12.5px; color: #6C7086; margin-left: 4px; align-self: center }
+  .bin-decimal { font-size: 12.5px; color: #A6ADC8; margin-left: 4px; align-self: center }
 
   /* 异或性质卡片 */
   .xor-props { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0 }
@@ -79,7 +79,7 @@
     overflow-x: auto;
   }
   .sv-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: nowrap }
-  .sv-label { min-width: 80px; color: #6C7086; font-size: 12px; text-align: right; flex-shrink: 0 }
+  .sv-label { min-width: 80px; color: #A6ADC8; font-size: 12px; text-align: right; flex-shrink: 0 }
   .sv-bits { display: flex; gap: 2px; flex-wrap: nowrap }
   .sv-bit { width: 24px; height: 24px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0 }
   .sv-bit.z     { background: #16141F; color: #45475A }
@@ -87,7 +87,7 @@
   .sv-bit.moved { background: rgba(250,179,135,.25); color: var(--code-num); border: 1px solid rgba(250,179,135,.4) }
   .sv-bit.lost  { background: #0D0C14; color: #2A2840; text-decoration: line-through; font-size: 10px }
   .sv-bit.new0  { background: rgba(137,180,250,.15); color: var(--code-fn); border: 1px solid rgba(137,180,250,.3) }
-  .sv-decimal { font-size: 12.5px; color: #6C7086; margin-left: 8px; white-space: nowrap }
+  .sv-decimal { font-size: 12.5px; color: #A6ADC8; margin-left: 8px; white-space: nowrap }
   .sv-sep { height: 1px; background: #2A2840; margin: 6px 0 6px 86px }
 
   /* GCC 内置函数表（浅色风格） */
@@ -110,7 +110,7 @@
   /* 44 二进制位演示 */
   .bit44 { display: flex; gap: 2px; align-items: center; margin-top: 8px; flex-wrap: wrap }
   .b44 { width: 20px; height: 20px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; flex-shrink: 0 }
-  .b44.z  { background: #16141F; color: #45475A }
+  .b44.z  { background: #16141F; color: #7F849C }
   .b44.o  { background: #2A2840; color: var(--code-text) }
   .b44.hi { background: rgba(166,227,161,.3); color: var(--code-str); border: 1px solid rgba(166,227,161,.4) }
   .b44.lo { background: rgba(250,179,135,.2); color: var(--code-num); border: 1px solid rgba(250,179,135,.3) }
@@ -166,21 +166,21 @@
     <p class="section-label">7.1</p>
     <h2 class="section-title">六大位运算符总览</h2>
     <div class="section-body">
-      <p>之前所有的运算符（<code>+ - * / %</code> 等）都是把数字当成一个整体来计算，而位运算则完全不同——它直接拆开数字底层的<b>二进制表示</b>（见 2.3 节原码反码补码），一位一位地进行操作。</p>
+      <p>之前所有的运算符（<code>+ - * / %</code> 等）都是把数字当成一个整体来计算，而位运算则完全不同——它直接拆开数字底层的<b>二进制表示</b>（见 2.4 节原码、反码与补码），一位一位地进行操作。</p>
       <p>这样做有什么好处？两个原因：一是<b>速度极快</b>，位运算是 CPU 最底层支持的操作，比乘除法快得多；二是能实现一些用普通算术运算很难甚至无法做到的技巧，比如用一个整数同时表示"32 个开关的状态"（状态压缩）、不用额外变量交换两个数、快速判断一个数是不是 2 的幂等等。这些技巧在竞赛中出现频率很高，值得花时间掌握。</p>
     </div>
 
     <div style="background:var(--code-bg);border-radius:var(--r-md);padding:14px 18px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:12px;">
-      <div style="color:#6C7086;margin-bottom:8px;">📌 忘记二进制了？花 10 秒复习一下：二进制每一位都对应一个"2 的次方"位值，从右往左依次是 1、2、4、8、16、32、64、128……以数字 <b style="color:var(--code-text)">6</b> 为例（只需要用到前 3 位）：</div>
+      <div style="color:#A6ADC8;margin-bottom:8px;">📌 忘记二进制了？花 10 秒复习一下：二进制每一位都对应一个"2 的次方"位值，从右往左依次是 1、2、4、8、16、32、64、128……以数字 <b style="color:var(--code-text)">6</b> 为例（只需要用到前 3 位）：</div>
       <div style="display:flex;gap:2px;margin-bottom:4px;padding-left:0;">
-        <div style="width:20px;text-align:center;color:#6C7086;font-size:10px;">4</div>
-        <div style="width:20px;text-align:center;color:#6C7086;font-size:10px;">2</div>
-        <div style="width:20px;text-align:center;color:#6C7086;font-size:10px;">1</div>
+        <div style="width:20px;text-align:center;color:#A6ADC8;font-size:10px;">4</div>
+        <div style="width:20px;text-align:center;color:#A6ADC8;font-size:10px;">2</div>
+        <div style="width:20px;text-align:center;color:#A6ADC8;font-size:10px;">1</div>
       </div>
       <div class="bit44">
         <div class="b44 hi">1</div><div class="b44 hi">1</div><div class="b44 z">0</div>
       </div>
-      <div style="color:#6C7086;margin-top:8px;font-size:11.5px;">高亮的两位对应位值 4 和 2，相加 4 + 2 = <b style="color:var(--code-str)">6</b> —— 这就是为什么二进制 <code>110</code> 就是十进制的 <code>6</code>。想系统复习，请回顾 <a href="02_03_原码反码补码.html">2.3 节「原码反码补码」</a>。下面表格里的每一行位运算，本质上都是把两个数按这种"位值对齐"的方式一位一位地比较。</div>
+      <div style="color:#A6ADC8;margin-top:8px;font-size:11.5px;">高亮的两位对应位值 4 和 2，相加 4 + 2 = <b style="color:var(--code-str)">6</b> —— 这就是为什么二进制 <code>110</code> 就是十进制的 <code>6</code>。想系统复习，请回顾 <a href="02_04_ComplementCodes.html" style="color:var(--code-fn);text-decoration:underline;text-underline-offset:3px;">2.4 节「原码、反码与补码」</a>。下面表格里的每一行位运算，本质上都是把两个数按这种"位值对齐"的方式一位一位地比较。</div>
     </div>
 
     <table class="op-overview">
@@ -240,7 +240,7 @@
         <div class="bin-op-sym sym-and">&amp;</div>
         <div>
           <div class="bin-op-title sym-and-t">6 &amp; 3 = 2</div>
-          <div style="font-size:12px;color:#6C7086;margin-top:2px">规则：1&amp;1=1 &nbsp;·&nbsp; 1&amp;0=0 &nbsp;·&nbsp; 0&amp;0=0</div>
+          <div style="font-size:12px;color:#A6ADC8;margin-top:2px">规则：1&amp;1=1 &nbsp;·&nbsp; 1&amp;0=0 &nbsp;·&nbsp; 0&amp;0=0</div>
         </div>
       </div>
       <div class="bin-row">
@@ -319,7 +319,7 @@
         <div class="bin-op-sym sym-or">|</div>
         <div>
           <div class="bin-op-title sym-or-t">6 | 3 = 7</div>
-          <div style="font-size:12px;color:#6C7086;margin-top:2px">规则：1|1=1 &nbsp;·&nbsp; 1|0=1 &nbsp;·&nbsp; 0|0=0</div>
+          <div style="font-size:12px;color:#A6ADC8;margin-top:2px">规则：1|1=1 &nbsp;·&nbsp; 1|0=1 &nbsp;·&nbsp; 0|0=0</div>
         </div>
       </div>
       <div class="bin-row">
@@ -369,7 +369,7 @@
         <div class="bin-op-sym sym-or">|</div>
         <div>
           <div class="bin-op-title sym-or-t">READ | WRITE = 3（二进制 011）</div>
-          <div style="font-size:12px;color:#6C7086;margin-top:2px">把"可读"和"可写"两个独立的开关，合并进同一个整数里</div>
+          <div style="font-size:12px;color:#A6ADC8;margin-top:2px">把"可读"和"可写"两个独立的开关，合并进同一个整数里</div>
         </div>
       </div>
       <div class="bin-row">
@@ -408,7 +408,7 @@
     <h2 class="section-title">~ 按位非（NOT）</h2>
     <div class="section-body">
       <p>按位非是六个位运算符里唯一一个<b>只需要一个操作数</b>的（其余都要两个数才能运算），规则也最简单粗暴：把每一个二进制位<b>全部取反</b>，0 变 1，1 变 0，没有例外。</p>
-      <p>取反之后会出现一个有趣的规律：<code>~n</code> 永远等于 <code>-(n+1)</code>，比如 <code>~6 = -7</code>、<code>~0 = -1</code>、<code>~(-1) = 0</code>。这个规律不是巧合，而是补码存储方式（见 2.3 节）决定的必然结果。</p>
+      <p>取反之后会出现一个有趣的规律：<code>~n</code> 永远等于 <code>-(n+1)</code>，比如 <code>~6 = -7</code>、<code>~0 = -1</code>、<code>~(-1) = 0</code>。这个规律不是巧合，而是补码存储方式（见 2.4 节）决定的必然结果。</p>
     </div>
 
     <div class="bin-op-card">
@@ -416,7 +416,7 @@
         <div class="bin-op-sym sym-not">~</div>
         <div>
           <div class="bin-op-title sym-not-t">~6 = -7</div>
-          <div style="font-size:12px;color:#6C7086;margin-top:2px">规则：~1=0 &nbsp;·&nbsp; ~0=1 &nbsp;（全部翻转）</div>
+          <div style="font-size:12px;color:#A6ADC8;margin-top:2px">规则：~1=0 &nbsp;·&nbsp; ~0=1 &nbsp;（全部翻转）</div>
         </div>
       </div>
       <div class="bin-row">
@@ -440,7 +440,7 @@
 
     <div class="callout info">
       <span class="callout-icon">📖</span>
-      <div><b>为什么 ~n 等于 -(n+1)？</b>回忆 2.3 节的补码规则：一个数按位全部取反，恰好就是它"反码"的定义；反码再加 1，就变成了这个数<b>相反数</b>的补码。也就是说 <code>~n</code>（全部取反）到 <code>-n</code>（相反数的补码）正好差一个"+1"，反过来推，<code>~n</code> 自然就等于 <code>-n-1</code>，也就是 <code>-(n+1)</code>。</div>
+      <div><b>为什么 ~n 等于 -(n+1)？</b>回忆 2.4 节的补码规则：一个数按位全部取反，恰好就是它"反码"的定义；反码再加 1，就变成了这个数<b>相反数</b>的补码。也就是说 <code>~n</code>（全部取反）到 <code>-n</code>（相反数的补码）正好差一个"+1"，反过来推，<code>~n</code> 自然就等于 <code>-n-1</code>，也就是 <code>-(n+1)</code>。</div>
     </div>
 
     <div class="callout tip">
@@ -462,7 +462,7 @@
         <div class="bin-op-sym sym-xor">^</div>
         <div>
           <div class="bin-op-title sym-xor-t">6 ^ 3 = 5</div>
-          <div style="font-size:12px;color:#6C7086;margin-top:2px">规则：1^1=0 &nbsp;·&nbsp; 1^0=1 &nbsp;·&nbsp; 0^0=0</div>
+          <div style="font-size:12px;color:#A6ADC8;margin-top:2px">规则：1^1=0 &nbsp;·&nbsp; 1^0=1 &nbsp;·&nbsp; 0^0=0</div>
         </div>
       </div>
       <div class="bin-row">
@@ -592,7 +592,7 @@
     </div>
 
     <div class="shift-visual">
-      <div style="font-size:11px;color:#6C7086;margin-bottom:10px;">6 &lt;&lt; 2 = 24（6 × 2² = 6 × 4）</div>
+      <div style="font-size:11px;color:#A6ADC8;margin-bottom:10px;">6 &lt;&lt; 2 = 24（6 × 2² = 6 × 4）</div>
       <div class="sv-row">
         <span class="sv-label">原始 (6)</span>
         <div class="sv-bits">
@@ -639,7 +639,7 @@
     </div>
 
     <div class="shift-visual">
-      <div style="font-size:11px;color:#6C7086;margin-bottom:10px;">24 &gt;&gt; 2 = 6（24 ÷ 2² = 24 ÷ 4）</div>
+      <div style="font-size:11px;color:#A6ADC8;margin-bottom:10px;">24 &gt;&gt; 2 = 6（24 ÷ 2² = 24 ÷ 4）</div>
       <div class="sv-row">
         <span class="sv-label">原始 (24)</span>
         <div class="sv-bits">
@@ -679,7 +679,7 @@
     </div>
 
     <div class="shift-visual">
-      <div style="font-size:11px;color:#6C7086;margin-bottom:10px;">-8 &gt;&gt; 1 = -4（补码下的算术右移，高位补 1）</div>
+      <div style="font-size:11px;color:#A6ADC8;margin-bottom:10px;">-8 &gt;&gt; 1 = -4（补码下的算术右移，高位补 1）</div>
       <div class="sv-row">
         <span class="sv-label">原始 (-8)</span>
         <div class="sv-bits">
@@ -730,7 +730,7 @@
 
     <!-- 44 binary visual -->
     <div style="background:var(--code-bg);border-radius:var(--r-md);padding:14px 18px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:12px;">
-      <div style="color:#6C7086;margin-bottom:8px;">44 = 0000 0000 0000 0000 0000 0000 0010 1100（32位）</div>
+      <div style="color:#A6ADC8;margin-bottom:8px;">44 = 0000 0000 0000 0000 0000 0000 0010 1100（32位）</div>
       <div class="bit44">
         <div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div>
         <div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div><div class="b44 z">0</div>
@@ -744,7 +744,7 @@
         <div class="b44 hi">1</div><div class="b44 z">0</div>
         <div class="b44 hi">1</div><div class="b44 hi">1</div>
         <div class="b44 lo">0</div><div class="b44 lo">0</div>
-        <div style="margin-left:10px;color:#6C7086;font-size:11px;align-self:center">
+        <div style="margin-left:10px;color:#A6ADC8;font-size:11px;align-self:center">
           <span style="color:var(--code-str)">■ = 值为1的位（共3个）</span>
           &nbsp;&nbsp;
           <span style="color:var(--code-num)">■ = 末尾0（共2个）</span>

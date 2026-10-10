@@ -167,16 +167,16 @@
     </div>
 
     <div class="num-visual">
-      <div class="num-visual-title">20 个随机数排序 —— 两种算法的交换次数对比</div>
+      <div class="num-visual-title">20 个数、顺序特别乱时 —— 两种算法最多要换多少次</div>
       <div class="count-bar-row">
         <div class="count-bar-label">冒泡排序</div>
-        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">112 次</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill long"></div><div class="count-bar-value">190 次</div></div>
       </div>
       <div class="count-bar-row">
         <div class="count-bar-label">选择排序</div>
-        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 13%;"></div><div class="count-bar-value">15 次</div></div>
+        <div class="count-bar-track"><div class="count-bar-fill short" style="width: 10%;"></div><div class="count-bar-value">19 次</div></div>
       </div>
-      <div class="num-visual-caption">同样的 20 个随机数，冒泡排序交换了 <strong>112 次</strong>，选择排序只交换了 <strong>15 次</strong>（最多 <code>n-1=19</code> 次，部分轮次"最小值已经在对的位置"时甚至不需要真正移动）。不过两者的<strong>比较</strong>次数是一样多的（都是约 <code>n²/2</code> 次）——选择排序省的是交换，不是比较。</div>
+      <div class="num-visual-caption">同样是 20 个随机数，如果这组数特别乱，用冒泡排序来排，最多要换 <strong>190 次</strong>位置；用选择排序来排，最多只需要换 <strong>19 次</strong>位置。<br>不过，它们要“比一比谁大谁小”的次数其实差不多，都是大约 20 × 20 ÷ 2 次。也就是说，选择排序省的是<strong>“换位置”</strong>，不是<strong>“比大小”</strong>。</div>
     </div>
 
     <div class="sub-title" id="compare">④ 完整代码与对比</div>

@@ -101,20 +101,20 @@
     <div class="sub-title" id="single">② 单层枚举：鸡兔同笼</div>
     <div class="section-body">
       <p>经典的"鸡兔同笼"问题：笼子里关着鸡和兔，一共数到 <strong>35 个头</strong>，<strong>94 只脚</strong>，问鸡和兔各有多少只？</p>
-      <p>用代数能解，但用枚举法更简单：鸡的数量一定在 <code>0</code> 到 <code>35</code> 之间（不可能比总头数还多）。只要枚举鸡的数量 <code>chicken</code>，兔子的数量自然就是 <code>35 - chicken</code>（因为头数加起来必须是 35）；再检查这种情况下脚的总数是不是正好 94——满足就是答案。</p>
+      <p>用代数能解，但用枚举法更简单：鸡的数量一定在 <code>0</code> 到 <code>35</code> 之间（不可能比总头数还多）。只要枚举鸡的数量 <code>a</code>，兔子的数量 <code>b</code> 自然就是 <code>35 - a</code>（因为头数加起来必须是 35）；再检查这种情况下脚的总数是不是正好 94——满足就是答案。</p>
     </div>
 
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 枚举法解鸡兔同笼</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">heads</span> <span class="op">=</span> <span class="num">35</span><span class="pnc">,</span> <span class="fn">legs</span> <span class="op">=</span> <span class="num">94</span><span class="pnc">;</span></td></tr>
-          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">chicken</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">chicken</span> <span class="op">&lt;=</span> <span class="fn">heads</span><span class="pnc">;</span> <span class="fn">chicken</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="num">35</span><span class="pnc">,</span> <span class="fn">m</span> <span class="op">=</span> <span class="num">94</span><span class="pnc">;</span>  <span class="cmt">// n 个头，m 只脚；a 是鸡，b 是兔</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">a</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">a</span><span class="op">++</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">rabbit</span> <span class="op">=</span> <span class="fn">heads</span> <span class="op">-</span> <span class="fn">chicken</span><span class="pnc">;</span>  <span class="cmt">// 头数加起来必须是35</span></td></tr>
-          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">chicken</span> <span class="op">*</span> <span class="num">2</span> <span class="op">+</span> <span class="fn">rabbit</span> <span class="op">*</span> <span class="num">4</span> <span class="op">==</span> <span class="fn">legs</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">b</span> <span class="op">=</span> <span class="fn">n</span> <span class="op">-</span> <span class="fn">a</span><span class="pnc">;</span>  <span class="cmt">// 头数加起来必须是 n</span></td></tr>
+          <tr class="hl"><td class="ln">5</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">*</span> <span class="num">2</span> <span class="op">+</span> <span class="fn">b</span> <span class="op">*</span> <span class="num">4</span> <span class="op">==</span> <span class="fn">m</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">6</td><td class="cd">    <span class="pnc">{</span></td></tr>
-          <tr><td class="ln">7</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"鸡："</span> <span class="op">&lt;&lt;</span> <span class="fn">chicken</span> <span class="op">&lt;&lt;</span> <span class="str">" 兔："</span> <span class="op">&lt;&lt;</span> <span class="fn">rabbit</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"鸡："</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span> <span class="op">&lt;&lt;</span> <span class="str">" 兔："</span> <span class="op">&lt;&lt;</span> <span class="fn">b</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">8</td><td class="cd">    <span class="pnc">}</span></td></tr>
           <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
@@ -124,14 +124,14 @@
     <div class="num-visual">
       <div class="num-visual-title">枚举鸡的数量，挨个检查脚的总数</div>
       <table class="dual-table">
-        <tr><th>chicken</th><th>rabbit = 35-chicken</th><th>脚的总数</th><th>是否等于 94？</th></tr>
+        <tr><th>a（鸡）</th><th>b（兔）= 35-a</th><th>脚的总数</th><th>是否等于 94？</th></tr>
         <tr><td class="dt-n">0</td><td>35</td><td>140</td><td class="dt-skip">不等，跳过</td></tr>
         <tr><td class="dt-n">1</td><td>34</td><td>138</td><td class="dt-skip">不等，跳过</td></tr>
         <tr class="dt-ellipsis"><td colspan="4">… 中间还要试 21 次，都不满足 …</td></tr>
         <tr><td class="dt-n">22</td><td>13</td><td>96</td><td class="dt-skip">不等，跳过</td></tr>
         <tr class="dt-final"><td class="dt-n">23</td><td>12</td><td>94</td><td>✓ 正好相等！找到答案</td></tr>
       </table>
-      <div class="num-visual-caption">枚举到 <code>chicken=23</code> 时，<code>rabbit=12</code>，脚的总数 <code>23×2+12×4=46+48=94</code>，正好对上——鸡 23 只，兔 12 只。整个过程只试了 <strong>24 次</strong>（<code>chicken</code> 从 0 到 23），比凑代数方程直接好懂。</div>
+      <div class="num-visual-caption">枚举到 <code>a=23</code> 时，<code>b=12</code>，脚的总数 <code>23×2+12×4=46+48=94</code>，正好对上——鸡 23 只，兔 12 只。整个过程只试了 <strong>24 次</strong>（<code>a</code> 从 0 到 23），比凑代数方程直接好懂。</div>
     </div>
 
     <div class="callout tip">
@@ -149,14 +149,14 @@
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 嵌套循环找勾股数组</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">limit</span> <span class="op">=</span> <span class="num">20</span><span class="pnc">;</span></td></tr>
-          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">a</span> <span class="op">&lt;=</span> <span class="fn">limit</span><span class="pnc">;</span> <span class="fn">a</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="num">20</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">2</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">a</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">a</span><span class="op">++</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">3</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">b</span> <span class="op">=</span> <span class="fn">a</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">b</span> <span class="op">&lt;=</span> <span class="fn">limit</span><span class="pnc">;</span> <span class="fn">b</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// b 从 a+1 开始，保证 a&lt;b</span></td></tr>
+          <tr class="hl"><td class="ln">4</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">b</span> <span class="op">=</span> <span class="fn">a</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">b</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">b</span><span class="op">++</span><span class="pnc">)</span>  <span class="cmt">// b 从 a+1 开始，保证 a&lt;b</span></td></tr>
           <tr><td class="ln">5</td><td class="cd">    <span class="pnc">{</span></td></tr>
-          <tr><td class="ln">6</td><td class="cd">        <span class="typ">int</span> <span class="fn">cSquare</span> <span class="op">=</span> <span class="fn">a</span> <span class="op">*</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span> <span class="op">*</span> <span class="fn">b</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">7</td><td class="cd">        <span class="typ">int</span> <span class="fn">c</span> <span class="op">=</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">sqrt</span><span class="pnc">(</span><span class="fn">cSquare</span><span class="pnc">);</span></td></tr>
-          <tr class="hl"><td class="ln">8</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">c</span> <span class="op">*</span> <span class="fn">c</span> <span class="op">==</span> <span class="fn">cSquare</span> <span class="op">&amp;&amp;</span> <span class="fn">c</span> <span class="op">&lt;=</span> <span class="fn">limit</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">        <span class="typ">int</span> <span class="fn">s</span> <span class="op">=</span> <span class="fn">a</span> <span class="op">*</span> <span class="fn">a</span> <span class="op">+</span> <span class="fn">b</span> <span class="op">*</span> <span class="fn">b</span><span class="pnc">;</span>  <span class="cmt">// s = a² + b²</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">        <span class="typ">int</span> <span class="fn">c</span> <span class="op">=</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">sqrt</span><span class="pnc">(</span><span class="fn">s</span><span class="pnc">);</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(</span><span class="fn">c</span> <span class="op">*</span> <span class="fn">c</span> <span class="op">==</span> <span class="fn">s</span> <span class="op">&amp;&amp;</span> <span class="fn">c</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">9</td><td class="cd">        <span class="pnc">{</span></td></tr>
           <tr><td class="ln">10</td><td class="cd">            <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">b</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">c</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">11</td><td class="cd">        <span class="pnc">}</span></td></tr>
@@ -168,7 +168,7 @@
 
     <div class="callout warn">
       <span class="callout-icon">⚠️</span>
-      <div><b>判断"是不是整数的平方根"要小心精度问题：</b>第 7 行用 <code>sqrt()</code> 算出来的是浮点数，直接转成 <code>int</code> 可能因为精度误差差 1（比如该是 5 却算成 4.999999）。第 8 行用 <code>c * c == cSquare</code> 再做一次整数验证，就是为了避免被这种浮点误差坑——这和 1.3 节判断质数时强调的 <code>i * i &lt;= n</code> 是同一个道理：能用整数运算验证的地方，尽量不要依赖浮点数。</div>
+      <div><b>判断"是不是整数的平方根"要小心精度问题：</b>第 7 行用 <code>sqrt()</code> 算出来的是浮点数，直接转成 <code>int</code> 可能因为精度误差差 1（比如该是 5 却算成 4.999999）。第 8 行用 <code>c * c == s</code> 再做一次整数验证，就是为了避免被这种浮点误差坑——这和 1.3 节判断质数时强调的 <code>i * i &lt;= n</code> 是同一个道理：能用整数运算验证的地方，尽量不要依赖浮点数。</div>
     </div>
 
     <div class="num-visual">
@@ -262,7 +262,7 @@
   <footer class="doc-footer">
     <p>算法文档 · 模块二 · 基础算法思想 · 2.1 枚举法</p>
     <div class="chapter-nav">
-      <a class="nav-btn ghost" href="A01_08_线性筛素数.html">← 1.8 线性筛素数</a>
+      <a class="nav-btn ghost" href="A01_12_高精度除法.html">← 1.12 高精度除法</a>
       <a class="nav-btn" href="A02_02_数组标记法.html">2.2 数组标记法 →</a>
     </div>
   </footer>

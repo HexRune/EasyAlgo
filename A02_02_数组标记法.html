@@ -192,18 +192,18 @@
         <table class="code-table">
           <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="num">8</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">nums</span><span class="pnc">[]</span> <span class="op">=</span> <span class="pnc">{</span><span class="num">1</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="num">6</span><span class="pnc">,</span> <span class="num">7</span><span class="pnc">,</span> <span class="num">8</span><span class="pnc">};</span>  <span class="cmt">// 缺了一个数</span></td></tr>
-          <tr><td class="ln">3</td><td class="cd"><span class="typ">bool</span> <span class="fn">appeared</span><span class="pnc">[</span><span class="num">9</span><span class="pnc">]</span> <span class="op">=</span> <span class="pnc">{</span><span class="kw">false</span><span class="pnc">};</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">bool</span> <span class="fn">seen</span><span class="pnc">[</span><span class="num">9</span><span class="pnc">]</span> <span class="op">=</span> <span class="pnc">{</span><span class="kw">false</span><span class="pnc">};</span></td></tr>
           <tr><td class="ln">4</td><td class="cd"></td></tr>
           <tr><td class="ln">5</td><td class="cd"><span class="cmt">// 第一遍：把出现过的数字都标记一下</span></td></tr>
           <tr><td class="ln">6</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">x</span> <span class="op">:</span> <span class="fn">nums</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">7</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">8</td><td class="cd">    <span class="fn">appeared</span><span class="pnc">[</span><span class="fn">x</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">8</td><td class="cd">    <span class="fn">seen</span><span class="pnc">[</span><span class="fn">x</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
           <tr><td class="ln">10</td><td class="cd"></td></tr>
           <tr><td class="ln">11</td><td class="cd"><span class="cmt">// 第二遍：找出没被标记过的那个数</span></td></tr>
           <tr><td class="ln">12</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">13</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">14</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">appeared</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">seen</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span></td></tr>
           <tr><td class="ln">15</td><td class="cd">    <span class="pnc">{</span></td></tr>
           <tr><td class="ln">16</td><td class="cd">        <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"缺失的数字是: "</span> <span class="op">&lt;&lt;</span> <span class="fn">i</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">17</td><td class="cd">    <span class="pnc">}</span></td></tr>
@@ -213,7 +213,7 @@
     </div>
 
     <div class="arr-visual">
-      <div class="num-visual-title">appeared 数组标记完之后的样子（下标 1~8）</div>
+      <div class="num-visual-title">seen 数组标记完之后的样子（下标 1~8）</div>
       <div class="arr-row">
         <div class="arr-cell-wrap"><div class="arr-cell hi">✓</div><div class="arr-idx">1</div></div>
         <div class="arr-cell-wrap"><div class="arr-cell hi">✓</div><div class="arr-idx">2</div></div>

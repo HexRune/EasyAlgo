@@ -143,23 +143,23 @@
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 约瑟夫环模拟</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Josephus</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">k</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">Joseph</span><span class="pnc">(</span><span class="typ">int</span> <span class="fn">n</span><span class="pnc">,</span> <span class="typ">int</span> <span class="fn">k</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr><td class="ln">3</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">bool</span><span class="pnc">&gt;</span> <span class="fn">eliminated</span><span class="pnc">(</span><span class="fn">n</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="kw">false</span><span class="pnc">);</span>  <span class="cmt">// 标记谁已经出局了</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd">    <span class="fn">vector</span><span class="pnc">&lt;</span><span class="typ">bool</span><span class="pnc">&gt;</span> <span class="fn">out</span><span class="pnc">(</span><span class="fn">n</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="kw">false</span><span class="pnc">);</span>  <span class="cmt">// 标记谁已经出局了</span></td></tr>
           <tr><td class="ln">4</td><td class="cd">    <span class="typ">int</span> <span class="fn">pos</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>           <span class="cmt">// 当前指向的人（用0~n-1表示，真实编号是pos+1）</span></td></tr>
-          <tr><td class="ln">5</td><td class="cd">    <span class="typ">int</span> <span class="fn">remaining</span> <span class="op">=</span> <span class="fn">n</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">6</td><td class="cd">    <span class="typ">int</span> <span class="fn">count</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>         <span class="cmt">// 当前报到的数字</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="typ">int</span> <span class="fn">left</span> <span class="op">=</span> <span class="fn">n</span><span class="pnc">;</span>  <span class="cmt">// 还剩几个人</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="typ">int</span> <span class="fn">cnt</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>         <span class="cmt">// 当前报到的数字</span></td></tr>
           <tr><td class="ln">7</td><td class="cd"></td></tr>
-          <tr><td class="ln">8</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">remaining</span> <span class="op">&gt;</span> <span class="num">1</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">left</span> <span class="op">&gt;</span> <span class="num">1</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">9</td><td class="cd">    <span class="pnc">{</span></td></tr>
-          <tr><td class="ln">10</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">eliminated</span><span class="pnc">[</span><span class="fn">pos</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">])</span>  <span class="cmt">// 这个人还在场，才轮到他报数</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">out</span><span class="pnc">[</span><span class="fn">pos</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">])</span>  <span class="cmt">// 这个人还在场，才轮到他报数</span></td></tr>
           <tr><td class="ln">11</td><td class="cd">        <span class="pnc">{</span></td></tr>
-          <tr><td class="ln">12</td><td class="cd">            <span class="fn">count</span><span class="op">++</span><span class="pnc">;</span></td></tr>
-          <tr class="hl"><td class="ln">13</td><td class="cd">            <span class="kw">if</span> <span class="pnc">(</span><span class="fn">count</span> <span class="op">==</span> <span class="fn">k</span><span class="pnc">)</span>  <span class="cmt">// 报到了k，这个人出局</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">            <span class="fn">cnt</span><span class="op">++</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd">            <span class="kw">if</span> <span class="pnc">(</span><span class="fn">cnt</span> <span class="op">==</span> <span class="fn">k</span><span class="pnc">)</span>  <span class="cmt">// 报到了k，这个人出局</span></td></tr>
           <tr><td class="ln">14</td><td class="cd">            <span class="pnc">{</span></td></tr>
-          <tr class="hl"><td class="ln">15</td><td class="cd">                <span class="fn">eliminated</span><span class="pnc">[</span><span class="fn">pos</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">16</td><td class="cd">                <span class="fn">remaining</span><span class="op">--</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">17</td><td class="cd">                <span class="fn">count</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>  <span class="cmt">// 重新从0开始报数</span></td></tr>
+          <tr class="hl"><td class="ln">15</td><td class="cd">                <span class="fn">out</span><span class="pnc">[</span><span class="fn">pos</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">]</span> <span class="op">=</span> <span class="kw">true</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">                <span class="fn">left</span><span class="op">--</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd">                <span class="fn">cnt</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span>  <span class="cmt">// 重新从0开始报数</span></td></tr>
           <tr><td class="ln">18</td><td class="cd">            <span class="pnc">}</span></td></tr>
           <tr><td class="ln">19</td><td class="cd">        <span class="pnc">}</span></td></tr>
           <tr class="hl"><td class="ln">20</td><td class="cd">        <span class="fn">pos</span> <span class="op">=</span> <span class="pnc">(</span><span class="fn">pos</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">)</span> <span class="op">%</span> <span class="fn">n</span><span class="pnc">;</span>  <span class="cmt">// 移动到下一个位置，绕圈</span></td></tr>
@@ -167,7 +167,7 @@
           <tr><td class="ln">22</td><td class="cd"></td></tr>
           <tr><td class="ln">23</td><td class="cd">    <span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">1</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;=</span> <span class="fn">n</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">24</td><td class="cd">    <span class="pnc">{</span></td></tr>
-          <tr><td class="ln">25</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">eliminated</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span>  <span class="cmt">// 找到唯一没出局的人</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">        <span class="kw">if</span> <span class="pnc">(!</span><span class="fn">out</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">])</span>  <span class="cmt">// 找到唯一没出局的人</span></td></tr>
           <tr><td class="ln">26</td><td class="cd">        <span class="pnc">{</span></td></tr>
           <tr><td class="ln">27</td><td class="cd">            <span class="kw">return</span> <span class="fn">i</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">28</td><td class="cd">        <span class="pnc">}</span></td></tr>
@@ -180,7 +180,7 @@
 
     <div class="callout tip">
       <span class="callout-icon">📌</span>
-      <div>这段代码同时用到了三个前面学过的工具：<code>eliminated</code> 数组是 2.2 节的<strong>数组标记法</strong>（标记谁出局了）；<code>pos = (pos+1) % n</code> 是这一节刚学的<strong>取余绕圈</strong>；<code>if (!eliminated[...])</code> 加 <code>count++</code> 则是最朴素的<strong>条件判断和计数</strong>。模拟法经常就是这样——单独看每一部分都不难，难的是把它们正确地组合在一起，照着题目描述的顺序一步步实现。</div>
+      <div>这段代码同时用到了三个前面学过的工具：<code>out</code> 数组是 2.2 节的<strong>数组标记法</strong>（标记谁出局了）；<code>pos = (pos+1) % n</code> 是这一节刚学的<strong>取余绕圈</strong>；<code>if (!out[...])</code> 加 <code>cnt++</code> 则是最朴素的<strong>条件判断和计数</strong>。模拟法经常就是这样——单独看每一部分都不难，难的是把它们正确地组合在一起，照着题目描述的顺序一步步实现。</div>
     </div>
 
     <div class="num-visual">
@@ -236,7 +236,7 @@
         <div class="joseph-cell winner">3</div>
       </div>
 
-      <div class="num-visual-caption">淘汰顺序是 <strong>2 → 4 → 1 → 5</strong>，最后留下来的是 <strong>3 号</strong>。注意已经出局的人不会被重新数到——这正是代码里 <code>if (!eliminated[pos+1])</code> 这一层判断在做的事：跳过已经离场的人，只给还在场的人报数。</div>
+      <div class="num-visual-caption">淘汰顺序是 <strong>2 → 4 → 1 → 5</strong>，最后留下来的是 <strong>3 号</strong>。注意已经出局的人不会被重新数到——这正是代码里 <code>if (!out[pos+1])</code> 这一层判断在做的事：跳过已经离场的人，只给还在场的人报数。</div>
     </div>
 
     <div class="sub-title" id="summary">④ 完整代码与小结</div>
@@ -245,8 +245,8 @@
       <thead><tr><th>用到的工具</th><th>对应代码</th><th>来自哪一节</th></tr></thead>
       <tbody>
         <tr><td>循环绕圈</td><td>pos = (pos + 1) % n</td><td>2.3 节本节内容</td></tr>
-        <tr><td>状态标记</td><td>eliminated[i] = true</td><td>2.2 数组标记法</td></tr>
-        <tr><td>条件计数</td><td>count++; if (count == k)</td><td>第4、5章 分支与循环</td></tr>
+        <tr><td>状态标记</td><td>out[i] = true</td><td>2.2 数组标记法</td></tr>
+        <tr><td>条件计数</td><td>cnt++; if (cnt == k)</td><td>第4、5章 分支与循环</td></tr>
       </tbody>
     </table>
 
