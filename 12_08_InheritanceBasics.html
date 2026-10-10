@@ -86,7 +86,7 @@
           <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+          <a class="ch12-item" href="12_00_ClassesAndOOP.html">概述</a>
         </div>
       </div>
 
@@ -98,11 +98,11 @@
           <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
-          <a class="ch12-item" href="12_02_类的定义与对象.html">类的定义与对象</a>
-          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
-          <a class="ch12-item" href="12_04_构造与析构函数.html">构造与析构函数</a>
-          <a class="ch12-item" href="12_05_运算符重载.html">运算符重载</a>
+          <a class="ch12-item" href="12_01_FromStructToClass.html">从 struct 到 class</a>
+          <a class="ch12-item" href="12_02_ClassDefinitionAndObjects.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_EncapsulationAndAccessControl.html">封装与访问控制</a>
+          <a class="ch12-item" href="12_04_ConstructorsAndDestructors.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_05_OperatorOverloading.html">运算符重载</a>
         </div>
       </div>
 
@@ -113,11 +113,11 @@
           <span class="ch12-group-count">5</span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
-          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
-          <a class="ch12-item active" href="12_08_继承基础.html">继承基础</a>
-          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
-          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+          <a class="ch12-item" href="12_06_CopyConstructor.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_StaticMembers.html">静态成员 static</a>
+          <a class="ch12-item active" href="12_08_InheritanceBasics.html">继承基础</a>
+          <a class="ch12-item" href="12_09_VirtualFunctionsAndPolymorphism.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_AbstractClassesAndPureVirtualFunctions.html">抽象类与纯虚函数</a>
         </div>
       </div>
 
@@ -207,6 +207,7 @@
     <div class="sub-title" id="s2">12.8.2　继承的基本语法</div>
     <div class="section-body">
       <p>在类名后面加 <code>: public 父类名</code> 就完成了继承。<code>public</code> 是最常用的继承方式，表示父类的 public 成员在子类里仍然是 public 的。</p>
+      <p><code>public</code> 继承表达的是一种 <strong>"is-a"（是一种）关系</strong>：子类<strong>是一种</strong>父类，比如"战士是一种英雄""法师是一种英雄"——这正好符合下面例子里 <code>Warrior</code>、<code>Mage</code> 和 <code>Hero</code> 的关系，也是最贴近面向对象设计初衷的继承方式，这也是为什么它最常用。</p>
     </div>
 
     <div class="code-block">
@@ -392,7 +393,7 @@
     <!-- ── 12.8.6 继承与访问权限 ── -->
     <div class="sub-title" id="s6">12.8.6　继承与访问权限</div>
     <div class="section-body">
-      <p>继承时也有三种方式：<code>public</code>、<code>protected</code>、<code>private</code>。它们决定父类的成员在子类中变成什么权限。竞赛和日常开发中几乎只用 <code>public</code> 继承，另外两种了解即可。</p>
+      <p>继承时也有三种方式：<code>public</code>、<code>protected</code>、<code>private</code>。它们决定父类的成员在子类中变成什么权限。竞赛和日常开发中几乎只用 <code>public</code> 继承，另外两种了解即可——<code>private</code> 继承表达的不是"is-a"关系，而是"根据……实现"（子类借用父类的实现细节，但不承认自己是一种父类），属于比较少见的高阶用法。</p>
     </div>
 
     <table class="inherit-table">
@@ -437,8 +438,8 @@
   <footer class="doc-footer">
     <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.8 继承基础</p>
     <div class="chapter-nav">
-      <a class="nav-btn ghost" href="12_07_静态成员.html">← 12.7 静态成员 static</a>
-      <a class="nav-btn" href="12_09_虚函数与多态.html">12.9 虚函数与多态 →</a>
+      <a class="nav-btn ghost" href="12_07_StaticMembers.html">← 12.7 静态成员 static</a>
+      <a class="nav-btn" href="12_09_VirtualFunctionsAndPolymorphism.html">12.9 虚函数与多态 →</a>
     </div>
   </footer>
 

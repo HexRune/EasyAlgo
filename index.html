@@ -233,12 +233,13 @@
   }
   @media (max-width: 700px) { .ch6-flat-items { grid-template-columns: repeat(1, 1fr); } }
 
-  /* 第八章：3 个等大小卡片，不分组 */
+  /* 第八章：4 个等大小卡片，不分组 */
   .ch8-flat-items {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
     margin-bottom: 18px;
     --grp-color: var(--pink-dark); --grp-color-mid: var(--pink-mid); --grp-color-light: var(--pink-light);
   }
+  @media (max-width: 900px) { .ch8-flat-items { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 700px) { .ch8-flat-items { grid-template-columns: repeat(1, 1fr); } }
   .card-num {
     flex-shrink: 0;
@@ -782,7 +783,7 @@
           <div class="card-chapter">第八章</div>
           <span class="card-tag must">⭐ 必学</span>
           <div class="card-title">函数</div>
-          <div class="card-desc">定义与调用 · 参数详解 · 默认参数 · 函数重载 · 内联函数 —— 点击下方任意小节直达对应页面</div>
+          <div class="card-desc">定义与调用 · 参数详解 · 默认参数 · 函数重载 · 内联函数 · Lambda 表达式 —— 点击下方任意小节直达对应页面</div>
         </div>
         <span class="mega-collapse-badge"><span class="mcb-icon">⌄</span></span>
       </div>
@@ -793,6 +794,7 @@
           <a class="stl-item" href="08_01_FunctionBasics.html"><span class="si-name">8.1 函数基础</span><span class="si-desc">定义 · 调用 · 声明</span></a>
           <a class="stl-item" href="08_02_FunctionParametersDetailed.html"><span class="si-name">8.2 函数参数详解</span><span class="si-desc">值 / 引用 / 指针传递 · 默认参数</span></a>
           <a class="stl-item" href="08_03_FunctionOverloadingAndInline.html"><span class="si-name">8.3 函数重载与内联函数</span><span class="si-desc">重载匹配 · inline</span></a>
+          <a class="stl-item" href="08_04_LambdaExpressions.html"><span class="si-name">8.4 Lambda 表达式</span><span class="si-desc">匿名函数 · 捕获列表</span></a>
         </div>
 
       </div>

@@ -89,7 +89,7 @@
           <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+          <a class="ch12-item" href="12_00_ClassesAndOOP.html">概述</a>
         </div>
       </div>
 
@@ -101,11 +101,11 @@
           <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
-          <a class="ch12-item" href="12_02_类的定义与对象.html">类的定义与对象</a>
-          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
-          <a class="ch12-item" href="12_04_构造与析构函数.html">构造与析构函数</a>
-          <a class="ch12-item" href="12_05_运算符重载.html">运算符重载</a>
+          <a class="ch12-item" href="12_01_FromStructToClass.html">从 struct 到 class</a>
+          <a class="ch12-item" href="12_02_ClassDefinitionAndObjects.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_EncapsulationAndAccessControl.html">封装与访问控制</a>
+          <a class="ch12-item" href="12_04_ConstructorsAndDestructors.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_05_OperatorOverloading.html">运算符重载</a>
         </div>
       </div>
 
@@ -116,11 +116,11 @@
           <span class="ch12-group-count">5</span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item active" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
-          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
-          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
-          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
-          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+          <a class="ch12-item active" href="12_06_CopyConstructor.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_StaticMembers.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_InheritanceBasics.html">继承基础</a>
+          <a class="ch12-item" href="12_09_VirtualFunctionsAndPolymorphism.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_AbstractClassesAndPureVirtualFunctions.html">抽象类与纯虚函数</a>
         </div>
       </div>
 
@@ -371,6 +371,11 @@
       </div>
     </div>
 
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>第 13 行的 <code>copy(other.data, other.data + size, data)</code> 是标准库 <code>&lt;algorithm&gt;</code> 里的 <code>copy</code> 算法，作用是把 <code>[other.data, other.data + size)</code> 这段区间的元素逐个复制到 <code>data</code> 开头——等价于写一个 <code>for (int i = 0; i &lt; size; i++) data[i] = other.data[i];</code>，只是更简洁。</div>
+    </div>
+
     <div class="copy-compare">
       <div class="copy-col shallow">
         <div class="copy-col-head">❌ 浅拷贝（默认行为）</div>
@@ -437,6 +442,13 @@
       </div>
     </div>
 
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>第 14 行 <code>if (this == &amp;other)</code> 是在防什么？</b>考虑 <code>a = a;</code> 这种自己赋值给自己的写法（虽然平时很少直接这样写，但比如 <code>v[i] = v[j]</code> 恰好 i、j 相等时，本质就是自赋值）。如果没有这行检查，第 15 行会先 <code>delete[] data</code> 把自己的内存释放掉——而这块内存恰好也是第 18 行 <code>other.data</code> 要拷贝的来源，此时 <code>other</code> 就是 <code>a</code> 自己，源数据已经被释放，再去复制就是在读取一块已经无效的内存，行为未定义。加上这行检查，遇到自赋值直接原样返回，安全跳过后面的删除和拷贝。
+      </div>
+    </div>
+
     <div class="callout info">
       <span class="callout-icon">💡</span>
       <div>
@@ -450,7 +462,7 @@
 
     <div class="section-body">
       <p>道理很简单：写了析构函数说明类里有手动管理的资源，拷贝时和赋值时同样需要深度处理——三件事是配套的，缺任何一个都会埋下隐患。</p>
-      <p>C++11 之后还引入了移动语义，扩展为<strong>"五法则（Rule of Five）"</strong>，在三法则基础上再加上移动构造函数和移动赋值运算符。竞赛阶段了解三法则即可，五法则属于更高阶的工程实践。</p>
+      <p>C++11 之后还引入了移动语义，扩展为<strong>"五法则（Rule of Five）"</strong>，在三法则基础上再加上移动构造函数和移动赋值运算符。竞赛阶段了解三法则即可，五法则属于更高阶的工程实践。移动语义主要解决的是<strong>性能优化</strong>问题（避免不必要的深拷贝），在 CSP-J / NOIP 这类竞赛里，除非是在处理超大规模数据、深拷贝本身成了性能瓶颈，否则通常不需要自己动手实现移动构造和移动赋值。</p>
     </div>
 
     <div class="callout tip">
@@ -477,8 +489,8 @@
   <footer class="doc-footer">
     <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.6 拷贝构造函数</p>
     <div class="chapter-nav">
-      <a class="nav-btn ghost" href="12_05_运算符重载.html">← 12.5 运算符重载</a>
-      <a class="nav-btn" href="12_07_静态成员.html">12.7 静态成员 static →</a>
+      <a class="nav-btn ghost" href="12_05_OperatorOverloading.html">← 12.5 运算符重载</a>
+      <a class="nav-btn" href="12_07_StaticMembers.html">12.7 静态成员 static →</a>
     </div>
   </footer>
 

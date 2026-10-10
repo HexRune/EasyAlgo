@@ -131,7 +131,7 @@
           <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item" href="12_00_类与面向对象.html">概述</a>
+          <a class="ch12-item" href="12_00_ClassesAndOOP.html">概述</a>
         </div>
       </div>
 
@@ -142,11 +142,11 @@
           <span class="ch12-group-count">5</span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item" href="12_01_从struct到class.html">从 struct 到 class</a>
-          <a class="ch12-item" href="12_02_类的定义与对象.html">类的定义与对象</a>
-          <a class="ch12-item" href="12_03_封装与访问控制.html">封装与访问控制</a>
-          <a class="ch12-item active" href="12_04_构造与析构函数.html">构造与析构函数</a>
-          <a class="ch12-item" href="12_05_运算符重载.html">运算符重载</a>
+          <a class="ch12-item" href="12_01_FromStructToClass.html">从 struct 到 class</a>
+          <a class="ch12-item" href="12_02_ClassDefinitionAndObjects.html">类的定义与对象</a>
+          <a class="ch12-item" href="12_03_EncapsulationAndAccessControl.html">封装与访问控制</a>
+          <a class="ch12-item active" href="12_04_ConstructorsAndDestructors.html">构造与析构函数</a>
+          <a class="ch12-item" href="12_05_OperatorOverloading.html">运算符重载</a>
         </div>
       </div>
 
@@ -158,11 +158,11 @@
           <span class="ch12-expand-badge"><span class="eb-icon">+</span></span>
         </div>
         <div class="ch12-items">
-          <a class="ch12-item" href="12_06_拷贝构造函数.html">拷贝构造函数</a>
-          <a class="ch12-item" href="12_07_静态成员.html">静态成员 static</a>
-          <a class="ch12-item" href="12_08_继承基础.html">继承基础</a>
-          <a class="ch12-item" href="12_09_虚函数与多态.html">虚函数与多态</a>
-          <a class="ch12-item" href="12_10_抽象类与纯虚函数.html">抽象类与纯虚函数</a>
+          <a class="ch12-item" href="12_06_CopyConstructor.html">拷贝构造函数</a>
+          <a class="ch12-item" href="12_07_StaticMembers.html">静态成员 static</a>
+          <a class="ch12-item" href="12_08_InheritanceBasics.html">继承基础</a>
+          <a class="ch12-item" href="12_09_VirtualFunctionsAndPolymorphism.html">虚函数与多态</a>
+          <a class="ch12-item" href="12_10_AbstractClassesAndPureVirtualFunctions.html">抽象类与纯虚函数</a>
         </div>
       </div>
 
@@ -300,9 +300,23 @@
           <tr><td class="ln">15</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span>() {</td></tr>
           <tr><td class="ln">16</td><td class="cd">    <span class="typ">Student</span> s1;                       <span class="cmt">// 调用 ① → name="未知", score=0</span></td></tr>
           <tr><td class="ln">17</td><td class="cd">    <span class="typ">Student</span> s2(<span class="str">"Alice"</span>, <span class="num">95</span>);          <span class="cmt">// 调用 ② → name="Alice", score=95</span></td></tr>
-          <tr><td class="ln">18</td><td class="cd">    <span class="typ">Student</span> s3 = <span class="typ">Student</span>(<span class="str">"Bob"</span>, <span class="num">82</span>); <span class="cmt">// 与 s2 写法等价</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="typ">Student</span> s3 = <span class="typ">Student</span>(<span class="str">"Bob"</span>, <span class="num">82</span>); <span class="cmt">// 与 s2 效果相同（C++17 起保证不产生额外拷贝）</span></td></tr>
           <tr><td class="ln">19</td><td class="cd">}</td></tr>
         </table>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div>
+        <b>注意：定义了带参构造函数后，默认构造函数不会再自动生成。</b>12.4.2 节说"不写构造函数，C++ 会自动生成一个默认构造函数"，这句话只在<strong>一个构造函数都没写</strong>时成立。上面的例子里之所以 <code>Student s1;</code>（第 16 行）还能用，是因为①处<strong>手动写了</strong>一个无参构造函数——如果类里<strong>只有</strong>②这个带参构造函数、没有①，C++ 就不会再补一个无参版本，此时写 <code>Student s1;</code> 会直接编译报错。想同时支持 <code>Student s;</code> 和 <code>Student s("Alice", 95);</code> 两种写法，就得像上面这样把两个构造函数都手动写出来。
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div>
+        <b>竞赛中怎么选：</b><code>Student s2("Alice", 95);</code> 这种直接传参的写法最简洁、最常用；<code>Student s3 = Student("Bob", 82);</code> 效果完全一样，但多打了一遍类型名，日常写代码更推荐 <code>s2</code> 那种写法。
       </div>
     </div>
 
@@ -499,8 +513,8 @@
   <footer class="doc-footer">
     <p>C++ 编程语法 · 第十二章 · 类与面向对象 · 12.4 构造与析构函数</p>
     <div class="chapter-nav">
-      <a class="nav-btn ghost" href="12_03_封装与访问控制.html">← 12.3 封装与访问控制</a>
-      <a class="nav-btn" href="12_05_运算符重载.html">12.5 运算符重载 →</a>
+      <a class="nav-btn ghost" href="12_03_EncapsulationAndAccessControl.html">← 12.3 封装与访问控制</a>
+      <a class="nav-btn" href="12_05_OperatorOverloading.html">12.5 运算符重载 →</a>
     </div>
   </footer>
 

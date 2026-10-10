@@ -36,11 +36,11 @@
 
   /* 具名函数 vs lambda 对比 */
   .named-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
-  .nc-card { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); }
+  .nc-card { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column; }
   .nc-head { padding: 10px 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
   .nc-head.before { background: var(--coral-light); color: var(--coral); }
   .nc-head.after  { background: var(--teal-light); color: var(--teal); }
-  .nc-body { padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--code-bg); color: var(--code-text); line-height: 1.75; overflow-x: auto; }
+  .nc-body { flex: 1; padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--code-bg); color: var(--code-text); line-height: 1.75; overflow-x: auto; }
   @media (max-width: 700px) { .named-compare { grid-template-columns: 1fr; } }
 
   /* lambda 结构解剖可视化 */
@@ -69,15 +69,26 @@
 
   /* 值捕获 vs 引用捕获对比 */
   .cap-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
-  .cap-card { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); }
+  .cap-card { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column; }
   .cap-head { padding: 10px 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
   .cap-head.val { background: var(--blue-light); color: var(--blue); }
   .cap-head.ref { background: var(--pink-light); color: var(--pink-dark); }
-  .cap-body { padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--code-bg); color: var(--code-text); line-height: 1.85; }
+  .cap-body { flex: 1; padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--code-bg); color: var(--code-text); line-height: 1.85; }
   .cap-body .cs { color: #6C7086; }
   .cap-body .ch { color: var(--code-str); }
   .cap-foot { padding: 10px 14px; font-size: 12.5px; line-height: 1.6; color: var(--text-secondary); border-top: 1px solid var(--border); background: var(--surface); }
   @media (max-width: 700px) { .cap-compare { grid-template-columns: 1fr; } }
+
+  /* 组成部分表格（粉色系表头，覆盖公共 .comp-table 的深色表头） */
+  .comp-table.la-ref thead tr { background: var(--pink-light); }
+  .comp-table.la-ref th { color: var(--pink-dark); }
+  .comp-table.la-ref td:first-child { color: var(--pink-dark); font-family: 'JetBrains Mono', monospace; font-weight: 600; background: #FCF3F6; white-space: nowrap; }
+
+  /* "是否必须"徽章 */
+  .must-badge { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 4px; font-weight: 600; white-space: nowrap; }
+  .must { background: #EAF8F2; color: var(--teal); }
+  .opt  { background: #F1EFE8; color: var(--text-muted); }
+  .cond { background: var(--amber-light); color: var(--amber); }
 
   /* 捕获符号速查表覆盖（粉色系表头） */
   .comp-table.cap-ref thead tr { background: var(--pink-light); }
@@ -218,7 +229,7 @@ sort(v.begin(), v.end(),<br>
       </div>
     </div>
 
-    <table class="comp-table">
+    <table class="comp-table la-ref">
       <thead><tr><th>组成部分</th><th>说明</th><th>是否必须</th></tr></thead>
       <tbody>
         <tr><td>捕获列表 <code>[ ]</code></td><td>决定这个 lambda 能不能、以及怎样使用外部（lambda 所在函数里）的变量，详见 8.4.3</td><td><span class="must-badge must">✅ 必需</span>（不需要用外部变量时写 <code>[]</code>）</td></tr>
