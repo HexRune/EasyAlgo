@@ -61,17 +61,17 @@
 
   /* ── 本页专属样式 ── */
   .str-visual { background: var(--code-bg); border-radius: var(--r-md); padding: 20px 24px; margin: 20px 0; font-family: 'JetBrains Mono', monospace; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
-  .sv-title { font-size: 11px; color: #6C7086; margin-bottom: 14px; letter-spacing: .06em; display: flex; align-items: center; justify-content: space-between; }
+  .sv-title { font-size: 11px; color: #A6ADC8; margin-bottom: 14px; letter-spacing: .06em; display: flex; align-items: center; justify-content: space-between; }
   .sv-size-badge { font-size: 10.5px; color: var(--code-str); background: rgba(166,227,161,.12); border: 1px solid rgba(166,227,161,.3); border-radius: 999px; padding: 2px 9px; }
   .sv-row { display: flex; gap: 4px; align-items: flex-start; }
   .sv-cell { display: flex; flex-direction: column; align-items: center; min-width: 38px; }
   .sv-char { width: 38px; height: 38px; border-radius: 6px; background: rgba(166,227,161,.15); border: 2px solid rgba(166,227,161,.5); color: var(--code-str); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; }
-  .sv-idx { font-size: 10.5px; color: #6C7086; margin-top: 5px; }
+  .sv-idx { font-size: 10.5px; color: #A6ADC8; margin-top: 5px; }
   /* \0 哨兵：不是字符串内容的一部分，视觉上明显弱化并拉开间距 */
   .sv-gap { width: 14px; flex-shrink: 0; position: relative; }
-  .sv-gap::after { content: '⋯'; position: absolute; top: 9px; left: 0; color: #45475A; font-size: 13px; }
-  .sv-char.end { width: 30px; height: 30px; margin-top: 4px; background: transparent; border: 1.5px dashed #3A3850; color: #6C7086; font-size: 10px; }
-  .sv-idx.end-idx { color: #45475A; }
+  .sv-gap::after { content: '⋯'; position: absolute; top: 9px; left: 0; color: #7F849C; font-size: 13px; }
+  .sv-char.end { width: 30px; height: 30px; margin-top: 4px; background: transparent; border: 1.5px dashed #3A3850; color: #A6ADC8; font-size: 10px; }
+  .sv-idx.end-idx { color: #7F849C; }
   .sv-caption { font-size: 12px; color: #A6ADC8; margin-top: 14px; line-height: 1.8; border-top: 1px solid #2A2840; padding-top: 12px; font-family: 'Noto Sans SC', sans-serif; }
   .sv-caption code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: #CBA6F7; background: none; border: none; padding: 0; }
   .sv-caption strong { color: #F2CDCD; font-weight: 700; }
@@ -84,6 +84,11 @@
   .api-table tr:nth-child(even) td { background: #FAFAF7; }
   .api-table tr:nth-child(even) td:first-child { background: #EEEDFE; }
   .api-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--accent-dark); background: var(--accent-light); white-space: nowrap; }
+  .sv-char.hit  { background: rgba(249,226,175,.16); border-color: rgba(249,226,175,.75); color: #F9E2AF; }
+  .sv-char.new  { background: rgba(137,180,250,.16); border-color: rgba(137,180,250,.75); color: #89B4FA; }
+  .sv-char.gone { background: rgba(243,139,168,.10); border: 2px dashed rgba(243,139,168,.65); color: #F38BA8; }
+  .sv-rowlabel { font-family: 'Noto Sans SC', sans-serif; font-size: 11.5px; color: #A6ADC8; margin: 14px 0 6px; }
+  .sv-rowlabel:first-of-type { margin-top: 0; }
 </style>
 </head>
 <body>
@@ -197,264 +202,955 @@
   <div class="toc">
     <div class="toc-title">本页目录</div>
     <ul class="toc-list">
-      <li><span class="toc-num">11.1.1</span><a href="#s1">定义与初始化</a></li>
-      <li><span class="toc-num">11.1.2</span><a href="#s2">输入与输出</a></li>
-      <li><span class="toc-num">11.1.3</span><a href="#s3">常用操作</a></li>
+      <li><span class="toc-num">11.1.1</span><a href="#s1">string 是什么</a></li>
+      <li><span class="toc-num">11.1.2</span><a href="#s2">定义与初始化</a></li>
+      <li><span class="toc-num">11.1.3</span><a href="#s3">拼接与比较</a></li>
+      <li><span class="toc-num">11.1.4</span><a href="#s4">输入与输出</a></li>
+      <li><span class="toc-num">11.1.5</span><a href="#s5">访问字符</a></li>
+      <li><span class="toc-num">11.1.6</span><a href="#s6">字符串与数字互转</a></li>
+      <li><span class="toc-num">11.1.7</span><a href="#s7">子串操作</a></li>
+      <li><span class="toc-num">11.1.8</span><a href="#s8">排序与反转</a></li>
+      <li><span class="toc-num">11.1.9</span><a href="#s9">迭代器遍历</a></li>
     </ul>
   </div>
 
   <!-- ═══ 正文 ═══ -->
   <section class="section" id="s0">
     <div class="section-body">
-      <p>C++ 标准库提供了 <code>string</code> 类型，专门用来处理文字信息。它比 C 风格的字符数组（比如 <code>char s[100]</code>）更安全、更灵活，是处理字符串的首选工具。使用前需引入 <code>&lt;string&gt;</code> 头文件。</p>
+      <p>C++ 标准库提供了 <code>string</code> 类型，专门用来处理文字信息。你可以把它想象成一条<strong>可以自动变长的纸带</strong>：纸带上一格放一个字符，你往后面接多少字，它就自己变长多少，不用你操心“够不够放”。使用前需引入 <code>&lt;string&gt;</code> 头文件（如果你用的是万能头文件 <code>&lt;bits/stdc++.h&gt;</code>，就不用再单独写了）。</p>
     </div>
-
-    <div class="sub-title" id="s1">11.1.1　定义与初始化</div>
+    <div class="sub-title" id="s1">11.1.1　string 是什么</div>
+    <div class="section-body">
+      <p>先分清两个容易混的东西：<strong>char</strong> 只能放<strong>一个</strong>字符，用<strong>单引号</strong>，比如 <code>'A'</code>；<strong>string</strong> 可以放<strong>一串</strong>字符，用<strong>双引号</strong>，比如 <code>"Hello"</code>。</p>
+    </div>
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>单引号和双引号不能混用：</b><code>char c = 'A';</code> 是对的，<code>char c = "A";</code> 是错的（<code>"A"</code> 是一个字符串，只是恰好只有一个字符）。这是新手最常见的编译错误之一。</div>
+    </div>
+    <div class="section-body">
+      <p>在 <code>string</code> 出现之前，C 语言里用字符数组 <code>char s[100]</code> 来存文字，要自己操心数组够不够大、结尾有没有 <code>\0</code>、拼接要调用 <code>strcat</code>……很容易出错。<code>string</code> 把这些麻烦事都包办了：</p>
+    </div>
+    <table class="api-table">
+      <thead><tr><th>对比项</th><th>char 数组</th><th>string</th></tr></thead>
+      <tbody>
+        <tr><td>内存管理</td><td>手动管理，容易越界、容易出错</td><td>自动管理，长度自动伸缩</td></tr>
+        <tr><td>拼接</td><td><code>strcat()</code> 函数</td><td><code>+</code> 或 <code>+=</code> 运算符</td></tr>
+        <tr><td>比较</td><td><code>strcmp()</code> 函数</td><td><code>==</code>、<code>!=</code>、<code>&lt;</code>、<code>&gt;</code> 运算符</td></tr>
+        <tr><td>获取长度</td><td><code>strlen()</code> 函数</td><td><code>.size()</code> 或 <code>.length()</code></td></tr>
+        <tr><td>越界保护</td><td>没有保护，容易崩溃</td><td><code>.at()</code> 有越界检查</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>一句话记住：</b>用 <code>string</code> 写字符串，就像用 <code>+</code> 加数字、用 <code>==</code> 比数字一样自然。所以在竞赛和日常练习中，处理文字请优先使用 <code>string</code>。</div>
+    </div>
+    <div class="sub-title" id="s2">11.1.2　定义与初始化</div>
+    <div class="section-body">
+      <p>下面这个完整的小程序展示了 <code>string</code> 的几种“出生方式”。后面的代码片段为了节省篇幅，都省略了 <code>#include</code> 和 <code>main()</code>，你把它们放进自己的 <code>main()</code> 里就能运行。</p>
+    </div>
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · string 的几种初始化方式</span></div>
       <div class="code-body">
         <table class="code-table">
           <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;string&gt;</span><span class="pnc"></span> <span class="cmt">// 必须包含这个头文件</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;string&gt;</span> <span class="cmt">// 必须包含这个头文件</span></td></tr>
           <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">4</td><td class="cd"></td></tr>
-          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">()</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">(</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr><td class="ln">7</td><td class="cd">    <span class="fn">string</span> <span class="fn">s1</span><span class="pnc">;</span>                  <span class="cmt">// 空字符串</span></td></tr>
-          <tr><td class="ln">8</td><td class="cd">    <span class="fn">string</span> <span class="fn">s2</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="pnc">;</span>      <span class="cmt">// 从 C 风格字符串初始化</span></td></tr>
-          <tr><td class="ln">9</td><td class="cd">    <span class="fn">string</span> <span class="fn">s3</span><span class="pnc">(</span><span class="fn">s2</span><span class="pnc">);</span>             <span class="cmt">// 拷贝构造</span></td></tr>
-          <tr><td class="ln">10</td><td class="cd">    <span class="fn">string</span> <span class="fn">s4</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">,</span> <span class="str">'a'</span><span class="pnc">);</span>          <span class="cmt">// "aaaaa"——5 个字符 'a'</span></td></tr>
-          <tr><td class="ln">11</td><td class="cd">    <span class="fn">string</span> <span class="fn">s5</span> <span class="op">=</span> <span class="str">"Hello"s</span><span class="pnc">;</span>       <span class="cmt">// （C++14 起）字面量语法，需 using namespace std::string_literals;</span></td></tr>
-          <tr><td class="ln">12</td><td class="cd"></td></tr>
-          <tr><td class="ln">13</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">14</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="typ">string</span> <span class="fn">s1</span><span class="pnc">;</span>                  <span class="cmt">// 空字符串，长度为 0</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="typ">string</span> <span class="fn">s2</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="pnc">;</span>        <span class="cmt">// 从 C 风格字符串初始化</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd">    <span class="typ">string</span> <span class="fn">s3</span><span class="pnc">(</span><span class="str">"World"</span><span class="pnc">)</span><span class="pnc">;</span>         <span class="cmt">// 另一种写法，效果和上一行一样</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="typ">string</span> <span class="fn">s4</span><span class="pnc">(</span><span class="fn">s2</span><span class="pnc">)</span><span class="pnc">;</span>              <span class="cmt">// 拷贝：s4 得到 "Hello"</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="typ">string</span> <span class="fn">s5</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">,</span> <span class="str">'a'</span><span class="pnc">)</span><span class="pnc">;</span>          <span class="cmt">// "aaaaa"——5 个字符 'a'</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="typ">string</span> <span class="fn">s6</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="fn">s</span><span class="pnc">;</span>       <span class="cmt">// （C++14 起）字面量写法，加 s 后缀表示这是 string</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="fn">s1</span> <span class="op">=</span> <span class="str">"C++"</span><span class="pnc">;</span>                 <span class="cmt">// 声明之后，随时可以用 = 重新赋值</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s1</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>         <span class="cmt">// 输出：C++</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
       </div>
     </div>
-
     <div class="callout warn">
       <span class="callout-icon">⚠️</span>
-      <div>
-        <b>注意：</b><br>
-        · 未初始化的 <code>string</code> 默认为空字符串（长度为 0），不会像字符数组那样出现乱码。<br>
-        · 虽然 <code>string</code> 支持通过下标 <code>[]</code> 访问字符，但<strong>不能给还不存在的位置赋值</strong>。<br>
-        · <code>"Hello"s</code> 这种带 <code>s</code> 后缀的写法是 C++14 才引入的语法，需要额外写 <code>using namespace std::string_literals;</code> 才能用。如果不确定自己的编译器是否支持，可以暂时忽略这种写法——前面几种初始化方式已经完全够日常使用了。
+      <div><b>注意：</b><br>
+        · 没有初始化的 <code>string</code> 默认是空字符串（长度为 0），不会像字符数组那样出现乱码。<br>
+        · 虽然 <code>string</code> 支持通过下标 <code>[]</code> 访问字符，但<strong>不能给还不存在的位置赋值</strong>：空字符串 <code>s1[0] = 'a';</code> 是错误的。想加字符请用 <code>+=</code>（见 11.1.3）。<br>
+        · <code>"Hello"s</code> 这种带 <code>s</code> 后缀的写法是 C++14 才引入的语法，需要编译器支持 C++14 或更高标准（并且写了 <code>using namespace std;</code>）才能用。如果不确定自己的编译器是否支持，可以暂时忽略这种写法——前面几种初始化方式已经完全够日常使用了。</div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>📏 长度、判空与清空</strong></p>
+    <div class="section-body">
+      <p>用 <code>.size()</code> 或 <code>.length()</code> 可以得到字符串里字符的个数，两者功能<strong>完全相同</strong>，用哪个都行。另外还有两个很常用的小工具：<code>.empty()</code> 判断是不是空字符串，<code>.clear()</code> 把字符串清空。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · size / length / empty / clear / swap</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>     <span class="cmt">// 输出：5</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">length</span><span class="pnc">(</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>   <span class="cmt">// 输出：5，和 size() 完全一样</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">string</span> <span class="fn">t</span><span class="pnc">;</span>                      <span class="cmt">// 空字符串</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">t</span><span class="pnc">.</span><span class="fn">empty</span><span class="pnc">(</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>    <span class="cmt">// 输出：1（true），说明 t 是空的</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">clear</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">;</span>                     <span class="cmt">// 清空 s</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>     <span class="cmt">// 输出：0</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">string</span> <span class="fn">a</span> <span class="op">=</span> <span class="str">"left"</span><span class="pnc">,</span> <span class="fn">b</span> <span class="op">=</span> <span class="str">"right"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="fn">a</span><span class="pnc">.</span><span class="fn">swap</span><span class="pnc">(</span><span class="fn">b</span><span class="pnc">)</span><span class="pnc">;</span>                     <span class="cmt">// 交换两个字符串的全部内容（速度极快）</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">a</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span> <span class="op">&lt;&lt;</span> <span class="fn">b</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span> <span class="cmt">// 输出：right left</span></td></tr>
+        </table>
       </div>
     </div>
-
-    <div class="sub-title" id="s2">11.1.2　输入与输出</div>
-    <div class="section-body">
-      <p>读字符串有两种常见方式：只要一个单词用 <code>cin &gt;&gt;</code>，要一整行（包括空格）用 <code>getline()</code>。两者混用时有一个经典的坑，一定要小心。</p>
+    <div class="callout danger">
+      <span class="callout-icon">🚫</span>
+      <div><b>坑 1：<code>size()</code> 返回的是“无符号整数”。</b><code>s.size()</code> 的类型是 <code>size_t</code>（无符号整数）。如果 <code>s</code> 是空字符串，<code>s.size() - 1</code> 不会得到 <code>-1</code>，而是变成一个<strong>超级大的数</strong>（约 1.8×10<sup>19</sup>），用在循环里会直接越界崩溃。<br>
+        所以在需要做减法或和 <code>int</code> 比较时，先把它转成 <code>int</code>：<code>int n = (int)s.size();</code>，这样 <code>n - 1</code> 就能正常得到 <code>-1</code> 了。</div>
     </div>
-
+    <div class="callout danger">
+      <span class="callout-icon">🚫</span>
+      <div><b>坑 2：中文字符不是“一个字符”。</b>一个汉字在 <code>string</code> 里占好几个字节：在 UTF-8 编码下占 <strong>3</strong> 个，在 GBK 编码下占 <strong>2</strong> 个。所以 <code>string s = "你好";</code> 的 <code>s.size()</code> 是 <code>6</code>（UTF-8）或 <code>4</code>（GBK），不是 2。<br>
+        <code>size()</code> 数的是<strong>字节</strong>，不是“字”。对中文字符串用 <code>s[i]</code> 逐个访问会把一个汉字拆成碎片。竞赛题里的字符串基本都是英文字母和数字，一般不会遇到这个问题；但自己写带中文的程序时要记得这一点。</div>
+    </div>
+    <div class="sub-title" id="s3">11.1.3　拼接与比较</div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:8px 0 10px;"><strong>🔗 拼接：+ 和 +=</strong></p>
+    <div class="section-body">
+      <p><code>string</code> 最方便的地方，就是可以像加数字一样“加”字符串：<code>+</code> 把两个字符串连成一个<strong>新的</strong>字符串；<code>+=</code> 直接在原字符串<strong>末尾追加</strong>内容。追加单个字符也一样可以用 <code>+=</code>。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 字符串的拼接</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s1</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">string</span> <span class="fn">s2</span> <span class="op">=</span> <span class="str">" World"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">string</span> <span class="fn">s3</span> <span class="op">=</span> <span class="fn">s1</span> <span class="op">+</span> <span class="fn">s2</span><span class="pnc">;</span>           <span class="cmt">// 用 + 拼接，得到新字符串</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s3</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>           <span class="cmt">// 输出：Hello World</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">string</span> <span class="fn">s4</span> <span class="op">=</span> <span class="str">"C++"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">s4</span> <span class="op">+=</span> <span class="str">" Fun"</span><span class="pnc">;</span>                  <span class="cmt">// 用 += 在 s4 末尾追加</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s4</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>           <span class="cmt">// 输出：C++ Fun</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">string</span> <span class="fn">s5</span> <span class="op">=</span> <span class="str">"ABC"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="fn">s5</span> <span class="op">+=</span> <span class="str">'D'</span><span class="pnc">;</span>                     <span class="cmt">// 追加单个字符</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s5</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>           <span class="cmt">// 输出：ABCD</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="cmt">// 连续拼接：从左到右一个一个算</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="typ">string</span> <span class="fn">s6</span> <span class="op">=</span> <span class="str">"I"</span> <span class="op">+</span> <span class="typ">string</span><span class="pnc">(</span><span class="str">" love "</span><span class="pnc">)</span> <span class="op">+</span> <span class="typ">string</span><span class="pnc">(</span><span class="str">"C++"</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s6</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>           <span class="cmt">// 输出：I love C++</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="callout danger">
+      <span class="callout-icon">🚫</span>
+      <div><b>两个“双引号字符串”不能直接相加！</b><code>"Hello" + " World"</code> 会编译报错，因为 <code>"Hello"</code> 和 <code>" World"</code> 都只是“C 风格字符串”，不是 <code>string</code>，不能用 <code>+</code>。<br>
+        只要加法的<strong>两边至少有一边是 <code>string</code></strong> 就可以了：<code>s1 + " World"</code> 没问题；或者像上面那样，用 <code>string("...")</code> 把其中一个“变身”成 <code>string</code>。注意 <code>+</code> 是从左往右算的，所以 <code>"I" + string(" love ")</code> 先算，结果是 <code>string</code>，后面的 <code>+</code> 就都没问题了。</div>
+    </div>
+    <div class="section-body">
+      <p>除了 <code>+=</code>，还有两个等价的“追加”工具：<code>s.append(t)</code> 在末尾追加字符串，<code>s.push_back(c)</code> 在末尾追加<strong>一个字符</strong>；反过来，<code>s.pop_back()</code> 删掉最后一个字符。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · append / push_back / pop_back</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">append</span><span class="pnc">(</span><span class="str">" World"</span><span class="pnc">)</span><span class="pnc">;</span>     <span class="cmt">// "Hello World"——在末尾追加字符串</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="str">'!'</span><span class="pnc">)</span><span class="pnc">;</span>       <span class="cmt">// "Hello World!"——在末尾追加一个字符</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">pop_back</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">;</span>           <span class="cmt">// "Hello World"——删除最后一个字符</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>⚖️ 比较：== != < ></strong></p>
+    <div class="section-body">
+      <p><code>string</code> 可以直接用比较运算符：<code>==</code> 判断两个字符串是不是<strong>完全一样</strong>，<code>!=</code> 判断是不是不一样；<code>&lt;</code>、<code>&gt;</code>、<code>&lt;=</code>、<code>&gt;=</code> 则按<strong>字典序</strong>比较大小——就像查英语词典：先比第一个字母，谁的字母排在前面谁就“更小”；第一个字母一样，再比第二个……</p>
+    </div>
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div>'<b>字符串比较的规则（字典序）：</b><br>
+        ① 从<strong>第一个字符</strong>开始，<strong>逐个字符</strong>比较它们的数值（也就是 <code>char</code> 的整数值，通常是 ASCII 码）。<br>
+        ② 遇到<strong>第一个不相等</strong>的字符时，这个字符<strong>较小</strong>的那个字符串就更小，后面的字符不用再看。<br>
+        ③ 如果一直比到其中一个字符串结束，前面的字符都相等，那么<strong>较短</strong>的字符串更小（相当于短的那个是长的那个的“前缀”）。<br>
+        ④ 如果两个字符串长度一样，而且每个字符都相等，那么它们<strong>相等</strong>（<code>==</code> 为 <code>true</code>）。</div>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 相等与字典序比较</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">boolalpha</span><span class="pnc">;</span>   <span class="cmt">// 让 true / false 显示成英文单词，而不是 1 / 0</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">string</span> <span class="fn">s1</span> <span class="op">=</span> <span class="str">"apple"</span><span class="pnc">,</span> <span class="fn">s2</span> <span class="op">=</span> <span class="str">"apple"</span><span class="pnc">,</span> <span class="fn">s3</span> <span class="op">=</span> <span class="str">"banana"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">s1</span> <span class="op">==</span> <span class="fn">s2</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>   <span class="cmt">// 输出：true，内容完全一样</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">s1</span> <span class="op">!=</span> <span class="fn">s3</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>   <span class="cmt">// 输出：true，内容不一样</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">s1</span> <span class="op">&lt;</span> <span class="fn">s3</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>    <span class="cmt">// 输出：true，因为 'a' &lt; 'b'</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">s3</span> <span class="op">&gt;</span> <span class="fn">s1</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>    <span class="cmt">// 输出：true</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 一方是另一方的前缀时，更短的更小</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">string</span> <span class="fn">s4</span> <span class="op">=</span> <span class="str">"abc"</span><span class="pnc">,</span> <span class="fn">s5</span> <span class="op">=</span> <span class="str">"abcd"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">s4</span> <span class="op">&lt;</span> <span class="fn">s5</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>    <span class="cmt">// 输出：true</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="str-visual">
+      <div class="sv-title"><span>字典序比较 "apple" 和 "apricot"</span><span class="sv-size-badge">比到下标 2 就能分出胜负</span></div>
+      <div class="sv-rowlabel">"apple"</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">a</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">p</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char hit">p</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char">l</div><div class="sv-idx">[3]</div></div><div class="sv-cell"><div class="sv-char">e</div><div class="sv-idx">[4]</div></div></div>
+      <div class="sv-rowlabel">"apricot"</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">a</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">p</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char hit">r</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char">i</div><div class="sv-idx">[3]</div></div><div class="sv-cell"><div class="sv-char">c</div><div class="sv-idx">[4]</div></div><div class="sv-cell"><div class="sv-char">o</div><div class="sv-idx">[5]</div></div><div class="sv-cell"><div class="sv-char">t</div><div class="sv-idx">[6]</div></div></div>
+      <div class="sv-caption">从左到右逐个字符比：下标 <code>[0]</code> 都是 <code>a</code>，<code>[1]</code> 都是 <code>p</code>，到了 <code>[2]</code>，<code>p</code>（ASCII 112）和 <code>r</code>（ASCII 114）不一样，<code>p</code> 更小，所以 <strong><code>"apple" &lt; "apricot"</code></strong>。<strong>只要找到第一个不同的字符，就立刻决出胜负</strong>，后面的字符不用再看了（对应规则 ②）。</div>
+    </div>
+    <div class="str-visual">
+      <div class="sv-title"><span>前缀的情况：比较 "abc" 和 "abcd"</span><span class="sv-size-badge">短的先结束就更小</span></div>
+      <div class="sv-rowlabel">"abc"</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">a</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">b</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char">c</div><div class="sv-idx">[2]</div></div></div>
+      <div class="sv-rowlabel">"abcd"</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">a</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">b</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char">c</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char hit">d</div><div class="sv-idx">[3]</div></div></div>
+      <div class="sv-caption">前 3 个字符 <code>a</code>、<code>b</code>、<code>c</code> 完全相同，但 <code>"abc"</code> 到这里就<strong>结束</strong>了，而 <code>"abcd"</code> 还多出一个 <code>d</code>。没有哪个字符更大，只能比长度：<strong>较短的更小</strong>，所以 <strong><code>"abc" &lt; "abcd"</code></strong>（对应规则 ③）。</div>
+    </div>
+    <div class="section-body">
+      <p>“谁的字符更小”看的是字符的 ASCII 码。你只需要记住下面这条大小规律：</p>
+    </div>
+    <table class="api-table">
+      <thead><tr><th>字符类型</th><th>范围</th><th>ASCII 码</th></tr></thead>
+      <tbody>
+        <tr><td>数字字符</td><td><code>'0'</code> ~ <code>'9'</code></td><td>48 ~ 57</td></tr>
+        <tr><td>大写字母</td><td><code>'A'</code> ~ <code>'Z'</code></td><td>65 ~ 90</td></tr>
+        <tr><td>小写字母</td><td><code>'a'</code> ~ <code>'z'</code></td><td>97 ~ 122</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip">
+      <span class="callout-icon">📐</span>
+      <div><b>大小规律：</b>数字 &lt; 大写字母 &lt; 小写字母。所以 <code>"Zebra" &lt; "apple"</code> 是 <code>true</code>——大写 <code>Z</code>（90）比小写 <code>a</code>（97）还小。如果想“不区分大小写”地比较，需要先把两个字符串都转成小写（或都转成大写）再比。</div>
+    </div>
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>数字字符串也是按字典序比的：</b><code>"10" &lt; "9"</code> 结果是 <code>true</code>！因为比的是第一个字符：<code>'1'</code>（49）小于 <code>'9'</code>（57），根本不会去看后面的 <code>0</code>。如果要比较数字的大小，需要先用 <code>stoi</code> 转成整数（见 11.1.6）再比。</div>
+    </div>
+    <div class="sub-title" id="s4">11.1.4　输入与输出</div>
+    <div class="section-body">
+      <p>输出很简单：<code>cout &lt;&lt; s;</code> 就能把字符串完整输出。读入字符串有两种常见方式：只要<strong>一个单词</strong>用 <code>cin &gt;&gt;</code>，要<strong>一整行</strong>（包括空格）用 <code>getline()</code>。两者混用时有一个经典的坑，一定要小心。</p>
+    </div>
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · cin 与 getline 的区别</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="fn">string</span> <span class="fn">word</span><span class="pnc">,</span> <span class="fn">line</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">word</span><span class="pnc">,</span> <span class="fn">line</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"></td></tr>
-          <tr><td class="ln">3</td><td class="cd"><span class="cmt">// 情况一：读一个单词（遇到空格就停）</span></td></tr>
-          <tr><td class="ln">4</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">word</span><span class="pnc">;</span>     <span class="cmt">// 输入 "Hello World" → word 得到 "Hello"</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="cmt">// 情况一：读一个单词（遇到空格、Tab 或换行就停）</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">word</span><span class="pnc">;</span>         <span class="cmt">// 输入 "Hello World" → word 得到 "Hello"</span></td></tr>
           <tr><td class="ln">5</td><td class="cd"></td></tr>
-          <tr><td class="ln">6</td><td class="cd"><span class="cmt">// 情况二：读一整行（包括空格）</span></td></tr>
-          <tr><td class="ln">7</td><td class="cd"><span class="fn">getline</span><span class="pnc">(</span><span class="fn">cin</span><span class="pnc">,</span> <span class="fn">line</span><span class="pnc">);</span>  <span class="cmt">// 输入 "Hello World" → line 得到 "Hello World"</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="cmt">// 情况二：读一整行（包括空格，直到换行）</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">getline</span><span class="pnc">(</span><span class="fn">cin</span><span class="pnc">,</span> <span class="fn">line</span><span class="pnc">)</span><span class="pnc">;</span>  <span class="cmt">// 输入 "Hello World" → line 得到 "Hello World"</span></td></tr>
           <tr><td class="ln">8</td><td class="cd"></td></tr>
           <tr class="hl-warn"><td class="ln">9</td><td class="cd"><span class="cmt">// ⚠️ 混用时的大坑！</span></td></tr>
           <tr class="hl-warn"><td class="ln">10</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span><span class="pnc">;</span></td></tr>
           <tr class="hl-warn"><td class="ln">11</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">n</span><span class="pnc">;</span>            <span class="cmt">// 输入 "42\n"，读到 42，但缓冲区还剩一个 '\n'</span></td></tr>
-          <tr class="hl"><td class="ln">12</td><td class="cd"><span class="fn">cin</span><span class="pnc">.</span><span class="fn">ignore</span><span class="pnc">();</span>      <span class="cmt">// 🔑 把残留的换行符清掉</span></td></tr>
-          <tr><td class="ln">13</td><td class="cd"><span class="fn">getline</span><span class="pnc">(</span><span class="fn">cin</span><span class="pnc">,</span> <span class="fn">line</span><span class="pnc">);</span>  <span class="cmt">// 现在才能正常读下一行</span></td></tr>
+          <tr class="hl-warn"><td class="ln">12</td><td class="cd"><span class="fn">cin</span><span class="pnc">.</span><span class="fn">ignore</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">;</span>        <span class="cmt">// 🔑 把残留的换行符清掉</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="fn">getline</span><span class="pnc">(</span><span class="fn">cin</span><span class="pnc">,</span> <span class="fn">line</span><span class="pnc">)</span><span class="pnc">;</span>  <span class="cmt">// 现在才能正常读下一行</span></td></tr>
         </table>
       </div>
     </div>
-
     <div class="callout info">
       <span class="callout-icon">📖</span>
-      <div>
-        <b>为什么混用会出问题？</b><br>
-        <code>cin &gt;&gt; n</code> 读取完数字后，你按下的回车键（<code>\n</code>）会残留在输入缓冲区里。紧接着 <code>getline</code> 一上来就看到了这个换行符，以为"哦，这行结束了"，于是直接返回一个空字符串——看起来就像程序"跳过"了输入。<br><br>
-        <b>解决办法：</b>在 <code>cin</code> 之后、<code>getline</code> 之前，加一句 <code>cin.ignore()</code>，把残留的换行符清掉即可。
-      </div>
+      <div><b>为什么混用会出问题？</b><br>
+        <code>cin &gt;&gt; n</code> 读取完数字后，你按下的回车键（<code>\n</code>）会残留在输入缓冲区里。紧接着 <code>getline</code> 一上来就看到了这个换行符，以为“哦，这行结束了”，于是直接返回一个空字符串——看起来就像程序“跳过”了输入。<br><br>
+        <b>解决办法：</b>在 <code>cin</code> 之后、<code>getline</code> 之前，加一句 <code>cin.ignore()</code>，把残留的换行符清掉即可。</div>
     </div>
-
     <div class="callout tip">
       <span class="callout-icon">💡</span>
-      <div>
-        <b>选择指南：</b><br>
+      <div><b>选择指南：</b><br>
         · 只读单个单词（无空格）→ <code>cin &gt;&gt; str;</code><br>
         · 需要读含空格的整行 → <code>getline(cin, str);</code><br>
-        · 混用 <code>cin</code> 和 <code>getline</code> 时，务必用 <code>cin.ignore()</code> 清理换行符
-      </div>
+        · 混用 <code>cin</code> 和 <code>getline</code> 时，务必先清理残留的换行符：用 <code>cin.ignore()</code>，或者多读一次 <code>getline</code>（见下面）</div>
     </div>
-
-    <div class="sub-title" id="s3">11.1.3　常用操作</div>
-
-    <p style="font-size:14.5px;color:var(--text-secondary);margin-bottom:10px;"><strong>🔗 拼接与比较</strong>　<code>string</code> 支持用 <code>+</code> 和 <code>+=</code> 进行拼接，也支持直接用比较运算符进行字典序比较。</p>
-
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>🧹 另一种清理办法：多读一次 getline</strong></p>
+    <div class="section-body">
+      <p>如果数字后面不小心多打了空格，<code>cin.ignore()</code> 只能丢掉<strong>一个</strong>字符，清不干净。还有一个更省心的办法：把残留的内容也当成“一行”，<strong>多调用一次 <code>getline</code> 把它读走、扔掉</strong>。比如输入是这样两行（第一行 <code>42</code> 后面多打了两个空格）：</p>
+    </div>
     <div class="code-block">
-      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 拼接与字典序比较</span></div>
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 用 getline 清理多余的空格和换行符</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="fn">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="fn">s</span> <span class="op">=</span> <span class="fn">s</span> <span class="op">+</span> <span class="str">" World"</span><span class="pnc">;</span>   <span class="cmt">// "Hello World"</span></td></tr>
-          <tr><td class="ln">3</td><td class="cd"><span class="fn">s</span> <span class="op">+=</span> <span class="str">"!"</span><span class="pnc">;</span>           <span class="cmt">// "Hello World!"</span></td></tr>
-          <tr><td class="ln">4</td><td class="cd"></td></tr>
-          <tr><td class="ln">5</td><td class="cd"><span class="cmt">// 字典序比较：从左到右逐字符比较 ASCII 码</span></td></tr>
-          <tr><td class="ln">6</td><td class="cd"><span class="fn">string</span> <span class="fn">a</span> <span class="op">=</span> <span class="str">"abc"</span><span class="pnc">,</span> <span class="fn">b</span> <span class="op">=</span> <span class="str">"abd"</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">&lt;</span> <span class="fn">b</span><span class="pnc">);</span>  <span class="cmt">// 1 (true)，因为 'c' &lt; 'd'</span></td></tr>
-          <tr><td class="ln">8</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">a</span> <span class="op">==</span> <span class="fn">b</span><span class="pnc">);</span> <span class="cmt">// 0 (false)</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 输入的两行内容：</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="cmt">//   第 1 行：42（后面还有两个空格）</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="cmt">//   第 2 行：asdfg</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">cin</span> <span class="op">&gt;&gt;</span> <span class="fn">n</span><span class="pnc">;</span>           <span class="cmt">// 读到 42，缓冲区里还剩下“两个空格 + 换行符”</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">getline</span><span class="pnc">(</span><span class="fn">cin</span><span class="pnc">,</span> <span class="fn">s</span><span class="pnc">)</span><span class="pnc">;</span>    <span class="cmt">// 把这一行剩下的内容整个读走（s 暂时是两个空格，没用，之后会被覆盖）</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">getline</span><span class="pnc">(</span><span class="fn">cin</span><span class="pnc">,</span> <span class="fn">s</span><span class="pnc">)</span><span class="pnc">;</span>    <span class="cmt">// 这一次才读到真正想要的下一行</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">n</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>  <span class="cmt">// 输出：42</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>  <span class="cmt">// 输出：asdfg</span></td></tr>
         </table>
       </div>
     </div>
-
-    <div class="callout tip">
-      <span class="callout-icon">📐</span>
-      <div>
-        <b>字典序规则：</b>从左到右逐个字符比较，遇到第一个不同字符时，ASCII 值小的字符串更小；若一方为另一方的前缀，则较短的更小（如 <code>"ab" &lt; "abc"</code>）。
-      </div>
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>为什么这样可行？</b><code>getline</code> 会一直读到换行符为止，并且把换行符也一起“吃掉”。所以第一个 <code>getline</code> 不管这一行剩下多少个空格、有没有内容，都会把它整行读走；第二个 <code>getline</code> 就能从下一行的开头开始读了。<br>
+        就算第一行只有 <code>42</code>、后面什么都没有，这个办法也同样有效（第一个 <code>getline</code> 只是读到了一个空字符串）。第一个 <code>getline</code> 读到的内容没有用，可以随便存进 <code>s</code>，反正后面马上会被第二次读取覆盖。</div>
     </div>
-
-    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>🔍 元素访问：[ ] vs at()</strong></p>
-
+    <table class="api-table">
+      <thead><tr><th>清理办法</th><th>能清掉多少</th><th>需要的头文件</th></tr></thead>
+      <tbody>
+        <tr><td><code>cin.ignore()</code></td><td>只丢掉 <strong>1 个</strong>字符（遇到多余空格就清不干净）</td><td>不需要</td></tr>
+        <tr><td>多读一次 <code>getline(cin, s)</code></td><td>丢掉这一行剩下的<strong>全部内容</strong></td><td>不需要</td></tr>
+        <tr><td><code>cin.ignore(numeric_limits&lt;streamsize&gt;::max(), '\n')</code></td><td>丢掉这一行剩下的<strong>全部内容</strong></td><td><code>&lt;limits&gt;</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout info">
+      <span class="callout-icon">🔧</span>
+      <div><b>进阶（可以先跳过）：<code>cin.ignore</code> 的完整写法。</b>如果你更习惯用 <code>cin.ignore</code>，可以这样写，效果和多读一次 <code>getline</code> 一样：<br>
+        <code>cin.ignore(numeric_limits&lt;streamsize&gt;::max(), '\n');</code><br>
+        意思是“一直丢，直到丢掉一个换行符为止”，把这一行剩下的内容全部清干净。使用它需要引入 <code>&lt;limits&gt;</code> 头文件（万能头文件已经包含）。</div>
+    </div>
+    <div class="sub-title" id="s5">11.1.5　访问字符</div>
+    <div class="section-body">
+      <p>把 <code>string</code> 想象成一排编了号的格子，每个格子放一个字符。<strong>编号（下标）从 0 开始</strong>，所以长度为 5 的字符串，最后一个字符的下标是 4，而不是 5。要访问第 <code>i</code> 个字符，有两种写法：<code>s[i]</code> 和 <code>s.at(i)</code>。</p>
+    </div>
     <div class="str-visual">
-      <div class="sv-title">
-        <span>字符串 "Hello" 的内存格子</span>
-        <span class="sv-size-badge">size() = 5</span>
-      </div>
-      <div class="sv-row">
-        <div class="sv-cell"><div class="sv-char">H</div><div class="sv-idx">[0]</div></div>
-        <div class="sv-cell"><div class="sv-char">e</div><div class="sv-idx">[1]</div></div>
-        <div class="sv-cell"><div class="sv-char">l</div><div class="sv-idx">[2]</div></div>
-        <div class="sv-cell"><div class="sv-char">l</div><div class="sv-idx">[3]</div></div>
-        <div class="sv-cell"><div class="sv-char">o</div><div class="sv-idx">[4]</div></div>
-        <div class="sv-gap"></div>
-        <div class="sv-cell"><div class="sv-char end">\0</div><div class="sv-idx end-idx">[5]</div></div>
-      </div>
-      <div class="sv-caption">
-        <code>size()</code> / <code>length()</code> 只统计这 5 个真正的字符，<strong>不包含 <code>\0</code></strong>。<code>\0</code> 不是字符串内容的一部分，只是 C++11 起为了兼容 C 语言接口而在末尾隐藏提供的一个只读"哨兵"——可以用 <code>s[s.size()]</code> 读到，但不能写入，也不计入长度。
-      </div>
+      <div class="sv-title"><span>字符串 "Hello" 的内存格子</span><span class="sv-size-badge">size() = 5</span></div>
+      <div class="sv-row"><div class="sv-cell"><div class="sv-char">H</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">e</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char">l</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char">l</div><div class="sv-idx">[3]</div></div><div class="sv-cell"><div class="sv-char">o</div><div class="sv-idx">[4]</div></div><div class="sv-gap"></div><div class="sv-cell"><div class="sv-char end">\0</div><div class="sv-idx end-idx">[5]</div></div></div>
+      <div class="sv-caption"><code>size()</code> / <code>length()</code> 只统计这 5 个真正的字符，<strong>不包含 <code>\0</code></strong>。<code>\0</code> 不是字符串内容的一部分，只是 C++11 起为了兼容 C 语言接口而在末尾隐藏提供的一个只读"哨兵"——可以用 <code>s[s.size()]</code> 读到，但不能写入，也不计入长度。</div>
     </div>
-
     <div class="code-block">
-      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 元素访问</span></div>
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 访问与修改字符</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="fn">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="typ">char</span> <span class="fn">c1</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">];</span>     <span class="cmt">// 'H'，不检查越界——快速，但需自行保证安全</span></td></tr>
-          <tr><td class="ln">3</td><td class="cd"><span class="typ">char</span> <span class="fn">c2</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">at</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">);</span>  <span class="cmt">// 'H'，越界时抛出异常——安全，但略有开销</span></td></tr>
-          <tr><td class="ln">4</td><td class="cd"><span class="typ">char</span> <span class="fn">c3</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">front</span><span class="pnc">();</span>  <span class="cmt">// 'H'</span></td></tr>
-          <tr><td class="ln">5</td><td class="cd"><span class="typ">char</span> <span class="fn">c4</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">back</span><span class="pnc">();</span>   <span class="cmt">// 'o'</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>        <span class="cmt">// 输出：H，下标从 0 开始</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">[</span><span class="num">1</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>        <span class="cmt">// 输出：e</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">at</span><span class="pnc">(</span><span class="num">4</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>     <span class="cmt">// 输出：o，at() 会检查有没有越界</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">char</span> <span class="fn">c3</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">front</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">;</span>         <span class="cmt">// 'H'，第一个字符</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="typ">char</span> <span class="fn">c4</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">back</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">;</span>          <span class="cmt">// 'o'，最后一个字符</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="fn">s</span><span class="pnc">[</span><span class="num">0</span><span class="pnc">]</span> <span class="op">=</span> <span class="str">'h'</span><span class="pnc">;</span>                  <span class="cmt">// 通过下标可以直接修改字符</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>           <span class="cmt">// 输出：hello</span></td></tr>
         </table>
       </div>
     </div>
-
     <table class="advice-table">
       <thead><tr><th>方式</th><th>建议</th></tr></thead>
       <tbody>
-        <tr><td><span class="advice-rec">[]</span></td><td>更快但不安全，越界访问是未定义行为</td></tr>
+        <tr><td><span class="advice-rec">[]</span></td><td>更快但不安全，越界访问是未定义行为（程序可能崩溃，也可能“看起来正常”但数据已经坏了）</td></tr>
         <tr><td><span class="advice-rec">at()</span></td><td>更安全但稍慢，越界时会抛出异常提醒你</td></tr>
       </tbody>
     </table>
     <div class="callout tip">
       <span class="callout-icon">🎯</span>
-      <div><b>建议：</b>竞赛中确定不越界时用 <code>[]</code>，调试阶段或不确定时用 <code>at()</code>。</div>
+      <div><b>建议：</b>竞赛中确定不越界时用 <code>[]</code>，调试阶段或不确定时用 <code>at()</code>。如果程序莫名其妙崩溃或结果乱七八糟，先检查下标有没有越界。</div>
     </div>
-
-    <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>✏️ 修改操作</strong></p>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>🔁 遍历：把每个字符都处理一遍</strong></p>
+    <div class="section-body">
+      <p>遍历有三种常用写法：<strong>下标循环</strong>（需要知道当前是第几个时用）、<strong>范围 for 循环</strong>（只关心每个字符本身时用，写起来最简洁），以及<strong>迭代器</strong>（把字符串当成一排格子，用“书签”一格一格往后移）。最后再看一个在遍历时<strong>修改</strong>字符的技巧。</p>
+    </div>
     <div class="code-block">
-      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 增删改字符串</span></div>
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 遍历字符串</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="fn">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">append</span><span class="pnc">(</span><span class="str">" World"</span><span class="pnc">);</span>     <span class="cmt">// "Hello World"——在末尾追加</span></td></tr>
-          <tr><td class="ln">3</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">push_back</span><span class="pnc">(</span><span class="str">'!'</span><span class="pnc">);</span>      <span class="cmt">// "Hello World!"——在末尾追加一个字符</span></td></tr>
-          <tr><td class="ln">4</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">pop_back</span><span class="pnc">();</span>           <span class="cmt">// "Hello World"——删除最后一个字符</span></td></tr>
-          <tr><td class="ln">5</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">,</span> <span class="str">" C++"</span><span class="pnc">);</span>   <span class="cmt">// "Hello C++ World"——在下标 5 处插入</span></td></tr>
-          <tr><td class="ln">6</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">);</span>         <span class="cmt">// 删除从下标 2 开始的 3 个字符（若省略长度，如 s.erase(2)，则删除从下标 2 到末尾的所有字符）</span></td></tr>
-          <tr><td class="ln">7</td><td class="cd"><span class="fn">s</span><span class="pnc">.</span><span class="fn">replace</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="str">"Hi"</span><span class="pnc">);</span> <span class="cmt">// 把下标 0 起的 5 个字符替换为 "Hi"</span></td></tr>
-          <tr><td class="ln">8</td><td class="cd"><span class="fn">s1</span><span class="pnc">.</span><span class="fn">swap</span><span class="pnc">(</span><span class="fn">s2</span><span class="pnc">);</span>            <span class="cmt">// 交换两个字符串的全部内容（速度极快）</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="cmt">// 写法一：下标循环，i 就是当前字符的下标</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">int</span> <span class="fn">i</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span> <span class="fn">i</span> <span class="op">&lt;</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">s</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">;</span> <span class="fn">i</span><span class="op">++</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">i</span> <span class="op">&lt;&lt;</span> <span class="str">":"</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">[</span><span class="fn">i</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span>   <span class="cmt">// 输出：0:H 1:e 2:l 3:l 4:o</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="cmt">// 写法二：范围 for 循环，c 依次是每个字符（得到的是拷贝，改 c 不会影响 s）</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">char</span> <span class="fn">c</span> <span class="op">:</span> <span class="fn">s</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">c</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span>                  <span class="cmt">// 输出：H e l l o</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="cmt">// 写法三：迭代器。it 像一个“书签”，*it 就是书签所在位置的字符</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">;</span> <span class="fn">it</span> <span class="op">!=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">;</span> <span class="op">++</span><span class="fn">it</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">it</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span>                <span class="cmt">// 输出：H e l l o</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd"></td></tr>
+          <tr><td class="ln">24</td><td class="cd"><span class="cmt">// 修改技巧：想在遍历时修改原字符串，范围 for 里要加 &amp;（引用，直接操作原来的格子）</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">char</span><span class="pnc">&amp;</span> <span class="fn">c</span> <span class="op">:</span> <span class="fn">s</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd">    <span class="fn">c</span> <span class="op">=</span> <span class="fn">toupper</span><span class="pnc">(</span><span class="fn">c</span><span class="pnc">)</span><span class="pnc">;</span>                    <span class="cmt">// 把每个字符变成大写，需要 &lt;cctype&gt;</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                     <span class="cmt">// 输出：HELLO</span></td></tr>
         </table>
       </div>
     </div>
-
-    <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>🔎 查找操作</strong></p>
-    <div class="code-block">
-      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · find / rfind / find_first_of</span></div>
-      <div class="code-body">
-        <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="fn">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello World"</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="fn">size_t</span> <span class="fn">pos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">"World"</span><span class="pnc">);</span>            <span class="cmt">// 查找 "World"，返回首次出现位置（这里是 6）</span></td></tr>
-          <tr><td class="ln">3</td><td class="cd"><span class="fn">size_t</span> <span class="fn">pos2</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">rfind</span><span class="pnc">(</span><span class="str">"l"</span><span class="pnc">);</span>            <span class="cmt">// 从后往前找 'l'，返回最后一次出现的位置</span></td></tr>
-          <tr><td class="ln">4</td><td class="cd"><span class="fn">size_t</span> <span class="fn">pos3</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find_first_of</span><span class="pnc">(</span><span class="str">"aeiou"</span><span class="pnc">);</span>  <span class="cmt">// 查找元音字母第一次出现的位置</span></td></tr>
-          <tr><td class="ln">5</td><td class="cd"></td></tr>
-          <tr class="hl"><td class="ln">6</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">"x"</span><span class="pnc">)</span> <span class="op">==</span> <span class="fn">string</span><span class="pnc">::</span><span class="fn">npos</span><span class="pnc">)</span> <span class="pnc">{</span>  <span class="cmt">// npos 表示"没找到"</span></td></tr>
-          <tr><td class="ln">7</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"没找到'x'"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">8</td><td class="cd"><span class="pnc">}</span></td></tr>
-        </table>
-      </div>
-    </div>
-
     <div class="callout info">
       <span class="callout-icon">📖</span>
-      <div><code>string::npos</code> 是什么？你可以把它理解为<strong>"无效位置"</strong>。当 <code>find()</code> 找不到你要的东西时，就返回 <code>string::npos</code> 来告诉你"抱歉，没找到"。使用时只需要记住：拿 <code>find()</code> 的返回值和 <code>string::npos</code> 比较，相等就说明没找到。</div>
+      <div><b>迭代器是什么？</b><code>s.begin()</code> 指向第一个字符，<code>s.end()</code> 指向最后一个字符<strong>后面</strong>的位置（表示“已经走完了”），<code>++it</code> 把书签往后移一格，<code>*it</code> 读出当前格子里的字符。对 <code>string</code> 来说，下标循环和范围 for 已经够用；但迭代器是 STL 所有容器（vector、set……）通用的遍历方式，所以先在这里认识一下，更详细的解释见 11.1.9。</div>
     </div>
-
-    <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>✂️ 截取与转换</strong></p>
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>写下标循环时记得转成 int：</b>循环条件写 <code>i &lt; (int)s.size()</code>，原因见 11.1.2 的“坑 1”。如果写成 <code>i &lt;= s.size() - 1</code>，遇到空字符串就会因为 <code>size() - 1</code> 变成超级大的数而越界。</div>
+    </div>
+    <div class="sub-title" id="s6">11.1.6　字符串与数字互转</div>
+    <div class="section-body">
+      <p>程序从键盘读到的内容，经常是以“字符串”的形式存在的；但要做加减乘除，就需要数值类型。反过来，想把计算结果拼到一句话里输出，也需要先把数字变成字符串。C++11 提供了两组现成的工具来做这两件事。</p>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:8px 0 10px;"><strong>🔢 字符串 → 数字：stoi 系列</strong></p>
+    <table class="api-table">
+      <thead><tr><th>函数</th><th>功能</th><th>目标类型</th><th>示例</th></tr></thead>
+      <tbody>
+        <tr><td>stoi()</td><td>string 转 int</td><td>int</td><td><code>stoi("123")</code> → 123</td></tr>
+        <tr><td>stol()</td><td>string 转 long</td><td>long</td><td><code>stol("123")</code> → 123L</td></tr>
+        <tr><td>stoll()</td><td>string 转 long long</td><td>long long</td><td><code>stoll("123")</code> → 123LL</td></tr>
+        <tr><td>stof()</td><td>string 转 float</td><td>float（单精度小数）</td><td><code>stof("3.14")</code> → 3.14f</td></tr>
+        <tr><td>stod()</td><td>string 转 double</td><td>double（双精度小数）</td><td><code>stod("3.14")</code> → 3.14</td></tr>
+      </tbody>
+    </table>
     <div class="code-block">
-      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · substr 与数字互转</span></div>
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · stoi 系列：字符串转数字</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="fn">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello World"</span><span class="pnc">;</span></td></tr>
-          <tr><td class="ln">2</td><td class="cd"><span class="fn">string</span> <span class="fn">sub</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">substr</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">);</span>  <span class="cmt">// "Hello"——从下标 0 开始，截取 5 个字符</span></td></tr>
-          <tr><td class="ln">3</td><td class="cd"></td></tr>
-          <tr><td class="ln">4</td><td class="cd"><span class="cmt">// 数字 ↔ 字符串互转（C++11 起支持）</span></td></tr>
-          <tr><td class="ln">5</td><td class="cd"><span class="fn">string</span> <span class="fn">numStr</span> <span class="op">=</span> <span class="fn">to_string</span><span class="pnc">(</span><span class="num">42</span><span class="pnc">);</span>     <span class="cmt">// 数字 → 字符串："42"</span></td></tr>
-          <tr><td class="ln">6</td><td class="cd"><span class="typ">int</span> <span class="fn">n</span> <span class="op">=</span> <span class="fn">stoi</span><span class="pnc">(</span><span class="str">"123"</span><span class="pnc">);</span>        <span class="cmt">// 字符串 → 整数：123</span></td></tr>
-          <tr><td class="ln">7</td><td class="cd"><span class="typ">double</span> <span class="fn">d</span> <span class="op">=</span> <span class="fn">stod</span><span class="pnc">(</span><span class="str">"3.14159"</span><span class="pnc">);</span> <span class="cmt">// 字符串 → 小数：3.14159</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s1</span> <span class="op">=</span> <span class="str">"123"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">num1</span> <span class="op">=</span> <span class="fn">stoi</span><span class="pnc">(</span><span class="fn">s1</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">num1</span> <span class="op">+</span> <span class="num">1</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>        <span class="cmt">// 输出：124，说明已经变成真正的数字了</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">string</span> <span class="fn">s2</span> <span class="op">=</span> <span class="str">"1234567890123"</span><span class="pnc">;</span>     <span class="cmt">// 超过了 int 的范围，要用 stoll</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">long</span> <span class="typ">long</span> <span class="fn">num2</span> <span class="op">=</span> <span class="fn">stoll</span><span class="pnc">(</span><span class="fn">s2</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">num2</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>            <span class="cmt">// 输出：1234567890123</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="typ">string</span> <span class="fn">s3</span> <span class="op">=</span> <span class="str">"2.718281828"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">double</span> <span class="fn">num3</span> <span class="op">=</span> <span class="fn">stod</span><span class="pnc">(</span><span class="fn">s3</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">num3</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>            <span class="cmt">// 输出：2.71828（cout 默认只显示 6 位有效数字）</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="cmt">// 转换后的数值可以直接参与运算</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">string</span> <span class="fn">sa</span> <span class="op">=</span> <span class="str">"100"</span><span class="pnc">,</span> <span class="fn">sb</span> <span class="op">=</span> <span class="str">"200"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="typ">int</span> <span class="fn">sum</span> <span class="op">=</span> <span class="fn">stoi</span><span class="pnc">(</span><span class="fn">sa</span><span class="pnc">)</span> <span class="op">+</span> <span class="fn">stoi</span><span class="pnc">(</span><span class="fn">sb</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">sum</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>             <span class="cmt">// 输出：300</span></td></tr>
         </table>
       </div>
     </div>
-
     <div class="callout warn">
       <span class="callout-icon">⚠️</span>
-      <div><b>注意：</b><code>stoi</code>/<code>stod</code> 在转换失败时（比如传入的字符串根本不是数字，像 <code>stoi("abc")</code>）会<strong>抛出异常</strong>，如果程序没有处理这个异常，会直接崩溃退出。在竞赛中，如果题目保证输入格式一定合法，可以放心直接使用；但如果输入内容可能不合法（比如处理用户输入或格式不确定的外部数据），就需要额外用 <code>try-catch</code> 处理异常，或者改用更稳健的解析方式（比如 <code>stringstream</code>）。</div>
+      <div><b>注意：</b><code>stoi</code>/<code>stod</code> 在转换失败时（比如传入的字符串根本不是数字，像 <code>stoi("abc")</code>）会<strong>抛出异常</strong>，如果程序没有处理这个异常，会直接崩溃退出。数字太大装不进 <code>int</code>（如 <code>stoi("99999999999")</code>）同样会抛出异常，这时要换成 <code>stoll</code>。<br>另外有一个容易忽略的细节：<code>stoi("12abc")</code> <strong>不会报错</strong>，它会读到不能再读为止，得到 <code>12</code>。<br>在竞赛中，如果题目保证输入格式一定合法，可以放心直接使用；但如果输入内容可能不合法（比如处理用户输入或格式不确定的外部数据），就需要额外用 <code>try-catch</code> 处理异常，或者改用更稳健的解析方式（比如 <code>stringstream</code>）。</div>
     </div>
-
-    <p style="font-size:14.5px;color:var(--text-secondary);margin:24px 0 10px;"><strong>🔄 迭代器遍历</strong></p>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>🔤 数字 → 字符串：to_string</strong></p>
     <div class="section-body">
-      <p>把 <code>string</code> 想象成一排连续的格子，每个格子里放一个字符。迭代器就像夹在格子之间的"书签"——它记住了你当前所在的位置。你可以用 <code>*it</code> 读取当前格子的字符，用 <code>++it</code> 把书签往后移一格。</p>
+      <p><code>to_string(数值)</code> 可以把 <code>int</code>、<code>long long</code>、<code>double</code> 等各种数值类型转成字符串，编译器会自动选对的版本。转换之后就可以用 <code>+</code> 和别的字符串拼在一起了。</p>
     </div>
-
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · to_string：数字转字符串</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">int</span> <span class="fn">a</span> <span class="op">=</span> <span class="num">123</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">string</span> <span class="fn">s1</span> <span class="op">=</span> <span class="fn">to_string</span><span class="pnc">(</span><span class="fn">a</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s1</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                <span class="cmt">// 输出：123</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">double</span> <span class="fn">b</span> <span class="op">=</span> <span class="num">3.14159</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">string</span> <span class="fn">s2</span> <span class="op">=</span> <span class="fn">to_string</span><span class="pnc">(</span><span class="fn">b</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s2</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                <span class="cmt">// 输出：3.141590（小数点后固定 6 位）</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="typ">int</span> <span class="fn">score</span> <span class="op">=</span> <span class="num">95</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">string</span> <span class="fn">msg</span> <span class="op">=</span> <span class="str">"你的成绩是："</span> <span class="op">+</span> <span class="fn">to_string</span><span class="pnc">(</span><span class="fn">score</span><span class="pnc">)</span> <span class="op">+</span> <span class="str">" 分"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">msg</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>               <span class="cmt">// 输出：你的成绩是：95 分</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="cmt">// 往返转换：字符串 → 数字 → 运算 → 字符串</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">string</span> <span class="fn">original</span> <span class="op">=</span> <span class="str">"256"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="typ">int</span> <span class="fn">num</span> <span class="op">=</span> <span class="fn">stoi</span><span class="pnc">(</span><span class="fn">original</span><span class="pnc">)</span><span class="pnc">;</span>          <span class="cmt">// 字符串 → 数字</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="typ">int</span> <span class="fn">doubled</span> <span class="op">=</span> <span class="fn">num</span> <span class="op">*</span> <span class="num">2</span><span class="pnc">;</span>             <span class="cmt">// 数值运算</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="typ">string</span> <span class="fn">result</span> <span class="op">=</span> <span class="fn">to_string</span><span class="pnc">(</span><span class="fn">doubled</span><span class="pnc">)</span><span class="pnc">;</span> <span class="cmt">// 数字 → 字符串</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"256 的两倍是："</span> <span class="op">&lt;&lt;</span> <span class="fn">result</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>  <span class="cmt">// 输出：256 的两倍是：512</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>小数转字符串的精度：</b><code>to_string</code> 转小数时，<strong>小数点后固定保留 6 位</strong>（所以 <code>3.14159</code> 变成了 <code>"3.141590"</code>）。如果想自己控制保留几位，不要用 <code>to_string</code>，改用 <code>cout &lt;&lt; fixed &lt;&lt; setprecision(2)</code> 直接输出（见 3.1 节）。</div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>🔟 一个超实用的小技巧：单个数字字符 ↔ 数字</strong></p>
+    <div class="section-body">
+      <p>处理“一位一位的数字”时（比如<a href="A01_09_高精度加法.html">高精度计算</a>），经常要把字符串里的一个字符 <code>'7'</code> 变成数字 <code>7</code>。办法很简单：<strong>减去字符 <code>'0'</code></strong>。因为数字字符的 ASCII 码是连续的（<code>'0'</code> 是 48，<code>'7'</code> 是 55，相差正好 7）。反过来，加上 <code>'0'</code> 就能把数字变回字符。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 数字字符和数字互转</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">char</span> <span class="fn">c</span> <span class="op">=</span> <span class="str">'7'</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">d</span> <span class="op">=</span> <span class="fn">c</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span>          <span class="cmt">// '7' - '0' = 55 - 48 = 7</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">d</span> <span class="op">+</span> <span class="num">1</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>    <span class="cmt">// 输出：8</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">x</span> <span class="op">=</span> <span class="num">5</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="typ">char</span> <span class="fn">ch</span> <span class="op">=</span> <span class="fn">x</span> <span class="op">+</span> <span class="str">'0'</span><span class="pnc">;</span>        <span class="cmt">// 5 + 48 = 53，也就是字符 '5'</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">ch</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>       <span class="cmt">// 输出：5</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 用它统计一个数字字符串的各位数字之和</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">string</span> <span class="fn">num</span> <span class="op">=</span> <span class="str">"12345"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">int</span> <span class="fn">sum</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">char</span> <span class="fn">c</span> <span class="op">:</span> <span class="fn">num</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="fn">sum</span> <span class="op">+=</span> <span class="fn">c</span> <span class="op">-</span> <span class="str">'0'</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">sum</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>      <span class="cmt">// 输出：15</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <table class="api-table">
+      <thead><tr><th>转换方向</th><th>函数</th><th>示例</th></tr></thead>
+      <tbody>
+        <tr><td>字符串 → 整数</td><td><code>stoi()</code> / <code>stol()</code> / <code>stoll()</code></td><td><code>stoi("123")</code> → 123</td></tr>
+        <tr><td>字符串 → 小数</td><td><code>stof()</code> / <code>stod()</code></td><td><code>stod("3.14")</code> → 3.14</td></tr>
+        <tr><td>数值 → 字符串</td><td><code>to_string()</code></td><td><code>to_string(123)</code> → "123"</td></tr>
+        <tr><td>数字字符 ↔ 数字</td><td><code>c - '0'</code> / <code>d + '0'</code></td><td><code>'7' - '0'</code> → 7</td></tr>
+      </tbody>
+    </table>
+    <div class="sub-title" id="s7">11.1.7　子串操作：查找、截取、插入、删除与替换</div>
+    <div class="section-body">
+      <p>一个字符串的“一部分”叫<strong>子串</strong>（比如 <code>"World"</code> 是 <code>"Hello World"</code> 的子串）。对子串可以做 5 件事：<strong>查找</strong>（find）、<strong>截取</strong>（substr）、<strong>插入</strong>（insert）、<strong>删除</strong>（erase）、<strong>替换</strong>（replace）。其中 <code>insert</code>、<code>erase</code>、<code>replace</code> 会<strong>直接修改原字符串</strong>；<code>find</code> 和 <code>substr</code> 不会改动原字符串。</p>
+    </div>
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>最重要的套路：先 <code>find</code> 定位，再动手。</b>实际写程序时，这 5 个操作经常组合起来用：先用 <code>find</code> 找到目标在哪，再用 <code>substr</code> 截下来、用 <code>erase</code> 删掉、用 <code>replace</code> 换掉，或者用 <code>insert</code> 在那里插入新内容。它们都用<strong>下标</strong>来指定位置，下标从 0 开始。</div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:8px 0 10px;"><strong>🔎 查找子串：find 系列</strong></p>
+    <div class="section-body">
+      <p><code>s.find(子串)</code> 从左往右找，返回子串<strong>第一次出现</strong>的位置——也就是子串<strong>第一个字符的下标</strong>。找不到就返回 <code>string::npos</code>（意思是“没找到”）。除了 <code>find</code>，还有几个兄弟函数：</p>
+    </div>
+    <table class="api-table">
+      <thead><tr><th>函数</th><th>查找方向</th><th>返回什么</th><th>示例</th></tr></thead>
+      <tbody>
+        <tr><td>find(str)</td><td>从左向右，首次出现</td><td>子串首字符的下标</td><td><code>s.find("abc")</code></td></tr>
+        <tr><td>find(str, pos)</td><td>从下标 pos 开始向右</td><td>子串首字符的下标</td><td><code>s.find("abc", 2)</code></td></tr>
+        <tr><td>rfind(str)</td><td>从右向左，最后一次出现</td><td>子串首字符的下标</td><td><code>s.rfind("abc")</code></td></tr>
+        <tr><td>find_first_of(chars)</td><td>从左向右，chars 里的<strong>任意一个</strong>字符</td><td>第一个匹配字符的下标</td><td><code>s.find_first_of("aeiou")</code></td></tr>
+        <tr><td>find_last_of(chars)</td><td>从右向左，chars 里的<strong>任意一个</strong>字符</td><td>最后一个匹配字符的下标</td><td><code>s.find_last_of("aeiou")</code></td></tr>
+        <tr><td>string::npos</td><td>——</td><td>表示“没找到”的特殊值</td><td><code>if (pos != string::npos)</code></td></tr>
+      </tbody>
+    </table>
+    <div class="section-body">
+      <p>以上所有查找函数，要找的内容既可以是字符串 <code>"abc"</code>，也可以是单个字符 <code>'a'</code>。</p>
+    </div>
+    <div class="str-visual">
+      <div class="sv-title"><span>find 与 substr 配合：定位 + 截取</span><span class="sv-size-badge">s = "Hello World"</span></div>
+      <div class="sv-row"><div class="sv-cell"><div class="sv-char">H</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">e</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char">l</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char">l</div><div class="sv-idx">[3]</div></div><div class="sv-cell"><div class="sv-char">o</div><div class="sv-idx">[4]</div></div><div class="sv-cell"><div class="sv-char">␣</div><div class="sv-idx">[5]</div></div><div class="sv-cell"><div class="sv-char hit">W</div><div class="sv-idx">[6]</div></div><div class="sv-cell"><div class="sv-char hit">o</div><div class="sv-idx">[7]</div></div><div class="sv-cell"><div class="sv-char hit">r</div><div class="sv-idx">[8]</div></div><div class="sv-cell"><div class="sv-char hit">l</div><div class="sv-idx">[9]</div></div><div class="sv-cell"><div class="sv-char hit">d</div><div class="sv-idx">[10]</div></div></div>
+      <div class="sv-caption"><code>s.find("World")</code> 返回 <code>6</code>（"World" 的第一个字符 <code>W</code> 的下标）。再用 <code>s.substr(6, 5)</code>：从下标 <code>6</code> 开始，截取 <code>5</code> 个字符，就得到高亮的 <strong>"World"</strong>。空格也是一个字符（图中用 ␣ 表示），所以 <code>H</code> 到 <code>o</code> 加空格正好占了下标 0~5。</div>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · find 系列</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello World, Hello C++"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">size_t</span> <span class="fn">pos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">"Hello"</span><span class="pnc">)</span><span class="pnc">;</span>         <span class="cmt">// 从左往右找，返回首次出现的下标</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">pos</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                  <span class="cmt">// 输出：0</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">pos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">"Hello"</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">)</span><span class="pnc">;</span>             <span class="cmt">// 从下标 1 开始往后找，跳过开头那个 Hello</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">pos</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                  <span class="cmt">// 输出：13</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="fn">pos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">'W'</span><span class="pnc">)</span><span class="pnc">;</span>                    <span class="cmt">// 也可以找单个字符</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">pos</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                  <span class="cmt">// 输出：6</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="fn">pos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">"xyz"</span><span class="pnc">)</span><span class="pnc">;</span>                  <span class="cmt">// 找不到，返回 string::npos</span></td></tr>
+          <tr class="hl"><td class="ln">13</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">pos</span> <span class="op">==</span> <span class="typ">string</span><span class="op">:</span><span class="op">:</span><span class="fn">npos</span><span class="pnc">)</span></td></tr>
+          <tr class="hl"><td class="ln">14</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr class="hl"><td class="ln">15</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"没找到 xyz"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr class="hl"><td class="ln">16</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="fn">pos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">rfind</span><span class="pnc">(</span><span class="str">"o"</span><span class="pnc">)</span><span class="pnc">;</span>                   <span class="cmt">// 从右往左找，返回最后一次出现的下标</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">pos</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                  <span class="cmt">// 输出：17</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="fn">pos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find_first_of</span><span class="pnc">(</span><span class="str">"aeiouAEIOU"</span><span class="pnc">)</span><span class="pnc">;</span>  <span class="cmt">// 找任意一个元音字母第一次出现的位置</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">pos</span> <span class="op">&lt;&lt;</span> <span class="str">"（字符 "</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">[</span><span class="fn">pos</span><span class="pnc">]</span> <span class="op">&lt;&lt;</span> <span class="str">"）"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>   <span class="cmt">// 输出：1（字符 e）</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>🔁 综合：找出所有出现的位置</strong></p>
+    <div class="section-body">
+      <p>想找“所有”出现的位置，就用 <code>while</code> 循环：每找到一个，就从它的<strong>下一个位置</strong>继续往后找，直到返回 <code>npos</code> 为止。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 找出所有 'l' 的位置</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello World, Hello C++"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"所有 l 的位置："</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">size_t</span> <span class="fn">pos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">'l'</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="kw">while</span> <span class="pnc">(</span><span class="fn">pos</span> <span class="op">!=</span> <span class="typ">string</span><span class="op">:</span><span class="op">:</span><span class="fn">npos</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">pos</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">pos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">'l'</span><span class="pnc">,</span> <span class="fn">pos</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">)</span><span class="pnc">;</span>       <span class="cmt">// 从刚找到的位置的下一个位置继续找</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                         <span class="cmt">// 输出：2 3 9 15 16</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b><code>string::npos</code> 是什么？</b>你可以把它理解为<strong>"无效位置"</strong>。当 <code>find()</code> 找不到你要的东西时，就返回 <code>string::npos</code> 来告诉你"抱歉，没找到"。使用时只需要记住：拿 <code>find()</code> 的返回值和 <code>string::npos</code> 比较，相等就说明没找到。<br>
+        <code>find</code> 的返回值请用 <code>size_t</code>（或 <code>auto</code>）来接收，并用 <code>pos != string::npos</code> 判断成功与否。不要写 <code>pos == -1</code>：虽然 <code>npos</code> 的值碰巧等价于 <code>-1</code>，但这样写不规范，换个写法就可能出错。</div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>✂️ 截取子串：substr</strong></p>
+    <div class="section-body">
+      <p><code>s.substr(起始位置, 截取长度)</code> 从原字符串中“剪”出一段，生成一个<strong>新的字符串</strong>，原字符串保持不变。如果省略长度，就一直截到末尾。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · substr 截取</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hello World"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">string</span> <span class="fn">sub</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">substr</span><span class="pnc">(</span><span class="num">6</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">)</span><span class="pnc">;</span>               <span class="cmt">// 从下标 6 开始，截取 5 个字符</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">sub</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                       <span class="cmt">// 输出：World</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">substr</span><span class="pnc">(</span><span class="num">6</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>               <span class="cmt">// 省略长度，截到末尾，输出：World</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">substr</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>            <span class="cmt">// 前 5 个字符，输出：Hello</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">substr</span><span class="pnc">(</span><span class="fn">s</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(</span><span class="pnc">)</span> <span class="op">-</span> <span class="num">5</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>    <span class="cmt">// 后 5 个字符，输出：World</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                         <span class="cmt">// 原串没变，输出：Hello World</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><b>常用模式：</b><code>s.substr(0, n)</code> 取前 <code>n</code> 个字符，<code>s.substr(s.size() - n)</code> 取后 <code>n</code> 个字符。如果长度写得比剩下的字符还多，会自动截到末尾，不会报错；但<strong>起始位置</strong>比字符串长度还大就会抛出异常。</div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>🧩 实战：find + substr 拆分字符串</strong></p>
+    <div class="section-body">
+      <p>下面两个例子都是“先 find 找分隔符，再 substr 截取”的经典用法：提取邮箱的用户名和域名，以及把用逗号隔开的内容拆开。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 用 find + substr 拆分字符串</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="cmt">// 例一：提取邮箱的用户名和域名</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">string</span> <span class="fn">email</span> <span class="op">=</span> <span class="str">"student@school.edu.cn"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="typ">size_t</span> <span class="fn">atPos</span> <span class="op">=</span> <span class="fn">email</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">'@'</span><span class="pnc">)</span><span class="pnc">;</span>                <span class="cmt">// '@' 的位置是 7</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">string</span> <span class="fn">username</span> <span class="op">=</span> <span class="fn">email</span><span class="pnc">.</span><span class="fn">substr</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">,</span> <span class="fn">atPos</span><span class="pnc">)</span><span class="pnc">;</span>      <span class="cmt">// 前面部分：student</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">string</span> <span class="fn">domain</span> <span class="op">=</span> <span class="fn">email</span><span class="pnc">.</span><span class="fn">substr</span><span class="pnc">(</span><span class="fn">atPos</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">)</span><span class="pnc">;</span>       <span class="cmt">// 后面部分：school.edu.cn（+1 是为了跳过 '@' 本身）</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"用户名："</span> <span class="op">&lt;&lt;</span> <span class="fn">username</span> <span class="op">&lt;&lt;</span> <span class="str">"，域名："</span> <span class="op">&lt;&lt;</span> <span class="fn">domain</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="cmt">// 例二：拆分逗号分隔的字符串</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="typ">string</span> <span class="fn">csv</span> <span class="op">=</span> <span class="str">"apple,banana,orange"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">size_t</span> <span class="fn">p1</span> <span class="op">=</span> <span class="fn">csv</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">','</span><span class="pnc">)</span><span class="pnc">;</span>                     <span class="cmt">// 第一个逗号，下标 5</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">size_t</span> <span class="fn">p2</span> <span class="op">=</span> <span class="fn">csv</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">','</span><span class="pnc">,</span> <span class="fn">p1</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">)</span><span class="pnc">;</span>             <span class="cmt">// 第二个逗号，下标 12</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">csv</span><span class="pnc">.</span><span class="fn">substr</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">,</span> <span class="fn">p1</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>             <span class="cmt">// 输出：apple</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">csv</span><span class="pnc">.</span><span class="fn">substr</span><span class="pnc">(</span><span class="fn">p1</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">,</span> <span class="fn">p2</span> <span class="op">-</span> <span class="fn">p1</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>  <span class="cmt">// 输出：banana</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">csv</span><span class="pnc">.</span><span class="fn">substr</span><span class="pnc">(</span><span class="fn">p2</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>            <span class="cmt">// 输出：orange</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="callout info">
+      <span class="callout-icon">📖</span>
+      <div><b>怎么算“中间那段”的长度？</b>第二个单词 <code>banana</code> 从 <code>p1 + 1</code> 开始，到 <code>p2</code>（第二个逗号）前面结束，所以长度是 <code>p2 - p1 - 1</code>。可以自己验算：<code>12 - 5 - 1 = 6</code>，<code>banana</code> 正好 6 个字母。</div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>📝 插入、删除与替换：insert、erase、replace</strong></p>
+    <div class="section-body">
+      <p>这三个操作都会<strong>直接修改原字符串</strong>，修改后字符串的长度会自动变长或变短。先看一张图，了解它们各自做了什么：</p>
+    </div>
+    <div class="str-visual">
+      <div class="sv-title"><span>insert / erase / replace 前后对比</span><span class="sv-size-badge">修改后长度自动变化</span></div>
+      <div class="sv-rowlabel">insert(1, 3, '-')　修改前</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">A</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">B</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char">C</div><div class="sv-idx">[2]</div></div></div>
+      <div class="sv-rowlabel">修改后：在下标 1 之前插入 3 个 '-'</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">A</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char new">-</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char new">-</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char new">-</div><div class="sv-idx">[3]</div></div><div class="sv-cell"><div class="sv-char">B</div><div class="sv-idx">[4]</div></div><div class="sv-cell"><div class="sv-char">C</div><div class="sv-idx">[5]</div></div></div>
+      <div class="sv-rowlabel">erase(2, 3)　修改前</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">A</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">B</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char gone">C</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char gone">D</div><div class="sv-idx">[3]</div></div><div class="sv-cell"><div class="sv-char gone">E</div><div class="sv-idx">[4]</div></div><div class="sv-cell"><div class="sv-char">F</div><div class="sv-idx">[5]</div></div><div class="sv-cell"><div class="sv-char">G</div><div class="sv-idx">[6]</div></div></div>
+      <div class="sv-rowlabel">修改后：从下标 2 起删掉 3 个字符（C D E），后面的字符自动往前补</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">A</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">B</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char">F</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char">G</div><div class="sv-idx">[3]</div></div></div>
+      <div class="sv-rowlabel">replace(7, 4, "C++")　修改前</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">I</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">␣</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char">l</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char">i</div><div class="sv-idx">[3]</div></div><div class="sv-cell"><div class="sv-char">k</div><div class="sv-idx">[4]</div></div><div class="sv-cell"><div class="sv-char">e</div><div class="sv-idx">[5]</div></div><div class="sv-cell"><div class="sv-char">␣</div><div class="sv-idx">[6]</div></div><div class="sv-cell"><div class="sv-char gone">J</div><div class="sv-idx">[7]</div></div><div class="sv-cell"><div class="sv-char gone">a</div><div class="sv-idx">[8]</div></div><div class="sv-cell"><div class="sv-char gone">v</div><div class="sv-idx">[9]</div></div><div class="sv-cell"><div class="sv-char gone">a</div><div class="sv-idx">[10]</div></div></div>
+      <div class="sv-rowlabel">修改后："Java"（4 个字符）被换成 "C++"（3 个字符），长度可以不一样</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">I</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">␣</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char">l</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char">i</div><div class="sv-idx">[3]</div></div><div class="sv-cell"><div class="sv-char">k</div><div class="sv-idx">[4]</div></div><div class="sv-cell"><div class="sv-char">e</div><div class="sv-idx">[5]</div></div><div class="sv-cell"><div class="sv-char">␣</div><div class="sv-idx">[6]</div></div><div class="sv-cell"><div class="sv-char new">C</div><div class="sv-idx">[7]</div></div><div class="sv-cell"><div class="sv-char new">+</div><div class="sv-idx">[8]</div></div><div class="sv-cell"><div class="sv-char new">+</div><div class="sv-idx">[9]</div></div></div>
+      <div class="sv-caption"><strong>粉色虚线</strong>的格子是被删除 / 被替换掉的字符，<strong>蓝色</strong>的格子是新插入的字符。注意：<code>insert(pos, ...)</code> 是插在<strong>下标 pos 的字符前面</strong>，原来 pos 及之后的字符都往后挪。</div>
+    </div>
+    <div class="section-body">
+      <p><strong>insert：插入。</strong><code>s.insert(位置, 内容)</code> 在指定位置<strong>之前</strong>插入内容；<code>s.insert(位置, n, 字符)</code> 一次插入 <code>n</code> 个相同的字符。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · insert 插入</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s1</span> <span class="op">=</span> <span class="str">"Hello World"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">s1</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">(</span><span class="num">6</span><span class="pnc">,</span> <span class="str">"Beautiful "</span><span class="pnc">)</span><span class="pnc">;</span>     <span class="cmt">// 在下标 6 之前插入</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s1</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>             <span class="cmt">// 输出：Hello Beautiful World</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">string</span> <span class="fn">s2</span> <span class="op">=</span> <span class="str">"World"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">s2</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">(</span><span class="num">0</span><span class="pnc">,</span> <span class="str">"Hello "</span><span class="pnc">)</span><span class="pnc">;</span>         <span class="cmt">// 在最开头插入</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s2</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>             <span class="cmt">// 输出：Hello World</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="typ">string</span> <span class="fn">s3</span> <span class="op">=</span> <span class="str">"ABC"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="fn">s3</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">(</span><span class="num">1</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="str">'-'</span><span class="pnc">)</span><span class="pnc">;</span>           <span class="cmt">// 在下标 1 之前插入 3 个 '-'</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s3</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>             <span class="cmt">// 输出：A---BC</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="cmt">// 应用：把手机号格式化成 138-1234-5678</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">string</span> <span class="fn">phone</span> <span class="op">=</span> <span class="str">"13812345678"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="fn">phone</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">(</span><span class="num">3</span><span class="pnc">,</span> <span class="str">"-"</span><span class="pnc">)</span><span class="pnc">;</span>           <span class="cmt">// 138-12345678</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="fn">phone</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">(</span><span class="num">8</span><span class="pnc">,</span> <span class="str">"-"</span><span class="pnc">)</span><span class="pnc">;</span>           <span class="cmt">// 138-1234-5678（第一次插入后，后面的字符整体后移了一位）</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">phone</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="section-body">
+      <p><strong>erase：删除。</strong><code>s.erase(起始位置, 删除长度)</code> 删掉指定范围的字符；省略长度就删到末尾；删单个字符就写 <code>s.erase(pos, 1)</code>。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · erase 删除</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s4</span> <span class="op">=</span> <span class="str">"ABCDEFG"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">s4</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">)</span><span class="pnc">;</span>                 <span class="cmt">// 从下标 2 开始，删掉 3 个字符（C D E）</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s4</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>             <span class="cmt">// 输出：ABFG</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">string</span> <span class="fn">s5</span> <span class="op">=</span> <span class="str">"Hello World"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">s5</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="num">5</span><span class="pnc">)</span><span class="pnc">;</span>                    <span class="cmt">// 省略长度：从下标 5 一直删到末尾</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s5</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>             <span class="cmt">// 输出：Hello</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="cmt">// 结合 find：删掉指定内容</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="typ">string</span> <span class="fn">s6</span> <span class="op">=</span> <span class="str">"Hello World"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="typ">size_t</span> <span class="fn">pos</span> <span class="op">=</span> <span class="fn">s6</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">"Wo"</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="kw">if</span> <span class="pnc">(</span><span class="fn">pos</span> <span class="op">!=</span> <span class="typ">string</span><span class="op">:</span><span class="op">:</span><span class="fn">npos</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="fn">s6</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="fn">pos</span><span class="pnc">,</span> <span class="num">2</span><span class="pnc">)</span><span class="pnc">;</span>           <span class="cmt">// 删掉 "Wo"</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s6</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>             <span class="cmt">// 输出：Hello rld</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"></td></tr>
+          <tr><td class="ln">18</td><td class="cd"><span class="cmt">// 循环 find + erase：删掉全部空格</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd"><span class="typ">string</span> <span class="fn">s7</span> <span class="op">=</span> <span class="str">"a b c d e"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="fn">pos</span> <span class="op">=</span> <span class="fn">s7</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">' '</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="kw">while</span> <span class="pnc">(</span><span class="fn">pos</span> <span class="op">!=</span> <span class="typ">string</span><span class="op">:</span><span class="op">:</span><span class="fn">npos</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">22</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="fn">s7</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="fn">pos</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="fn">pos</span> <span class="op">=</span> <span class="fn">s7</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">' '</span><span class="pnc">,</span> <span class="fn">pos</span><span class="pnc">)</span><span class="pnc">;</span>    <span class="cmt">// 注意：不用 +1，因为删掉空格后，后面的字符已经往前补位了</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s7</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>             <span class="cmt">// 输出：abcde</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="section-body">
+      <p><strong>replace：替换。</strong><code>s.replace(起始位置, 被替换的长度, 新内容)</code> 把指定范围的字符换成新内容，新内容和被换掉的部分<strong>长度可以不一样</strong>，字符串总长度会自动调整。新内容写空字符串 <code>""</code>，效果就等于 <code>erase</code>。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · replace 替换</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s8</span> <span class="op">=</span> <span class="str">"I like Java"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">s8</span><span class="pnc">.</span><span class="fn">replace</span><span class="pnc">(</span><span class="num">7</span><span class="pnc">,</span> <span class="num">4</span><span class="pnc">,</span> <span class="str">"C++"</span><span class="pnc">)</span><span class="pnc">;</span>       <span class="cmt">// 把下标 7 起的 4 个字符 "Java" 换成 "C++"</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s8</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>            <span class="cmt">// 输出：I like C++</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">string</span> <span class="fn">s9</span> <span class="op">=</span> <span class="str">"ABCDEFG"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">s9</span><span class="pnc">.</span><span class="fn">replace</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="str">"XYZ"</span><span class="pnc">)</span><span class="pnc">;</span>       <span class="cmt">// 把 "CDE" 换成 "XYZ"</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s9</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>            <span class="cmt">// 输出：ABXYZFG</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="typ">string</span> <span class="fn">s10</span> <span class="op">=</span> <span class="str">"ABxxxCD"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="fn">s10</span><span class="pnc">.</span><span class="fn">replace</span><span class="pnc">(</span><span class="num">2</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="str">""</span><span class="pnc">)</span><span class="pnc">;</span>         <span class="cmt">// 替换成空 = 删除</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s10</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>           <span class="cmt">// 输出：ABCD</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd"></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="cmt">// 循环 find + replace：把所有 "one" 换成 "1"</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="typ">string</span> <span class="fn">s11</span> <span class="op">=</span> <span class="str">"one two one two"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="typ">size_t</span> <span class="fn">pos</span> <span class="op">=</span> <span class="fn">s11</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">"one"</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd"><span class="kw">while</span> <span class="pnc">(</span><span class="fn">pos</span> <span class="op">!=</span> <span class="typ">string</span><span class="op">:</span><span class="op">:</span><span class="fn">npos</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="fn">s11</span><span class="pnc">.</span><span class="fn">replace</span><span class="pnc">(</span><span class="fn">pos</span><span class="pnc">,</span> <span class="num">3</span><span class="pnc">,</span> <span class="str">"1"</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="fn">pos</span> <span class="op">=</span> <span class="fn">s11</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">"one"</span><span class="pnc">,</span> <span class="fn">pos</span> <span class="op">+</span> <span class="num">1</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s11</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>           <span class="cmt">// 输出：1 two 1 two</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="callout danger">
+      <span class="callout-icon">🚫</span>
+      <div><b>“全部替换”小心死循环：</b>上面的写法里，新内容 <code>"1"</code> 里不包含要找的 <code>"one"</code>，所以 <code>pos + 1</code> 没问题。但如果<strong>新内容里又包含了要找的内容</strong>——比如把 <code>"a"</code> 替换成 <code>"aa"</code>——每替换一次就会产生一个新的 <code>"a"</code>，用 <code>pos + 1</code> 会一直找到刚替换出来的，永远停不下来。<br>
+        正确做法是让 <code>pos</code> 直接跳过新内容：<code>pos += 新内容的长度;</code>（上面的例子里新内容长度是 1，所以 <code>pos + 1</code> 恰好可用）。</div>
+    </div>
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>修改操作的三个通用注意事项：</b><br>
+        1. <code>insert</code>、<code>erase</code>、<code>replace</code> 都<strong>直接修改原字符串</strong>。如果之后还需要原来的内容，请先复制一份：<code>string backup = s;</code>。<br>
+        2. 要保证起始位置不越界（不能大于字符串长度），否则程序会抛出 <code>out_of_range</code> 异常。<br>
+        3. 插入、删除、替换之后，字符串的长度和后面字符的下标都会变化。在循环里反复修改时，要特别注意下标有没有“错位”。</div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>🧪 综合实战：五个操作一起用</strong></p>
+    <div class="section-body">
+      <p>任务：处理字符串 <code>" Hello World! "</code>（注意两头各有一个空格）。依次完成：① 查找 <code>World</code> 的位置；② 截取出 <code>World!</code>；③ 在 <code>World</code> 后面插入 <code>" C++"</code>；④ 删除所有空格；⑤ 把 <code>Hello</code> 替换成 <code>Hi</code>。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 五大操作组合实战</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;iostream&gt;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;string&gt;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">using</span> <span class="kw">namespace</span> <span class="fn">std</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">int</span> <span class="fn">main</span><span class="pnc">(</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="typ">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">" Hello World! "</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"原始字符串：\""</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span> <span class="op">&lt;&lt;</span> <span class="str">"\""</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"></td></tr>
+          <tr><td class="ln">10</td><td class="cd">    <span class="cmt">// 1. 查找 "World" 的位置（开头有个空格，所以 W 的下标是 7）</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="typ">size_t</span> <span class="fn">worldPos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">"World"</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">12</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"World 的位置："</span> <span class="op">&lt;&lt;</span> <span class="fn">worldPos</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>       <span class="cmt">// 输出：7</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"></td></tr>
+          <tr><td class="ln">14</td><td class="cd">    <span class="cmt">// 2. 截取 "World!"（find + substr 组合）</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd">    <span class="typ">string</span> <span class="fn">world</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">substr</span><span class="pnc">(</span><span class="fn">worldPos</span><span class="pnc">,</span> <span class="num">6</span><span class="pnc">)</span><span class="pnc">;</span>                <span class="cmt">// "World!" 共 6 个字符</span></td></tr>
+          <tr><td class="ln">16</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"截取结果："</span> <span class="op">&lt;&lt;</span> <span class="fn">world</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                <span class="cmt">// 输出：World!</span></td></tr>
+          <tr><td class="ln">17</td><td class="cd"></td></tr>
+          <tr><td class="ln">18</td><td class="cd">    <span class="cmt">// 3. 在 "World" 后面插入 " C++"（World 占 5 个字符，所以插在 worldPos + 5）</span></td></tr>
+          <tr><td class="ln">19</td><td class="cd">    <span class="fn">s</span><span class="pnc">.</span><span class="fn">insert</span><span class="pnc">(</span><span class="fn">worldPos</span> <span class="op">+</span> <span class="num">5</span><span class="pnc">,</span> <span class="str">" C++"</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">20</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"插入后："</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                      <span class="cmt">// 输出： Hello World C++!</span></td></tr>
+          <tr><td class="ln">21</td><td class="cd"></td></tr>
+          <tr><td class="ln">22</td><td class="cd">    <span class="cmt">// 4. 循环 find + erase：删除所有空格</span></td></tr>
+          <tr><td class="ln">23</td><td class="cd">    <span class="typ">size_t</span> <span class="fn">spacePos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">' '</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">24</td><td class="cd">    <span class="kw">while</span> <span class="pnc">(</span><span class="fn">spacePos</span> <span class="op">!=</span> <span class="typ">string</span><span class="op">:</span><span class="op">:</span><span class="fn">npos</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">25</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">26</td><td class="cd">        <span class="fn">s</span><span class="pnc">.</span><span class="fn">erase</span><span class="pnc">(</span><span class="fn">spacePos</span><span class="pnc">,</span> <span class="num">1</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">27</td><td class="cd">        <span class="fn">spacePos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">' '</span><span class="pnc">,</span> <span class="fn">spacePos</span><span class="pnc">)</span><span class="pnc">;</span>                <span class="cmt">// 从当前位置继续，不用 +1</span></td></tr>
+          <tr><td class="ln">28</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">29</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"去空格后："</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                    <span class="cmt">// 输出：HelloWorldC++!</span></td></tr>
+          <tr><td class="ln">30</td><td class="cd"></td></tr>
+          <tr><td class="ln">31</td><td class="cd">    <span class="cmt">// 5. 把 "Hello" 替换成 "Hi"（find + replace 组合）</span></td></tr>
+          <tr><td class="ln">32</td><td class="cd">    <span class="typ">size_t</span> <span class="fn">helloPos</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">find</span><span class="pnc">(</span><span class="str">"Hello"</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">33</td><td class="cd">    <span class="kw">if</span> <span class="pnc">(</span><span class="fn">helloPos</span> <span class="op">!=</span> <span class="typ">string</span><span class="op">:</span><span class="op">:</span><span class="fn">npos</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">34</td><td class="cd">    <span class="pnc">{</span></td></tr>
+          <tr><td class="ln">35</td><td class="cd">        <span class="fn">s</span><span class="pnc">.</span><span class="fn">replace</span><span class="pnc">(</span><span class="fn">helloPos</span><span class="pnc">,</span> <span class="num">5</span><span class="pnc">,</span> <span class="str">"Hi"</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">36</td><td class="cd">    <span class="pnc">}</span></td></tr>
+          <tr><td class="ln">37</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"替换后："</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                      <span class="cmt">// 输出：HiWorldC++!</span></td></tr>
+          <tr><td class="ln">38</td><td class="cd"></td></tr>
+          <tr><td class="ln">39</td><td class="cd">    <span class="kw">return</span> <span class="num">0</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">40</td><td class="cd"><span class="pnc">}</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <table class="api-table">
+      <thead><tr><th>操作</th><th>写法</th><th>效果</th><th>是否修改原串</th></tr></thead>
+      <tbody>
+        <tr><td>查找</td><td><code>s.find(str)</code></td><td>返回子串首次出现的下标，找不到返回 <code>npos</code></td><td>❌ 不修改</td></tr>
+        <tr><td>截取</td><td><code>s.substr(pos, len)</code></td><td>返回截取出来的<strong>新</strong>字符串</td><td>❌ 不修改</td></tr>
+        <tr><td>插入</td><td><code>s.insert(pos, str)</code></td><td>在下标 pos 之前插入 str</td><td>✅ 原地修改</td></tr>
+        <tr><td>删除</td><td><code>s.erase(pos, len)</code></td><td>删除从 pos 开始的 len 个字符</td><td>✅ 原地修改</td></tr>
+        <tr><td>替换</td><td><code>s.replace(pos, len, str)</code></td><td>把从 pos 开始的 len 个字符换成 str</td><td>✅ 原地修改</td></tr>
+      </tbody>
+    </table>
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>核心规律：</b><code>find</code> 定位 → 确定位置 → <code>substr</code> 截取 / <code>erase</code> 删除 / <code>replace</code> 替换 / <code>insert</code> 插入。五个操作都用<strong>下标</strong>定位，下标从 0 开始。</div>
+    </div>
+    <div class="sub-title" id="s8">11.1.8　排序与反转：sort 与 reverse</div>
+    <div class="section-body">
+      <p>字符串可以看成“一排字符”，所以 <code>&lt;algorithm&gt;</code> 里处理序列的工具，也能直接用在 <code>string</code> 上。最常用的两个是 <code>sort</code>（排序）和 <code>reverse</code>（反转）。它们都<strong>直接修改原字符串</strong>。</p>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:8px 0 10px;"><strong>🔀 sort：给字符排队</strong></p>
+    <div class="section-body">
+      <p><code>sort(s.begin(), s.end())</code> 把字符串里的字符按 ASCII 码<strong>从小到大</strong>排好。想从大到小，在后面加一个 <code>greater&lt;char&gt;()</code>；或者用反向迭代器 <code>sort(s.rbegin(), s.rend())</code>。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · sort 排序字符</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;algorithm&gt;</span> <span class="cmt">// sort 和 reverse 都需要这个头文件</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="mac">#include</span><span class="pnc"> </span><span class="str">&lt;functional&gt;</span> <span class="cmt">// greater 需要这个头文件</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="typ">string</span> <span class="fn">s1</span> <span class="op">=</span> <span class="str">"dcba"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="fn">sort</span><span class="pnc">(</span><span class="fn">s1</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">,</span> <span class="fn">s1</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">)</span><span class="pnc">;</span>                    <span class="cmt">// 升序</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s1</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                            <span class="cmt">// 输出：abcd</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="typ">string</span> <span class="fn">s2</span> <span class="op">=</span> <span class="str">"hello"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="fn">sort</span><span class="pnc">(</span><span class="fn">s2</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">,</span> <span class="fn">s2</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">,</span> <span class="fn">greater</span><span class="pnc">&lt;</span><span class="typ">char</span><span class="pnc">&gt;</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">)</span><span class="pnc">;</span>   <span class="cmt">// 降序</span></td></tr>
+          <tr><td class="ln">10</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s2</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                            <span class="cmt">// 输出：ollhe</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd"></td></tr>
+          <tr><td class="ln">12</td><td class="cd"><span class="cmt">// 大小写混合：大写字母的 ASCII 比小写小，所以大写排在前面</span></td></tr>
+          <tr><td class="ln">13</td><td class="cd"><span class="typ">string</span> <span class="fn">s3</span> <span class="op">=</span> <span class="str">"CbAd"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">14</td><td class="cd"><span class="fn">sort</span><span class="pnc">(</span><span class="fn">s3</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">,</span> <span class="fn">s3</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">15</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s3</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                            <span class="cmt">// 输出：ACbd</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><b>排序是“不可逆”的：</b>排完之后，原来的顺序就没有了。如果之后还要用原字符串，请先复制一份：<code>string backup = s;</code>。排序规则就是 11.1.3 讲过的 ASCII 大小规律：数字 &lt; 大写字母 &lt; 小写字母。</div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>↩️ reverse：把字符串倒过来</strong></p>
+    <div class="section-body">
+      <p><code>reverse(s.begin(), s.end())</code> 把整个字符串<strong>首尾颠倒</strong>。只想倒前面一部分，就把结束位置改成 <code>s.begin() + n</code>，只会反转前 <code>n</code> 个字符。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · reverse 反转</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s4</span> <span class="op">=</span> <span class="str">"ABCDEFG"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="fn">reverse</span><span class="pnc">(</span><span class="fn">s4</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">,</span> <span class="fn">s4</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">)</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s4</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                       <span class="cmt">// 输出：GFEDCBA</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"></td></tr>
+          <tr><td class="ln">5</td><td class="cd"><span class="typ">string</span> <span class="fn">s5</span> <span class="op">=</span> <span class="str">"ABCDEFG"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd"><span class="fn">reverse</span><span class="pnc">(</span><span class="fn">s5</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">,</span> <span class="fn">s5</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(</span><span class="pnc">)</span> <span class="op">+</span> <span class="num">3</span><span class="pnc">)</span><span class="pnc">;</span>      <span class="cmt">// 只反转前 3 个字符</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s5</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                       <span class="cmt">// 输出：CBADEFG</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>🪞 应用：判断回文串</strong></p>
+    <div class="section-body">
+      <p><strong>回文串</strong>就是正着读和倒着读都一样的字符串，比如 <code>"level"</code>、<code>"racecar"</code>。判断方法很直接：把字符串复制一份，反转之后和原来的比一比，相等就是回文。</p>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 用 reverse 判断回文</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"level"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">string</span> <span class="fn">rev</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">;</span>                            <span class="cmt">// 先复制一份</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="fn">reverse</span><span class="pnc">(</span><span class="fn">rev</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">,</span> <span class="fn">rev</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">)</span><span class="pnc">;</span>           <span class="cmt">// 把复制品反转</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span> <span class="op">&lt;&lt;</span> <span class="pnc">(</span><span class="fn">s</span> <span class="op">==</span> <span class="fn">rev</span> <span class="op">?</span> <span class="str">" 是"</span> <span class="op">:</span> <span class="str">" 不是"</span><span class="pnc">)</span> <span class="op">&lt;&lt;</span> <span class="str">"回文串"</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>   <span class="cmt">// 输出：level 是回文串</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <p style="font-size:14.5px;color:var(--text-secondary);margin:20px 0 10px;"><strong>👉👈 手动反转：双指针法（理解原理）</strong></p>
+    <div class="section-body">
+      <p><code>reverse</code> 的原理其实很简单，就是<strong>首尾对称交换</strong>：一个指针 <code>left</code> 从最左边出发，一个指针 <code>right</code> 从最右边出发，交换它们指向的字符，然后各自向中间靠拢，直到两个指针碰头为止。这叫“双指针”思想，后面的算法篇还会反复用到。</p>
+    </div>
+    <div class="str-visual">
+      <div class="sv-title"><span>双指针反转 "12345"</span><span class="sv-size-badge">只需交换 2 次</span></div>
+      <div class="sv-rowlabel">第 1 步：left = 0，right = 4，交换 '1' 和 '5' → 52341</div><div class="sv-row"><div class="sv-cell"><div class="sv-char hit">1</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">2</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char">3</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char">4</div><div class="sv-idx">[3]</div></div><div class="sv-cell"><div class="sv-char hit">5</div><div class="sv-idx">[4]</div></div></div>
+      <div class="sv-rowlabel">第 2 步：left = 1，right = 3，交换 '2' 和 '4' → 54321</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">5</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char hit">2</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char">3</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char hit">4</div><div class="sv-idx">[3]</div></div><div class="sv-cell"><div class="sv-char">1</div><div class="sv-idx">[4]</div></div></div>
+      <div class="sv-rowlabel">第 3 步：left = 2，right = 2，两个指针碰头（left &lt; right 不成立），结束</div><div class="sv-row"><div class="sv-cell"><div class="sv-char">5</div><div class="sv-idx">[0]</div></div><div class="sv-cell"><div class="sv-char">4</div><div class="sv-idx">[1]</div></div><div class="sv-cell"><div class="sv-char hit">3</div><div class="sv-idx">[2]</div></div><div class="sv-cell"><div class="sv-char">2</div><div class="sv-idx">[3]</div></div><div class="sv-cell"><div class="sv-char">1</div><div class="sv-idx">[4]</div></div></div>
+      <div class="sv-caption">每次交换都能确定首尾两个位置，所以长度为 <code>n</code> 的字符串只需要交换 <code>n/2</code> 次，时间复杂度是 <strong>O(n)</strong>。因为是在原字符串上“原地”交换，不需要额外开辟新字符串，所以空间复杂度是 <strong>O(1)</strong>。</div>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 双指针手动反转</span></div>
+      <div class="code-body">
+        <table class="code-table">
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"12345"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">2</td><td class="cd"><span class="typ">int</span> <span class="fn">left</span> <span class="op">=</span> <span class="num">0</span><span class="pnc">,</span> <span class="fn">right</span> <span class="op">=</span> <span class="pnc">(</span><span class="typ">int</span><span class="pnc">)</span><span class="fn">s</span><span class="pnc">.</span><span class="fn">size</span><span class="pnc">(</span><span class="pnc">)</span> <span class="op">-</span> <span class="num">1</span><span class="pnc">;</span>   <span class="cmt">// 左指针指向开头，右指针指向末尾</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">while</span> <span class="pnc">(</span><span class="fn">left</span> <span class="op">&lt;</span> <span class="fn">right</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">swap</span><span class="pnc">(</span><span class="fn">s</span><span class="pnc">[</span><span class="fn">left</span><span class="pnc">]</span><span class="pnc">,</span> <span class="fn">s</span><span class="pnc">[</span><span class="fn">right</span><span class="pnc">]</span><span class="pnc">)</span><span class="pnc">;</span>               <span class="cmt">// 交换两个指针指向的字符</span></td></tr>
+          <tr><td class="ln">6</td><td class="cd">    <span class="fn">left</span><span class="op">++</span><span class="pnc">;</span>                                <span class="cmt">// 左指针向右移</span></td></tr>
+          <tr><td class="ln">7</td><td class="cd">    <span class="fn">right</span><span class="op">--</span><span class="pnc">;</span>                               <span class="cmt">// 右指针向左移</span></td></tr>
+          <tr><td class="ln">8</td><td class="cd"><span class="pnc">}</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">s</span> <span class="op">&lt;&lt;</span> <span class="fn">endl</span><span class="pnc">;</span>                         <span class="cmt">// 输出：54321</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <table class="api-table">
+      <thead><tr><th>函数</th><th>功能</th><th>是否修改原串</th><th>需要头文件</th></tr></thead>
+      <tbody>
+        <tr><td><code>sort(s.begin(), s.end())</code></td><td>升序排列字符</td><td>✅ 原地修改</td><td><code>&lt;algorithm&gt;</code></td></tr>
+        <tr><td><code>reverse(s.begin(), s.end())</code></td><td>颠倒字符顺序</td><td>✅ 原地修改</td><td><code>&lt;algorithm&gt;</code></td></tr>
+      </tbody>
+    </table>
+    <div class="sub-title" id="s9">11.1.9　迭代器遍历</div>
+    <div class="section-body">
+      <p>把 <code>string</code> 想象成一排连续的格子，每个格子里放一个字符。迭代器就像夹在格子之间的"书签"——它记住了你当前所在的位置。你可以用 <code>*it</code> 读取当前格子的字符，用 <code>++it</code> 把书签往后移一格。（迭代器的概念在 11.0 里介绍过，11.1.5 里你也已经见过它的写法，这一节再把含义讲清楚。）</p>
+    </div>
     <div class="code-block">
       <div class="code-header"><div class="code-dots"><div class="code-dot red"></div><div class="code-dot amber"></div><div class="code-dot green"></div></div><span class="code-lang">C++ · 用迭代器和范围 for 遍历</span></div>
       <div class="code-body">
         <table class="code-table">
-          <tr><td class="ln">1</td><td class="cd"><span class="fn">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hi"</span><span class="pnc">;</span></td></tr>
+          <tr><td class="ln">1</td><td class="cd"><span class="typ">string</span> <span class="fn">s</span> <span class="op">=</span> <span class="str">"Hi"</span><span class="pnc">;</span></td></tr>
           <tr><td class="ln">2</td><td class="cd"><span class="cmt">// begin() 指向第一个字符，end() 指向尾后位置</span></td></tr>
-          <tr><td class="ln">3</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">();</span> <span class="fn">it</span> <span class="op">!=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">();</span> <span class="op">++</span><span class="fn">it</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">3</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="kw">auto</span> <span class="fn">it</span> <span class="op">=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">begin</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">;</span> <span class="fn">it</span> <span class="op">!=</span> <span class="fn">s</span><span class="pnc">.</span><span class="fn">end</span><span class="pnc">(</span><span class="pnc">)</span><span class="pnc">;</span> <span class="op">++</span><span class="fn">it</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">4</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr><td class="ln">5</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">it</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span>  <span class="cmt">// 输出：H i</span></td></tr>
+          <tr><td class="ln">5</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="fn">it</span> <span class="op">&lt;&lt;</span> <span class="str">" "</span><span class="pnc">;</span>     <span class="cmt">// 输出：H i</span></td></tr>
           <tr><td class="ln">6</td><td class="cd"><span class="pnc">}</span></td></tr>
           <tr><td class="ln">7</td><td class="cd"></td></tr>
           <tr><td class="ln">8</td><td class="cd"><span class="cmt">// C++11 范围 for 循环（底层也是用迭代器）</span></td></tr>
-          <tr><td class="ln">9</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">char</span> <span class="fn">c</span> <span class="pnc">:</span> <span class="fn">s</span><span class="pnc">)</span></td></tr>
+          <tr><td class="ln">9</td><td class="cd"><span class="kw">for</span> <span class="pnc">(</span><span class="typ">char</span> <span class="fn">c</span> <span class="op">:</span> <span class="fn">s</span><span class="pnc">)</span></td></tr>
           <tr><td class="ln">10</td><td class="cd"><span class="pnc">{</span></td></tr>
-          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">c</span><span class="pnc">;</span>  <span class="cmt">// 输出：Hi</span></td></tr>
+          <tr><td class="ln">11</td><td class="cd">    <span class="fn">cout</span> <span class="op">&lt;&lt;</span> <span class="fn">c</span><span class="pnc">;</span>              <span class="cmt">// 输出：Hi</span></td></tr>
           <tr><td class="ln">12</td><td class="cd"><span class="pnc">}</span></td></tr>
         </table>
       </div>
     </div>
-
     <div class="callout tip">
       <span class="callout-icon">📌</span>
-      <div><b>小贴士：</b><code>s.begin()</code> 返回指向第一个字符的迭代器，<code>s.end()</code> 返回指向最后一个字符<strong>后面</strong>的迭代器——它不指向任何字符，只表示"已经遍历完了"。</div>
+      <div><b>小贴士：</b><code>s.begin()</code> 返回指向第一个字符的迭代器，<code>s.end()</code> 返回指向最后一个字符<strong>后面</strong>的迭代器——它不指向任何字符，只表示"已经遍历完了"。前面 <code>sort</code>、<code>reverse</code> 里写的 <code>s.begin()</code>、<code>s.end()</code>，就是在告诉函数“处理从头到尾这一段”。</div>
     </div>
-
     <div class="sub-title">📋 string 常用操作速查表</div>
     <div class="section-body">
       <p>把本节出现过的方法按用途归类汇总，写代码时可以直接当参考卡用。</p>
     </div>
-
     <table class="api-table">
       <thead><tr><th>方法</th><th>分类</th><th>作用</th></tr></thead>
       <tbody>
@@ -471,15 +1167,31 @@
         <tr><td>s.find(t)</td><td>查找</td><td>查找 t 首次出现的位置，找不到返回 string::npos</td></tr>
         <tr><td>s.rfind(t)</td><td>查找</td><td>从后往前查找 t 最后一次出现的位置</td></tr>
         <tr><td>s.find_first_of(chars)</td><td>查找</td><td>查找 chars 中任意字符首次出现的位置</td></tr>
-        <tr><td>s.substr(pos, len)</td><td>截取</td><td>从 pos 开始截取 len 个字符</td></tr>
+        <tr><td>s.find_last_of(chars)</td><td>查找</td><td>查找 chars 中任意字符最后一次出现的位置</td></tr>
+        <tr><td>s.substr(pos, len)</td><td>截取</td><td>从 pos 开始截取 len 个字符（省略 len 则截到末尾）</td></tr>
         <tr><td>to_string(num)</td><td>转换</td><td>数字 → 字符串</td></tr>
-        <tr><td>stoi(s) / stod(s)</td><td>转换</td><td>字符串 → 整数 / 小数</td></tr>
-        <tr><td>s.size() / s.empty()</td><td>容量</td><td>长度 / 判断是否为空</td></tr>
+        <tr><td>stoi(s) / stol(s) / stoll(s)</td><td>转换</td><td>字符串 → int / long / long long</td></tr>
+        <tr><td>stof(s) / stod(s)</td><td>转换</td><td>字符串 → float / double</td></tr>
+        <tr><td>sort(s.begin(), s.end())</td><td>排序</td><td>按 ASCII 码升序排列（需要 &lt;algorithm&gt;）</td></tr>
+        <tr><td>reverse(s.begin(), s.end())</td><td>反转</td><td>颠倒字符顺序（需要 &lt;algorithm&gt;）</td></tr>
+        <tr><td>s.size() / s.length() / s.empty()</td><td>容量</td><td>长度 / 长度 / 判断是否为空</td></tr>
         <tr><td>s.clear()</td><td>容量</td><td>清空字符串</td></tr>
         <tr><td>s.begin() / s.end()</td><td>遍历</td><td>正向迭代器范围</td></tr>
         <tr><td>s1.swap(s2)</td><td>其它</td><td>交换两个字符串的全部内容</td></tr>
       </tbody>
     </table>
+    <div class="sub-title">🎯 本节小结</div>
+    <div class="callout perf">
+      <span class="callout-icon">🎯</span>
+      <div><b>这一节你学会了：</b><br>
+        1. <code>string</code> 是 C++ 处理字符串的核心类型，比 <code>char</code> 数组更安全、更方便；用 <code>=</code> 赋值，用 <code>.size()</code> / <code>.length()</code> 获取长度。<br>
+        2. 用 <code>+</code>、<code>+=</code> 拼接，用 <code>==</code>、<code>&lt;</code>、<code>&gt;</code> 按字典序比较。注意两个双引号字符串不能直接相加，<code>size()</code> 是无符号数。<br>
+        3. <code>cin</code> 读不含空格的内容，<code>getline()</code> 读整行；混用时要先清掉残留的换行符（<code>cin.ignore()</code>，或者多读一次 <code>getline</code>）。<br>
+        4. 用 <code>[i]</code> 或 <code>.at(i)</code> 访问、修改字符，下标从 0 开始，用范围 for 或下标循环遍历。<br>
+        5. 字符串 → 数字用 <code>stoi / stoll / stod</code>，数字 → 字符串用 <code>to_string</code>，数字字符和数字之间用 <code>- '0'</code> / <code>+ '0'</code>。<br>
+        6. 子串五大操作：<code>find</code> 找位置、<code>substr</code> 截取、<code>insert</code> 插入、<code>erase</code> 删除、<code>replace</code> 替换，常常用 <code>find</code> 定位后配合使用。<br>
+        7. <code>sort</code> 给字符排序，<code>reverse</code> 反转字符顺序，两者都直接修改原字符串，需要 <code>&lt;algorithm&gt;</code>。</div>
+    </div>
   </section>
 
   <footer class="doc-footer">
